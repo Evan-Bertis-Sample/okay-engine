@@ -15,14 +15,7 @@ def register_subparser(subparser):
     )
 
 def main(args):
-    build_options = OkayBuildOptions()
-    build_options.set_build_type(OkayBuildType.from_string(args.build_type))
-    # if the project directory is not specified (default is "."), then use the current directory
-    project_dir = args.project_dir
-    if project_dir == ".":
-        project_dir = os.getcwd()
-    build_options.set_project_dir(project_dir)
-
+    build_options = OkayBuildOptions.from_args(args)
     OkayBuildUtil.build_project(build_options)
-    OkayBuildUtil.compile_shaders(project_dir)
+    # OkayBuildUtil.compile_shaders(build_options.project_dir)
     OkayBuildUtil.run_project(build_options, use_gdb=args.gdb)

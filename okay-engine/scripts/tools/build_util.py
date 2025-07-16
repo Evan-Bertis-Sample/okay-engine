@@ -39,6 +39,7 @@ class OkayBuildOptions:
         compiler: str = "gcc"
     ):
         self.project_dir = project_dir.resolve()
+        self.target = target
         self.build_type = build_type
         self.project_name = project_name or self.project_dir.name
         self.compiler = compiler
@@ -61,24 +62,44 @@ class OkayBuildOptions:
             "--project-name",
             help="Override the default target/project name",
         )
+        sp.add_argument(
+            "--compiler",
+            type=str,
+            default="gcc",
+            help="C/C++ compiler to use (default: gcc)",
+        )
+        sp.add_argument(
+            "--target",
+            type=str,
+            default="all",
+            help="CMake target to build (default: native)",
+        )
 
     @classmethod
     def from_args(cls, args) -> "OkayBuildOptions":
         bt = OkayBuildType.from_string(args.build_type) or OkayBuildType.Debug
         return cls(
-            project_dir=args.project_dir,
+            project_dir=args.project_dir.resolve(),
             build_type=bt,
             project_name=args.project_name,
+            target=args.target,
+            compiler=args.compiler,
         )
+    
 
     @property
     def build_dir(self) -> Path:
-        return Path(OkayToolUtil.get_okay_work_dir(self.project_dir)) / "build"
+        # build directory is in the .okay folder
+        path = Path(OkayToolUtil.get_okay_work_dir(self.project_dir)) / "build"
+        # make sure the path exists
+        path.mkdir(parents=True, exist_ok=True)
+        return path / f"{self.target.lower()}_{self.build_type.name.lower()}"
 
     @property
     def cmake_configure_cmd(self) -> list[str]:
         okay_root = OkayToolUtil.get_okay_dir()
-        rel_prj = str(self.project_dir.relative_to(okay_root)).replace("\\", "/")
+        rel_prj = os.path.relpath(self.project_dir, okay_root).replace("\\", "/")
+
         return [
             "cmake",
             "-G",
@@ -88,6 +109,7 @@ class OkayBuildOptions:
             "-B",
             str(self.build_dir),
             f"-DPROJECT={self.project_name}",
+            f"-DTARGET={self.target}",
             f"-DOKAY_PROJECT_ROOT_DIR={rel_prj}",
             f"-DCMAKE_BUILD_TYPE={self.build_type.value}",
             f"-DCMAKE_C_COMPILER={self.compiler}",
@@ -134,16 +156,21 @@ class OkayBuildUtil:
         src_h = _sha256_of_files(roots, OkayBuildUtil.SOURCE_EXTS).hexdigest()
         shd_h = _sha256_of_files(roots, OkayBuildUtil.SHADER_EXTS).hexdigest()
         return src_h, shd_h
+    
+
+    @staticmethod
+    def get_checksum_file() -> Path:
+        return OkayToolUtil.get_okay_work_dir() / "checksum.txt"
 
     @staticmethod
     def write_checksum_file(options: OkayBuildOptions):
         options.build_dir.mkdir(parents=True, exist_ok=True)
         src, shd = OkayBuildUtil.generate_checksums(options)
-        (options.build_dir / "checksum.txt").write_text(f"{src}\n{shd}")
+        OkayBuildUtil.get_checksum_file().write_text(f"{src}\n{shd}")
 
     @staticmethod
     def read_stored_checksums(options: OkayBuildOptions) -> tuple[str, str] | None:
-        f = options.build_dir / "checksum.txt"
+        f = OkayBuildUtil.get_checksum_file()
         if not f.exists():
             return None
         lines = f.read_text().splitlines()
@@ -167,7 +194,7 @@ class OkayBuildUtil:
             subprocess.run(
                 options.cmake_configure_cmd,
                 check=True,
-                cwd=OkayToolUtil.get_okay_dir(),
+                cwd=OkayToolUtil.get_okay_dir() / options.project_dir
             )
         except subprocess.CalledProcessError as e:
             print(f"✗ CMake configure failed: {e}")
