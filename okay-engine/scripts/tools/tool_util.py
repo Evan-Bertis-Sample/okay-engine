@@ -46,6 +46,12 @@ class OkayToolUtil:
         # execute the script
         os.exec([script_path] + args, shell=True)
 
+    @staticmethod
+    def is_good_for_work() -> bool:
+        # check if the current working directory has an ".okay" work directory
+        work_dir = OkayToolUtil.get_okay_work_dir(os.getcwd())
+        return work_dir.exists() and work_dir.is_dir()
+
 class OkayLogType(enum.Enum):
     INFO = "INFO"
     WARNING = "WARNING"

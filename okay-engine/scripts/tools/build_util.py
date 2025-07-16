@@ -71,7 +71,7 @@ class OkayBuildOptions:
         sp.add_argument(
             "--target",
             type=str,
-            default="all",
+            default="native",
             help="CMake target to build (default: native)",
         )
 
@@ -109,9 +109,11 @@ class OkayBuildOptions:
             "-B",
             str(self.build_dir),
             f"-DPROJECT={self.project_name}",
-            f"-DTARGET={self.target}",
+            f"-DOKAY_PROJECT_NAME={self.project_name}",
+            f"-DOKAY_TARGET={self.target}",
             f"-DOKAY_PROJECT_ROOT_DIR={rel_prj}",
             f"-DCMAKE_BUILD_TYPE={self.build_type.value}",
+            f"-DOKAY_BUILD_TYPE={self.build_type.value}",
             f"-DCMAKE_C_COMPILER={self.compiler}",
             f"-DCMAKE_CXX_COMPILER={self.compiler}",
         ]

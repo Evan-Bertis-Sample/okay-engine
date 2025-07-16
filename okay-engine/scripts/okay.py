@@ -7,6 +7,7 @@ import argparse
 import importlib
 import sys
 from pathlib import Path
+from tools import tool_util
 
 TOOLS_FOLDER = "tools"
 OKAY_ASCII_LOGO = r"""
@@ -51,7 +52,7 @@ def main():
 
     # Header
     print(OKAY_ASCII_LOGO)
-    print("Okay Engine – An okay game engine for okay games.\n")
+    print("okay engine – an okay game engine for okay games.\n")
 
     # Set up top‑level parser
     parser = argparse.ArgumentParser(description="Dispatcher for all okay_ sub-tools.")
@@ -72,6 +73,8 @@ def main():
             module.register_subparser(sub)
 
         modules[cmd] = module
+    
+    print("") # Blank line for better readability
 
     args = parser.parse_args()
 
@@ -79,6 +82,14 @@ def main():
     tool_mod = modules[args.tool]
     if not hasattr(tool_mod, "main"):
         parser.error(f"Tool '{args.tool}' does not define a main(args) function.")
+
+    # if this tool is not "init" require that the work directory exists
+    if args.tool != "init" and not tool_util.OkayToolUtil.is_good_for_work():
+        sys.stderr.write("Error: This command must be run in a valid Okay project directory.\n")
+        sys.exit(1)
+
+    # Call the main function of the selected tool
+
     tool_mod.main(args)
 
 
