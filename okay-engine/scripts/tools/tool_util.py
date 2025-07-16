@@ -5,7 +5,6 @@ import enum
 import subprocess
 import pathlib
 
-
 class OkayToolUtil:
     @staticmethod
     def get_root_dir():
@@ -47,3 +46,38 @@ class OkayToolUtil:
         # execute the script
         os.exec([script_path] + args, shell=True)
 
+class OkayLogType(enum.Enum):
+    INFO = "INFO"
+    WARNING = "WARNING"
+    ERROR = "ERROR"
+
+    def __str__(self):
+        return self.value
+    
+    @staticmethod
+    def get_prefix_color(log_type : "OkayLogType") -> str:
+        if log_type == OkayLogType.INFO:
+            return "\033[94m"
+        elif log_type == OkayLogType.WARNING:
+            return "\033[93m"
+        elif log_type == OkayLogType.ERROR:
+            return "\033[91m"
+        return "\033[0m"
+
+    @staticmethod
+    def get_suffix_color(log_type : "OkayLogType") -> str:
+        return "\033[0m"  # Reset color
+    
+    @staticmethod
+    def get_log_prefix(log_type: "OkayLogType") -> str:
+        return f"[{log_type.name}]"
+
+class OkayLogger:
+    @staticmethod
+    def log(message: str, log_type: "OkayLogType" = OkayLogType.INFO):
+        prefix = OkayLogType.get_prefix_color(log_type)
+        suffix = OkayLogType.get_suffix_color(log_type)
+        if log_type == OkayLogType.INFO:
+            print(f"{prefix}[okay][{log_type.name}]{suffix} {message}")
+        else:
+            print(f"{prefix}[okay][{log_type.name}] {message}{suffix}")

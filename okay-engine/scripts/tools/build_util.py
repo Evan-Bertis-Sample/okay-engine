@@ -3,7 +3,7 @@ from pathlib import Path
 import subprocess
 import shutil
 import hashlib
-from tools.tool_util import OkayToolUtil
+from tools.tool_util import OkayToolUtil, OkayLogType, OkayLogger
 import enum
 import os
 import sys
@@ -127,10 +127,10 @@ class OkayBuildOptions:
 
     def validate_dirs(self, *, need_build_dir: bool = False) -> bool:
         if not self.project_dir.is_dir():
-            print(f"✗ Project directory not found: {self.project_dir}")
+            OkayLogger.log(f"Project directory not found: {self.project_dir}", OkayLogType.ERROR)
             return False
         if need_build_dir and not self.build_dir.is_dir():
-            print(f"✗ Build directory not found: {self.build_dir}")
+            OkayLogger.log(f"Build directory not found: {self.build_dir}", OkayLogType.ERROR)
             return False
         return True
 
@@ -189,7 +189,7 @@ class OkayBuildUtil:
             return
         options.build_dir.mkdir(parents=True, exist_ok=True)
 
-        print(f"Configuring → {' '.join(options.cmake_configure_cmd)}")
+        OkayLogger.log(f"Configuring → {' '.join(options.cmake_configure_cmd)}", OkayLogType.INFO)
         try:
             subprocess.run(
                 options.cmake_configure_cmd,
@@ -197,10 +197,10 @@ class OkayBuildUtil:
                 cwd=OkayToolUtil.get_okay_dir() / options.project_dir
             )
         except subprocess.CalledProcessError as e:
-            print(f"✗ CMake configure failed: {e}")
+            OkayLogger.log(f"CMake configure failed: {e}", OkayLogType.ERROR)
             return
 
-        print(f"Building   → {' '.join(options.cmake_build_cmd)}")
+        OkayLogger.log(f"Building   → {' '.join(options.cmake_build_cmd)}", OkayLogType.INFO)
         try:
             subprocess.run(
                 options.cmake_build_cmd,
@@ -209,12 +209,12 @@ class OkayBuildUtil:
             )
         except subprocess.CalledProcessError as e:
             width = shutil.get_terminal_size().columns
-            print("\n" + "=" * width + "\n")
-            print(f"✗ Build failed: {e}")
+            OkayLogger.log("\n" + "=" * width + "\n", OkayLogType.ERROR)
+            OkayLogger.log(f"Build failed: {e}", OkayLogType.ERROR)
             return
 
         OkayBuildUtil.write_checksum_file(options)
-        print(f"✓ Build complete – executable at {options.executable}")
+        OkayLogger.log(f"Build complete – executable at {options.executable}", OkayLogType.Success)
 
     @staticmethod
     def run_project(
@@ -223,27 +223,27 @@ class OkayBuildUtil:
         if not options.validate_dirs(need_build_dir=True):
             return
         if not options.executable.exists():
-            print(f"✗ Executable not found: {options.executable}")
+            OkayLogger.log(f"Executable not found: {options.executable}", OkayLogType.ERROR)
             return
 
         if not allow_dirty and not OkayBuildUtil.checksums_valid(options):
-            print("\033[91m✗ Project changed since last build – please rebuild.\033[0m")
-            print("    okay build")
-            print("    okay sc\n")
-            print("…continuing anyway…\n")
+            OkayLogger.log("Project changed since last build – please rebuild.", OkayLogType.WARNING)
+            OkayLogger.log("    okay build", OkayLogType.INFO)
+            OkayLogger.log("    okay sc\n", OkayLogType.INFO)
+            OkayLogger.log("…continuing anyway…\n", OkayLogType.WARNING)
 
         cmd = ["gdb", str(options.executable)] if use_gdb else [str(options.executable)]
-        print(f"Running → {' '.join(cmd)}")
+        OkayLogger.log(f"Running → {' '.join(cmd)}", OkayLogType.INFO)
         try:
             subprocess.run(cmd, check=True, cwd=options.build_dir)
         except subprocess.CalledProcessError as e:
-            print(f"✗ Runtime error: {e}")
+            OkayLogger.log(f"Runtime error: {e}", OkayLogType.ERROR)
 
     @staticmethod
     def compile_shaders(options: OkayBuildOptions):
         script = Path(OkayToolUtil.get_okay_tool_dir()) / "okay_sc.sh"
         if not script.exists():
-            print(f"✗ Shader compiler not found: {script}")
+            OkayLogger.log(f"Shader compiler not found: {script}", OkayLogType.ERROR)
             return
         cmd = [
             "bash",
@@ -251,5 +251,5 @@ class OkayBuildUtil:
             str(options.project_dir),
             OkayToolUtil.get_okay_dir(),
         ]
-        print(f"Compiling shaders → {' '.join(cmd)}")
+        OkayLogger.log(f"Compiling shaders → {' '.join(cmd)}", OkayLogType.INFO)
         os.execvp(cmd[0], cmd)
