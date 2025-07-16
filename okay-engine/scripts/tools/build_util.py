@@ -191,12 +191,13 @@ class OkayBuildUtil:
             return
         options.build_dir.mkdir(parents=True, exist_ok=True)
 
-        OkayLogger.log(f"Configuring → {' '.join(options.cmake_configure_cmd)}", OkayLogType.INFO)
+        OkayLogger.log("Executing command: " + " ".join(options.cmake_configure_cmd), OkayLogType.INFO)
+        OkayLogger.log(f"Working directory: {OkayToolUtil.get_okay_dir()}", OkayLogType.INFO)
         try:
             subprocess.run(
                 options.cmake_configure_cmd,
                 check=True,
-                cwd=OkayToolUtil.get_okay_dir() / options.project_dir
+                cwd=OkayToolUtil.get_okay_dir()
             )
         except subprocess.CalledProcessError as e:
             OkayLogger.log(f"CMake configure failed: {e}", OkayLogType.ERROR)
