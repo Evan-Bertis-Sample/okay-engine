@@ -1,13 +1,15 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
+"""
+Okay Engine dispatcher for all `okay_*.py` sub-tools.
+"""
 
-import os
-import sys
 import argparse
 import importlib
+import sys
+from pathlib import Path
 
 TOOLS_FOLDER = "tools"
-
-OKAY_ASCII_LOGO = """
+OKAY_ASCII_LOGO = r"""
        _                                  _            
   ___ | |__ __ _  _  _   ___  _ _   __ _ (_) _ _   ___ 
  / _ \| / // _` || || | / -_)| ' \ / _` || || ' \ / -_)
@@ -15,76 +17,69 @@ OKAY_ASCII_LOGO = """
                   |__/             |___/               
 """
 
+
+def discover_tools(tools_dir: Path) -> list[Path]:
+    """
+    Recursively find all Python files in `tools_dir` whose names start with 'okay_'.
+    """
+    return sorted(tools_dir.rglob("okay_*.py"))
+
+
+def build_module_info(tool_path: Path, project_root: Path) -> tuple[str, str]:
+    """
+    Given the full path to a tool file, return
+      (command_name, module_path)
+    where:
+      - command_name is the subcommand (filename without 'okay_' prefix)
+      - module_path is the importable module string
+    """
+    relative = tool_path.relative_to(project_root).with_suffix("")
+    module_path = relative.as_posix().replace("/", ".")
+    command_name = tool_path.stem.removeprefix("okay_")
+    return command_name, module_path
+
+
 def main():
-    # Path to the 'okay' directory
-    okay_dir = os.path.join(os.path.dirname(__file__), TOOLS_FOLDER)
+    project_root = Path(__file__).resolve().parent
+    tools_dir = project_root / TOOLS_FOLDER
 
-    # Collect all okay_*.py files
-    tool_files = []
-    # walk recursively through the okay directory to find all the tools
-    # tools are python files that start with okay_
-    for root, _, files in os.walk(okay_dir):
-        for file in files:
-            if file.startswith("okay_") and file.endswith(".py"):
-                # get the full path to the file relative to the location of this file
-                tool_path = os.path.relpath(os.path.join(root, file), okay_dir)
-                tool_path = TOOLS_FOLDER + os.path.sep + tool_path
-                tool_files.append(tool_path)
+    if not tools_dir.is_dir():
+        sys.stderr.write(f"Error: tools directory not found at {tools_dir}\n")
+        sys.exit(1)
 
+    tool_files = discover_tools(tools_dir)
 
+    # Header
     print(OKAY_ASCII_LOGO)
-    print("Okay - Raymarched Voxel Engine")
+    print("Okay Engine – An okay game engine for okay games.\n")
 
-    parser = argparse.ArgumentParser(description="Dispatcher for okay_ sub-tools.")
-    subparsers = parser.add_subparsers(dest="tool", help="Sub-commands")
+    # Set up top‑level parser
+    parser = argparse.ArgumentParser(description="Dispatcher for all okay_ sub-tools.")
+    subparsers = parser.add_subparsers(
+        dest="tool", required=True, help="Available sub-commands"
+    )
 
-    # Keep track of modules
-    modules = {}
+    # Dynamically import and register each sub-tool
+    modules: dict[str, object] = {}
+    for fp in tool_files:
+        cmd, mod_path = build_module_info(fp, project_root)
+        print(f"Loading module: {mod_path}")
+        module = importlib.import_module(mod_path)
 
-    # Dynamically import each sub-tool and let it register its subparser
-    for tool_file in tool_files:
-        tool_name = tool_file[:-3]  # remove .py
-        # Convert 'okay_foo.py' → subcommand name 'foo'
-        subcommand_name = tool_name.replace("okay_", "")
-
-        # also take only the name of the tool, not the path/to/the/tool
-        subcommand_name = subcommand_name.split(os.path.sep)[-1]
-
-        # Build module path: 'okay.okay_foo'
-        module_path = tool_name.replace(os.path.sep, ".")
-        print(f"Importing module: {module_path}")
-
-        # Import the module
-        module = importlib.import_module(module_path)
-
-        # We expect each module to define a function `register_subparser`
-        # to let the module configure the argparse options it needs.
-        subparser = subparsers.add_parser(subcommand_name)
-
-        # The module can define how it wants to configure the parser
-        # e.g. add arguments, etc.
+        # Create its subparser
+        sub = subparsers.add_parser(cmd, help=module.__doc__ or "")
         if hasattr(module, "register_subparser"):
-            module.register_subparser(subparser)
+            module.register_subparser(sub)
 
-        modules[subcommand_name] = module
+        modules[cmd] = module
 
     args = parser.parse_args()
 
-    print("")
-
-    # If no subcommand was specified, just print help
-    if not args.tool:
-        parser.print_help()
-        sys.exit(1)
-
-    # Dispatch to the appropriate module’s `main` function
-    # We expect each sub-tool to define a `main(args)` function
-    tool_module = modules[args.tool]
-    if hasattr(tool_module, "main"):
-        tool_module.main(args)
-    else:
-        print(f"Error: The tool {args.tool} has no main() function.")
-        sys.exit(1)
+    # Dispatch
+    tool_mod = modules[args.tool]
+    if not hasattr(tool_mod, "main"):
+        parser.error(f"Tool '{args.tool}' does not define a main(args) function.")
+    tool_mod.main(args)
 
 
 if __name__ == "__main__":
