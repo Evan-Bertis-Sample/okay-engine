@@ -97,8 +97,9 @@ class OkayBuildOptions:
 
     @property
     def cmake_configure_cmd(self) -> list[str]:
-        okay_root = OkayToolUtil.get_okay_dir()
+        okay_root = OkayToolUtil.get_okay_cmake_dir()
         rel_prj = os.path.relpath(self.project_dir, okay_root).replace("\\", "/")
+        abs_prj = (Path(okay_root) / rel_prj).resolve().as_posix()
 
         return [
             "cmake",
@@ -111,7 +112,7 @@ class OkayBuildOptions:
             f"-DPROJECT={self.project_name}",
             f"-DOKAY_PROJECT_NAME={self.project_name}",
             f"-DOKAY_TARGET={self.target}",
-            f"-DOKAY_PROJECT_ROOT_DIR={rel_prj}",
+            f"-DOKAY_PROJECT_ROOT_DIR={abs_prj}",
             f"-DCMAKE_BUILD_TYPE={self.build_type.value}",
             f"-DOKAY_BUILD_TYPE={self.build_type.value}",
             f"-DCMAKE_C_COMPILER={self.compiler}",
@@ -192,12 +193,13 @@ class OkayBuildUtil:
         options.build_dir.mkdir(parents=True, exist_ok=True)
 
         OkayLogger.log("Executing command: " + " ".join(options.cmake_configure_cmd), OkayLogType.INFO)
-        OkayLogger.log(f"Working directory: {OkayToolUtil.get_okay_dir()}", OkayLogType.INFO)
+        cmake_dir = OkayToolUtil.get_okay_cmake_dir()
+        OkayLogger.log(f"Working directory: {cmake_dir}", OkayLogType.INFO)
         try:
             subprocess.run(
                 options.cmake_configure_cmd,
                 check=True,
-                cwd=OkayToolUtil.get_okay_dir()
+                cwd=cmake_dir
             )
         except subprocess.CalledProcessError as e:
             OkayLogger.log(f"CMake configure failed: {e}", OkayLogType.ERROR)

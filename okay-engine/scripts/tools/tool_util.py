@@ -27,6 +27,10 @@ class OkayToolUtil:
     @staticmethod
     def get_okay_parent_dir():
         return OkayToolUtil.get_okay_dir().parent
+    
+    @staticmethod
+    def get_okay_cmake_dir():
+        return OkayToolUtil.get_okay_dir()
 
     @staticmethod
     def get_okay_build_dir(build_options: "OkayBuildOptions"):

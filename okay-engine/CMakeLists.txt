@@ -52,16 +52,14 @@ if(NOT EXISTS ${OKAY_PROJECT_ROOT_DIR}/okay.cmake)
     message(FATAL_ERROR "okay.cmake not found in project root directory.")
 endif()
 
-# check that the okay.cmake file is readable
-if(NOT IS_READABLE ${OKAY_PROJECT_ROOT_DIR}/okay.cmake)
-    message(FATAL_ERROR "okay.cmake not readable in project root directory.")
-endif()
 
 # --- COMPILING OKAY ENGINE ---
 
 message(STATUS "Compiling okay Engine")
 
 set(OKAY_ENGINE_DIR ${CMAKE_SOURCE_DIR})
+
+message(STATUS "Okay Engine Directory: ${OKAY_ENGINE_DIR}")
 
 # collect all core .c and .h files recursively
 file(GLOB_RECURSE OKAY_CORE_SOURCES ${OKAY_ENGINE_DIR}/core/*.cpp)
@@ -88,45 +86,45 @@ set_property(TARGET okay PROPERTY C_STANDARD 99)
 
 # --- Fetching Dependencies (Vulkan, GLFW, GLM, etc) ---
 
-include(FetchContent)
+# include(FetchContent)
 
-set(OKAY_ENGINE_VENDOR_DIR ${OKAY_ENGINE_DIR}/vendor)
+# set(OKAY_ENGINE_VENDOR_DIR ${OKAY_ENGINE_DIR}/vendor)
 
-message(STATUS "Vendor Directory: ${OKAY_ENGINE_VENDOR_DIR}")
+# message(STATUS "Vendor Directory: ${OKAY_ENGINE_VENDOR_DIR}")
 
-# Vulkan is a required dependency.
-include(FindVulkan)
-if(NOT VULKAN_FOUND)
-    message(FATAL_ERROR "Vulkan SDK not installed.")
-endif()
+# # Vulkan is a required dependency.
+# include(FindVulkan)
+# if(NOT VULKAN_FOUND)
+#     message(FATAL_ERROR "Vulkan SDK not installed.")
+# endif()
 
-# now add GLFW and GLM
-# I just put them as gitsubmodules, no cmake magic here
-# glfw
-set(GLFW_BUILD_DOCS OFF CACHE BOOL  "GLFW lib only")
-set(GLFW_INSTALL OFF CACHE BOOL  "GLFW lib only")
-set(GLAD_GL "")
-set(GLFW_LIBRARY_TYPE "STATIC")
-add_subdirectory(${OKAY_ENGINE_VENDOR_DIR}/glfw)
-# glm
-option(CGLM_SHARED "Shared build" ON)
-option(CGLM_STATIC "Static build" OFF)
-option(CGLM_USE_C99 "" OFF) # C11 
-option(CGLM_USE_TEST "Enable Tests" OFF) # for make check - make test
-add_subdirectory(${OKAY_ENGINE_VENDOR_DIR}/cglm)
+# # now add GLFW and GLM
+# # I just put them as gitsubmodules, no cmake magic here
+# # glfw
+# set(GLFW_BUILD_DOCS OFF CACHE BOOL  "GLFW lib only")
+# set(GLFW_INSTALL OFF CACHE BOOL  "GLFW lib only")
+# set(GLAD_GL "")
+# set(GLFW_LIBRARY_TYPE "STATIC")
+# add_subdirectory(${OKAY_ENGINE_VENDOR_DIR}/glfw)
+# # glm
+# option(CGLM_SHARED "Shared build" ON)
+# option(CGLM_STATIC "Static build" OFF)
+# option(CGLM_USE_C99 "" OFF) # C11 
+# option(CGLM_USE_TEST "Enable Tests" OFF) # for make check - make test
+# add_subdirectory(${OKAY_ENGINE_VENDOR_DIR}/cglm)
 
 
 # Include directories
 target_include_directories(okay 
     PUBLIC ${OKAY_PARENT_DIR}
-    PUBLIC ${OKAY_PARENT_DIR}/include
-    PRIVATE ${Vulkan_INCLUDE_DIRS} libs/glfw/include
+    # PUBLIC ${OKAY_PARENT_DIR}/include
+    # PRIVATE ${Vulkan_INCLUDE_DIRS} libs/glfw/include
 )
 
-target_link_libraries(okay 
-    Vulkan::Vulkan
-    cglm glfw
-)
+# target_link_libraries(okay 
+#     Vulkan::Vulkan
+#     cglm glfw
+# )
 
 # --- COMPILING GAME ---
 
