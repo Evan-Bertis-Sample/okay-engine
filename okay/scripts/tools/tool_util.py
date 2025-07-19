@@ -13,7 +13,7 @@ class OkayToolUtil:
 
     @staticmethod
     def get_okay_dir():
-        return OkayToolUtil.get_root_dir() / "okay-engine"
+        return OkayToolUtil.get_root_dir() / "okay"
 
     @staticmethod
     def get_okay_tool_dir():

@@ -1,4 +1,4 @@
-#include <okay-engine/okay.hpp>
+#include <okay/core/okay.hpp>
 
 int main() {
     OkayEngine::initialize();
