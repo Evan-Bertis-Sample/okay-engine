@@ -1,6 +1,8 @@
-#include <iostream>
+#include <okay-engine/okay.hpp>
 
 int main() {
-    std::cout << "Hello, Okay Engine!" << std::endl;
+    OkayEngine::initialize();
+    OkayEngine::run();
+    OkayEngine::shutdown();
     return 0;
 }
