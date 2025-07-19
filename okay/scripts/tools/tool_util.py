@@ -81,6 +81,7 @@ class OkayLogType(enum.Enum):
     @staticmethod
     def get_log_prefix(log_type: "OkayLogType") -> str:
         return f"[{log_type.name}]"
+    
 
 class OkayLogger:
     @staticmethod

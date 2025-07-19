@@ -2,6 +2,7 @@
 #define __OKAY_H__
 
 #include <iostream>
+#include <string>
 
 class OkayEngine {
    public:

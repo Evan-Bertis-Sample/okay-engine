@@ -27,6 +27,9 @@ class OkayBuildType(enum.Enum):
             if t.name.lower() == s.lower():
                 return t
         return None
+    
+    def __str__(self):
+        return self.name
 
 
 class OkayBuildOptions:
@@ -65,7 +68,7 @@ class OkayBuildOptions:
         sp.add_argument(
             "--compiler",
             type=str,
-            default="gcc",
+            default="g++",
             help="C/C++ compiler to use (default: gcc)",
         )
         sp.add_argument(
@@ -115,7 +118,7 @@ class OkayBuildOptions:
             f"-DOKAY_PROJECT_ROOT_DIR={abs_prj}",
             f"-DCMAKE_BUILD_TYPE={self.build_type.value}",
             f"-DOKAY_BUILD_TYPE={self.build_type.value}",
-            f"-DCMAKE_C_COMPILER={self.compiler}",
+            f"-DCMAKE_C_COMPILER=gcc",
             f"-DCMAKE_CXX_COMPILER={self.compiler}",
         ]
 
@@ -125,7 +128,7 @@ class OkayBuildOptions:
 
     @property
     def executable(self) -> Path:
-        exe = f"{self.project_name}.exe" if os.name == "nt" else self.project_name
+        exe = f"{self.project_name}.exe" if sys.platform == "win32" else self.project_name
         return self.build_dir / exe
 
     def validate_dirs(self, *, need_build_dir: bool = False) -> bool:
@@ -162,18 +165,18 @@ class OkayBuildUtil:
     
 
     @staticmethod
-    def get_checksum_file() -> Path:
-        return OkayToolUtil.get_okay_work_dir() / "checksum.txt"
+    def get_checksum_file(project_dir: Path) -> Path:
+        return OkayToolUtil.get_okay_work_dir(project_dir) / "checksum.txt"
 
     @staticmethod
     def write_checksum_file(options: OkayBuildOptions):
         options.build_dir.mkdir(parents=True, exist_ok=True)
         src, shd = OkayBuildUtil.generate_checksums(options)
-        OkayBuildUtil.get_checksum_file().write_text(f"{src}\n{shd}")
+        OkayBuildUtil.get_checksum_file(options.project_dir).write_text(f"{src}\n{shd}")
 
     @staticmethod
     def read_stored_checksums(options: OkayBuildOptions) -> tuple[str, str] | None:
-        f = OkayBuildUtil.get_checksum_file()
+        f = OkayBuildUtil.get_checksum_file(options.project_dir)
         if not f.exists():
             return None
         lines = f.read_text().splitlines()
@@ -219,7 +222,7 @@ class OkayBuildUtil:
             return
 
         OkayBuildUtil.write_checksum_file(options)
-        OkayLogger.log(f"Build complete – executable at {options.executable}", OkayLogType.Success)
+        OkayLogger.log(f"Build complete – executable at {options.executable}", OkayLogType.INFO)
 
     @staticmethod
     def run_project(
