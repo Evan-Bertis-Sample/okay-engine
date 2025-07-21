@@ -84,47 +84,40 @@ set(OKAY_PARENT_DIR ${OKAY_ENGINE_DIR}/..)
 # set okay to be a c99 library
 set_property(TARGET okay PROPERTY C_STANDARD 99)
 
-# --- Fetching Dependencies (Vulkan, GLFW, GLM, etc) ---
+# --- Adding dependencies -- OpenGL, GLM, GLFW ---
 
-# include(FetchContent)
+# GLM & GLFW are added as git submodules in the vendor directory
 
-# set(OKAY_ENGINE_VENDOR_DIR ${OKAY_ENGINE_DIR}/vendor)
+include(FetchContent)
 
-# message(STATUS "Vendor Directory: ${OKAY_ENGINE_VENDOR_DIR}")
+set(OKAY_ENGINE_VENDOR_DIR ${OKAY_ENGINE_DIR}/vendor)
 
-# # Vulkan is a required dependency.
-# include(FindVulkan)
-# if(NOT VULKAN_FOUND)
-#     message(FATAL_ERROR "Vulkan SDK not installed.")
-# endif()
+message(STATUS "Vendor Directory: ${OKAY_ENGINE_VENDOR_DIR}")
 
 # # now add GLFW and GLM
-# # I just put them as gitsubmodules, no cmake magic here
+
 # # glfw
-# set(GLFW_BUILD_DOCS OFF CACHE BOOL  "GLFW lib only")
-# set(GLFW_INSTALL OFF CACHE BOOL  "GLFW lib only")
-# set(GLAD_GL "")
-# set(GLFW_LIBRARY_TYPE "STATIC")
-# add_subdirectory(${OKAY_ENGINE_VENDOR_DIR}/glfw)
+set(GLFW_BUILD_DOCS OFF CACHE BOOL  "GLFW lib only")
+set(GLFW_INSTALL OFF CACHE BOOL  "GLFW lib only")
+set(GLAD_GL "")
+set(GLFW_LIBRARY_TYPE "STATIC")
+add_subdirectory(${OKAY_ENGINE_VENDOR_DIR}/glfw)
 # # glm
-# option(CGLM_SHARED "Shared build" ON)
-# option(CGLM_STATIC "Static build" OFF)
-# option(CGLM_USE_C99 "" OFF) # C11 
-# option(CGLM_USE_TEST "Enable Tests" OFF) # for make check - make test
-# add_subdirectory(${OKAY_ENGINE_VENDOR_DIR}/cglm)
+option(GLM_SHARED "Shared build" ON)
+option(GLM_STATIC "Static build" OFF)
+option(GLM_USE_TEST "Enable Tests" OFF) # for make check - make test
+add_subdirectory(${OKAY_ENGINE_VENDOR_DIR}/glm)
 
 
 # Include directories
 target_include_directories(okay 
     PUBLIC ${OKAY_PARENT_DIR}
-    # PUBLIC ${OKAY_PARENT_DIR}/include
-    # PRIVATE ${Vulkan_INCLUDE_DIRS} libs/glfw/include
+    PUBLIC ${OKAY_PARENT_DIR}/include
 )
 
-# target_link_libraries(okay 
-#     Vulkan::Vulkan
-#     cglm glfw
-# )
+target_link_libraries(okay 
+    glm glfw
+)
 
 # --- COMPILING GAME ---
 
