@@ -94,20 +94,33 @@ set(OKAY_ENGINE_VENDOR_DIR ${OKAY_ENGINE_DIR}/vendor)
 
 message(STATUS "Vendor Directory: ${OKAY_ENGINE_VENDOR_DIR}")
 
-# # now add GLFW and GLM
+# now add GLFW and GLM
 
-# # glfw
-set(GLFW_BUILD_DOCS OFF CACHE BOOL  "GLFW lib only")
-set(GLFW_INSTALL OFF CACHE BOOL  "GLFW lib only")
-set(GLAD_GL "")
-set(GLFW_LIBRARY_TYPE "STATIC")
-add_subdirectory(${OKAY_ENGINE_VENDOR_DIR}/glfw)
-# # glm
+# array of libraries to be added
+set(OKAY_ENGINE_LIBRARIES
+    glm
+)
+
+# glm
 option(GLM_SHARED "Shared build" ON)
 option(GLM_STATIC "Static build" OFF)
 option(GLM_USE_TEST "Enable Tests" OFF) # for make check - make test
 add_subdirectory(${OKAY_ENGINE_VENDOR_DIR}/glm)
 
+
+# glfw (only if Windows)
+if (WIN32)
+    set(GLFW_BUILD_DOCS OFF CACHE BOOL  "GLFW lib only")
+    set(GLFW_INSTALL OFF CACHE BOOL  "GLFW lib only")
+    set(GLAD_GL "")
+    set(GLFW_LIBRARY_TYPE "STATIC")
+    add_subdirectory(${OKAY_ENGINE_VENDOR_DIR}/glfw)
+
+    # add to the list of libraries
+    list(APPEND OKAY_ENGINE_LIBRARIES glfw)
+else()
+    message(STATUS "Skipping GLFW on non-Windows platform")
+endif()
 
 # Include directories
 target_include_directories(okay 
@@ -116,7 +129,7 @@ target_include_directories(okay
 )
 
 target_link_libraries(okay 
-    glm glfw
+    PUBLIC ${OKAY_ENGINE_LIBRARIES}
 )
 
 # --- COMPILING GAME ---

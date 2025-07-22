@@ -1,0 +1,44 @@
+# .clang-tidy
+Checks: >
+  -*,
+  clang-analyzer-*,
+  bugprone-*,
+  -bugprone-reserved-identifier,      # ← disable exactly this one
+  modernize-*,
+  readability-function-cognitive-complexity,
+  readability-identifier-naming
+
+CheckOptions:
+  # Class names: Pascal/CamelCase
+  - key: readability-identifier-naming.ClassCase
+    value: CamelCase
+
+  # Public member variables: lowerCamelCase → camelBack, no prefix
+  - key: readability-identifier-naming.PublicMemberVariableCase
+    value: camelBack
+  - key: readability-identifier-naming.PublicMemberPrefix
+    value: ''
+
+  # Private member variables: lowerCamelCase → camelBack, prefix "_"
+  - key: readability-identifier-naming.PrivateMemberVariableCase
+    value: camelBack
+  - key: readability-identifier-naming.PrivateMemberPrefix
+    value: '_'
+
+  # All functions (free, static, member): lowerCamelCase → camelBack
+  - key: readability-identifier-naming.FunctionCase
+    value: camelBack
+
+  # Local variables: lowerCamelCase → camelBack
+  - key: readability-identifier-naming.VariableCase
+    value: camelBack
+
+  # Constants & macros: UPPER_CASE
+  - key: readability-identifier-naming.ConstantCase
+    value: UPPER_CASE
+  - key: readability-identifier-naming.MacroCase
+    value: UPPER_CASE
+
+  # Suppress “reserved identifier” warnings on macros:
+  - key: bugprone-reserved-identifier.IgnoreMacros
+    value: '1'
