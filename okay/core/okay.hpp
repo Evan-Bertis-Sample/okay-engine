@@ -31,7 +31,6 @@ class OkayEngine {
             glfwTerminate();
             return;
         }
-
     }
     static void run() {
         std::cout << "Okay Engine is running." << std::endl;
@@ -46,7 +45,6 @@ class OkayEngine {
             // Swap front and back buffers
             glfwSwapBuffers(g_window);
         }
-
     }
     static void shutdown() {
         std::cout << "Okay Engine shutdown." << std::endl;

@@ -28,7 +28,6 @@ class SurfaceDriver {
     SurfaceConfig _config;
 };
 
-
 };  // namespace okay
 
 #endif  // __OKAY_SURFACE_H__
