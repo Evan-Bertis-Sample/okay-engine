@@ -81,8 +81,9 @@ add_library(okay STATIC
 # in okay/include
 set(OKAY_PARENT_DIR ${OKAY_ENGINE_DIR}/..)
 
-# set okay to be a c99 library
-set_property(TARGET okay PROPERTY C_STANDARD 99)
+# set okay to be a C++17
+set_property(TARGET okay PROPERTY CXX_STANDARD 17)
+set_property(TARGET ${PROJECT} PROPERTY CXX_STANDARD 17)
 
 # --- Adding dependencies -- OpenGL, GLM, GLFW ---
 
