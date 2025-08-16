@@ -11,6 +11,10 @@ namespace okay {
 class OkayEngine {
    public:
     OkaySystemManager systems;
+
+    void initialize() {
+        
+    }
 };
 
 extern OkayEngine Engine;

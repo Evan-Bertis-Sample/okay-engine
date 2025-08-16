@@ -74,7 +74,7 @@ class OkayBuildOptions:
         sp.add_argument(
             "--target",
             type=str,
-            default="native",
+            default="windows",
             help="CMake target to build (default: native)",
         )
 

@@ -2,8 +2,7 @@
 #define __GLFW_SURFACE_H__
 
 #include <GLFW/glfw3.h>
-
-#include <okay/core/graphics/okay_surface.hpp>
+#include <okay/core/renderer/okay_surface.hpp>
 #include <stdexcept>
 
 namespace okay::glfw {

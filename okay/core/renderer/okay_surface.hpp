@@ -1,6 +1,9 @@
 #ifndef __OKAY_SURFACE_H__
 #define __OKAY_SURFACE_H__
 
+#include <okay/core/system/okay_system.hpp>
+#include <okay/core/util/option.hpp>
+
 namespace okay {
 
 /// @brief Configuration for the surface.
@@ -27,6 +30,18 @@ class SurfaceDriver {
    protected:
     SurfaceConfig _config;
 };
+
+#ifdef __GLFW_SURFACE_H__
+#include <okay/core/renderer/glfw/glfw_surface.hpp>
+
+#define SurfaceDriver okay::glfw::GLFWSurface
+
+#elif  __EGL_SURFACE_H__
+#include <okay/core/renderer/egl/egl_surface.hpp>
+
+#define SurfaceDriver okay::egl::EGLSurface
+
+#endif  // __GLFW_SURFACE_H__
 
 };  // namespace okay
 
