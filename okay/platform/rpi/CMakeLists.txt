@@ -29,3 +29,10 @@ target_link_libraries(okay_platform INTERFACE
 )
 
 target_compile_definitions(okay_platform INTERFACE __EGL_SURFACE_H__)
+
+# add the .hpp and .cpp files to the okay_platform target
+# use wildcards to avoid listing every file
+file(GLOB_RECURSE OKAY_PLATFORM_SOURCES ${CMAKE_CURRENT_LIST_DIR}/*.cpp)
+file(GLOB_RECURSE OKAY_PLATFORM_HEADERS ${CMAKE_CURRENT_LIST_DIR}/*.hpp)
+target_sources(okay_platform INTERFACE ${OKAY_PLATFORM_SOURCES} ${OKAY_PLATFORM_HEADERS})
+target_include_directories(okay_platform INTERFACE ${CMAKE_CURRENT_LIST_DIR})

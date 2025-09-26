@@ -2,6 +2,7 @@
 #define __OKAY_RENDERER_H__
 
 #include <okay/core/system/okay_system.hpp>
+#include <okay/core/renderer/okay_surface.hpp>
 #include <iostream>
 
 namespace okay {
@@ -12,7 +13,6 @@ class OkayRenderer : public OkaySystem<OkayRenderer> {
 
     void initialize() override {
         std::cout << "Okay Renderer initialized." << std::endl;
-        // Initialize rendering resources here
     }
 
     void postInitialize() override {

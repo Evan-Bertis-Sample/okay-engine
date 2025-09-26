@@ -82,7 +82,7 @@ add_subdirectory(${OKAY_VENDOR_DIR}/glm)
 add_subdirectory(${OKAY_ENGINE_DIR}/platform)
 
 # link common libs and platform bundle into the engine
-target_link_libraries(okay PUBLIC ${OKAY_ENGINE_LIBRARIES} okay_platform OpenGL::GL)
+target_link_libraries(okay PUBLIC ${OKAY_ENGINE_LIBRARIES} okay_platform)
 
 # compile the game
 message(STATUS "Compiling Game")

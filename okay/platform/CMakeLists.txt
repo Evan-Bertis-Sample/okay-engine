@@ -21,10 +21,4 @@ message(STATUS "OKAY_PLATFORM = ${OKAY_PLATFORM}")
 
 add_library(okay_platform INTERFACE)
 
-if(OKAY_PLATFORM STREQUAL "windows")
-    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/windows)
-elseif(OKAY_PLATFORM STREQUAL "rpi")
-    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/rpi)
-else()
-    message(FATAL_ERROR "Unknown OKAY_PLATFORM='${OKAY_PLATFORM}'")
-endif()
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/${OKAY_PLATFORM})
