@@ -28,8 +28,8 @@ class OkayGame {
     
     // ...variadic function that takes in std::unique_ptr<OkaySystem<T>> for each system type
     template <typename... Systems>
-    OkayGame& addSystems(std::unique_ptr<OkaySystem<Systems>>... systems) {
-        (Engine.systems.registerSystem(std::move(systems)), ...);
+    OkayGame& addSystems(std::unique_ptr<Systems>... systems) {
+        (Engine.systems.template registerSystem(std::move(systems)), ...);
         return *this;
     }
 

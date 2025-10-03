@@ -2,6 +2,7 @@
 #define __OKAY_SURFACE_H__
 
 #include <memory>
+#include <okay/core/system/okay_system.hpp>
 
 namespace okay {
 
@@ -14,9 +15,9 @@ struct SurfaceConfig {
 };
 
 class Surface {
-public:
+   public:
     explicit Surface(const SurfaceConfig& cfg);
-    ~Surface();                           // non-virtual dtor is fine (no inheritance)
+    ~Surface();  // non-virtual dtor is fine (no inheritance)
     Surface(Surface&&) noexcept;
     Surface& operator=(Surface&&) noexcept;
 
@@ -26,11 +27,11 @@ public:
     void swapBuffers();
     void destroy();
 
-private:
-    struct SurfaceImpl;                          // defined in the backend .cpp
-    std::unique_ptr<SurfaceImpl> _impl;          // opaque to callers
+   private:
+    struct SurfaceImpl;                  // defined in the backend .cpp
+    std::unique_ptr<SurfaceImpl> _impl;  // opaque to callers
 };
 
-} // namespace okay
+}  // namespace okay
 
-#endif // __OKAY_SURFACE_H__
+#endif  // __OKAY_SURFACE_H__

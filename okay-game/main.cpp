@@ -1,4 +1,5 @@
 #include <okay/core/okay.hpp>
+#include <okay/core/renderer/okay_renderer.hpp>
 #include <okay/core/renderer/okay_surface.hpp>
 
 struct GameConfig {
@@ -13,25 +14,19 @@ int main() {
     okay::SurfaceConfig surfaceConfig;
     okay::Surface surface(surfaceConfig);
 
-    surface.initialize();
+    okay::OkayRendererSettings rendererSettings{surfaceConfig};
+    auto renderer = okay::OkayRenderer::create(rendererSettings);
 
-    while (surface.shouldClose() == false) {
-        surface.pollEvents();
-        surface.swapBuffers();
-    }
+    GameConfig config;
 
-    surface.destroy();
-
-    // GameConfig config;
-
-    // okay::OkayGame<GameConfig>::create()
-    //     .addSystems(
-
-    //         )
-    //     .onInitialize(__gameInitialize)
-    //     .onUpdate(__gameUpdate)
-    //     .onShutdown(__gameShutdown)
-    //     .run(config);
+    okay::OkayGame<GameConfig>::create()
+        .addSystems(
+            std::move(renderer)
+        )
+        .onInitialize(__gameInitialize)
+        .onUpdate(__gameUpdate)
+        .onShutdown(__gameShutdown)
+        .run(config);
 
     return 0;
 }

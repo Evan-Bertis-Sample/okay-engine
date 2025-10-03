@@ -18,18 +18,14 @@ struct OkaySystemConfig {
     std::uint32_t tickTime;
 };
 
-template <typename T>
+// templated parameter for OkaySystem
+template <OkaySystemScope ScopeV>
 class OkaySystem {
    public:
-    static constexpr OkaySystemScope scope = T::scope;
+    // assert that ScopeV is a valid OkaySystemScope
+    static_assert(std::is_enum_v<ScopeV>, "ScopeV must be an enum type.");
 
-    template <typename hashT>
-    static constexpr std::size_t hash() {
-        return std::is_same<hashT, OkaySystem>::value ? 0 : typeid(hashT).hash_code();
-    }
-
-    static constexpr std::size_t hash() { return hash<T>(); }
-    static constexpr const char* name() { return typeid(T).name(); }
+    static const OkaySystemScope scope = ScopeV;
 
     virtual void initialize() {}
     virtual void postInitialize() {}
@@ -38,6 +34,11 @@ class OkaySystem {
     virtual void postTick() {}
 
     virtual void shutdown() {}
+
+    const OkaySystemConfig& getConfig() { return _systemConfig; }
+
+   protected:
+    OkaySystemConfig _systemConfig;
 };
 
 class OkaySystemPool {
@@ -55,8 +56,7 @@ class OkaySystemPool {
 
     template <typename T>
     void registerSystem(std::unique_ptr<T> system) {
-        static_assert(std::is_base_of<T, OkaySystem<T>>::value,
-                      "T must inherit from OkaySystem<T>.");
+        static_assert(std::is_base_of_v<OkaySystem<T>, T>, "T must inherit from OkaySystem<T>.");
 
         _systems.emplace(OkaySystem<T>::hash(), std::move(system));
     }
@@ -65,13 +65,12 @@ class OkaySystemPool {
     /// @return True if the system exists, false otherwise
     template <typename T>
     bool hasSystem() const {
-        static_assert(std::is_base_of<OkaySystem<T>, T>::value,
-                      "T must inherit from OkaySystem<T>.");
+        static_assert(std::is_base_of_v<OkaySystem<T>, T>, "T must inherit from OkaySystem<T>.");
         return _systems.find(OkaySystem<T>::hash()) != _systems.end();
     }
 
    private:
-    std::map<std::size_t, std::unique_ptr<OkaySystem<void>>> _systems;
+    std::map<std::size_t, std::unique_ptr<OkaySystem>> _systems;
 };
 
 class OkaySystemManager {
@@ -84,15 +83,13 @@ class OkaySystemManager {
 
     template <typename T>
     Option<T*> getSystem() {
-        static_assert(std::is_base_of<T, OkaySystem<T>>::value,
-                      "T must inherit from OkaySystem<T>.");
+        static_assert(std::is_base_of_v<OkaySystem<T>, T>, "T must inherit from OkaySystem<T>.");
         return _pools[T::scope]->template getSystem<T>();
     }
 
     template <typename T>
     void registerSystem(std::unique_ptr<T> system) {
-        static_assert(std::is_base_of<T, OkaySystem<T>>::value,
-                      "T must inherit from OkaySystem<T>.");
+        static_assert(std::is_base_of_v<OkaySystem<T>, T>, "T must inherit from OkaySystem<T>.");
 
         _pools[T::scope]->registerSystem(std::move(system));
     }
