@@ -11,7 +11,7 @@ struct OkayRendererSettings {
     SurfaceConfig SurfaceConfig;
 };
 
-class OkayRenderer : public OkaySystem<OkayRenderer> {
+class OkayRenderer : public IOkaySystem<OkayRenderer> {
    public:
     static const OkaySystemScope scope = OkaySystemScope::ENGINE;
 
