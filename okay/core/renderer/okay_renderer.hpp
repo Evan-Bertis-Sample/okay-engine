@@ -11,9 +11,8 @@ struct OkayRendererSettings {
     SurfaceConfig SurfaceConfig;
 };
 
-class OkayRenderer : public IOkaySystem<OkayRenderer> {
+class OkayRenderer : public OkaySystem<OkaySystemScope::ENGINE> {
    public:
-    static const OkaySystemScope scope = OkaySystemScope::ENGINE;
 
     static std::unique_ptr<OkayRenderer> create(const OkayRendererSettings& settings) {
         return std::make_unique<OkayRenderer>(settings);

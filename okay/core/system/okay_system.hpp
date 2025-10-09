@@ -25,8 +25,6 @@ class IOkaySystem {
         return typeid(IOkaySystem).hash_code();
     }
 
-    virtual OkaySystemScope getScope() = 0;
-
     virtual void initialize() {}
     virtual void postInitialize() {}
 
@@ -44,7 +42,7 @@ class IOkaySystem {
 template <OkaySystemScope ScopeV>
 class OkaySystem : public IOkaySystem {
    public:
-    static_assert(std::is_enum_v<ScopeV, OkaySystemScope>, "ScopeV must be an OkaySystemScope!");
+    static_assert(ScopeV >= OkaySystemScope::ENGINE && ScopeV < OkaySystemScope::__COUNT, "ScopeV must be a valid OkaySystemScope value.");
 
     static const OkaySystemScope scope = ScopeV;
 };
