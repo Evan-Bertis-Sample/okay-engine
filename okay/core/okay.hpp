@@ -49,7 +49,11 @@ class OkayGame {
     }
 
     void run(GameConfigT& config) {
+        for (std::unique_ptr<IOkaySystem> &system : Engine.systems.getPool(OkaySystemScope::ENGINE)) {
+            system->initialize();
+        }
 
+        _onInitialize(config);
     }
 
    private:

@@ -42,7 +42,8 @@ class IOkaySystem {
 template <OkaySystemScope ScopeV>
 class OkaySystem : public IOkaySystem {
    public:
-    static_assert(ScopeV >= OkaySystemScope::ENGINE && ScopeV < OkaySystemScope::__COUNT, "ScopeV must be a valid OkaySystemScope value.");
+    static_assert(ScopeV >= OkaySystemScope::ENGINE && ScopeV < OkaySystemScope::__COUNT,
+                  "ScopeV must be a valid OkaySystemScope value.");
 
     static const OkaySystemScope scope = ScopeV;
 };
@@ -73,6 +74,40 @@ class OkaySystemPool {
         return _systems.find(T::hash()) != _systems.end();
     }
 
+    class Iterator {
+       public:
+        using iterator_category = std::forward_iterator_tag;
+        using value_type = std::unique_ptr<IOkaySystem>;
+        using difference_type = std::ptrdiff_t;
+        using pointer = std::unique_ptr<IOkaySystem>*;
+        using reference = std::unique_ptr<IOkaySystem>&;
+
+        // Constructor
+        Iterator(std::map<std::size_t, std::unique_ptr<IOkaySystem>>::iterator it) : _current(it) {}
+
+        // Dereference operator
+        reference operator*() const { return *_current; }
+        pointer operator->() const { return &*_current; }
+
+        // Increment operators
+        Iterator& operator++() {
+            ++_current;
+            return *this;
+        }
+
+        Iterator operator++(int) {
+            Iterator temp = *this;
+            ++_current;
+            return temp;
+        }
+
+        bool operator==(const Iterator& other) const { return _current == other._current; }
+        bool operator!=(const Iterator& other) const { return _current != other._current; }
+
+       private:
+        typename std::map<std::size_t, std::unique_ptr<IOkaySystem>>::iterator _current;
+    };
+
    private:
     std::map<std::size_t, std::unique_ptr<IOkaySystem>> _systems;
 };
@@ -96,6 +131,10 @@ class OkaySystemManager {
         // static_assert(std::is_base_of_v<IOkaySystem<T>, T>, "T must inherit from
         // OkaySystem<T>.");
         _pools[T::scope]->registerSystem(std::move(system));
+    }
+
+    std::unique_ptr<OkaySystemPool>& getPool(const OkaySystemScope scope) {
+        return _pools[scope];
     }
 
    private:
