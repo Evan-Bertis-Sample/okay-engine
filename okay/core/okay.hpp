@@ -49,7 +49,9 @@ class OkayGame {
     }
 
     void run(GameConfigT& config) {
-        for (std::unique_ptr<IOkaySystem> &system : Engine.systems.getPool(OkaySystemScope::ENGINE)) {
+        OkaySystemPool &enginePool = Engine.systems.getPool(OkaySystemScope::ENGINE);
+
+        for (IOkaySystem* system : enginePool) {
             system->initialize();
         }
 
