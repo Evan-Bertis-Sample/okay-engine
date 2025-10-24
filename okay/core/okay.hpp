@@ -12,9 +12,7 @@ class OkayEngine {
    public:
     OkaySystemManager systems;
 
-    void initialize() {
-        
-    }
+    void initialize() {}
 };
 
 extern OkayEngine Engine;
@@ -22,10 +20,8 @@ extern OkayEngine Engine;
 template <typename GameConfigT>
 class OkayGame {
    public:
-    static OkayGame create() {
-        return OkayGame();
-    }
-    
+    static OkayGame create() { return OkayGame(); }
+
     // ...variadic function that takes in std::unique_ptr<OkaySystem<T>> for each system type
     template <typename... Systems>
     OkayGame& addSystems(std::unique_ptr<Systems>... systems) {
@@ -49,19 +45,39 @@ class OkayGame {
     }
 
     void run(GameConfigT& config) {
-        OkaySystemPool &enginePool = Engine.systems.getPool(OkaySystemScope::ENGINE);
+        OkaySystemPool& enginePool = Engine.systems.getPool(OkaySystemScope::ENGINE);
+
+        for (IOkaySystem* system : enginePool) {
+            system->initialize();
+        }
+
+        OkaySystemPool& gamePool = Engine.systems.getPool(OkaySystemScope::GAME);
 
         for (IOkaySystem* system : enginePool) {
             system->initialize();
         }
 
         _onInitialize(config);
+
+        while (_shouldRun) {
+            for (IOkaySystem* system : enginePool) {
+                system->tick();
+            }
+
+            for (IOkaySystem* system : enginePool) {
+                system->tick();
+            }
+
+            _onUpdate(config);
+        }
     }
 
    private:
     std::function<void(GameConfigT&)> _onInitialize;
     std::function<void(GameConfigT&)> _onUpdate;
     std::function<void(GameConfigT&)> _onShutdown;
+
+    bool _shouldRun = true;
 };
 
 }  // namespace okay
