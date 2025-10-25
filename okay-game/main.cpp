@@ -2,13 +2,10 @@
 #include <okay/core/renderer/okay_renderer.hpp>
 #include <okay/core/renderer/okay_surface.hpp>
 
-struct GameConfig {
-    std::int16_t width = 800;
-};
 
-static void __gameInitialize(GameConfig& config);
-static void __gameUpdate(GameConfig& config);
-static void __gameShutdown(GameConfig& config);
+static void __gameInitialize();
+static void __gameUpdate();
+static void __gameShutdown();
 
 int main() {
     okay::SurfaceConfig surfaceConfig;
@@ -17,31 +14,29 @@ int main() {
     okay::OkayRendererSettings rendererSettings{surfaceConfig};
     auto renderer = okay::OkayRenderer::create(rendererSettings);
 
-    GameConfig config;
-
-    okay::OkayGame<GameConfig>::create()
+    okay::OkayGame::create()
         .addSystems(
             std::move(renderer)
         )
         .onInitialize(__gameInitialize)
         .onUpdate(__gameUpdate)
         .onShutdown(__gameShutdown)
-        .run(config);
+        .run();
 
     return 0;
 }
 
-static void __gameInitialize(GameConfig& config) {
+static void __gameInitialize() {
     std::cout << "Game initialized." << std::endl;
     // Additional game initialization logic
 }
 
-static void __gameUpdate(GameConfig& config) {
+static void __gameUpdate() {
     std::cout << "Game updated." << std::endl;
     // Game update logic
 }
 
-static void __gameShutdown(GameConfig& config) {
+static void __gameShutdown() {
     std::cout << "Game shutdown." << std::endl;
     // Cleanup logic before game shutdown
 }

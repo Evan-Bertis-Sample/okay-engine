@@ -22,8 +22,7 @@ struct OkaySystemConfig {
 
 class IOkaySystem {
    public:
-    static std::size_t hash() {
-        // Use typeid for RTTI-based hash
+    static const std::size_t hash() noexcept {
         return typeid(IOkaySystem).hash_code();
     }
 
@@ -74,6 +73,10 @@ class OkaySystemPool {
     bool hasSystem() const {
         static_assert(std::is_base_of_v<IOkaySystem, T>, "T must inherit from OkaySystem.");
         return _systems.find(T::hash()) != _systems.end();
+    }
+
+    bool hasSystem(std::size_t hash) const {
+        return _systems.find(hash) != _systems.end();
     }
 
     class iterator {
@@ -168,6 +171,13 @@ class OkaySystemManager {
     }
 
     OkaySystemPool& getPool(const OkaySystemScope scope) { return _pools[scope]; }
+
+    bool hasSystem(std::size_t hash) {
+        for (const OkaySystemPool &pool : _pools) {
+            if (pool.hasSystem(hash)) return true;
+        }
+        return false;
+    }
 
    private:
     static std::array<OkaySystemPool, OkaySystemScope::__COUNT> _pools;

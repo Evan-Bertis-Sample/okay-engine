@@ -14,7 +14,7 @@ class OkayLevel {
 
     template <typename... Systems>
     OkayLevel& addLevelSystems(std::unique_ptr<Systems>... systems) {
-        _levelSystems.template registerSystem(std::move(systems)), ...);
+        (_levelSystems.template registerSystem(std::move(systems)), ...);
         return *this;
     };
 
