@@ -45,11 +45,16 @@ class OkayGame {
 
     void run() {
         // check for required systems
-        for (std::size_t systemHash : _REQUIRED_SYSTEMS) {
-            if (!Engine.systems.hasSystem(systemHash)) {
-                std::cout << "missing required system...\n";
-                return;
+        bool allRequiredSystems = true;
+        for (OkaySystemDescriptor systemDescriptor : _REQUIRED_SYSTEMS) {
+            if (!Engine.systems.hasSystem(systemDescriptor.SysId)) {
+                std::cout << "Missing required system : " << systemDescriptor.SystemName << std::endl;
+                allRequiredSystems = false;
             }
+        }
+
+        if (allRequiredSystems) {
+            return;
         }
 
         OkaySystemPool& enginePool = Engine.systems.getPool(OkaySystemScope::ENGINE);
@@ -60,7 +65,7 @@ class OkayGame {
 
         OkaySystemPool& gamePool = Engine.systems.getPool(OkaySystemScope::GAME);
 
-        for (IOkaySystem* system : enginePool) {
+        for (IOkaySystem* system : gamePool) {
             system->initialize();
         }
 
@@ -71,7 +76,7 @@ class OkayGame {
                 system->tick();
             }
 
-            for (IOkaySystem* system : enginePool) {
+            for (IOkaySystem* system : gamePool) {
                 system->tick();
             }
 
@@ -84,7 +89,7 @@ class OkayGame {
     std::function<void()> _onUpdate;
     std::function<void()> _onShutdown;
 
-    static const std::vector<std::size_t> _REQUIRED_SYSTEMS;
+    static const std::vector<OkaySystemDescriptor> _REQUIRED_SYSTEMS;
 
     bool _shouldRun = true;
 };

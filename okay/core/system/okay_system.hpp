@@ -22,8 +22,14 @@ struct OkaySystemConfig {
 
 class IOkaySystem {
    public:
-    static const std::size_t hash() noexcept {
-        return typeid(IOkaySystem).hash_code();
+    template <typename T>
+    static const std::size_t sysid() {
+        return typeid(T).hash_code();
+    }
+
+    template <typename T>
+    static const char *sysName() {
+        return typeid(T).name();
     }
 
     virtual void initialize() {}
@@ -49,12 +55,31 @@ class OkaySystem : public IOkaySystem {
     static const OkaySystemScope scope = ScopeV;
 };
 
+struct OkaySystemDescriptor {
+    std::size_t SysId;
+    const char* SystemName;
+
+    template <typename T>
+    static OkaySystemDescriptor create() {
+        static_assert(std::is_base_of<IOkaySystem, T>::value, "T must inherit from OkaySystem");
+
+        return OkaySystemDescriptor(
+            IOkaySystem::sysid<T>(),
+            IOkaySystem::sysName<T>()
+        );
+    }
+
+   private:
+    OkaySystemDescriptor(std::size_t sysid, const char* systemName)
+        : SysId(sysid), SystemName(systemName) {}
+};
+
 class OkaySystemPool {
    public:
     template <typename T>
     Option<T*> getSystem() {
         static_assert(std::is_base_of<IOkaySystem, T>::value, "T must inherit from OkaySystem.");
-        auto it = _systems.find(T::hash());
+        auto it = _systems.find(IOkaySystem::sysid<T>());
         if (it != _systems.end()) {
             return Option<T*>::some(static_cast<T*>(it->second.get()));
         }
@@ -64,7 +89,7 @@ class OkaySystemPool {
     template <typename T>
     void registerSystem(std::unique_ptr<T> system) {
         static_assert(std::is_base_of_v<IOkaySystem, T>, "T must inherit from OkaySystem.");
-        _systems.emplace(T::hash(), std::move(system));
+        _systems.emplace(IOkaySystem::sysid<T>(), std::move(system));
     }
 
     /// @brief Checks if a system of type T exists in the pool
@@ -72,12 +97,10 @@ class OkaySystemPool {
     template <typename T>
     bool hasSystem() const {
         static_assert(std::is_base_of_v<IOkaySystem, T>, "T must inherit from OkaySystem.");
-        return _systems.find(T::hash()) != _systems.end();
+        return _systems.find(IOkaySystem::sysid<T>) != _systems.end();
     }
 
-    bool hasSystem(std::size_t hash) const {
-        return _systems.find(hash) != _systems.end();
-    }
+    bool hasSystem(std::size_t hash) const { return _systems.find(hash) != _systems.end(); }
 
     class iterator {
        private:
@@ -173,7 +196,7 @@ class OkaySystemManager {
     OkaySystemPool& getPool(const OkaySystemScope scope) { return _pools[scope]; }
 
     bool hasSystem(std::size_t hash) {
-        for (const OkaySystemPool &pool : _pools) {
+        for (const OkaySystemPool& pool : _pools) {
             if (pool.hasSystem(hash)) return true;
         }
         return false;

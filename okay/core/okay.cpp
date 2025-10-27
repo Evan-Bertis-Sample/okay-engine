@@ -7,8 +7,8 @@ namespace okay {
 
 OkayEngine Engine;
 
-const std::vector<std::size_t> OkayGame::_REQUIRED_SYSTEMS = {
-    OkayLevelManager::hash()
+const std::vector<OkaySystemDescriptor> OkayGame::_REQUIRED_SYSTEMS = {
+    OkaySystemDescriptor::create<OkayLevelManager>()
 };
 
 }  // namespace okay

@@ -32,13 +32,11 @@ class OkayRenderer : public OkaySystem<OkaySystemScope::ENGINE> {
     }
 
     void tick() override {
-        std::cout << "Rendering frame..." << std::endl;
         _surface->pollEvents();
         // Render the current frame
     }
 
     void postTick() override {
-        std::cout << "Post-rendering tasks." << std::endl;
         // Cleanup or prepare for the next frame
     }
 
