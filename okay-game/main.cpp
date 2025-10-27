@@ -32,7 +32,7 @@ static void __gameInitialize() {
 }
 
 static void __gameUpdate() {
-    std::cout << "Game updated." << std::endl;
+    // std::cout << "Game updated." << std::endl;
     // Game update logic
 }
 
