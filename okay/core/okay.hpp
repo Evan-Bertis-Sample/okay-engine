@@ -4,6 +4,7 @@
 #include <functional>
 #include <iostream>
 #include <okay/core/system/okay_system.hpp>
+#include <okay/core/logging/okay_logger.hpp>
 #include <string>
 
 namespace okay {
@@ -11,6 +12,7 @@ namespace okay {
 class OkayEngine {
    public:
     OkaySystemManager systems;
+    OkayLogger logger;
 
     void initialize() {}
 };
@@ -48,12 +50,12 @@ class OkayGame {
         bool allRequiredSystems = true;
         for (OkaySystemDescriptor systemDescriptor : _REQUIRED_SYSTEMS) {
             if (!Engine.systems.hasSystem(systemDescriptor.SysId)) {
-                std::cout << "Missing required system : " << systemDescriptor.SystemName << std::endl;
+                Engine.logger.error(__FILE__, __LINE__) << "Missing required system : " << systemDescriptor.SystemName << std::endl;
                 allRequiredSystems = false;
             }
         }
 
-        if (allRequiredSystems) {
+        if (!allRequiredSystems) {
             return;
         }
 
