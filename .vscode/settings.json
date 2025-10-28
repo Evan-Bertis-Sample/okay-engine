@@ -72,6 +72,7 @@
         "xlocmon": "cpp",
         "xloctime": "cpp",
         "xtree": "cpp",
-        "csignal": "cpp"
+        "csignal": "cpp",
+        "source_location": "cpp"
     }
 }

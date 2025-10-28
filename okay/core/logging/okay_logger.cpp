@@ -17,14 +17,6 @@ OkayLogger::OkayLogger(const OkayLoggerOptions& options) : _options(options) {
 #endif
 }
 
-OkayLogger OkayLogger::createDefault() {
-    OkayLoggerOptions options;
-    options.ToFile = true;
-    options.FilePrefix = "okay_log_";
-    options.UseColor = true;
-    return OkayLogger(options);
-}
-
 const char* OkayLogger::_severityString(Severity s) {
     switch (s) {
         case Severity::Debug:

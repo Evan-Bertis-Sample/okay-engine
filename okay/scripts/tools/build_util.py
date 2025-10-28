@@ -39,7 +39,7 @@ class OkayBuildOptions:
         target : str,
         build_type: OkayBuildType = OkayBuildType.Release,
         project_name: str = None,
-        compiler: str = "gcc"
+        compiler: str = "g++"
     ):
         self.project_dir = project_dir.resolve()
         self.target = target
@@ -104,6 +104,8 @@ class OkayBuildOptions:
         rel_prj = os.path.relpath(self.project_dir, okay_root).replace("\\", "/")
         abs_prj = (Path(okay_root) / rel_prj).resolve().as_posix()
 
+        c_compiler = self.compiler if self.compiler != "g++" else "gcc"
+
         return [
             "cmake",
             "-G",
@@ -118,7 +120,7 @@ class OkayBuildOptions:
             f"-DOKAY_PROJECT_ROOT_DIR={abs_prj}",
             f"-DCMAKE_BUILD_TYPE={self.build_type.value}",
             f"-DOKAY_BUILD_TYPE={self.build_type.value}",
-            f"-DCMAKE_C_COMPILER=gcc",
+            f"-DCMAKE_C_COMPILER={c_compiler}",
             f"-DCMAKE_CXX_COMPILER={self.compiler}",
         ]
 

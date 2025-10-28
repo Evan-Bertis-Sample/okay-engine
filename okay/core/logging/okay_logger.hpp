@@ -9,6 +9,7 @@
 #include <sstream>
 #include <string>
 #include <type_traits>
+#include <source_location>
 
 // 0=Debug, 1=Info, 2=Warning, 3=Error
 #ifndef OKAY_COMPILED_MIN_SEVERITY
@@ -29,7 +30,7 @@ enum class Severity : std::uint8_t { Debug, Info, Warning, Error };
 enum class Verbosity : std::uint8_t { Silent, Quiet, Normal, Verbose, VeryVerbose };
 
 struct OkayLoggerOptions {
-    bool ToFile = false;
+    bool ToFile = true;
     std::string FilePrefix = "okay_log_";
     bool UseColor = true;
 };
@@ -45,10 +46,9 @@ inline constexpr bool LogEnabled_v = LogEnabled<S, V>::value;
 
 class OkayLogger {
    public:
-    explicit OkayLogger(const OkayLoggerOptions& options);
-    static OkayLogger createDefault();
+    OkayLogger() {}
+    OkayLogger(const OkayLoggerOptions& options);
 
-    // Enabled overloads
     template <Verbosity Verb = Verbosity::VeryVerbose,
               typename std::enable_if<LogEnabled_v<Severity::Debug, Verb>, int>::type = 0>
     OkayLogger& debug(const char* file = __FILE__, int line = __LINE__) {
@@ -87,13 +87,13 @@ class OkayLogger {
         _active = false;
         return *this;
     }
-    template <Verbosity Verb = Verbosity::VeryVerbose,
+    template <Verbosity Verb = Verbosity::Quiet,
               typename std::enable_if<!LogEnabled_v<Severity::Warning, Verb>, int>::type = 0>
     OkayLogger& warn(const char* = nullptr, int = 0) {
         _active = false;
         return *this;
     }
-    template <Verbosity Verb = Verbosity::VeryVerbose,
+    template <Verbosity Verb = Verbosity::Normal,
               typename std::enable_if<!LogEnabled_v<Severity::Error, Verb>, int>::type = 0>
     OkayLogger& error(const char* = nullptr, int = 0) {
         _active = false;
@@ -104,6 +104,24 @@ class OkayLogger {
     template <typename T>
     OkayLogger& operator<<(const T& value) {
         if (_active) _buffer << value;
+        return *this;
+    }
+
+    OkayLogger& operator<<(std::ostream& (*manip)(std::ostream&)) {
+        if (_active) {
+            // Detect std::endl and flush the log line instead of writing to the buffer
+            if (manip == static_cast<std::ostream& (*)(std::ostream&)>(
+                             std::endl<char, std::char_traits<char>>)) {
+                _flush();
+            } else {
+                manip(_buffer);
+            }
+        }
+        return *this;
+    }
+
+    OkayLogger& operator<<(std::ios_base& (*manip)(std::ios_base&)) {
+        if (_active) manip(_buffer);
         return *this;
     }
 
@@ -123,12 +141,12 @@ class OkayLogger {
         debug<Verb>(file, line) << v;
         endl();
     }
-    template <Verbosity Verb = Verbosity::VeryVerbose, typename T>
+    template <Verbosity Verb = Verbosity::Quiet, typename T>
     void warnln(const T& v, const char* file = __FILE__, int line = __LINE__) {
         warn<Verb>(file, line) << v;
         endl();
     }
-    template <Verbosity Verb = Verbosity::VeryVerbose, typename T>
+    template <Verbosity Verb = Verbosity::Normal, typename T>
     void errorln(const T& v, const char* file = __FILE__, int line = __LINE__) {
         error<Verb>(file, line) << v;
         endl();

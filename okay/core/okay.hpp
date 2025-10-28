@@ -14,7 +14,8 @@ class OkayEngine {
     OkaySystemManager systems;
     OkayLogger logger;
 
-    void initialize() {}
+    OkayEngine() {}
+    ~OkayEngine() {}
 };
 
 extern OkayEngine Engine;
@@ -50,7 +51,7 @@ class OkayGame {
         bool allRequiredSystems = true;
         for (OkaySystemDescriptor systemDescriptor : _REQUIRED_SYSTEMS) {
             if (!Engine.systems.hasSystem(systemDescriptor.SysId)) {
-                Engine.logger.error(__FILE__, __LINE__) << "Missing required system : " << systemDescriptor.SystemName << std::endl;
+                Engine.logger.error() << "Missing required system : " << systemDescriptor.SystemName << std::endl;
                 allRequiredSystems = false;
             }
         }

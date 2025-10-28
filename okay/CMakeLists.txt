@@ -50,13 +50,31 @@ message(STATUS "Vendor dir: ${OKAY_VENDOR_DIR}")
 
 # collect core sources and headers
 file(GLOB_RECURSE OKAY_CORE_SOURCES ${OKAY_ENGINE_DIR}/core/*.cpp)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 file(GLOB_RECURSE OKAY_CORE_HEADERS ${OKAY_ENGINE_DIR}/core/*.hpp)
 
 add_library(okay STATIC ${OKAY_CORE_SOURCES} ${OKAY_CORE_HEADERS})
 
 # c++ standard
-set_property(TARGET okay PROPERTY CXX_STANDARD 17)
-set_property(TARGET ${PROJECT} PROPERTY CXX_STANDARD 17)
+set_property(TARGET okay PROPERTY CXX_STANDARD 20)
+set_property(TARGET ${PROJECT} PROPERTY CXX_STANDARD 20)
+
+# Version guards for C++20 features
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 11)
+    message(FATAL_ERROR "GCC >= 11 required for C++20 features")
+  endif()
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  # libc++/libstdc++ version also matters, but this is a decent floor
+  if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 13)
+    message(FATAL_ERROR "Clang >= 13 required for C++20")
+  endif()
+elseif (MSVC)
+  # 1929 corresponds to VS 2019 16.10 (v19.29); VS 2022 is newer
+  if (MSVC_VERSION LESS 1929)
+    message(FATAL_ERROR "MSVC v19.29 (VS 2019 16.10) or newer required for C++20 features")
+  endif()
+endif()
 
 # common include paths for okay
 target_include_directories(okay 
