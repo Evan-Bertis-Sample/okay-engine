@@ -39,13 +39,15 @@ class OkayBuildOptions:
         target : str,
         build_type: OkayBuildType = OkayBuildType.Release,
         project_name: str = None,
-        compiler: str = "g++"
+        compiler: str = "g++",
+        generator : str = "auto"
     ):
         self.project_dir = project_dir.resolve()
         self.target = target
         self.build_type = build_type
         self.project_name = project_name or self.project_dir.name
         self.compiler = compiler
+        self.generator = generator
 
     @classmethod
     def add_subparser_args(cls, sp):
@@ -77,6 +79,12 @@ class OkayBuildOptions:
             default="windows",
             help="CMake target to build (default: native)",
         )
+        sp.add_argument(
+            "--generator",
+            choices=["auto", "ninja", "mingw-makefiles", "unix-makefiles", "vs"],
+            default="auto",
+            help="CMake generator to use (default: auto)",
+        )
 
     @classmethod
     def from_args(cls, args) -> "OkayBuildOptions":
@@ -87,7 +95,30 @@ class OkayBuildOptions:
             project_name=args.project_name,
             target=args.target,
             compiler=args.compiler,
+            generator=args.generator
         )
+    
+    def _decide_generator(self) -> list[str]:
+        gen = self.generator.lower()
+        if gen == "ninja":
+            return ["-G", "Ninja"]
+        if gen == "mingw-makefiles":
+            return ["-G", "MinGW Makefiles"]
+        if gen == "unix-makefiles":
+            return ["-G", "Unix Makefiles"]
+        if gen == "vs":
+            # Force MSVC. Don’t pass GCC compilers in this case.
+            return ["-G", "Visual Studio 17 2022", "-A", "x64"]
+
+        # auto
+        # Prefer Ninja if found
+        if shutil.which("ninja"):
+            return ["-G", "Ninja"]
+        # On Windows without Ninja, prefer MinGW Makefiles if you’re using GCC
+        if os.name == "nt" and self.compiler in ("g++", "gcc"):
+            return ["-G", "MinGW Makefiles"]
+        # Fallback
+        return ["-G", "Unix Makefiles"]
     
 
     @property
@@ -104,29 +135,42 @@ class OkayBuildOptions:
         rel_prj = os.path.relpath(self.project_dir, okay_root).replace("\\", "/")
         abs_prj = (Path(okay_root) / rel_prj).resolve().as_posix()
 
-        c_compiler = self.compiler if self.compiler != "g++" else "gcc"
-
-        return [
+        args = [
             "cmake",
-            "-G",
-            "Unix Makefiles",
-            "-S",
-            ".",
-            "-B",
-            str(self.build_dir),
+            *self._decide_generator(),
+            "-S", ".",
+            "-B", str(self.build_dir),
             f"-DPROJECT={self.project_name}",
             f"-DOKAY_PROJECT_NAME={self.project_name}",
             f"-DOKAY_TARGET={self.target}",
             f"-DOKAY_PROJECT_ROOT_DIR={abs_prj}",
             f"-DCMAKE_BUILD_TYPE={self.build_type.value}",
             f"-DOKAY_BUILD_TYPE={self.build_type.value}",
-            f"-DCMAKE_C_COMPILER={c_compiler}",
-            f"-DCMAKE_CXX_COMPILER={self.compiler}",
         ]
+
+        # Only set compilers when we’re *not* using Visual Studio
+        gens = set(self._decide_generator())
+        using_vs = "Visual Studio 17 2022" in gens
+        if not using_vs:
+            c_compiler = self.compiler if self.compiler != "g++" else "gcc"
+            args += [f"-DCMAKE_C_COMPILER={c_compiler}",
+                    f"-DCMAKE_CXX_COMPILER={self.compiler}"]
+
+        # Cross-compile for Raspberry Pi if desired via a toolchain (see below)
+        toolchain = os.environ.get("OKAY_TOOLCHAIN_FILE", "")
+        if self.target.lower() in ("rpi", "raspberrypi") and toolchain:
+            args += [f"-DCMAKE_TOOLCHAIN_FILE={toolchain}"]
+
+        return args
 
     @property
     def cmake_build_cmd(self) -> list[str]:
-        return ["cmake", "--build", str(self.build_dir), "--target", self.project_name]
+        cmd = ["cmake", "--build", str(self.build_dir), "--target", self.project_name]
+        # Add --config for multi-config generators like Visual Studio / Ninja Multi-Config
+        gens = self._decide_generator()
+        if "Visual Studio 17 2022" in gens:
+            cmd += ["--config", self.build_type.value]
+        return cmd
 
     @property
     def executable(self) -> Path:

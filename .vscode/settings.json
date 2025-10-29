@@ -73,6 +73,7 @@
         "xloctime": "cpp",
         "xtree": "cpp",
         "csignal": "cpp",
-        "source_location": "cpp"
+        "source_location": "cpp",
+        "fstream": "cpp"
     }
 }
