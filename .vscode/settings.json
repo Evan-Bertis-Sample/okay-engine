@@ -75,5 +75,6 @@
         "csignal": "cpp",
         "source_location": "cpp",
         "fstream": "cpp"
-    }
+    },
+    "cmake.sourceDirectory": "D:/Documents/Code/Personal-Projects/okay-engine/okay/vendor/glm/test/cmake"
 }

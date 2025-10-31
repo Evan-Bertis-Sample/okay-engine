@@ -1,20 +1,33 @@
-# platform/windows/CMakeLists.txt
-# glfw + desktop opengl, defines __GLFW_SURFACE_H__
-
-set(GLFW_BUILD_DOCS OFF CACHE BOOL "GLFW lib only")
-set(GLFW_INSTALL OFF CACHE BOOL "GLFW lib only")
+# glfw (static)
+set(GLFW_BUILD_DOCS OFF CACHE BOOL "GLFW only")
+set(GLFW_INSTALL    OFF CACHE BOOL "GLFW only")
 set(GLFW_LIBRARY_TYPE "STATIC")
-
-# vendor/glfw is outside this dir; add a binary dir explicitly
 add_subdirectory(${OKAY_VENDOR_DIR}/glfw ${CMAKE_CURRENT_BINARY_DIR}/glfw)
 
-# carry link libs/defs via interface target
-target_link_libraries(okay_platform INTERFACE glfw OpenGL::GL)
-target_compile_definitions(okay_platform INTERFACE __GLFW_SURFACE_H__)
+file(GLOB PLATFORM_SRC CONFIGURE_DEPENDS ${CMAKE_CURRENT_LIST_DIR}/*.cpp)
+file(GLOB PLATFORM_HDR CONFIGURE_DEPENDS ${CMAKE_CURRENT_LIST_DIR}/*.hpp)
 
-# add the .hpp and .cpp files to the okay_platform target
-# use wildcards to avoid listing every file
-file(GLOB_RECURSE OKAY_PLATFORM_SOURCES ${CMAKE_CURRENT_LIST_DIR}/*.cpp)
-file(GLOB_RECURSE OKAY_PLATFORM_HEADERS ${CMAKE_CURRENT_LIST_DIR}/*.hpp)
-target_sources(okay_platform INTERFACE ${OKAY_PLATFORM_SOURCES} ${OKAY_PLATFORM_HEADERS})
-target_include_directories(okay_platform INTERFACE ${CMAKE_CURRENT_LIST_DIR})
+# okay_platform is a real STATIC lib created in platform/CMakeLists.txt
+target_sources(okay_platform PRIVATE ${PLATFORM_SRC} ${PLATFORM_HDR})
+
+target_include_directories(okay_platform PRIVATE
+  ${CMAKE_CURRENT_LIST_DIR}
+  ${OKAY_PARENT_DIR}
+  ${OKAY_PARENT_DIR}/include
+)
+
+
+target_compile_definitions(okay_platform PUBLIC __GLFW_SURFACE_H__)
+
+# link low-level deps INTO the platform lib
+target_link_libraries(okay_platform PUBLIC
+  glfw
+  OpenGL::GL
+  user32 gdi32 shell32 advapi32 ole32 uuid winmm imm32 version uxtheme setupapi bcrypt
+)
+
+# Force console subsystem on Windows
+target_link_options(${PROJECT} PRIVATE
+  $<$<AND:$<BOOL:${WIN32}>,$<CXX_COMPILER_ID:GNU,Clang>>:-Wl,-subsystem,console>
+  $<$<AND:$<BOOL:${WIN32}>,$<CXX_COMPILER_ID:MSVC>>:/SUBSYSTEM:CONSOLE>
+)

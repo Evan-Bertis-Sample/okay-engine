@@ -2,7 +2,6 @@
 #include <okay/core/renderer/okay_renderer.hpp>
 #include <okay/core/renderer/okay_surface.hpp>
 
-
 static void __gameInitialize();
 static void __gameUpdate();
 static void __gameShutdown();
