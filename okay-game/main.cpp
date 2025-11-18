@@ -1,6 +1,7 @@
 #include <okay/core/okay.hpp>
 #include <okay/core/renderer/okay_renderer.hpp>
 #include <okay/core/renderer/okay_surface.hpp>
+#include <okay/core/level/okay_level_manager.hpp>
 
 static void __gameInitialize();
 static void __gameUpdate();
@@ -13,9 +14,13 @@ int main() {
     okay::OkayRendererSettings rendererSettings{surfaceConfig};
     auto renderer = okay::OkayRenderer::create(rendererSettings);
 
+    okay::OkayLevelManagerSettings levelManagerSettings;
+    auto levelManager = okay::OkayLevelManager::create(levelManagerSettings);
+
     okay::OkayGame::create()
         .addSystems(
-            std::move(renderer)
+            std::move(renderer),
+            std::move(levelManager)
         )
         .onInitialize(__gameInitialize)
         .onUpdate(__gameUpdate)
