@@ -38,7 +38,7 @@ The recursive flag is important, as some needed libraries have been included as 
 
 ```bash
 cd okay-engine
-source ./okay/scipts/install.bash
+source ./okay/scripts/install.bash
 ```
 
 1. Try to run the okay game!
