@@ -13,9 +13,17 @@ struct OkayVertex {
     glm::vec3 Color;
 };
 
+struct OkayMeshData {
+    std::vector<OkayVertex> Vertices;
+    std::vector<std::uint32_t> Indices;
+};
+
+
 struct OkayModel {
-    std::size_t Offset;
-    std::size_t Length;
+    std::size_t VertexOffset;
+    std::size_t VertexCount;
+    std::size_t IndexOffset;
+    std::size_t IndexCount;
 };
 
 class OkayModelView;
@@ -26,9 +34,10 @@ class OkayModelBuffer {
     std::vector<glm::vec3> Normals;
     std::vector<glm::vec2> UVs;
     std::vector<glm::vec3> Colors;
+    std::vector<uint32_t> Indices;
 
    public:
-    OkayModel AddModel(const std::vector<OkayVertex>& model);
+    OkayModel AddModel(const OkayMeshData& model);
     std::size_t Size() const { return Positions.size(); }
     OkayModelView GetModelView(OkayModel model) const;
 
@@ -42,8 +51,9 @@ class OkayModelBuffer {
             : _buffer(buffer), _index(index) {}
 
         OkayVertex operator*() const {
-            return OkayVertex{_buffer->Positions[_index], _buffer->Normals[_index],
-                              _buffer->UVs[_index], _buffer->Colors[_index]};
+            std::size_t attrIndex = _buffer->Indices[_index];
+            return OkayVertex{_buffer->Positions[attrIndex], _buffer->Normals[attrIndex],
+                              _buffer->UVs[attrIndex], _buffer->Colors[attrIndex]};
         }
 
         iterator& operator++() {
@@ -65,11 +75,11 @@ class OkayModelView {
         : _buffer(buffer), _model(model) {}
 
     OkayModelBuffer::iterator begin() const {
-        return OkayModelBuffer::iterator(_buffer, _model.Offset);
+        return OkayModelBuffer::iterator(_buffer, _model.IndexOffset);
     }
 
     OkayModelBuffer::iterator end() const {
-        return OkayModelBuffer::iterator(_buffer, _model.Offset + _model.Length);
+        return OkayModelBuffer::iterator(_buffer, _model.IndexOffset + _model.IndexCount);
     }
 
    private:
