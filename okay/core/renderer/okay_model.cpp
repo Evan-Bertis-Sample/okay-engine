@@ -21,3 +21,5 @@ OkayModel OkayModelBuffer::AddModel(const std::vector<OkayVertex>& model) {
 
     return m;
 }
+
+OkayModelView OkayModelBuffer::GetModelView(OkayModel model) const { return OkayModelView(this, model); }

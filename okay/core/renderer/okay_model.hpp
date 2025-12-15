@@ -18,6 +18,8 @@ struct OkayModel {
     std::size_t Length;
 };
 
+class OkayModelView;
+
 class OkayModelBuffer {
    private:
     std::vector<glm::vec3> Positions;
@@ -27,8 +29,8 @@ class OkayModelBuffer {
 
    public:
     OkayModel AddModel(const std::vector<OkayVertex>& model);
-    OkayModelView GetModelView(OkayModel model) const { return OkayModelView(this, model); }
     std::size_t Size() const { return Positions.size(); }
+    OkayModelView GetModelView(OkayModel model) const;
 
     class iterator {
        public:
