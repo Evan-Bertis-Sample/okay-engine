@@ -6,6 +6,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <okay/core/renderer/okay_model.hpp>
+#include <type_traits>
 #include <utility>
 
 namespace okay::primitives {
@@ -14,11 +15,10 @@ template <typename BuilderT>
 using VertexTransformation =
     std::function<okay::OkayVertex(const okay::OkayVertex&, const BuilderT&)>;
 
-#define OKAY_PRIM_FIELD(FieldName)                \
-    template <class T>                            \
-    auto& With##FieldName(T&& value) {            \
-        this->FieldName = std::forward<T>(value); \
-        return *this;                             \
+#define OKAY_PRIM_FIELD(FieldName)                     \
+    auto& With##FieldName(decltype(FieldName) value) { \
+        this->FieldName = std::move(value);            \
+        return *this;                                  \
     }
 
 struct Placement {

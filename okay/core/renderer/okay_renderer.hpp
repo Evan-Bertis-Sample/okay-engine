@@ -4,6 +4,7 @@
 #include <iostream>
 #include <okay/core/renderer/okay_surface.hpp>
 #include <okay/core/system/okay_system.hpp>
+#include <okay/core/renderer/okay_primitive.hpp>
 
 namespace okay {
 
@@ -24,6 +25,12 @@ class OkayRenderer : public OkaySystem<OkaySystemScope::ENGINE> {
     void initialize() override {
         std::cout << "Okay Renderer initialized." << std::endl;
         _surface->initialize();
+
+        okay::primitives::Box()
+            .WithCenter({10, 10, 10})
+            .WithSize({10, 10, 10})
+            .Build();
+
     }
 
     void postInitialize() override {
