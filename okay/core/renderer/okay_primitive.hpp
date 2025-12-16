@@ -6,132 +6,201 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <okay/core/renderer/okay_model.hpp>
-#include <vector>
+#include <utility>
 
-namespace okay {
+namespace okay::primitives {
 
-template <typename Options>
-using VertexTransformation = std::function<OkayVertex(const OkayVertex&, const Options&)>;
+template <typename BuilderT>
+using VertexTransformation =
+    std::function<okay::OkayVertex(const okay::OkayVertex&, const BuilderT&)>;
 
-class OkayPrimitives {
-   public:
-    struct RectOptions {
-        glm::vec3 Center{0.0f};
-        glm::vec2 Size{1.0f, 1.0f};
-        glm::quat Rotation{1.0f, 0.0f, 0.0f, 0.0f};  // identity
-        bool TwoSided{false};
+#define OKAY_PRIM_FIELD(FieldName)                              \
+    template <class T>                                          \
+    auto& With##FieldName(T&& value) {                                \
+        this->FieldName = std::forward<T>(value);               \
+        return *this;                                           \
+    }
 
-        static const RectOptions& Default() { static RectOptions opt{}; return opt; }
-    };
+struct Placement {
+    glm::vec3 Center{0.0f};
+    glm::quat Rotation{1.0f, 0.0f, 0.0f, 0.0f};  // identity
 
-    // Rect in local XY plane, normal +Z, then rotated and translated.
-    static OkayMeshData Rect(const RectOptions& opt = RectOptions::Default(),
-                             const VertexTransformation<RectOptions>& xf = nullptr);
-
-    struct PlaneOptions {
-        glm::vec3 Center{0.0f};
-        glm::vec2 Size{1.0f, 1.0f};
-        glm::ivec2 Segments{1, 1};  // grid resolution
-        glm::quat Rotation{1.0f, 0.0f, 0.0f, 0.0f};
-        bool TwoSided{false};
-
-        static const PlaneOptions& Default() { static PlaneOptions opt{}; return opt; }
-    };
-
-    static OkayMeshData Plane(const PlaneOptions& opt = PlaneOptions::Default(),
-                              const VertexTransformation<PlaneOptions>& xf = nullptr);
-
-    struct BoxOptions {
-        glm::vec3 Center{0.0f};
-        glm::vec3 Size{1.0f, 1.0f, 1.0f};
-        glm::quat Rotation{1.0f, 0.0f, 0.0f, 0.0f};
-
-        static const BoxOptions& Default() { static BoxOptions opt{}; return opt; }
-    };
-
-    static OkayMeshData Box(const BoxOptions& opt = BoxOptions::Default(),
-                            const VertexTransformation<BoxOptions>& xf = nullptr);
-
-    // UV Sphere: lat/long parameterization (has pole triangles / seam)
-    struct UVSphereOptions {
-        glm::vec3 Center{0.0f};
-        float Radius{0.5f};
-        int Segments{32};  // around (longitude)
-        int Rings{16};     // vertical (latitude)
-        glm::quat Rotation{1.0f, 0.0f, 0.0f, 0.0f};
-        bool GenerateTangents{false};  // placeholder if you add tangents later
-
-        static const UVSphereOptions& Default() { static UVSphereOptions opt{}; return opt;}
-    };
-
-    static OkayMeshData UVSphere(const UVSphereOptions& opt = UVSphereOptions::Default(),
-                                 const VertexTransformation<UVSphereOptions>& xf = nullptr);
-
-    // Icosphere/Geosphere: subdivided icosahedron (more uniform triangles)
-    struct IcoSphereOptions {
-        glm::vec3 Center{0.0f};
-        float Radius{0.5f};
-        int Subdivisions{2};  // 0..~6 typical
-        glm::quat Rotation{1.0f, 0.0f, 0.0f, 0.0f};
-
-        static const IcoSphereOptions& Default() { static IcoSphereOptions opt{}; return opt;}
-    };
-
-    static OkayMeshData IcoSphere(const IcoSphereOptions& opt = IcoSphereOptions::Default(),
-                                  const VertexTransformation<IcoSphereOptions>& xf = nullptr);
-
-    struct CylinderOptions {
-        glm::vec3 Center{0.0f};
-        float Radius{0.5f};
-        float Height{1.0f};
-        int Segments{32};
-        bool Caps{true};
-        glm::quat Rotation{1.0f, 0.0f, 0.0f, 0.0f};
-
-        static const CylinderOptions& Default() { static CylinderOptions opt{}; return opt;}
-    };
-
-    static OkayMeshData Cylinder(const CylinderOptions& opt = CylinderOptions::Default(),
-                                 const VertexTransformation<CylinderOptions>& xf = nullptr);
-
-    struct ConeOptions {
-        glm::vec3 Center{0.0f};
-        float Radius{0.5f};
-        float Height{1.0f};
-        int Segments{32};
-        bool Cap{true};
-        glm::quat Rotation{1.0f, 0.0f, 0.0f, 0.0f};
-
-        static const ConeOptions& Default() { static ConeOptions opt{}; return opt;}
-    };
-
-    static OkayMeshData Cone(const ConeOptions& opt = ConeOptions::Default(),
-                             const VertexTransformation<ConeOptions>& xf = nullptr);
-
-    struct CapsuleOptions {
-        glm::vec3 Center{0.0f};
-        float Radius{0.5f};
-        float Height{1.5f};  // total height, includes hemispheres
-        int Segments{32};    // around
-        int Rings{8};        // per hemisphere
-        glm::quat Rotation{1.0f, 0.0f, 0.0f, 0.0f};
-
-        static const CapsuleOptions& Default() { static CapsuleOptions opt{}; return opt;}
-    };
-
-    static OkayMeshData Capsule(const CapsuleOptions& opt = CapsuleOptions::Default(),
-                                const VertexTransformation<CapsuleOptions>& xf = nullptr);
-
-   private:
-    static void ApplyTransform(OkayVertex& v, const glm::vec3& center, const glm::quat& rot);
-
-    template <typename OptionsT>
-    static void ApplyUserXform(OkayVertex& v, const OptionsT& opt,
-                               const VertexTransformation<OptionsT>& xf) {
-        if (xf) v = xf(v, opt);
+    Placement& Translate(const glm::vec3& d) {
+        Center += d;
+        return *this;
+    }
+    Placement& Rotate(const glm::quat& q) {
+        Rotation = q * Rotation;
+        return *this;
     }
 };
 
-}  // namespace okay
+template <class Derived>
+class PlacementMixin {
+   public:
+    Derived& WithCenter(const glm::vec3& c) {
+        _Xform.Center = c;
+        return Self();
+    }
+    Derived& WithRotation(const glm::quat& q) {
+        _Xform.Rotation = q;
+        return Self();
+    }
+    Derived& Translate(const glm::vec3& d) {
+        _Xform.Translate(d);
+        return Self();
+    }
+    Derived& Rotate(const glm::quat& q) {
+        _Xform.Rotate(q);
+        return Self();
+    }
+
+    const Placement& Xform() const { return _Xform; }
+
+   protected:
+    Placement _Xform{};
+
+   private:
+    Derived& Self() { return static_cast<Derived&>(*this); }
+};
+
+class RectBuilder final : public PlacementMixin<RectBuilder> {
+   public:
+    glm::vec2 Size{1.0f, 1.0f};
+    bool TwoSided{false};
+
+    OKAY_PRIM_FIELD(Size)
+    OKAY_PRIM_FIELD(TwoSided)
+
+    okay::OkayMeshData Build() const { return Build(nullptr); }
+    okay::OkayMeshData Build(const VertexTransformation<RectBuilder>& xf) const;
+};
+
+class PlaneBuilder final : public PlacementMixin<PlaneBuilder> {
+   public:
+    glm::vec2 Size{1.0f, 1.0f};
+    glm::ivec2 Segments{1, 1};
+    bool TwoSided{false};
+
+    OKAY_PRIM_FIELD(Size)
+    OKAY_PRIM_FIELD(Segments)
+    OKAY_PRIM_FIELD(TwoSided)
+
+    okay::OkayMeshData Build() const { return Build(nullptr); }
+    okay::OkayMeshData Build(const VertexTransformation<PlaneBuilder>& xf) const;
+};
+
+class BoxBuilder final : public PlacementMixin<BoxBuilder> {
+   public:
+    glm::vec3 Size{1.0f, 1.0f, 1.0f};
+
+    OKAY_PRIM_FIELD(Size)
+
+    okay::OkayMeshData Build() const { return Build(nullptr); }
+    okay::OkayMeshData Build(const VertexTransformation<BoxBuilder>& xf) const;
+};
+
+class UVSphereBuilder final : public PlacementMixin<UVSphereBuilder> {
+   public:
+    float Radius{0.5f};
+    int Segments{32};
+    int Rings{16};
+    bool GenerateTangents{false};
+
+    OKAY_PRIM_FIELD(Radius)
+    OKAY_PRIM_FIELD(Segments)
+    OKAY_PRIM_FIELD(Rings)
+    OKAY_PRIM_FIELD(GenerateTangents)
+
+    okay::OkayMeshData Build() const { return Build(nullptr); }
+    okay::OkayMeshData Build(const VertexTransformation<UVSphereBuilder>& xf) const;
+};
+
+class IcoSphereBuilder final : public PlacementMixin<IcoSphereBuilder> {
+   public:
+    float Radius{0.5f};
+    int Subdivisions{2};
+
+    OKAY_PRIM_FIELD(Radius)
+    OKAY_PRIM_FIELD(Subdivisions)
+
+    okay::OkayMeshData Build() const { return Build(nullptr); }
+    okay::OkayMeshData Build(const VertexTransformation<IcoSphereBuilder>& xf) const;
+};
+
+class CylinderBuilder final : public PlacementMixin<CylinderBuilder> {
+   public:
+    float Radius{0.5f};
+    float Height{1.0f};
+    int Segments{32};
+    bool Caps{true};
+
+    OKAY_PRIM_FIELD(Radius)
+    OKAY_PRIM_FIELD(Height)
+    OKAY_PRIM_FIELD(Segments)
+    OKAY_PRIM_FIELD(Caps)
+
+    okay::OkayMeshData Build() const { return Build(nullptr); }
+    okay::OkayMeshData Build(const VertexTransformation<CylinderBuilder>& xf) const;
+};
+
+class ConeBuilder final : public PlacementMixin<ConeBuilder> {
+   public:
+    float Radius{0.5f};
+    float Height{1.0f};
+    int Segments{32};
+    bool Cap{true};
+
+    OKAY_PRIM_FIELD(Radius)
+    OKAY_PRIM_FIELD(Height)
+    OKAY_PRIM_FIELD(Segments)
+    OKAY_PRIM_FIELD(Cap)
+
+    okay::OkayMeshData Build() const { return Build(nullptr); }
+    okay::OkayMeshData Build(const VertexTransformation<ConeBuilder>& xf) const;
+};
+
+class CapsuleBuilder final : public PlacementMixin<CapsuleBuilder> {
+   public:
+    float Radius{0.5f};
+    float Height{1.5f};
+    int Segments{32};
+    int Rings{8};
+
+    OKAY_PRIM_FIELD(Radius)
+    OKAY_PRIM_FIELD(Height)
+    OKAY_PRIM_FIELD(Segments)
+    OKAY_PRIM_FIELD(Rings)
+
+    okay::OkayMeshData Build() const { return Build(nullptr); }
+    okay::OkayMeshData Build(const VertexTransformation<CapsuleBuilder>& xf) const;
+};
+
+inline RectBuilder Rect() {
+    return RectBuilder{};
+}
+inline PlaneBuilder Plane() {
+    return PlaneBuilder{};
+}
+inline BoxBuilder Box() {
+    return BoxBuilder{};
+}
+inline UVSphereBuilder UVSphere() {
+    return UVSphereBuilder{};
+}
+inline IcoSphereBuilder IcoSphere() {
+    return IcoSphereBuilder{};
+}
+inline CylinderBuilder Cylinder() {
+    return CylinderBuilder{};
+}
+inline ConeBuilder Cone() {
+    return ConeBuilder{};
+}
+inline CapsuleBuilder Capsule() {
+    return CapsuleBuilder{};
+}
+
+}  // namespace okay::primitives
 
 #endif  // __OKAY_PRIMITIVE_H__
