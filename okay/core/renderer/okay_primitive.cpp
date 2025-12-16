@@ -10,7 +10,7 @@ namespace okay::primitives {
 static constexpr float kPi = 3.14159265358979323846f;
 
 template <typename BuilderT>
-static inline okay::OkayVertex ApplyTransforms(const BuilderT& builder,
+static inline okay::OkayVertex applyTransforms(const BuilderT& builder,
                                                const VertexTransformation<BuilderT>& xf,
                                                okay::OkayVertex v) {
     const Placement& placement = builder.transform();
@@ -33,7 +33,7 @@ okay::OkayMeshData RectBuilder::build(const VertexTransformation<RectBuilder>& x
     const auto PushVertex = [&](glm::vec3 position, glm::vec3 normal,
                                 glm::vec2 uv) -> std::uint32_t {
         const std::uint32_t index = static_cast<std::uint32_t>(out.Vertices.size());
-        out.Vertices.push_back(ApplyTransforms(*this, xf,
+        out.Vertices.push_back(applyTransforms(*this, xf,
                                                okay::OkayVertex{
                                                    .Position = position,
                                                    .Normal = normal,
@@ -97,7 +97,7 @@ okay::OkayMeshData PlaneBuilder::build(const VertexTransformation<PlaneBuilder>&
                 const float u = static_cast<float>(x) / static_cast<float>(segmentsX);
                 const float localX = -halfWidth + u * Size.x;
 
-                out.Vertices.push_back(ApplyTransforms(*this, xf,
+                out.Vertices.push_back(applyTransforms(*this, xf,
                                                        okay::OkayVertex{
                                                            .Position = {localX, localY, 0.0f},
                                                            .Normal = surfaceNormal,
@@ -184,7 +184,7 @@ okay::OkayMeshData BoxBuilder::build(const VertexTransformation<BoxBuilder>& xf)
     };
 
     const auto PushFaceVertex = [&](glm::vec3 position, glm::vec3 normal, glm::vec2 uv) {
-        out.Vertices.push_back(ApplyTransforms(*this, xf,
+        out.Vertices.push_back(applyTransforms(*this, xf,
                                                okay::OkayVertex{
                                                    .Position = position,
                                                    .Normal = normal,
@@ -237,7 +237,7 @@ okay::OkayMeshData UVSphereBuilder::build(const VertexTransformation<UVSphereBui
             const glm::vec3 unitNormal = {cosTheta * sinPhi, sinTheta * sinPhi, cosPhi};
             const glm::vec3 localPosition = unitNormal * Radius;
 
-            out.Vertices.push_back(ApplyTransforms(*this, xf,
+            out.Vertices.push_back(applyTransforms(*this, xf,
                                                    okay::OkayVertex{
                                                        .Position = localPosition,
                                                        .Normal = unitNormal,
@@ -276,7 +276,7 @@ struct EdgeKeyHash {
     }
 };
 
-static std::uint32_t GetOrCreateMidpointVertex(
+static std::uint32_t getOrCreateMidpointVertex(
     std::vector<glm::vec3>& unitPositions,
     std::unordered_map<EdgeKey, std::uint32_t, EdgeKeyHash>& cache, std::uint32_t i0,
     std::uint32_t i1) {
@@ -327,9 +327,9 @@ okay::OkayMeshData IcoSphereBuilder::build(const VertexTransformation<IcoSphereB
             const std::uint32_t i1 = triangles[i + 1];
             const std::uint32_t i2 = triangles[i + 2];
 
-            const std::uint32_t a = GetOrCreateMidpointVertex(unitPositions, midpointCache, i0, i1);
-            const std::uint32_t b = GetOrCreateMidpointVertex(unitPositions, midpointCache, i1, i2);
-            const std::uint32_t c = GetOrCreateMidpointVertex(unitPositions, midpointCache, i2, i0);
+            const std::uint32_t a = getOrCreateMidpointVertex(unitPositions, midpointCache, i0, i1);
+            const std::uint32_t b = getOrCreateMidpointVertex(unitPositions, midpointCache, i1, i2);
+            const std::uint32_t c = getOrCreateMidpointVertex(unitPositions, midpointCache, i2, i0);
 
             refined.insert(refined.end(), {i0, a, c, i1, b, a, i2, c, b, a, b, c});
         }
@@ -345,7 +345,7 @@ okay::OkayMeshData IcoSphereBuilder::build(const VertexTransformation<IcoSphereB
         const float u = std::atan2(unitNormal.y, unitNormal.x) / (2.0f * kPi) + 0.5f;
         const float v = std::acos(std::clamp(unitNormal.z, -1.0f, 1.0f)) / kPi;
 
-        out.Vertices.push_back(ApplyTransforms(*this, xf,
+        out.Vertices.push_back(applyTransforms(*this, xf,
                                                okay::OkayVertex{
                                                    .Position = unitNormal * Radius,
                                                    .Normal = unitNormal,
@@ -381,14 +381,14 @@ okay::OkayMeshData CylinderBuilder::build(const VertexTransformation<CylinderBui
         const glm::vec3 bottomPos = radialNormal * Radius + glm::vec3(0, 0, -halfHeight);
         const glm::vec3 topPos = radialNormal * Radius + glm::vec3(0, 0, +halfHeight);
 
-        out.Vertices.push_back(ApplyTransforms(*this, xf,
+        out.Vertices.push_back(applyTransforms(*this, xf,
                                                okay::OkayVertex{
                                                    .Position = bottomPos,
                                                    .Normal = radialNormal,
                                                    .UV = {u, 0.0f},
                                                }));
 
-        out.Vertices.push_back(ApplyTransforms(*this, xf,
+        out.Vertices.push_back(applyTransforms(*this, xf,
                                                okay::OkayVertex{
                                                    .Position = topPos,
                                                    .Normal = radialNormal,
@@ -413,7 +413,7 @@ okay::OkayMeshData CylinderBuilder::build(const VertexTransformation<CylinderBui
 
     // Caps
     const std::uint32_t bottomCenterIndex = static_cast<std::uint32_t>(out.Vertices.size());
-    out.Vertices.push_back(ApplyTransforms(*this, xf,
+    out.Vertices.push_back(applyTransforms(*this, xf,
                                            okay::OkayVertex{
                                                .Position = {0, 0, -halfHeight},
                                                .Normal = {0, 0, -1},
@@ -421,7 +421,7 @@ okay::OkayMeshData CylinderBuilder::build(const VertexTransformation<CylinderBui
                                            }));
 
     const std::uint32_t topCenterIndex = static_cast<std::uint32_t>(out.Vertices.size());
-    out.Vertices.push_back(ApplyTransforms(*this, xf,
+    out.Vertices.push_back(applyTransforms(*this, xf,
                                            okay::OkayVertex{
                                                .Position = {0, 0, +halfHeight},
                                                .Normal = {0, 0, +1},
@@ -437,7 +437,7 @@ okay::OkayMeshData CylinderBuilder::build(const VertexTransformation<CylinderBui
         const float cosTheta = std::cos(theta);
         const float sinTheta = std::sin(theta);
 
-        out.Vertices.push_back(ApplyTransforms(
+        out.Vertices.push_back(applyTransforms(
             *this, xf,
             okay::OkayVertex{
                 .Position =
@@ -456,7 +456,7 @@ okay::OkayMeshData CylinderBuilder::build(const VertexTransformation<CylinderBui
         const float cosTheta = std::cos(theta);
         const float sinTheta = std::sin(theta);
 
-        out.Vertices.push_back(ApplyTransforms(
+        out.Vertices.push_back(applyTransforms(
             *this, xf,
             okay::OkayVertex{
                 .Position =
@@ -506,7 +506,7 @@ okay::OkayMeshData ConeBuilder::build(const VertexTransformation<ConeBuilder>& x
         const glm::vec3 approxNormal =
             glm::normalize(glm::vec3(cosTheta, sinTheta, Radius / Height));
 
-        out.Vertices.push_back(ApplyTransforms(*this, xf,
+        out.Vertices.push_back(applyTransforms(*this, xf,
                                                okay::OkayVertex{
                                                    .Position = ringPos,
                                                    .Normal = approxNormal,
@@ -516,7 +516,7 @@ okay::OkayMeshData ConeBuilder::build(const VertexTransformation<ConeBuilder>& x
 
     // Apex
     const std::uint32_t apexIndex = static_cast<std::uint32_t>(out.Vertices.size());
-    out.Vertices.push_back(ApplyTransforms(*this, xf,
+    out.Vertices.push_back(applyTransforms(*this, xf,
                                            okay::OkayVertex{
                                                .Position = {0, 0, +halfHeight},
                                                .Normal = {0, 0, 1},  // simple
@@ -534,7 +534,7 @@ okay::OkayMeshData ConeBuilder::build(const VertexTransformation<ConeBuilder>& x
 
     // Cap center
     const std::uint32_t capCenterIndex = static_cast<std::uint32_t>(out.Vertices.size());
-    out.Vertices.push_back(ApplyTransforms(*this, xf,
+    out.Vertices.push_back(applyTransforms(*this, xf,
                                            okay::OkayVertex{
                                                .Position = {0, 0, -halfHeight},
                                                .Normal = {0, 0, -1},
@@ -550,7 +550,7 @@ okay::OkayMeshData ConeBuilder::build(const VertexTransformation<ConeBuilder>& x
         const float cosTheta = std::cos(theta);
         const float sinTheta = std::sin(theta);
 
-        out.Vertices.push_back(ApplyTransforms(
+        out.Vertices.push_back(applyTransforms(
             *this, xf,
             okay::OkayVertex{
                 .Position =
@@ -600,14 +600,14 @@ okay::OkayMeshData CapsuleBuilder::build(const VertexTransformation<CapsuleBuild
                 radialNormal * radius + glm::vec3(0, 0, -halfCylinderHeight);
             const glm::vec3 topPos = radialNormal * radius + glm::vec3(0, 0, +halfCylinderHeight);
 
-            out.Vertices.push_back(ApplyTransforms(*this, xf,
+            out.Vertices.push_back(applyTransforms(*this, xf,
                                                    okay::OkayVertex{
                                                        .Position = bottomPos,
                                                        .Normal = radialNormal,
                                                        .UV = {u, 0.0f},
                                                    }));
 
-            out.Vertices.push_back(ApplyTransforms(*this, xf,
+            out.Vertices.push_back(applyTransforms(*this, xf,
                                                    okay::OkayVertex{
                                                        .Position = topPos,
                                                        .Normal = radialNormal,
@@ -662,7 +662,7 @@ okay::OkayMeshData CapsuleBuilder::build(const VertexTransformation<CapsuleBuild
 
                 localPosition.z += topHemisphere ? halfCylinderHeight : -halfCylinderHeight;
 
-                mesh.Vertices.push_back(ApplyTransforms(
+                mesh.Vertices.push_back(applyTransforms(
                     *this, xf,
                     okay::OkayVertex{
                         .Position = localPosition,
@@ -696,4 +696,4 @@ okay::OkayMeshData CapsuleBuilder::build(const VertexTransformation<CapsuleBuild
     return out;
 }
 
-}  // namespace okay::primitives
+}
