@@ -13,7 +13,7 @@ template <typename BuilderT>
 static inline okay::OkayVertex ApplyTransforms(const BuilderT& builder,
                                                const VertexTransformation<BuilderT>& xf,
                                                okay::OkayVertex v) {
-    const Placement& placement = builder.Xform();
+    const Placement& placement = builder.transform();
 
     v.Position = placement.Rotation * v.Position + placement.Center;
     v.Normal = glm::normalize(placement.Rotation * v.Normal);
@@ -22,7 +22,7 @@ static inline okay::OkayVertex ApplyTransforms(const BuilderT& builder,
     return v;
 }
 
-okay::OkayMeshData RectBuilder::Build(const VertexTransformation<RectBuilder>& xf) const {
+okay::OkayMeshData RectBuilder::build(const VertexTransformation<RectBuilder>& xf) const {
     okay::OkayMeshData out;
     out.Vertices.reserve(TwoSided ? 8 : 4);
     out.Indices.reserve(TwoSided ? 12 : 6);
@@ -70,7 +70,7 @@ okay::OkayMeshData RectBuilder::Build(const VertexTransformation<RectBuilder>& x
     return out;
 }
 
-okay::OkayMeshData PlaneBuilder::Build(const VertexTransformation<PlaneBuilder>& xf) const {
+okay::OkayMeshData PlaneBuilder::build(const VertexTransformation<PlaneBuilder>& xf) const {
     okay::OkayMeshData out;
 
     const int segmentsX = std::max(1, Segments.x);
@@ -137,7 +137,7 @@ struct BoxFaceDefinition {
     glm::vec3 A, B, C, D;  // CCW quad in local space
 };
 
-okay::OkayMeshData BoxBuilder::Build(const VertexTransformation<BoxBuilder>& xf) const {
+okay::OkayMeshData BoxBuilder::build(const VertexTransformation<BoxBuilder>& xf) const {
     okay::OkayMeshData out;
     out.Vertices.reserve(24);
     out.Indices.reserve(36);
@@ -207,7 +207,7 @@ okay::OkayMeshData BoxBuilder::Build(const VertexTransformation<BoxBuilder>& xf)
     return out;
 }
 
-okay::OkayMeshData UVSphereBuilder::Build(const VertexTransformation<UVSphereBuilder>& xf) const {
+okay::OkayMeshData UVSphereBuilder::build(const VertexTransformation<UVSphereBuilder>& xf) const {
     okay::OkayMeshData out;
 
     const int longitudeSegments = std::max(3, Segments);
@@ -294,7 +294,7 @@ static std::uint32_t GetOrCreateMidpointVertex(
     return newIndex;
 }
 
-okay::OkayMeshData IcoSphereBuilder::Build(const VertexTransformation<IcoSphereBuilder>& xf) const {
+okay::OkayMeshData IcoSphereBuilder::build(const VertexTransformation<IcoSphereBuilder>& xf) const {
     okay::OkayMeshData out;
 
     const int subdivisions = std::max(0, Subdivisions);
@@ -357,7 +357,7 @@ okay::OkayMeshData IcoSphereBuilder::Build(const VertexTransformation<IcoSphereB
 }
 
 
-okay::OkayMeshData CylinderBuilder::Build(const VertexTransformation<CylinderBuilder>& xf) const {
+okay::OkayMeshData CylinderBuilder::build(const VertexTransformation<CylinderBuilder>& xf) const {
     okay::OkayMeshData out;
 
     const int radialSegments = std::max(3, Segments);
@@ -483,7 +483,7 @@ okay::OkayMeshData CylinderBuilder::Build(const VertexTransformation<CylinderBui
 }
 
 
-okay::OkayMeshData ConeBuilder::Build(const VertexTransformation<ConeBuilder>& xf) const {
+okay::OkayMeshData ConeBuilder::build(const VertexTransformation<ConeBuilder>& xf) const {
     okay::OkayMeshData out;
 
     const int radialSegments = std::max(3, Segments);
@@ -569,7 +569,7 @@ okay::OkayMeshData ConeBuilder::Build(const VertexTransformation<ConeBuilder>& x
     return out;
 }
 
-okay::OkayMeshData CapsuleBuilder::Build(const VertexTransformation<CapsuleBuilder>& xf) const {
+okay::OkayMeshData CapsuleBuilder::build(const VertexTransformation<CapsuleBuilder>& xf) const {
     okay::OkayMeshData out;
 
     const int radialSegments = std::max(3, Segments);

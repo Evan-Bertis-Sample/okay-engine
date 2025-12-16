@@ -26,10 +26,10 @@ class OkayRenderer : public OkaySystem<OkaySystemScope::ENGINE> {
         std::cout << "Okay Renderer initialized." << std::endl;
         _surface->initialize();
 
-        okay::primitives::Box()
-            .WithCenter({10, 10, 10})
-            .WithSize({10, 10, 10})
-            .Build();
+        okay::primitives::box()
+            .withCenter({10, 10, 10})
+            .withSize({10, 10, 10})
+            .build();
 
     }
 
