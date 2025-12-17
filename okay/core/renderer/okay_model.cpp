@@ -4,33 +4,33 @@ using namespace okay;
 
 OkayModel OkayModelBuffer::AddModel(const OkayMeshData& mesh) {
     OkayModel m{};
-    m.VertexOffset = Positions.size();
-    m.VertexCount = mesh.Vertices.size();
+    m.vertexOffset = positions.size();
+    m.vertexCount = mesh.vertices.size();
 
-    m.IndexOffset = Indices.size();
-    m.IndexCount = mesh.Indices.size();
+    m.indexOffset = indices.size();
+    m.indexCount = mesh.indices.size();
 
     // Reserve vertex attribute storage
-    Positions.reserve(Positions.size() + m.VertexCount);
-    Normals.reserve(Normals.size() + m.VertexCount);
-    UVs.reserve(UVs.size() + m.VertexCount);
-    Colors.reserve(Colors.size() + m.VertexCount);
+    positions.reserve(positions.size() + m.vertexCount);
+    normals.reserve(normals.size() + m.vertexCount);
+    uvs.reserve(uvs.size() + m.vertexCount);
+    colors.reserve(colors.size() + m.vertexCount);
 
     // Reserve index storage
-    Indices.reserve(Indices.size() + m.IndexCount);
+    indices.reserve(indices.size() + m.indexCount);
 
     // Append vertices (SoA)
-    for (const OkayVertex& v : mesh.Vertices) {
-        Positions.push_back(v.Position);
-        Normals.push_back(v.Normal);
-        UVs.push_back(v.UV);
-        Colors.push_back(v.Color);
+    for (const OkayVertex& v : mesh.vertices) {
+        positions.push_back(v.position);
+        normals.push_back(v.normal);
+        uvs.push_back(v.uv);
+        colors.push_back(v.color);
     }
 
     // Append indices, rebased to the global vertex offset
-    const std::uint32_t base = static_cast<std::uint32_t>(m.VertexOffset);
-    for (std::uint32_t i : mesh.Indices) {
-        Indices.push_back(base + i);
+    const std::uint32_t base = static_cast<std::uint32_t>(m.vertexOffset);
+    for (std::uint32_t i : mesh.indices) {
+        indices.push_back(base + i);
     }
 
     return m;

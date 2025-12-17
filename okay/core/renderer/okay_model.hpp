@@ -7,38 +7,38 @@
 namespace okay {
 
 struct OkayVertex {
-    glm::vec3 Position;
-    glm::vec3 Normal;
-    glm::vec2 UV;
-    glm::vec3 Color;
+    glm::vec3 position;
+    glm::vec3 normal;
+    glm::vec2 uv;
+    glm::vec3 color;
 };
 
 struct OkayMeshData {
-    std::vector<OkayVertex> Vertices;
-    std::vector<std::uint32_t> Indices;
+    std::vector<OkayVertex> vertices;
+    std::vector<std::uint32_t> indices;
 };
 
 
 struct OkayModel {
-    std::size_t VertexOffset;
-    std::size_t VertexCount;
-    std::size_t IndexOffset;
-    std::size_t IndexCount;
+    std::size_t vertexOffset;
+    std::size_t vertexCount;
+    std::size_t indexOffset;
+    std::size_t indexCount;
 };
 
 class OkayModelView;
 
 class OkayModelBuffer {
    private:
-    std::vector<glm::vec3> Positions;
-    std::vector<glm::vec3> Normals;
-    std::vector<glm::vec2> UVs;
-    std::vector<glm::vec3> Colors;
-    std::vector<uint32_t> Indices;
+    std::vector<glm::vec3> positions;
+    std::vector<glm::vec3> normals;
+    std::vector<glm::vec2> uvs;
+    std::vector<glm::vec3> colors;
+    std::vector<uint32_t> indices;
 
    public:
     OkayModel AddModel(const OkayMeshData& model);
-    std::size_t Size() const { return Positions.size(); }
+    std::size_t Size() const { return positions.size(); }
     OkayModelView GetModelView(OkayModel model) const;
 
     class iterator {
@@ -51,9 +51,9 @@ class OkayModelBuffer {
             : _buffer(buffer), _index(index) {}
 
         OkayVertex operator*() const {
-            std::size_t attrIndex = _buffer->Indices[_index];
-            return OkayVertex{_buffer->Positions[attrIndex], _buffer->Normals[attrIndex],
-                              _buffer->UVs[attrIndex], _buffer->Colors[attrIndex]};
+            std::size_t attrIndex = _buffer->indices[_index];
+            return OkayVertex{_buffer->positions[attrIndex], _buffer->normals[attrIndex],
+                              _buffer->uvs[attrIndex], _buffer->colors[attrIndex]};
         }
 
         iterator& operator++() {
@@ -75,11 +75,11 @@ class OkayModelView {
         : _buffer(buffer), _model(model) {}
 
     OkayModelBuffer::iterator begin() const {
-        return OkayModelBuffer::iterator(_buffer, _model.IndexOffset);
+        return OkayModelBuffer::iterator(_buffer, _model.indexOffset);
     }
 
     OkayModelBuffer::iterator end() const {
-        return OkayModelBuffer::iterator(_buffer, _model.IndexOffset + _model.IndexCount);
+        return OkayModelBuffer::iterator(_buffer, _model.indexOffset + _model.indexCount);
     }
 
    private:
