@@ -6,7 +6,6 @@
 #include <stdexcept>
 #include <string>
 
-
 namespace okay {
 
 struct Surface::SurfaceImpl {

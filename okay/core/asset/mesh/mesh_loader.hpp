@@ -4,7 +4,7 @@
 #include <filesystem>
 #include <istream>
 
-#include <okay/core/asset/okay_asset.h>
+#include <okay/core/asset/okay_asset.hpp>
 #include <okay/core/util/result.hpp>
 #include <okay/core/renderer/okay_mesh.hpp>
 

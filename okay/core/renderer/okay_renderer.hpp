@@ -6,7 +6,7 @@
 #include <okay/core/renderer/okay_primitive.hpp>
 #include <okay/core/renderer/okay_surface.hpp>
 #include <okay/core/system/okay_system.hpp>
-#include <okay/core/asset/okay_asset.h>
+#include <okay/core/asset/okay_asset.hpp>
 
 namespace okay {
 

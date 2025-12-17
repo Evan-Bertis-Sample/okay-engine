@@ -18,10 +18,7 @@ int main() {
     auto levelManager = okay::OkayLevelManager::create(levelManagerSettings);
 
     okay::OkayGame::create()
-        .addSystems(
-            std::move(renderer),
-            std::move(levelManager)
-        )
+        .addSystems(std::move(renderer), std::move(levelManager))
         .onInitialize(__gameInitialize)
         .onUpdate(__gameUpdate)
         .onShutdown(__gameShutdown)
