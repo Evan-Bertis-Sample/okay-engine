@@ -8,6 +8,14 @@
 #include <okay/core/util/option.hpp>
 #include <okay/core/util/result.hpp>
 
+#ifndef OKAY_ENGINE_ASSET_ROOT
+#define OKAY_ENGINE_ASSET_ROOT ".okay/engine/assets"
+#endif
+
+#ifndef OKAY_GAME_ASSET_ROOT
+#define OKAY_GAME_ASSET_ROOT ".okay/game/assets"
+#endif
+
 namespace okay {
 
 template <typename T>
@@ -19,7 +27,7 @@ struct OkayAsset {
 
 template <typename T>
 struct OkayAssetLoader {
-    static Result<T> loadAsset(const std::istream& file);
+    static Result<T> loadAsset(const std::ifstream& file);
 };
 
 template <typename T>
@@ -30,22 +38,19 @@ using OnAssetFailedCB = std::function<void(const std::string&)>;
 
 class OkayAssetManager : public OkaySystem<OkaySystemScope::ENGINE> {
    public:
-    static constexpr const char* ENGINE_ASSET_ROOT = ".okay/engine/assets";
-    static constexpr const char* GAME_ASSET_ROOT = ".okay/user/assets";
-
     template <typename T>
     struct Load {
        public:
         OnAssetSucceedCB<T> onCompleteCB;
         OnAssetFailedCB<T> onFailCB;
-        const std::filesystem::path& assetPath;
+        std::filesystem::path assetPath;
 
         static Load<T> EngineAsset(const std::filesystem::path& path) {
-            return Load(std::filesystem::path(ENGINE_ASSET_ROOT) / path);
+            return Load(std::filesystem::path(OKAY_ENGINE_ASSET_ROOT) / path);
         };
 
         static Load<T> GameAsset(const std::filesystem::path& path) {
-            return Load(std::filesystem::path(GAME_ASSET_ROOT) / path);
+            return Load(std::filesystem::path(OKAY_GAME_ASSET_ROOT) / path);
         };
 
         Load<T>& onComplete(OnAssetSucceedCB<T> cb) {
@@ -57,7 +62,7 @@ class OkayAssetManager : public OkaySystem<OkaySystemScope::ENGINE> {
             return *this;
         }
 
-        std::istream data() const { return std::ifstream(assetPath); }
+        std::ifstream data() const { return std::ifstream(assetPath); }
 
        private:
         Load(const std::filesystem::path& assetPath) : assetPath(assetPath) {}
@@ -73,7 +78,7 @@ class OkayAssetManager : public OkaySystem<OkaySystemScope::ENGINE> {
 
     template <typename T>
     LoadHandle<T> loadAssetAsync(const Load<T>& load) {
-        std::istream assetFile = load.data();
+        std::ifstream assetFile = load.data();
         Result<T> res = OkayAssetLoader<T>::loadAsset(assetFile);
 
         if (res.isError()) {
@@ -92,7 +97,7 @@ class OkayAssetManager : public OkaySystem<OkaySystemScope::ENGINE> {
 
     template <typename T>
     Result<OkayAsset<T>> loadAssetSync(const Load<T>& load) {
-        std::istream assetFile = load.data();
+        std::ifstream assetFile = load.data();
         Result<T> res = OkayAssetLoader<T>::loadAsset(assetFile);
 
         if (res.isError()) {

@@ -40,7 +40,8 @@ class OkayBuildOptions:
         build_type: OkayBuildType = OkayBuildType.Release,
         project_name: str = None,
         compiler: str = "g++",
-        generator : str = "auto"
+        generator : str = "auto",
+        user_asset_dir : Path = None
     ):
         self.project_dir = project_dir.resolve()
         self.target = target
@@ -48,6 +49,7 @@ class OkayBuildOptions:
         self.project_name = project_name or self.project_dir.name
         self.compiler = compiler
         self.generator = generator
+        self.user_asset_dir = user_asset_dir or (self.project_dir / "assets")
 
     @classmethod
     def add_subparser_args(cls, sp):
@@ -84,6 +86,14 @@ class OkayBuildOptions:
             choices=["auto", "ninja", "mingw-makefiles", "unix-makefiles", "vs"],
             default="auto",
             help="CMake generator to use (default: auto)",
+        )
+
+        # user asset dirs
+        sp.add_argument(
+            "--asset-dir",
+            type=Path,
+            default="assets",
+            help="Path to your project assets",
         )
 
     @classmethod
@@ -130,6 +140,18 @@ class OkayBuildOptions:
         return path / f"{self.target.lower()}_{self.build_type.name.lower()}"
 
     @property
+    def packaged_engine_asset_dir(self) -> Path:
+        return Path(OkayToolUtil.get_okay_work_dir(self.project_dir)) / "engine" / "assets"
+    
+    @property
+    def packaged_game_asset_dir(self) -> Path:
+        return Path(OkayToolUtil.get_okay_work_dir(self.project_dir)) / "game" / "assets"
+    
+    @property
+    def engine_asset_dir(self) -> Path:
+        return Path(OkayToolUtil.get_okay_dir()) / "assets"
+
+    @property
     def cmake_configure_cmd(self) -> list[str]:
         okay_root = OkayToolUtil.get_okay_cmake_dir()
         rel_prj = os.path.relpath(self.project_dir, okay_root).replace("\\", "/")
@@ -146,6 +168,8 @@ class OkayBuildOptions:
             f"-DOKAY_PROJECT_ROOT_DIR={abs_prj}",
             f"-DCMAKE_BUILD_TYPE={self.build_type.value}",
             f"-DOKAY_BUILD_TYPE={self.build_type.value}",
+            f"-DOKAY_ENGINE_ASSET_ROOT={self.packaged_engine_asset_dir}",
+            f"-DOKAY_GAME_ASSET_ROOT={self.packaged_game_asset_dir}",
         ]
 
         # Only set compilers when we’re *not* using Visual Studio
@@ -234,6 +258,21 @@ class OkayBuildUtil:
         if stored is None:
             return False
         return stored == OkayBuildUtil.generate_checksums(options)
+    
+    @staticmethod
+    def package_assets(src_dir : Path, dest_dir : Path):
+        # for now, this is a simple implementation that will copy 
+        # all files from the source directory to the destination directory
+        # in the future, this will probably package assets and encrypt them
+        if src_dir.exists() == False:
+            OkayLogger.log(f"Source directory not found: {src_dir}", OkayLogType.ERROR)
+            return
+        
+        if dest_dir.exists():
+            shutil.rmtree(dest_dir)
+
+
+        shutil.copytree(src_dir, dest_dir, dirs_exist_ok=True)
 
     @staticmethod
     def build_project(options: OkayBuildOptions):
@@ -244,6 +283,11 @@ class OkayBuildUtil:
         OkayLogger.log("Executing command: " + " ".join(options.cmake_configure_cmd), OkayLogType.INFO)
         cmake_dir = OkayToolUtil.get_okay_cmake_dir()
         OkayLogger.log(f"Working directory: {cmake_dir}", OkayLogType.INFO)
+
+        OkayLogger.log("Packaging assets…", OkayLogType.INFO)
+        OkayBuildUtil.package_assets(options.user_asset_dir, options.packaged_game_asset_dir)
+        OkayBuildUtil.package_assets(options.engine_asset_dir, options.packaged_engine_asset_dir)
+
         try:
             subprocess.run(
                 options.cmake_configure_cmd,
