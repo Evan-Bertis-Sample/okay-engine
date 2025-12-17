@@ -1,14 +1,19 @@
+#define GLAD_GL_IMPLEMENTATION
+#include "glad/gl.h"
 #include <GLFW/glfw3.h>
 
+#include <iostream>
 #include <okay/core/renderer/okay_surface.hpp>
 #include <stdexcept>
 #include <string>
+
 
 namespace okay {
 
 struct Surface::SurfaceImpl {
     SurfaceConfig cfg;
     GLFWwindow* window = nullptr;
+    GladGLContext gladContext;
     explicit SurfaceImpl(const SurfaceConfig& c) : cfg(c) {}
 };
 
@@ -29,6 +34,11 @@ void Surface::initialize() {
 
     glfwMakeContextCurrent(_impl->window);
     glfwSwapInterval(_impl->cfg.vsync ? 1 : 0);
+
+    // load all open gl function pointers
+    if (!gladLoadGLContext(&_impl->gladContext, glfwGetProcAddress)) {
+        std::cout << "Failed to initialize GLAD" << std::endl;
+    }
 }
 
 bool Surface::shouldClose() const {

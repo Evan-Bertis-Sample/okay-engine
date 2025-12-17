@@ -7,15 +7,19 @@ add_subdirectory(${OKAY_VENDOR_DIR}/glfw ${CMAKE_CURRENT_BINARY_DIR}/glfw)
 file(GLOB PLATFORM_SRC CONFIGURE_DEPENDS ${CMAKE_CURRENT_LIST_DIR}/*.cpp)
 file(GLOB PLATFORM_HDR CONFIGURE_DEPENDS ${CMAKE_CURRENT_LIST_DIR}/*.hpp)
 
+
 # okay_platform is a real STATIC lib created in platform/CMakeLists.txt
-target_sources(okay_platform PRIVATE ${PLATFORM_SRC} ${PLATFORM_HDR})
+target_sources(okay_platform PRIVATE 
+  ${PLATFORM_SRC} 
+  ${PLATFORM_HDR}
+  glad/gl.h
+)
 
 target_include_directories(okay_platform PRIVATE
   ${CMAKE_CURRENT_LIST_DIR}
   ${OKAY_PARENT_DIR}
   ${OKAY_PARENT_DIR}/include
 )
-
 
 target_compile_definitions(okay_platform PUBLIC __GLFW_SURFACE_H__)
 
