@@ -1,5 +1,5 @@
-#ifndef __OKAY_MODEL_H__
-#define __OKAY_MODEL_H__
+#ifndef __OKAY_MESH_H__
+#define __OKAY_MESH_H__
 
 #include <glm/glm.hpp>
 #include <vector>
@@ -18,8 +18,7 @@ struct OkayMeshData {
     std::vector<std::uint32_t> indices;
 };
 
-
-struct OkayModel {
+struct OkayMesh {
     std::size_t vertexOffset;
     std::size_t vertexCount;
     std::size_t indexOffset;
@@ -28,7 +27,7 @@ struct OkayModel {
 
 class OkayModelView;
 
-class OkayModelBuffer {
+class OkayMeshBuffer {
    private:
     std::vector<glm::vec3> positions;
     std::vector<glm::vec3> normals;
@@ -37,9 +36,9 @@ class OkayModelBuffer {
     std::vector<uint32_t> indices;
 
    public:
-    OkayModel AddModel(const OkayMeshData& model);
+    OkayMesh AddModel(const OkayMeshData& model);
     std::size_t Size() const { return positions.size(); }
-    OkayModelView GetModelView(OkayModel model) const;
+    OkayModelView GetModelView(OkayMesh model) const;
 
     class iterator {
        public:
@@ -47,7 +46,7 @@ class OkayModelBuffer {
         using difference_type = std::ptrdiff_t;
         using iterator_category = std::forward_iterator_tag;
 
-        iterator(const OkayModelBuffer* buffer, std::size_t index)
+        iterator(const OkayMeshBuffer* buffer, std::size_t index)
             : _buffer(buffer), _index(index) {}
 
         OkayVertex operator*() const {
@@ -64,29 +63,28 @@ class OkayModelBuffer {
         bool operator!=(const iterator& other) const { return _index != other._index; }
 
        private:
-        const OkayModelBuffer* _buffer;
+        const OkayMeshBuffer* _buffer;
         std::size_t _index;
     };
 };
 
 class OkayModelView {
    public:
-    OkayModelView(const OkayModelBuffer* buffer, OkayModel model)
-        : _buffer(buffer), _model(model) {}
+    OkayModelView(const OkayMeshBuffer* buffer, OkayMesh model) : _buffer(buffer), _model(model) {}
 
-    OkayModelBuffer::iterator begin() const {
-        return OkayModelBuffer::iterator(_buffer, _model.indexOffset);
+    OkayMeshBuffer::iterator begin() const {
+        return OkayMeshBuffer::iterator(_buffer, _model.indexOffset);
     }
 
-    OkayModelBuffer::iterator end() const {
-        return OkayModelBuffer::iterator(_buffer, _model.indexOffset + _model.indexCount);
+    OkayMeshBuffer::iterator end() const {
+        return OkayMeshBuffer::iterator(_buffer, _model.indexOffset + _model.indexCount);
     }
 
    private:
-    const OkayModelBuffer* _buffer;
-    OkayModel _model;
+    const OkayMeshBuffer* _buffer;
+    OkayMesh _model;
 };
 
 };  // namespace okay
 
-#endif  // __OKAY_MODEL_H__
+#endif  // __OKAY_MESH_H__

@@ -3,4 +3,3 @@
 using namespace okay;
 
 std::array<OkaySystemPool, OkaySystemScope::__COUNT> OkaySystemManager::_pools;
-

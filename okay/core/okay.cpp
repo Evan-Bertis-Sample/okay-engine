@@ -8,7 +8,6 @@ namespace okay {
 OkayEngine Engine;
 
 const std::vector<OkaySystemDescriptor> OkayGame::_REQUIRED_SYSTEMS = {
-    OkaySystemDescriptor::create<OkayLevelManager>()
-};
+    OkaySystemDescriptor::create<OkayLevelManager>()};
 
 }  // namespace okay

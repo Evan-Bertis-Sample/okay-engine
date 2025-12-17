@@ -28,7 +28,7 @@ class IOkaySystem {
     }
 
     template <typename T>
-    static const char *sysName() {
+    static const char* sysName() {
         return typeid(T).name();
     }
 
@@ -63,10 +63,7 @@ struct OkaySystemDescriptor {
     static OkaySystemDescriptor create() {
         static_assert(std::is_base_of<IOkaySystem, T>::value, "T must inherit from OkaySystem");
 
-        return OkaySystemDescriptor(
-            IOkaySystem::sysid<T>(),
-            IOkaySystem::sysName<T>()
-        );
+        return OkaySystemDescriptor(IOkaySystem::sysid<T>(), IOkaySystem::sysName<T>());
     }
 
    private:

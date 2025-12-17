@@ -33,9 +33,7 @@ class OkayLevel {
         return *this;
     }
 
-    OkaySystemPool &getLevelSystemsPool() {
-        return _levelSystems;
-    }
+    OkaySystemPool& getLevelSystemsPool() { return _levelSystems; }
 
    private:
     OkaySystemPool _levelSystems;

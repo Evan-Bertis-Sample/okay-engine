@@ -2,7 +2,7 @@
 #define __OKAY_RENDERER_H__
 
 #include <iostream>
-#include <okay/core/renderer/okay_model.hpp>
+#include <okay/core/renderer/okay_mesh.hpp>
 #include <okay/core/renderer/okay_primitive.hpp>
 #include <okay/core/renderer/okay_surface.hpp>
 #include <okay/core/system/okay_system.hpp>
@@ -47,7 +47,7 @@ class OkayRenderer : public OkaySystem<OkaySystemScope::ENGINE> {
         std::cout << "Okay Renderer initialized." << std::endl;
         _surface->initialize();
 
-        OkayModel model =
+        OkayMesh model =
             _modelBuffer.AddModel(okay::primitives::box().sizeSet({10, 10, 10}).build());
 
         auto vertexShader = glCreateShader(GL_VERTEX_SHADER);
@@ -85,7 +85,6 @@ class OkayRenderer : public OkaySystem<OkaySystemScope::ENGINE> {
         }
         glDeleteShader(vertexShader);
         glDeleteShader(fragmentShader);
-
 
         float vertices[] = {
             -0.5f, -0.5f, 0.0f,  // left
@@ -129,7 +128,8 @@ class OkayRenderer : public OkaySystem<OkaySystemScope::ENGINE> {
 
         // draw our first triangle
         glUseProgram(shaderProgram);
-        glBindVertexArray(VAO); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
+        glBindVertexArray(VAO);  // seeing as we only have a single VAO there's no need to bind it
+                                 // every time, but we'll do so to keep things a bit more organized
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
         _surface->swapBuffers();
@@ -148,7 +148,7 @@ class OkayRenderer : public OkaySystem<OkaySystemScope::ENGINE> {
     OkayRendererSettings _settings;
     std::unique_ptr<Surface> _surface;
 
-    OkayModelBuffer _modelBuffer;
+    OkayMeshBuffer _modelBuffer;
 };
 
 }  // namespace okay

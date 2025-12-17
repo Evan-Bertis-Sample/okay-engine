@@ -60,6 +60,10 @@ class Result {
     Result(bool error, std::string errorMessage) : _error(error), _errorMessage(errorMessage) {}
 };
 
+struct NoneType {};
+
+typedef Result<NoneType> Failable;
+
 }  // namespace okay
 
 #endif  // __RESULT_H__

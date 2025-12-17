@@ -1,9 +1,9 @@
-#include "okay_model.hpp"
+#include "okay_mesh.hpp"
 
 using namespace okay;
 
-OkayModel OkayModelBuffer::AddModel(const OkayMeshData& mesh) {
-    OkayModel m{};
+OkayMesh OkayMeshBuffer::AddModel(const OkayMeshData& mesh) {
+    OkayMesh m{};
     m.vertexOffset = positions.size();
     m.vertexCount = mesh.vertices.size();
 
@@ -36,6 +36,6 @@ OkayModel OkayModelBuffer::AddModel(const OkayMeshData& mesh) {
     return m;
 }
 
-OkayModelView OkayModelBuffer::GetModelView(OkayModel model) const {
+OkayModelView OkayMeshBuffer::GetModelView(OkayMesh model) const {
     return OkayModelView(this, model);
 }

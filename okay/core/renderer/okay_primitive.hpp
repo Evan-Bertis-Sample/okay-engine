@@ -5,7 +5,7 @@
 #include <functional>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
-#include <okay/core/renderer/okay_model.hpp>
+#include <okay/core/renderer/okay_mesh.hpp>
 #include <type_traits>
 #include <utility>
 
@@ -15,10 +15,10 @@ template <typename BuilderT>
 using VertexTransformation =
     std::function<okay::OkayVertex(const okay::OkayVertex&, const BuilderT&)>;
 
-#define OKAY_PRIM_FIELD(FieldName)                     \
+#define OKAY_PRIM_FIELD(FieldName)                    \
     auto& FieldName##Set(decltype(FieldName) value) { \
-        this->FieldName = std::move(value);            \
-        return *this;                                  \
+        this->FieldName = std::move(value);           \
+        return *this;                                 \
     }
 
 struct Placement {

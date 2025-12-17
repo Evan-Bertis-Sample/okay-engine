@@ -27,7 +27,11 @@ struct OkayAsset {
 
 template <typename T>
 struct OkayAssetLoader {
-    static Result<T> loadAsset(const std::ifstream& file);
+    static Result<T> loadAsset(const std::filesystem::path& path, std::istream& file) {
+        static_assert(sizeof(T) != 0,
+                      "No OkayAssetLoader<T> specialization found for this asset type.");
+        return Result<T>::errorResult("No loader");
+    }
 };
 
 template <typename T>
@@ -79,7 +83,7 @@ class OkayAssetManager : public OkaySystem<OkaySystemScope::ENGINE> {
     template <typename T>
     LoadHandle<T> loadAssetAsync(const Load<T>& load) {
         std::ifstream assetFile = load.data();
-        Result<T> res = OkayAssetLoader<T>::loadAsset(assetFile);
+        Result<T> res = OkayAssetLoader<T>::loadAsset(load.assetPath, assetFile);
 
         if (res.isError()) {
             auto handleAsset = Result<OkayAsset<T>>::errorResult(res.error());
@@ -98,7 +102,7 @@ class OkayAssetManager : public OkaySystem<OkaySystemScope::ENGINE> {
     template <typename T>
     Result<OkayAsset<T>> loadAssetSync(const Load<T>& load) {
         std::ifstream assetFile = load.data();
-        Result<T> res = OkayAssetLoader<T>::loadAsset(assetFile);
+        Result<T> res = OkayAssetLoader<T>::loadAsset(load.assetPath, assetFile);
 
         if (res.isError()) {
             return Result<OkayAsset<T>>::errorResult(res.error());

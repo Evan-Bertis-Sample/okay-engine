@@ -264,7 +264,6 @@ okay::OkayMeshData UVSphereBuilder::build(const VertexTransformation<UVSphereBui
     return out;
 }
 
-
 struct EdgeKey {
     std::uint32_t a, b;
     bool operator==(const EdgeKey& o) const { return a == o.a && b == o.b; }
@@ -356,7 +355,6 @@ okay::OkayMeshData IcoSphereBuilder::build(const VertexTransformation<IcoSphereB
     return out;
 }
 
-
 okay::OkayMeshData CylinderBuilder::build(const VertexTransformation<CylinderBuilder>& xf) const {
     okay::OkayMeshData out;
 
@@ -364,8 +362,7 @@ okay::OkayMeshData CylinderBuilder::build(const VertexTransformation<CylinderBui
     const int seamColumns = radialSegments + 1;
     const float halfHeight = height * 0.5f;
 
-    out.vertices.reserve(static_cast<size_t>(seamColumns * 2) +
-                         (caps ? (2 + seamColumns * 2) : 0));
+    out.vertices.reserve(static_cast<size_t>(seamColumns * 2) + (caps ? (2 + seamColumns * 2) : 0));
     out.indices.reserve(static_cast<size_t>(radialSegments * 6) +
                         (caps ? static_cast<size_t>(radialSegments * 6) : 0));
 
@@ -481,7 +478,6 @@ okay::OkayMeshData CylinderBuilder::build(const VertexTransformation<CylinderBui
 
     return out;
 }
-
 
 okay::OkayMeshData ConeBuilder::build(const VertexTransformation<ConeBuilder>& xf) const {
     okay::OkayMeshData out;
@@ -696,4 +692,4 @@ okay::OkayMeshData CapsuleBuilder::build(const VertexTransformation<CapsuleBuild
     return out;
 }
 
-}
+}  // namespace okay::primitives
