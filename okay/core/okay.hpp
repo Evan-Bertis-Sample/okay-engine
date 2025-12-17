@@ -1,10 +1,12 @@
 #ifndef __OKAY_H__
 #define __OKAY_H__
 
-#include <functional>
-#include <iostream>
+#include <glad/gl.h>
 #include <okay/core/system/okay_system.hpp>
 #include <okay/core/logging/okay_logger.hpp>
+
+#include <functional>
+#include <iostream>
 #include <string>
 
 namespace okay {

@@ -43,6 +43,10 @@ class OkayRenderer : public OkaySystem<OkaySystemScope::ENGINE> {
 
         OkayModel model =
             _modelBuffer.AddModel(okay::primitives::box().sizeSet({10, 10, 10}).build());
+
+        auto vertexShader = glCreateShader(GL_VERTEX_SHADER);
+        glShaderSource(vertexShader, 1, &VertexSrcSimple, NULL);
+        glCompileShader(vertexShader);
     }
 
     void postInitialize() override {

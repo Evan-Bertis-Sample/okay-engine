@@ -99,9 +99,11 @@ add_subdirectory(${OKAY_VENDOR_DIR}/glm)
 # set OKAY_PLATFORM to override autodetect (e.g., -DOKAY_PLATFORM=windows)
 add_subdirectory(${OKAY_ENGINE_DIR}/platform)
 
-# allow glm to be included in the game
+# allow glm & glad to be included in the game
 target_include_directories(okay
   PUBLIC ${OKAY_VENDOR_DIR}/glm
+  # for glad/gl.h
+  PUBLIC ${OKAY_VENDOR_DIR}
 )
 
 # link common libs and platform bundle into the engine

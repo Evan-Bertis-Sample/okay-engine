@@ -12,13 +12,13 @@ file(GLOB PLATFORM_HDR CONFIGURE_DEPENDS ${CMAKE_CURRENT_LIST_DIR}/*.hpp)
 target_sources(okay_platform PRIVATE 
   ${PLATFORM_SRC} 
   ${PLATFORM_HDR}
-  glad/gl.h
 )
 
 target_include_directories(okay_platform PRIVATE
   ${CMAKE_CURRENT_LIST_DIR}
   ${OKAY_PARENT_DIR}
   ${OKAY_PARENT_DIR}/include
+  ${OKAY_VENDOR_DIR}
 )
 
 target_compile_definitions(okay_platform PUBLIC __GLFW_SURFACE_H__)
