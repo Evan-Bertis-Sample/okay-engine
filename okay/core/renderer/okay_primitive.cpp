@@ -15,8 +15,8 @@ static inline okay::OkayVertex applyTransforms(const BuilderT& builder,
                                                okay::OkayVertex v) {
     const Placement& placement = builder.transform();
 
-    v.Position = placement.Rotation * v.Position + placement.Center;
-    v.Normal = glm::normalize(placement.Rotation * v.Normal);
+    v.Position = placement.rotation * v.Position + placement.center;
+    v.Normal = glm::normalize(placement.rotation * v.Normal);
 
     if (xf) v = xf(v, builder);
     return v;
@@ -24,11 +24,11 @@ static inline okay::OkayVertex applyTransforms(const BuilderT& builder,
 
 okay::OkayMeshData RectBuilder::build(const VertexTransformation<RectBuilder>& xf) const {
     okay::OkayMeshData out;
-    out.Vertices.reserve(TwoSided ? 8 : 4);
-    out.Indices.reserve(TwoSided ? 12 : 6);
+    out.Vertices.reserve(twoSided ? 8 : 4);
+    out.Indices.reserve(twoSided ? 12 : 6);
 
-    const float halfWidth = Size.x * 0.5f;
-    const float halfHeight = Size.y * 0.5f;
+    const float halfWidth = size.x * 0.5f;
+    const float halfHeight = size.y * 0.5f;
 
     const auto PushVertex = [&](glm::vec3 position, glm::vec3 normal,
                                 glm::vec2 uv) -> std::uint32_t {
@@ -50,7 +50,7 @@ okay::OkayMeshData RectBuilder::build(const VertexTransformation<RectBuilder>& x
 
     out.Indices.insert(out.Indices.end(), {0, 1, 2, 0, 2, 3});
 
-    if (TwoSided) {
+    if (twoSided) {
         const std::uint32_t backBase = 4;
 
         // Duplicate vertices with flipped normals
@@ -73,17 +73,17 @@ okay::OkayMeshData RectBuilder::build(const VertexTransformation<RectBuilder>& x
 okay::OkayMeshData PlaneBuilder::build(const VertexTransformation<PlaneBuilder>& xf) const {
     okay::OkayMeshData out;
 
-    const int segmentsX = std::max(1, Segments.x);
-    const int segmentsY = std::max(1, Segments.y);
+    const int segmentsX = std::max(1, segments.x);
+    const int segmentsY = std::max(1, segments.y);
 
     const int vertexCountX = segmentsX + 1;
     const int vertexCountY = segmentsY + 1;
 
-    out.Vertices.reserve(static_cast<size_t>(vertexCountX * vertexCountY) * (TwoSided ? 2 : 1));
-    out.Indices.reserve(static_cast<size_t>(segmentsX * segmentsY) * 6 * (TwoSided ? 2 : 1));
+    out.Vertices.reserve(static_cast<size_t>(vertexCountX * vertexCountY) * (twoSided ? 2 : 1));
+    out.Indices.reserve(static_cast<size_t>(segmentsX * segmentsY) * 6 * (twoSided ? 2 : 1));
 
-    const float halfWidth = Size.x * 0.5f;
-    const float halfHeight = Size.y * 0.5f;
+    const float halfWidth = size.x * 0.5f;
+    const float halfHeight = size.y * 0.5f;
 
     const auto EmitGrid = [&](float normalSign) {
         const glm::vec3 surfaceNormal = {0.0f, 0.0f, normalSign};
@@ -91,11 +91,11 @@ okay::OkayMeshData PlaneBuilder::build(const VertexTransformation<PlaneBuilder>&
 
         for (int y = 0; y < vertexCountY; ++y) {
             const float v = static_cast<float>(y) / static_cast<float>(segmentsY);
-            const float localY = -halfHeight + v * Size.y;
+            const float localY = -halfHeight + v * size.y;
 
             for (int x = 0; x < vertexCountX; ++x) {
                 const float u = static_cast<float>(x) / static_cast<float>(segmentsX);
-                const float localX = -halfWidth + u * Size.x;
+                const float localX = -halfWidth + u * size.x;
 
                 out.Vertices.push_back(applyTransforms(*this, xf,
                                                        okay::OkayVertex{
@@ -127,7 +127,7 @@ okay::OkayMeshData PlaneBuilder::build(const VertexTransformation<PlaneBuilder>&
     };
 
     EmitGrid(+1.0f);
-    if (TwoSided) EmitGrid(-1.0f);
+    if (twoSided) EmitGrid(-1.0f);
 
     return out;
 }
@@ -142,7 +142,7 @@ okay::OkayMeshData BoxBuilder::build(const VertexTransformation<BoxBuilder>& xf)
     out.Vertices.reserve(24);
     out.Indices.reserve(36);
 
-    const glm::vec3 halfExtents = Size * 0.5f;
+    const glm::vec3 halfExtents = size * 0.5f;
 
     const BoxFaceDefinition faces[6] = {
         // +Z
@@ -210,8 +210,8 @@ okay::OkayMeshData BoxBuilder::build(const VertexTransformation<BoxBuilder>& xf)
 okay::OkayMeshData UVSphereBuilder::build(const VertexTransformation<UVSphereBuilder>& xf) const {
     okay::OkayMeshData out;
 
-    const int longitudeSegments = std::max(3, Segments);
-    const int latitudeRings = std::max(2, Rings);
+    const int longitudeSegments = std::max(3, segments);
+    const int latitudeRings = std::max(2, rings);
 
     const int vertexColumns = longitudeSegments + 1;  // seam duplicate
     const int vertexRows = latitudeRings + 1;         // include poles
@@ -235,7 +235,7 @@ okay::OkayMeshData UVSphereBuilder::build(const VertexTransformation<UVSphereBui
             const float cosTheta = std::cos(theta);
 
             const glm::vec3 unitNormal = {cosTheta * sinPhi, sinTheta * sinPhi, cosPhi};
-            const glm::vec3 localPosition = unitNormal * Radius;
+            const glm::vec3 localPosition = unitNormal * radius;
 
             out.Vertices.push_back(applyTransforms(*this, xf,
                                                    okay::OkayVertex{
@@ -297,7 +297,7 @@ static std::uint32_t getOrCreateMidpointVertex(
 okay::OkayMeshData IcoSphereBuilder::build(const VertexTransformation<IcoSphereBuilder>& xf) const {
     okay::OkayMeshData out;
 
-    const int subdivisions = std::max(0, Subdivisions);
+    const int subdivisions = std::max(0, subdivisions);
 
     std::vector<glm::vec3> unitPositions;
     std::vector<std::uint32_t> triangles;
@@ -347,7 +347,7 @@ okay::OkayMeshData IcoSphereBuilder::build(const VertexTransformation<IcoSphereB
 
         out.Vertices.push_back(applyTransforms(*this, xf,
                                                okay::OkayVertex{
-                                                   .Position = unitNormal * Radius,
+                                                   .Position = unitNormal * radius,
                                                    .Normal = unitNormal,
                                                    .UV = {u, 1.0f - v},
                                                }));
@@ -360,14 +360,14 @@ okay::OkayMeshData IcoSphereBuilder::build(const VertexTransformation<IcoSphereB
 okay::OkayMeshData CylinderBuilder::build(const VertexTransformation<CylinderBuilder>& xf) const {
     okay::OkayMeshData out;
 
-    const int radialSegments = std::max(3, Segments);
+    const int radialSegments = std::max(3, segments);
     const int seamColumns = radialSegments + 1;
-    const float halfHeight = Height * 0.5f;
+    const float halfHeight = height * 0.5f;
 
     out.Vertices.reserve(static_cast<size_t>(seamColumns * 2) +
-                         (Caps ? (2 + seamColumns * 2) : 0));
+                         (caps ? (2 + seamColumns * 2) : 0));
     out.Indices.reserve(static_cast<size_t>(radialSegments * 6) +
-                        (Caps ? static_cast<size_t>(radialSegments * 6) : 0));
+                        (caps ? static_cast<size_t>(radialSegments * 6) : 0));
 
     // Side
     for (int col = 0; col < seamColumns; ++col) {
@@ -378,8 +378,8 @@ okay::OkayMeshData CylinderBuilder::build(const VertexTransformation<CylinderBui
         const float sinTheta = std::sin(theta);
 
         const glm::vec3 radialNormal = {cosTheta, sinTheta, 0.0f};
-        const glm::vec3 bottomPos = radialNormal * Radius + glm::vec3(0, 0, -halfHeight);
-        const glm::vec3 topPos = radialNormal * Radius + glm::vec3(0, 0, +halfHeight);
+        const glm::vec3 bottomPos = radialNormal * radius + glm::vec3(0, 0, -halfHeight);
+        const glm::vec3 topPos = radialNormal * radius + glm::vec3(0, 0, +halfHeight);
 
         out.Vertices.push_back(applyTransforms(*this, xf,
                                                okay::OkayVertex{
@@ -409,7 +409,7 @@ okay::OkayMeshData CylinderBuilder::build(const VertexTransformation<CylinderBui
         out.Indices.insert(out.Indices.end(), {i00, i10, i11, i00, i11, i01});
     }
 
-    if (!Caps) return out;
+    if (!caps) return out;
 
     // Caps
     const std::uint32_t bottomCenterIndex = static_cast<std::uint32_t>(out.Vertices.size());
@@ -441,7 +441,7 @@ okay::OkayMeshData CylinderBuilder::build(const VertexTransformation<CylinderBui
             *this, xf,
             okay::OkayVertex{
                 .Position =
-                    glm::vec3(cosTheta, sinTheta, 0.0f) * Radius + glm::vec3(0, 0, -halfHeight),
+                    glm::vec3(cosTheta, sinTheta, 0.0f) * radius + glm::vec3(0, 0, -halfHeight),
                 .Normal = {0, 0, -1},
                 .UV = {0.5f + cosTheta * 0.5f, 0.5f + sinTheta * 0.5f},
             }));
@@ -460,7 +460,7 @@ okay::OkayMeshData CylinderBuilder::build(const VertexTransformation<CylinderBui
             *this, xf,
             okay::OkayVertex{
                 .Position =
-                    glm::vec3(cosTheta, sinTheta, 0.0f) * Radius + glm::vec3(0, 0, +halfHeight),
+                    glm::vec3(cosTheta, sinTheta, 0.0f) * radius + glm::vec3(0, 0, +halfHeight),
                 .Normal = {0, 0, +1},
                 .UV = {0.5f + cosTheta * 0.5f, 0.5f + sinTheta * 0.5f},
             }));
@@ -486,11 +486,11 @@ okay::OkayMeshData CylinderBuilder::build(const VertexTransformation<CylinderBui
 okay::OkayMeshData ConeBuilder::build(const VertexTransformation<ConeBuilder>& xf) const {
     okay::OkayMeshData out;
 
-    const int radialSegments = std::max(3, Segments);
+    const int radialSegments = std::max(3, segments);
     const int seamColumns = radialSegments + 1;
-    const float halfHeight = Height * 0.5f;
+    const float halfHeight = height * 0.5f;
 
-    out.Vertices.reserve(static_cast<size_t>(seamColumns + 1) + (Cap ? (seamColumns + 1) : 0));
+    out.Vertices.reserve(static_cast<size_t>(seamColumns + 1) + (cap ? (seamColumns + 1) : 0));
     out.Indices.reserve(static_cast<size_t>(radialSegments * 3 * 2));
 
     // Side ring vertices
@@ -502,9 +502,9 @@ okay::OkayMeshData ConeBuilder::build(const VertexTransformation<ConeBuilder>& x
         const float sinTheta = std::sin(theta);
 
         const glm::vec3 ringPos =
-            glm::vec3(cosTheta, sinTheta, 0.0f) * Radius + glm::vec3(0, 0, -halfHeight);
+            glm::vec3(cosTheta, sinTheta, 0.0f) * radius + glm::vec3(0, 0, -halfHeight);
         const glm::vec3 approxNormal =
-            glm::normalize(glm::vec3(cosTheta, sinTheta, Radius / Height));
+            glm::normalize(glm::vec3(cosTheta, sinTheta, radius / height));
 
         out.Vertices.push_back(applyTransforms(*this, xf,
                                                okay::OkayVertex{
@@ -530,7 +530,7 @@ okay::OkayMeshData ConeBuilder::build(const VertexTransformation<ConeBuilder>& x
         out.Indices.insert(out.Indices.end(), {a, b, apexIndex});
     }
 
-    if (!Cap) return out;
+    if (!cap) return out;
 
     // Cap center
     const std::uint32_t capCenterIndex = static_cast<std::uint32_t>(out.Vertices.size());
@@ -554,7 +554,7 @@ okay::OkayMeshData ConeBuilder::build(const VertexTransformation<ConeBuilder>& x
             *this, xf,
             okay::OkayVertex{
                 .Position =
-                    glm::vec3(cosTheta, sinTheta, 0.0f) * Radius + glm::vec3(0, 0, -halfHeight),
+                    glm::vec3(cosTheta, sinTheta, 0.0f) * radius + glm::vec3(0, 0, -halfHeight),
                 .Normal = {0, 0, -1},
                 .UV = {0.5f + cosTheta * 0.5f, 0.5f + sinTheta * 0.5f},
             }));
@@ -572,14 +572,14 @@ okay::OkayMeshData ConeBuilder::build(const VertexTransformation<ConeBuilder>& x
 okay::OkayMeshData CapsuleBuilder::build(const VertexTransformation<CapsuleBuilder>& xf) const {
     okay::OkayMeshData out;
 
-    const int radialSegments = std::max(3, Segments);
-    const int hemisphereRings = std::max(2, Rings);
+    const int radialSegments = std::max(3, segments);
+    const int hemisphereRings = std::max(2, rings);
 
     const int seamColumns = radialSegments + 1;
     const int hemisphereRows = hemisphereRings + 1;
 
-    const float radius = Radius;
-    const float halfTotalHeight = Height * 0.5f;
+    const float radius = radius;
+    const float halfTotalHeight = height * 0.5f;
     const float halfCylinderHeight = std::max(0.0f, halfTotalHeight - radius);
 
     // Cylinder sides

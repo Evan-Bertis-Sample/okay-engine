@@ -16,21 +16,21 @@ using VertexTransformation =
     std::function<okay::OkayVertex(const okay::OkayVertex&, const BuilderT&)>;
 
 #define OKAY_PRIM_FIELD(FieldName)                     \
-    auto& with##FieldName(decltype(FieldName) value) { \
+    auto& FieldName##Set(decltype(FieldName) value) { \
         this->FieldName = std::move(value);            \
         return *this;                                  \
     }
 
 struct Placement {
-    glm::vec3 Center{0.0f};
-    glm::quat Rotation{1.0f, 0.0f, 0.0f, 0.0f};  // identity
+    glm::vec3 center{0.0f};
+    glm::quat rotation{1.0f, 0.0f, 0.0f, 0.0f};  // identity
 
     Placement& translate(const glm::vec3& d) {
-        Center += d;
+        center += d;
         return *this;
     }
     Placement& rotate(const glm::quat& q) {
-        Rotation = q * Rotation;
+        rotation = q * rotation;
         return *this;
     }
 };
@@ -39,11 +39,11 @@ template <class Derived>
 class PlacementMixin {
    public:
     Derived& withCenter(const glm::vec3& c) {
-        _transform.Center = c;
+        _transform.center = c;
         return self();
     }
     Derived& withRotation(const glm::quat& q) {
-        _transform.Rotation = q;
+        _transform.rotation = q;
         return self();
     }
     Derived& translate(const glm::vec3& d) {
@@ -66,11 +66,11 @@ class PlacementMixin {
 
 class RectBuilder final : public PlacementMixin<RectBuilder> {
    public:
-    glm::vec2 Size{1.0f, 1.0f};
-    bool TwoSided{false};
+    glm::vec2 size{1.0f, 1.0f};
+    bool twoSided{false};
 
-    OKAY_PRIM_FIELD(Size)
-    OKAY_PRIM_FIELD(TwoSided)
+    OKAY_PRIM_FIELD(size)
+    OKAY_PRIM_FIELD(twoSided)
 
     okay::OkayMeshData build() const { return build(nullptr); }
     okay::OkayMeshData build(const VertexTransformation<RectBuilder>& xf) const;
@@ -78,13 +78,13 @@ class RectBuilder final : public PlacementMixin<RectBuilder> {
 
 class PlaneBuilder final : public PlacementMixin<PlaneBuilder> {
    public:
-    glm::vec2 Size{1.0f, 1.0f};
-    glm::ivec2 Segments{1, 1};
-    bool TwoSided{false};
+    glm::vec2 size{1.0f, 1.0f};
+    glm::ivec2 segments{1, 1};
+    bool twoSided{false};
 
-    OKAY_PRIM_FIELD(Size)
-    OKAY_PRIM_FIELD(Segments)
-    OKAY_PRIM_FIELD(TwoSided)
+    OKAY_PRIM_FIELD(size)
+    OKAY_PRIM_FIELD(segments)
+    OKAY_PRIM_FIELD(twoSided)
 
     okay::OkayMeshData build() const { return build(nullptr); }
     okay::OkayMeshData build(const VertexTransformation<PlaneBuilder>& xf) const;
@@ -92,9 +92,9 @@ class PlaneBuilder final : public PlacementMixin<PlaneBuilder> {
 
 class BoxBuilder final : public PlacementMixin<BoxBuilder> {
    public:
-    glm::vec3 Size{1.0f, 1.0f, 1.0f};
+    glm::vec3 size{1.0f, 1.0f, 1.0f};
 
-    OKAY_PRIM_FIELD(Size)
+    OKAY_PRIM_FIELD(size)
 
     okay::OkayMeshData build() const { return build(nullptr); }
     okay::OkayMeshData build(const VertexTransformation<BoxBuilder>& xf) const;
@@ -102,15 +102,15 @@ class BoxBuilder final : public PlacementMixin<BoxBuilder> {
 
 class UVSphereBuilder final : public PlacementMixin<UVSphereBuilder> {
    public:
-    float Radius{0.5f};
-    int Segments{32};
-    int Rings{16};
-    bool GenerateTangents{false};
+    float radius{0.5f};
+    int segments{32};
+    int rings{16};
+    bool generateTangents{false};
 
-    OKAY_PRIM_FIELD(Radius)
-    OKAY_PRIM_FIELD(Segments)
-    OKAY_PRIM_FIELD(Rings)
-    OKAY_PRIM_FIELD(GenerateTangents)
+    OKAY_PRIM_FIELD(radius)
+    OKAY_PRIM_FIELD(segments)
+    OKAY_PRIM_FIELD(rings)
+    OKAY_PRIM_FIELD(generateTangents)
 
     okay::OkayMeshData build() const { return build(nullptr); }
     okay::OkayMeshData build(const VertexTransformation<UVSphereBuilder>& xf) const;
@@ -118,11 +118,11 @@ class UVSphereBuilder final : public PlacementMixin<UVSphereBuilder> {
 
 class IcoSphereBuilder final : public PlacementMixin<IcoSphereBuilder> {
    public:
-    float Radius{0.5f};
-    int Subdivisions{2};
+    float radius{0.5f};
+    int subdivisions{2};
 
-    OKAY_PRIM_FIELD(Radius)
-    OKAY_PRIM_FIELD(Subdivisions)
+    OKAY_PRIM_FIELD(radius)
+    OKAY_PRIM_FIELD(subdivisions)
 
     okay::OkayMeshData build() const { return build(nullptr); }
     okay::OkayMeshData build(const VertexTransformation<IcoSphereBuilder>& xf) const;
@@ -130,15 +130,15 @@ class IcoSphereBuilder final : public PlacementMixin<IcoSphereBuilder> {
 
 class CylinderBuilder final : public PlacementMixin<CylinderBuilder> {
    public:
-    float Radius{0.5f};
-    float Height{1.0f};
-    int Segments{32};
-    bool Caps{true};
+    float radius{0.5f};
+    float height{1.0f};
+    int segments{32};
+    bool caps{true};
 
-    OKAY_PRIM_FIELD(Radius)
-    OKAY_PRIM_FIELD(Height)
-    OKAY_PRIM_FIELD(Segments)
-    OKAY_PRIM_FIELD(Caps)
+    OKAY_PRIM_FIELD(radius)
+    OKAY_PRIM_FIELD(height)
+    OKAY_PRIM_FIELD(segments)
+    OKAY_PRIM_FIELD(caps)
 
     okay::OkayMeshData build() const { return build(nullptr); }
     okay::OkayMeshData build(const VertexTransformation<CylinderBuilder>& xf) const;
@@ -146,15 +146,15 @@ class CylinderBuilder final : public PlacementMixin<CylinderBuilder> {
 
 class ConeBuilder final : public PlacementMixin<ConeBuilder> {
    public:
-    float Radius{0.5f};
-    float Height{1.0f};
-    int Segments{32};
-    bool Cap{true};
+    float radius{0.5f};
+    float height{1.0f};
+    int segments{32};
+    bool cap{true};
 
-    OKAY_PRIM_FIELD(Radius)
-    OKAY_PRIM_FIELD(Height)
-    OKAY_PRIM_FIELD(Segments)
-    OKAY_PRIM_FIELD(Cap)
+    OKAY_PRIM_FIELD(radius)
+    OKAY_PRIM_FIELD(height)
+    OKAY_PRIM_FIELD(segments)
+    OKAY_PRIM_FIELD(cap)
 
     okay::OkayMeshData build() const { return build(nullptr); }
     okay::OkayMeshData build(const VertexTransformation<ConeBuilder>& xf) const;
@@ -162,15 +162,15 @@ class ConeBuilder final : public PlacementMixin<ConeBuilder> {
 
 class CapsuleBuilder final : public PlacementMixin<CapsuleBuilder> {
    public:
-    float Radius{0.5f};
-    float Height{1.5f};
-    int Segments{32};
-    int Rings{8};
+    float radius{0.5f};
+    float height{1.5f};
+    int segments{32};
+    int rings{8};
 
-    OKAY_PRIM_FIELD(Radius)
-    OKAY_PRIM_FIELD(Height)
-    OKAY_PRIM_FIELD(Segments)
-    OKAY_PRIM_FIELD(Rings)
+    OKAY_PRIM_FIELD(radius)
+    OKAY_PRIM_FIELD(height)
+    OKAY_PRIM_FIELD(segments)
+    OKAY_PRIM_FIELD(rings)
 
     okay::OkayMeshData build() const { return build(nullptr); }
     okay::OkayMeshData build(const VertexTransformation<CapsuleBuilder>& xf) const;

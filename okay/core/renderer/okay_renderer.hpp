@@ -41,12 +41,8 @@ class OkayRenderer : public OkaySystem<OkaySystemScope::ENGINE> {
         std::cout << "Okay Renderer initialized." << std::endl;
         _surface->initialize();
 
-        OkayModel model = _modelBuffer.AddModel(
-            okay::primitives::box()
-                .withCenter({10, 10, 10})
-                .withSize({10, 10, 10})
-                .build()
-        );
+        OkayModel model =
+            _modelBuffer.AddModel(okay::primitives::box().sizeSet({10, 10, 10}).build());
     }
 
     void postInitialize() override {
