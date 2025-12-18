@@ -31,7 +31,7 @@ class OkayAssetIO {
     virtual ~OkayAssetIO() = default;
 
     virtual Result<std::unique_ptr<std::istream>> open(const std::filesystem::path& path) = 0;
-    virtual Result<std::size_t> fileSize(const std::filesystem::path& path) = 0;
+    virtual Result<std::size_t> fileSize(const std::filesystem::path& path) const = 0;
 };
 
 class FilesystemAssetIO final : public OkayAssetIO {
@@ -45,7 +45,7 @@ class FilesystemAssetIO final : public OkayAssetIO {
         return Result<std::unique_ptr<std::istream>>::ok(std::move(f));
     }
 
-    Result<std::size_t> fileSize(const std::filesystem::path& path) override {
+    Result<std::size_t> fileSize(const std::filesystem::path& path) const override {
         std::error_code ec;
         auto s = std::filesystem::file_size(path, ec);
         if (ec) {
@@ -122,7 +122,7 @@ class OkayAssetManager : public OkaySystem<OkaySystemScope::ENGINE> {
 
             return LoadHandle<T>{.state = LoadHandle<T>::State::FAILED, .asset = handleAsset};
         } else {
-            OkayAsset<T> asset = createAsset(load.assetPath, res.value());
+            OkayAsset<T> asset = createAsset(load.assetPath, res.value(), load.assetIO);
             auto handleAsset = Result<OkayAsset<T>>::ok(asset);
             if (load.onCompleteCB) load.onCompleteCB(asset);
 

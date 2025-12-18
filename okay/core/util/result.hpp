@@ -1,68 +1,95 @@
 #ifndef __RESULT_H__
 #define __RESULT_H__
 
-#include <sstream>
-#include <vector>
+#include <optional>
 #include <string>
-#include <initializer_list>
-#include <functional>
+#include <type_traits>
+#include <utility>
 
 namespace okay {
 
-/// @brief A class reprsenting the result of a function, used for operations where you can fail, and
-/// care about an error message
-/// @tparam T The type of the the value
+template <typename>
+inline constexpr bool dependent_false_v = false;
+
+/// @brief A class representing the result of a function: either a value (ok) or an error message.
 template <typename T>
 class Result {
-   public:
-    /// @brief Create a result with some value -- no error
-    /// @param value The value
-    /// @return The result with a value
-    static Result<T> ok(T value) { return Result<T>(value); }
+public:
+    using ValueType = T;
 
-    /// @brief Create a result with no value, but with an error message
-    /// @param errorMessage The error message
-    /// @return The result with an error message
-    static Result<T> errorResult(std::string errorMessage) { return Result<T>(true, errorMessage); }
+    template <typename U = T>
+    static Result<T> ok(U&& value) {
+        return Result<T>(std::in_place, std::forward<U>(value));
+    }
 
-    /// @brief Ctor
-    Result() : _error(true) {}
+    static Result<T> errorResult(std::string errorMessage) {
+        return Result<T>(std::move(errorMessage));
+    }
 
-    /// @brief Cast to bool
-    operator bool() const { return !_error; }
+    Result() : _value(std::nullopt), _errorMessage("") {}
 
-    /// @brief Equals operator
-    Result<T> operator=(const Result<T>& other) {
+    operator bool() const { return _value.has_value(); }
+    bool isError() const { return !_value.has_value(); }
+    const std::string& error() const { return _errorMessage; }
+
+    /// @brief Copy the value out (only available when T is copyable).
+    T value() const requires(std::is_copy_constructible_v<T>) {
+        return *_value;
+    }
+
+    /// @brief If you call value() on a move-only T, you get a clear compile-time error.
+    T value() const requires(!std::is_copy_constructible_v<T>) {
+        static_assert(dependent_false_v<T>,
+                      "Result<T>::value() requires T to be copyable. "
+                      "For move-only T (e.g., std::unique_ptr), use valueRef() or take().");
+        return T{};
+    }
+
+    T& valueRef() { return *_value; }
+    const T& valueRef() const { return *_value; }
+
+    /// @brief Move the value out. After take(), Result becomes an error (empty message).
+    T take() {
+        T out = std::move(*_value);
+        _value.reset();
+        _errorMessage.clear();
+        return out;
+    }
+
+    // Nice ergonomics
+    T& operator*() { return valueRef(); }
+    const T& operator*() const { return valueRef(); }
+    T* operator->() { return &valueRef(); }
+    const T* operator->() const { return &valueRef(); }
+
+    // Copy only if T is copyable
+    Result(const Result& other) requires(std::is_copy_constructible_v<T>)
+        : _value(other._value), _errorMessage(other._errorMessage) {}
+
+    Result& operator=(const Result& other) requires(std::is_copy_assignable_v<T>) {
+        if (this == &other) return *this;
         _value = other._value;
-        _error = other._error;
         _errorMessage = other._errorMessage;
         return *this;
     }
 
-    /// @brief Get the value in the result
-    /// @return The value in the result -- could be garbage if it is an error
-    T value() const { return _value; }
+    Result(Result&&) noexcept = default;
+    Result& operator=(Result&&) noexcept = default;
 
-    /// @brief Checks if the result is an error
-    /// @return If the result is an error
-    bool isError() const { return _error; }
-
-    /// @brief Get the error message
-    /// @return The error message
-    std::string error() const { return _errorMessage; }
-
-   private:
-    T _value;
-    bool _error;
+private:
+    std::optional<T> _value;
     std::string _errorMessage;
 
-    Result(T value) : _value(value), _error(false), _errorMessage("") {}
-    Result(bool error, std::string errorMessage) : _error(error), _errorMessage(errorMessage) {}
+    template <typename... Args>
+    explicit Result(std::in_place_t, Args&&... args)
+        : _value(std::in_place, std::forward<Args>(args)...), _errorMessage("") {}
+
+    explicit Result(std::string errorMessage)
+        : _value(std::nullopt), _errorMessage(std::move(errorMessage)) {}
 };
 
 struct NoneType {};
-
-typedef Result<NoneType> Failable;
+using Failable = Result<NoneType>;
 
 }  // namespace okay
 

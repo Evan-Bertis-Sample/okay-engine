@@ -30,7 +30,7 @@ Result<OkayMeshData> OkayAssetLoader<OkayMeshData>::loadAsset(
             "Failed to open mesh file: " + path.string() + ": " + fileRes.error());
     }
     
-    std::unique_ptr<std::istream> file = fileRes.value();
+    std::unique_ptr<std::istream> file = fileRes.take();
 
     return loader->Load(path, *file);
 }
