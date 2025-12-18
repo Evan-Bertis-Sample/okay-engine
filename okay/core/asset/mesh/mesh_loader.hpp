@@ -18,7 +18,7 @@ class MeshLoader {
 
 template <>
 struct OkayAssetLoader<OkayMeshData> {
-    static Result<OkayMeshData> loadAsset(const std::filesystem::path& path, std::istream& file);
+    static Result<OkayMeshData> loadAsset(const std::filesystem::path& path, OkayAssetIO& assetIO);
 };
 
 }  // namespace okay
