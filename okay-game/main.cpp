@@ -2,6 +2,7 @@
 #include <okay/core/renderer/okay_renderer.hpp>
 #include <okay/core/renderer/okay_surface.hpp>
 #include <okay/core/level/okay_level_manager.hpp>
+#include <okay/core/asset/okay_asset.hpp>
 
 static void __gameInitialize();
 static void __gameUpdate();
@@ -18,7 +19,7 @@ int main() {
     auto levelManager = okay::OkayLevelManager::create(levelManagerSettings);
 
     okay::OkayGame::create()
-        .addSystems(std::move(renderer), std::move(levelManager))
+        .addSystems(std::move(renderer), std::move(levelManager), std::make_unique<okay::OkayAssetManager>())
         .onInitialize(__gameInitialize)
         .onUpdate(__gameUpdate)
         .onShutdown(__gameShutdown)
