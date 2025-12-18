@@ -18,17 +18,28 @@ struct OkayShader {
           _state(NOT_COMPILED) {}
 
     OkayShader() : vertexShader(""), fragmentShader(""), shaderProgram(0), _state(NOT_COMPILED) {}
+    
+    // copy, assignment
+    OkayShader(const OkayShader& other)
+        : vertexShader(other.vertexShader),
+          fragmentShader(other.fragmentShader),
+          shaderProgram(other.shaderProgram),
+          _state(other._state) {}
 
-    const std::string vertexShader;
-    const std::string fragmentShader;
-
-    Failable compile() {
-        // dummy compile
-        _state = STANDBY;
-        return Failable::ok({});
+    OkayShader& operator=(const OkayShader& other) {
+        if (this == &other) return *this;
+        vertexShader = other.vertexShader;
+        fragmentShader = other.fragmentShader;
+        shaderProgram = other.shaderProgram;
+        _state = other._state;
+        return *this;
     }
 
-    Failable set() { return Failable::ok({}); }
+    std::string vertexShader;
+    std::string fragmentShader;
+
+    Failable compile();
+    Failable set();
     ShaderState state() const { return _state; }
 
    private:

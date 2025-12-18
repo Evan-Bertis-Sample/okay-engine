@@ -30,13 +30,13 @@ class OkayAssetIO {
    public:
     virtual ~OkayAssetIO() = default;
 
-    virtual Result<std::unique_ptr<std::istream>> open(const std::filesystem::path& path) = 0;
+    virtual Result<std::unique_ptr<std::istream>> open(const std::filesystem::path& path) const = 0;
     virtual Result<std::size_t> fileSize(const std::filesystem::path& path) const = 0;
 };
 
 class FilesystemAssetIO final : public OkayAssetIO {
    public:
-    Result<std::unique_ptr<std::istream>> open(const std::filesystem::path& path) override {
+    Result<std::unique_ptr<std::istream>> open(const std::filesystem::path& path) const override {
         auto f = std::make_unique<std::ifstream>(path, std::ios::in | std::ios::binary);
         if (!f->is_open()) {
             return Result<std::unique_ptr<std::istream>>::errorResult("Failed to open asset: " +
@@ -57,7 +57,7 @@ class FilesystemAssetIO final : public OkayAssetIO {
 
 template <typename T>
 struct OkayAssetLoader {
-    static Result<T> loadAsset(const std::filesystem::path& path, OkayAssetIO &assetIO) {
+    static Result<T> loadAsset(const std::filesystem::path& path, const OkayAssetIO &assetIO) {
         static_assert(sizeof(T) != 0,
                       "No OkayAssetLoader<T> specialization found for this asset type.");
         return Result<T>::errorResult("No loader");
@@ -122,7 +122,7 @@ class OkayAssetManager : public OkaySystem<OkaySystemScope::ENGINE> {
 
             return LoadHandle<T>{.state = LoadHandle<T>::State::FAILED, .asset = handleAsset};
         } else {
-            OkayAsset<T> asset = createAsset(load.assetPath, res.value(), load.assetIO);
+            OkayAsset<T> asset = createAsset<T>(load.assetPath, res.value(), load.assetIO);
             auto handleAsset = Result<OkayAsset<T>>::ok(asset);
             if (load.onCompleteCB) load.onCompleteCB(asset);
 
@@ -137,7 +137,7 @@ class OkayAssetManager : public OkaySystem<OkaySystemScope::ENGINE> {
         if (res.isError()) {
             return Result<OkayAsset<T>>::errorResult(res.error());
         } else {
-            return Result<OkayAsset<T>>::ok(createAsset(load.assetPath, res.value()));
+            return Result<OkayAsset<T>>::ok(createAsset<T>(load.assetPath, res.value(), load.assetIO));
         };
     };
 

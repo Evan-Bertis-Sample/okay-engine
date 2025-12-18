@@ -14,7 +14,7 @@ inline constexpr bool dependent_false_v = false;
 /// @brief A class representing the result of a function: either a value (ok) or an error message.
 template <typename T>
 class Result {
-public:
+   public:
     using ValueType = T;
 
     template <typename U = T>
@@ -33,12 +33,16 @@ public:
     const std::string& error() const { return _errorMessage; }
 
     /// @brief Copy the value out (only available when T is copyable).
-    T value() const requires(std::is_copy_constructible_v<T>) {
+    T value() const
+        requires(std::is_copy_constructible_v<T>)
+    {
         return *_value;
     }
 
     /// @brief If you call value() on a move-only T, you get a clear compile-time error.
-    T value() const requires(!std::is_copy_constructible_v<T>) {
+    T value() const
+        requires(!std::is_copy_constructible_v<T>)
+    {
         static_assert(dependent_false_v<T>,
                       "Result<T>::value() requires T to be copyable. "
                       "For move-only T (e.g., std::unique_ptr), use valueRef() or take().");
@@ -63,10 +67,13 @@ public:
     const T* operator->() const { return &valueRef(); }
 
     // Copy only if T is copyable
-    Result(const Result& other) requires(std::is_copy_constructible_v<T>)
+    Result(const Result& other)
+        requires(std::is_copy_constructible_v<T>)
         : _value(other._value), _errorMessage(other._errorMessage) {}
 
-    Result& operator=(const Result& other) requires(std::is_copy_assignable_v<T>) {
+    Result& operator=(const Result& other)
+        requires(std::is_copy_assignable_v<T>)
+    {
         if (this == &other) return *this;
         _value = other._value;
         _errorMessage = other._errorMessage;
@@ -76,7 +83,7 @@ public:
     Result(Result&&) noexcept = default;
     Result& operator=(Result&&) noexcept = default;
 
-private:
+   private:
     std::optional<T> _value;
     std::string _errorMessage;
 

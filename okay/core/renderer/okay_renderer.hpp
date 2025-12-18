@@ -2,6 +2,7 @@
 #define __OKAY_RENDERER_H__
 
 #include <iostream>
+#include <okay/core/renderer/okay_material.hpp>
 #include <okay/core/renderer/okay_mesh.hpp>
 #include <okay/core/renderer/okay_primitive.hpp>
 #include <okay/core/renderer/okay_surface.hpp>
@@ -14,22 +15,6 @@ struct OkayRendererSettings {
     SurfaceConfig SurfaceConfig;
 };
 
-// temporary just to get something displaying on the screen
-static const char* VertexSrcSimple =
-    "#version 330 core\n"
-    "layout (location = 0) in vec3 aPos;\n"
-    "void main()\n"
-    "{\n"
-    "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-    "}\0";
-
-static const char* FragSrcSimple =
-    "#version 330 core\n"
-    "out vec4 FragColor;\n"
-    "void main()\n"
-    "{\n"
-    "   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
-    "}\n\0";
 
 class OkayRenderer : public OkaySystem<OkaySystemScope::ENGINE> {
    public:
@@ -40,8 +25,8 @@ class OkayRenderer : public OkaySystem<OkaySystemScope::ENGINE> {
     OkayRenderer(const OkayRendererSettings& settings)
         : _settings(settings), _surface(std::make_unique<Surface>(settings.SurfaceConfig)) {}
 
-    unsigned int shaderProgram;
     unsigned int VBO, VAO;
+    OkayShader shader;
 
     void initialize() override {
         std::cout << "Okay Renderer initialized." << std::endl;
@@ -50,41 +35,20 @@ class OkayRenderer : public OkaySystem<OkaySystemScope::ENGINE> {
         OkayMesh model =
             _modelBuffer.AddModel(okay::primitives::box().sizeSet({10, 10, 10}).build());
 
-        auto vertexShader = glCreateShader(GL_VERTEX_SHADER);
-        glShaderSource(vertexShader, 1, &VertexSrcSimple, NULL);
-        glCompileShader(vertexShader);
+        Result<OkayAsset<OkayShader>> shaderRes = Engine.systems.getSystem<OkayAssetManager>().value()->loadEngineAssetSync<OkayShader>("shaders/test");
 
-        // check for shader compile errors
-        int success;
-        char infoLog[512];
-        glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-        if (!success) {
-            glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-            std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+        if (shaderRes.isError()) {
+            std::cerr << "Failed to load shader: " << shaderRes.error() << std::endl;
+            return;
         }
-        // fragment shader
-        unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(fragmentShader, 1, &FragSrcSimple, NULL);
-        glCompileShader(fragmentShader);
-        // check for shader compile errors
-        glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-        if (!success) {
-            glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-            std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
+
+        shader = shaderRes.value().asset;
+        Failable compileResult = shader.compile();
+
+        if (compileResult.isError()) {
+            std::cerr << "Shader compilation failed: " << compileResult.error() << std::endl;
+            return;
         }
-        // link shaders
-        shaderProgram = glCreateProgram();
-        glAttachShader(shaderProgram, vertexShader);
-        glAttachShader(shaderProgram, fragmentShader);
-        glLinkProgram(shaderProgram);
-        // check for linking errors
-        glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-        if (!success) {
-            glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-            std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
-        }
-        glDeleteShader(vertexShader);
-        glDeleteShader(fragmentShader);
 
         float vertices[] = {
             -0.5f, -0.5f, 0.0f,  // left
@@ -127,7 +91,7 @@ class OkayRenderer : public OkaySystem<OkaySystemScope::ENGINE> {
         glClear(GL_COLOR_BUFFER_BIT);
 
         // draw our first triangle
-        glUseProgram(shaderProgram);
+        shader.set();
         glBindVertexArray(VAO);  // seeing as we only have a single VAO there's no need to bind it
                                  // every time, but we'll do so to keep things a bit more organized
         glDrawArrays(GL_TRIANGLES, 0, 3);

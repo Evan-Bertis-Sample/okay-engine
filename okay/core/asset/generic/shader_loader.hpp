@@ -12,9 +12,8 @@ namespace okay {
 
 template <>
 struct OkayAssetLoader<OkayShader> {
-
     static Result<OkayShader> loadAsset(const std::filesystem::path& path,
-                                        OkayAssetIO& assetIO) {
+                                        const OkayAssetIO& assetIO) {
                                             
         // by standard, the fragment shader will be path + .frag
         // and the vertex shader will be path + .vert
