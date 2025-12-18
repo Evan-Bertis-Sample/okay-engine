@@ -18,9 +18,6 @@ struct OkayAssetLoader<OkayShader> {
         // by standard, the fragment shader will be path + .frag
         // and the vertex shader will be path + .vert
 
-        std::string vertexShaderCode;
-        std::string fragmentShaderCode;
-
         // load vertex shader
         Result<std::unique_ptr<std::istream>> vertexStreamRes =
             assetIO.open(path.string() + ".vert");
@@ -30,7 +27,7 @@ struct OkayAssetLoader<OkayShader> {
         }
 
         // read vertex shader code
-        std::unique_ptr<std::istream> vertexStream = vertexStreamRes.value();
+        std::unique_ptr<std::istream> vertexStream = vertexStreamRes.take();
         std::string vertexShaderCode((std::istreambuf_iterator<char>(*vertexStream)),
                                     std::istreambuf_iterator<char>());
 
@@ -43,7 +40,7 @@ struct OkayAssetLoader<OkayShader> {
         }
 
         // read fragment shader code
-        std::unique_ptr<std::istream> fragmentStream = fragmentStreamRes.value();
+        std::unique_ptr<std::istream> fragmentStream = fragmentStreamRes.take();
         std::string fragmentShaderCode((std::istreambuf_iterator<char>(*fragmentStream)),
                                        std::istreambuf_iterator<char>());
 

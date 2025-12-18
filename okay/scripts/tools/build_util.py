@@ -138,18 +138,23 @@ class OkayBuildOptions:
         # make sure the path exists
         path.mkdir(parents=True, exist_ok=True)
         return path / f"{self.target.lower()}_{self.build_type.name.lower()}"
+    
 
     @property
     def packaged_engine_asset_dir(self) -> Path:
-        return Path(OkayToolUtil.get_okay_work_dir(self.project_dir)) / "engine" / "assets"
+        return Path(self.build_dir / "engine" / "assets")
     
     @property
     def packaged_game_asset_dir(self) -> Path:
-        return Path(OkayToolUtil.get_okay_work_dir(self.project_dir)) / "game" / "assets"
+        return Path(self.build_dir / "game" / "assets")
     
     @property
     def engine_asset_dir(self) -> Path:
         return Path(OkayToolUtil.get_okay_dir()) / "assets"
+    
+    def rel_to_build_dir(self, p: Path) -> str:
+        return os.path.relpath(p.resolve(), self.build_dir).replace("\\", "/")
+
 
     @property
     def cmake_configure_cmd(self) -> list[str]:
@@ -168,8 +173,9 @@ class OkayBuildOptions:
             f"-DOKAY_PROJECT_ROOT_DIR={abs_prj}",
             f"-DCMAKE_BUILD_TYPE={self.build_type.value}",
             f"-DOKAY_BUILD_TYPE={self.build_type.value}",
-            f"-DOKAY_ENGINE_ASSET_ROOT={self.packaged_engine_asset_dir}",
-            f"-DOKAY_GAME_ASSET_ROOT={self.packaged_game_asset_dir}",
+            # these should be relative to the build dir
+            f"-DOKAY_ENGINE_ASSET_ROOT={self.rel_to_build_dir(self.packaged_engine_asset_dir)}",
+            f"-DOKAY_GAME_ASSET_ROOT={self.rel_to_build_dir(self.packaged_game_asset_dir)}",
         ]
 
         # Only set compilers when we’re *not* using Visual Studio

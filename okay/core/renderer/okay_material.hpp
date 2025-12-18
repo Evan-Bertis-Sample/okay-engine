@@ -19,22 +19,6 @@ struct OkayShader {
 
     OkayShader() : vertexShader(""), fragmentShader(""), shaderProgram(0), _state(NOT_COMPILED) {}
     
-    // copy, assignment
-    OkayShader(const OkayShader& other)
-        : vertexShader(other.vertexShader),
-          fragmentShader(other.fragmentShader),
-          shaderProgram(other.shaderProgram),
-          _state(other._state) {}
-
-    OkayShader& operator=(const OkayShader& other) {
-        if (this == &other) return *this;
-        vertexShader = other.vertexShader;
-        fragmentShader = other.fragmentShader;
-        shaderProgram = other.shaderProgram;
-        _state = other._state;
-        return *this;
-    }
-
     std::string vertexShader;
     std::string fragmentShader;
 

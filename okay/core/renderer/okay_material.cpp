@@ -55,7 +55,7 @@ Failable OkayShader::compile() {
 }
 
 Failable OkayShader::set() {
-    if (_state != STANDBY) {
+    if (_state != STANDBY && _state != IN_USE) {
         return Failable::errorResult("Shader must be compiled before setting it for use.");
     }
 

@@ -9,12 +9,18 @@
 #include <okay/core/util/option.hpp>
 #include <okay/core/util/result.hpp>
 
+#ifdef _WIN32
+#define SEP "\\"
+#else
+#define SEP "/"
+#endif
+
 #ifndef OKAY_ENGINE_ASSET_ROOT
-#define OKAY_ENGINE_ASSET_ROOT ".okay/engine/assets"
+#define OKAY_ENGINE_ASSET_ROOT "engine" SEP "assets"
 #endif
 
 #ifndef OKAY_GAME_ASSET_ROOT
-#define OKAY_GAME_ASSET_ROOT ".okay/game/assets"
+#define OKAY_GAME_ASSET_ROOT SEP "game" SEP "assets"
 #endif
 
 namespace okay {

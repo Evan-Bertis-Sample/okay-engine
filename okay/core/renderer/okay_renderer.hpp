@@ -9,6 +9,8 @@
 #include <okay/core/system/okay_system.hpp>
 #include <okay/core/asset/okay_asset.hpp>
 
+#include <okay/core/asset/generic/shader_loader.hpp>
+
 namespace okay {
 
 struct OkayRendererSettings {
@@ -35,7 +37,8 @@ class OkayRenderer : public OkaySystem<OkaySystemScope::ENGINE> {
         OkayMesh model =
             _modelBuffer.AddModel(okay::primitives::box().sizeSet({10, 10, 10}).build());
 
-        Result<OkayAsset<OkayShader>> shaderRes = Engine.systems.getSystem<OkayAssetManager>().value()->loadEngineAssetSync<OkayShader>("shaders/test");
+        Result<OkayAsset<OkayShader>> shaderRes = Engine.systems.getSystem<OkayAssetManager>().value()
+            ->loadEngineAssetSync<OkayShader>(std::filesystem::path("shaders/test"));
 
         if (shaderRes.isError()) {
             std::cerr << "Failed to load shader: " << shaderRes.error() << std::endl;
@@ -91,7 +94,13 @@ class OkayRenderer : public OkaySystem<OkaySystemScope::ENGINE> {
         glClear(GL_COLOR_BUFFER_BIT);
 
         // draw our first triangle
-        shader.set();
+        Failable f = shader.set();
+        if (f.isError()) {
+            std::cerr << "Failed to set shader: " << f.error() << std::endl;
+            while (true) {}
+            return;
+        }
+
         glBindVertexArray(VAO);  // seeing as we only have a single VAO there's no need to bind it
                                  // every time, but we'll do so to keep things a bit more organized
         glDrawArrays(GL_TRIANGLES, 0, 3);
