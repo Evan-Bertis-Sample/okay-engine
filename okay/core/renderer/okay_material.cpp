@@ -2,6 +2,8 @@
 #include <okay/core/util/result.hpp>
 #include <glad/gl.h>
 
+#include <unordered_map>
+
 using namespace okay;
 
 Failable OkayShader::compile() {
