@@ -1,10 +1,10 @@
 #ifndef __DIRTY_SET_H__
 #define __DIRTY_SET_H__
 
+#include <algorithm>
 #include <cstdint>
 #include <span>
 #include <vector>
-#include <algorithm>
 
 namespace okay {
 
@@ -62,7 +62,9 @@ class DirtySet final {
     bool empty() const { return _items.empty(); }
     std::size_t size() const { return _items.size(); }
 
-    std::span<const IndexT> items() const { return std::span<const IndexT>(_items.data(), _items.size()); }
+    std::span<const IndexT> items() const {
+        return std::span<const IndexT>(_items.data(), _items.size());
+    }
 
     const std::vector<IndexT>& vec() const { return _items; }
 

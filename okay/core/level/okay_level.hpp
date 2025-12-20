@@ -5,6 +5,8 @@
 #include <iostream>
 #include <okay/core/system/okay_system.hpp>
 #include <string>
+#include <memory>
+#include <functional>
 
 namespace okay {
 

@@ -59,6 +59,10 @@ add_library(okay STATIC ${OKAY_CORE_SOURCES} ${OKAY_CORE_HEADERS})
 set_property(TARGET okay PROPERTY CXX_STANDARD 20)
 set_property(TARGET ${PROJECT} PROPERTY CXX_STANDARD 20)
 
+target_compile_features(okay PUBLIC cxx_std_20)
+target_compile_features(${PROJECT} PUBLIC cxx_std_20)
+
+
 # Version guards for C++20 features
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 11)

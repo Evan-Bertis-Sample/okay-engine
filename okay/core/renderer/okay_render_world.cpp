@@ -128,7 +128,7 @@ OkayTransform& OkayRenderWorld::transformRef(Entity e) {
 OkayMesh& OkayRenderWorld::meshRef(Entity e) {
     return slotRef(e).mesh;
 }
-OkayMaterial& OkayRenderWorld::materialRef(Entity e) {
+IOkayMaterial& OkayRenderWorld::materialRef(Entity e) {
     return slotRef(e).material;
 }
 
@@ -140,7 +140,7 @@ void OkayRenderWorld::ensureIndexCapacity(std::uint32_t index) {
 }
 
 OkayRenderWorld::Entity OkayRenderWorld::spawn(const OkayTransform& localTransform,
-                                               const OkayMesh& mesh, const OkayMaterial& material,
+                                               const OkayMesh& mesh, const IOkayMaterial& material,
                                                Entity parent) {
     Entity e = _pool.emplace();
     ensureIndexCapacity(e.index);
@@ -224,7 +224,7 @@ const OkayMesh& OkayRenderWorld::mesh(Entity e) const {
     return _pool.get(e).mesh;
 }
 
-const OkayMaterial& OkayRenderWorld::material(Entity e) const {
+const IOkayMaterial& OkayRenderWorld::material(Entity e) const {
     assert(_pool.valid(e));
     return _pool.get(e).material;
 }
@@ -241,7 +241,7 @@ void OkayRenderWorld::setMesh(Entity e, const OkayMesh& mesh) {
     markRenderablesDirty();
 }
 
-void OkayRenderWorld::setMaterial(Entity e, const OkayMaterial& material) {
+void OkayRenderWorld::setMaterial(Entity e, const IOkayMaterial& material) {
     assert(_pool.valid(e));
     _pool.get(e).material = material;
     markRenderablesDirty();
@@ -391,7 +391,7 @@ glm::mat4 OkayRenderWorld::compose(const OkayTransform& t) {
     return T * R * S;
 }
 
-std::uint64_t OkayRenderWorld::makeSortKey(const OkayMaterial& material, const OkayMesh& mesh) {
+std::uint64_t OkayRenderWorld::makeSortKey(const IOkayMaterial& material, const OkayMesh& mesh) {
     const std::uint64_t shader = static_cast<std::uint64_t>(material.shaderID());
     const std::uint64_t matId = static_cast<std::uint64_t>(material.id());
 

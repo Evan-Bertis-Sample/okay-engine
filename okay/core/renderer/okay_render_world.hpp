@@ -25,7 +25,7 @@ struct OkayTransform {
 struct OkayDrawItem {
     glm::mat4 worldFromMesh{1.0f};
     OkayMesh mesh{};
-    OkayMaterial material{};
+    IOkayMaterial material{};
     std::uint64_t sortKey{0};
     std::uint32_t entityIndex{0xFFFFFFFFu};
 };
@@ -97,7 +97,7 @@ class OkayRenderWorld final {
     OkayRenderWorld(OkayRenderWorld&&) = default;
     OkayRenderWorld& operator=(OkayRenderWorld&&) = default;
 
-    Entity spawn(const OkayTransform& localTransform, const OkayMesh& mesh, const OkayMaterial& material,
+    Entity spawn(const OkayTransform& localTransform, const OkayMesh& mesh, const IOkayMaterial& material,
                  Entity parent = NullEntity);
 
     void destroy(Entity e);
@@ -115,11 +115,11 @@ class OkayRenderWorld final {
     const glm::mat4& worldFromEntity(Entity e) const;
 
     const OkayMesh& mesh(Entity e) const;
-    const OkayMaterial& material(Entity e) const;
+    const IOkayMaterial& material(Entity e) const;
 
     void setTransform(Entity e, const OkayTransform& t);
     void setMesh(Entity e, const OkayMesh& mesh);
-    void setMaterial(Entity e, const OkayMaterial& material);
+    void setMaterial(Entity e, const IOkayMaterial& material);
 
     template <class Fn>
     void withTransform(Entity e, Fn&& fn) {
@@ -145,7 +145,7 @@ class OkayRenderWorld final {
         OkayTransform local{};
         glm::mat4 world{1.0f};
         OkayMesh mesh{};
-        OkayMaterial material{};
+        IOkayMaterial material{};
     };
 
     Slot& slotRef(Entity e);
@@ -153,7 +153,7 @@ class OkayRenderWorld final {
 
     OkayTransform& transformRef(Entity e);
     OkayMesh& meshRef(Entity e);
-    OkayMaterial& materialRef(Entity e);
+    IOkayMaterial& materialRef(Entity e);
 
     void ensureIndexCapacity(std::uint32_t index);
 
@@ -169,7 +169,7 @@ class OkayRenderWorld final {
     void syncDrawItemTransform(std::uint32_t index);
 
     static glm::mat4 compose(const OkayTransform& t);
-    static std::uint64_t makeSortKey(const OkayMaterial& material, const OkayMesh& mesh);
+    static std::uint64_t makeSortKey(const IOkayMaterial& material, const OkayMesh& mesh);
 
    private:
     ObjectPool<Slot> _pool;

@@ -4,6 +4,8 @@
 #include <okay/core/system/okay_system.hpp>
 #include <okay/core/level/okay_level.hpp>
 
+#include <string>
+
 namespace okay {
 
 struct OkayLevelManagerSettings {
