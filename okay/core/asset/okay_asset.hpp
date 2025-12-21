@@ -63,7 +63,7 @@ class FilesystemAssetIO final : public OkayAssetIO {
 
 template <typename T>
 struct OkayAssetLoader {
-    static Result<T> loadAsset(const std::filesystem::path& path, const OkayAssetIO &assetIO) {
+    static Result<T> loadAsset(const std::filesystem::path& path, const OkayAssetIO& assetIO) {
         static_assert(sizeof(T) != 0,
                       "No OkayAssetLoader<T> specialization found for this asset type.");
         return Result<T>::errorResult("No loader");
@@ -143,7 +143,8 @@ class OkayAssetManager : public OkaySystem<OkaySystemScope::ENGINE> {
         if (res.isError()) {
             return Result<OkayAsset<T>>::errorResult(res.error());
         } else {
-            return Result<OkayAsset<T>>::ok(createAsset<T>(load.assetPath, res.value(), load.assetIO));
+            return Result<OkayAsset<T>>::ok(
+                createAsset<T>(load.assetPath, res.value(), load.assetIO));
         };
     };
 
@@ -159,7 +160,8 @@ class OkayAssetManager : public OkaySystem<OkaySystemScope::ENGINE> {
 
    private:
     template <typename T>
-    inline OkayAsset<T> createAsset(const std::filesystem::path& path, T loaded, const OkayAssetIO& assetIO) {
+    inline OkayAsset<T> createAsset(const std::filesystem::path& path, T loaded,
+                                    const OkayAssetIO& assetIO) {
         return OkayAsset<T>{.asset = loaded, .assetSize = assetIO.fileSize(path).value()};
     }
 };

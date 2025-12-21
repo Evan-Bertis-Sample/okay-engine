@@ -5,4 +5,4 @@ namespace okay {
 class OkayTexture {};
 }  // namespace okay
 
-#endif // __OKAY_TEXTURE_H__
+#endif  // __OKAY_TEXTURE_H__

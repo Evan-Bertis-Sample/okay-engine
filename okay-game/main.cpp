@@ -19,7 +19,8 @@ int main() {
     auto levelManager = okay::OkayLevelManager::create(levelManagerSettings);
 
     okay::OkayGame::create()
-        .addSystems(std::move(renderer), std::move(levelManager), std::make_unique<okay::OkayAssetManager>())
+        .addSystems(std::move(renderer), std::move(levelManager),
+                    std::make_unique<okay::OkayAssetManager>())
         .onInitialize(__gameInitialize)
         .onUpdate(__gameUpdate)
         .onShutdown(__gameShutdown)

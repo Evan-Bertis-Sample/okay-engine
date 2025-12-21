@@ -69,7 +69,7 @@ class ObjectPool final {
         s.ref().~T();
         s.alive = false;
 
-        s.genera   tion += 1;
+        s.genera tion += 1;
         s.freeNext = _freeHead;
         _freeHead = h.index;
 

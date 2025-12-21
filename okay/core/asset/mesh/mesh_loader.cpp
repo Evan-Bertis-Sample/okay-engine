@@ -14,9 +14,8 @@ static std::unique_ptr<MeshLoader> CreateMeshLoaderForExtension(const std::files
     return nullptr;
 }
 
-Result<OkayMeshData> OkayAssetLoader<OkayMeshData>::loadAsset(
-    const std::filesystem::path& path,
-    const OkayAssetIO& assetIO) {
+Result<OkayMeshData> OkayAssetLoader<OkayMeshData>::loadAsset(const std::filesystem::path& path,
+                                                              const OkayAssetIO& assetIO) {
     auto loader = CreateMeshLoaderForExtension(path);
     if (!loader) {
         const std::string ext = path.has_extension() ? path.extension().string() : "(no extension)";
@@ -26,10 +25,10 @@ Result<OkayMeshData> OkayAssetLoader<OkayMeshData>::loadAsset(
 
     Result<std::unique_ptr<std::istream>> fileRes = assetIO.open(path);
     if (fileRes.isError()) {
-        return Result<OkayMeshData>::errorResult(
-            "Failed to open mesh file: " + path.string() + ": " + fileRes.error());
+        return Result<OkayMeshData>::errorResult("Failed to open mesh file: " + path.string() +
+                                                 ": " + fileRes.error());
     }
-    
+
     std::unique_ptr<std::istream> file = fileRes.take();
 
     return loader->Load(path, *file);

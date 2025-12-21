@@ -11,11 +11,10 @@
 
 namespace okay {
 
-template <class ... Uniforms>
+template <class... Uniforms>
 struct OkayAssetLoader<OkayShader<Uniforms...>> {
     static Result<OkayShader<Uniforms...>> loadAsset(const std::filesystem::path& path,
-                                        const OkayAssetIO& assetIO) {
-                                            
+                                                     const OkayAssetIO& assetIO) {
         // by standard, the fragment shader will be path + .frag
         // and the vertex shader will be path + .vert
 
@@ -24,20 +23,22 @@ struct OkayAssetLoader<OkayShader<Uniforms...>> {
             assetIO.open(path.string() + ".vert");
 
         if (vertexStreamRes.isError()) {
-            return Result<OkayShader<Uniforms...>>::errorResult("Failed to open vertex shader: " + path.string());
+            return Result<OkayShader<Uniforms...>>::errorResult("Failed to open vertex shader: " +
+                                                                path.string());
         }
 
         // read vertex shader code
         std::unique_ptr<std::istream> vertexStream = vertexStreamRes.take();
         std::string vertexShaderCode((std::istreambuf_iterator<char>(*vertexStream)),
-                                    std::istreambuf_iterator<char>());
+                                     std::istreambuf_iterator<char>());
 
         // load fragment shader
         Result<std::unique_ptr<std::istream>> fragmentStreamRes =
             assetIO.open(path.string() + ".frag");
 
         if (fragmentStreamRes.isError()) {
-            return Result<OkayShader<Uniforms...>>::errorResult("Failed to open fragment shader: " + path.string());
+            return Result<OkayShader<Uniforms...>>::errorResult("Failed to open fragment shader: " +
+                                                                path.string());
         }
 
         // read fragment shader code
@@ -45,7 +46,8 @@ struct OkayAssetLoader<OkayShader<Uniforms...>> {
         std::string fragmentShaderCode((std::istreambuf_iterator<char>(*fragmentStream)),
                                        std::istreambuf_iterator<char>());
 
-        return Result<OkayShader<Uniforms...>>::ok(OkayShader<Uniforms...>(vertexShaderCode, fragmentShaderCode));
+        return Result<OkayShader<Uniforms...>>::ok(
+            OkayShader<Uniforms...>(vertexShaderCode, fragmentShaderCode));
     }
 };
 

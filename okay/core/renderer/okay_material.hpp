@@ -25,7 +25,6 @@ class OkayMaterial;
 template <class... Uniforms>
 struct OkayShader<OkayMaterialUniformCollection<Uniforms...>> {
    public:
-
     OkayShader(const std::string vertexSrc, const std::string fragmentSrc)
         : vertexShader(std::move(vertexSrc)),
           fragmentShader(std::move(fragmentSrc)),
@@ -108,13 +107,9 @@ struct OkayShader<OkayMaterialUniformCollection<Uniforms...>> {
         return Failable::ok({});
     }
 
-    Failable findUniformLocations() {
-        return uniforms.findLocations(shaderProgram);
-    };
+    Failable findUniformLocations() { return uniforms.findLocations(shaderProgram); };
 
-    Failable passDirtyUniforms() {
-        return uniforms.setUniforms(shaderProgram);
-    };
+    Failable passDirtyUniforms() { return uniforms.setUniforms(shaderProgram); };
 
     ShaderState state() const { return _state; }
     std::uint32_t id() const { return _id; }
