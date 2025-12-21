@@ -57,7 +57,9 @@ class OkayRenderer : public OkaySystem<OkaySystemScope::ENGINE> {
             return;
         }
 
+        // failling line -- not found?
         shader.uniforms.get<FixedString("u_color")>().set(glm::vec3(1.0f, 0.5f, 0.2f));
+
 
         Failable findRes = shader.findUniformLocations();
         if (findRes.isError()) {

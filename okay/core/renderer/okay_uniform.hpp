@@ -140,44 +140,51 @@ struct OkayMaterialUniform<NoneType, FixedString("")> {
 // define none type for empty uniform collections
 using OkayMaterialUniformNone = OkayMaterialUniform<NoneType, FixedString("")>;
 
-// Name matching
-template <auto Name, class U>
-struct UniformNameMatches : std::false_type {};
-
-template <auto Name, class T, auto UName>
-struct UniformNameMatches<Name, OkayMaterialUniform<T, UName>>
-    : std::bool_constant<(Name.sv() == UName.sv())> {};
-
-// Index of uniform by name
 template <auto Name, class... Uniforms>
 struct UniformIndex;
 
+// Helper to get index of uniform by name at compile time
 template <auto Name, class First, class... Rest>
 struct UniformIndex<Name, First, Rest...> {
     static constexpr std::size_t value =
-        UniformNameMatches<Name, First>::value ? 0 : 1 + UniformIndex<Name, Rest...>::value;
+        std::bool_constant<First::name.sv() == Name.sv()>::value
+            ? 0
+            : 1 + UniformIndex<Name, Rest...>::value;
+};
+
+template <auto Name, class Last>
+struct UniformIndex<Name, Last> {
+    static constexpr std::size_t value =
+        std::bool_constant<Last::name.sv() == Name.sv()>::value ? 0 : 0;
 };
 
 template <auto Name>
 struct UniformIndex<Name> {
-    static_assert(dependent_false_v<decltype(Name)>, "Uniform name not found in collection.");
+    static_assert(dependent_false_v<decltype(Name)>,
+                  "Uniform with the specified name not found in OkayMaterialUniformCollection");
     static constexpr std::size_t value = 0;
 };
+
 
 template <class... Uniforms>
 struct OkayMaterialUniformCollection {
     std::tuple<Uniforms...> uniforms;
 
-    template <auto Name>
-    decltype(auto) get() {
-        constexpr std::size_t idx = UniformIndex<Name, Uniforms...>::value;
-        return std::get<idx>(uniforms);
+    template <auto Name, std::size_t I = UniformIndex<Name, Uniforms...>::value>
+    decltype(auto) get() const {
+        return std::get<I>(uniforms);
     }
 
+    template <auto Name, std::size_t I = UniformIndex<Name, Uniforms...>::value>
+    decltype(auto) get() {
+        return std::get<I>(uniforms);
+    }
+
+    std::size_t size() const { return sizeof...(Uniforms); }
+
     template <auto Name>
-    decltype(auto) get() const {
-        constexpr std::size_t idx = UniformIndex<Name, Uniforms...>::value;
-        return std::get<idx>(uniforms);
+    constexpr std::size_t index() const {
+        return UniformIndex<Name, Uniforms...>::value;
     }
 
     Failable setUniforms(GLuint shaderProgram) {
