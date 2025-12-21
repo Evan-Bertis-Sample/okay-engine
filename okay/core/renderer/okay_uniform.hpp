@@ -2,27 +2,15 @@
 #define __OKAY_UNIFORM_H__
 
 #include <glm/glm.hpp>
+#include <okay/core/logging/okay_logger.hpp>
 #include <okay/core/util/result.hpp>
+#include <okay/core/util/type.hpp>
 #include <string_view>
 #include <tuple>
 #include <type_traits>
 #include <utility>
 
 namespace okay {
-
-template <std::size_t N>
-struct FixedString {
-    char value[N]{};
-
-    constexpr FixedString(const char (&str)[N]) {
-        for (std::size_t i = 0; i < N; ++i) value[i] = str[i];
-    }
-
-    constexpr std::string_view sv() const { return {value, N - 1}; }  // drop '\0'
-};
-
-template <std::size_t N>
-FixedString(const char (&)[N]) -> FixedString<N>;
 
 enum class UniformKind { FLOAT, INT, VEC2, VEC3, VEC4, MAT3, MAT4, TEXTURE, VOID };
 
@@ -67,6 +55,8 @@ struct OkayMaterialUniform {
     }
     const T& get() const { return _value; }
     bool isDirty() const { return _dirty; }
+    void markDirty() { _dirty = true; }
+    unsigned int location() const { return _location; }
 
     Failable findLocation(unsigned int shaderProgram) {
         int location = glGetUniformLocation(shaderProgram, std::string(name.sv()).c_str());
@@ -77,10 +67,74 @@ struct OkayMaterialUniform {
         return Failable::ok({});
     };
 
+    Failable passUniform(unsigned int shaderProgram) {
+        if (location() == invalidLocation()) {
+            Failable result = findLocation(shaderProgram);
+            if (result.isError()) {
+                return Failable::errorResult("Failed to find uniform location for '" +
+                                             std::string(name.sv()) + "': " + result.error());
+            }
+        }
+
+        // Set the uniform value
+        if constexpr (kind == UniformKind::FLOAT) {
+            glUniform1f(location(), get());
+        } else if constexpr (kind == UniformKind::INT) {
+            glUniform1i(location(), get());
+        } else if constexpr (kind == UniformKind::VEC2) {
+            glUniform2fv(location(), 1, &get().x);
+        } else if constexpr (kind == UniformKind::VEC3) {
+            glUniform3fv(location(), 1, &get().x);
+        } else if constexpr (kind == UniformKind::VEC4) {
+            glUniform4fv(location(), 1, &get().x);
+        } else if constexpr (kind == UniformKind::MAT3) {
+            glUniformMatrix3fv(location(), 1, GL_FALSE, &get()[0][0]);
+        } else if constexpr (kind == UniformKind::MAT4) {
+            glUniformMatrix4fv(location(), 1, GL_FALSE, &get()[0][0]);
+        } else if constexpr (kind == UniformKind::TEXTURE) {
+            // Texture binding handled elsewhere
+            return Failable::errorResult(
+                "Direct setting of texture uniforms is not supported for '" +
+                std::string(name.sv()) + "'");
+        } else if constexpr (kind == UniformKind::VOID) {
+            // No action needed
+        } else {
+            return Failable::errorResult("Unsupported uniform type for '" + std::string(name.sv()) +
+                                         "'");
+        }
+
+        _dirty = false;
+        return Failable::ok({});
+    }
+
    private:
     T _value{};
     bool _dirty{true};
     unsigned int _location{invalidLocation()};
+};
+
+// special definition for none type of uniforms
+template <>
+struct OkayMaterialUniform<NoneType, FixedString("")> {
+    using ValueType = NoneType;
+
+    static constexpr auto name = FixedString("");
+    static constexpr UniformKind kind = UniformKind::VOID;
+    static constexpr unsigned int invalidLocation() { return 0xFFFFFFFFu; }
+
+    constexpr std::string_view name_sv() const { return name.sv(); }
+
+    void set(const NoneType&) {}
+    const NoneType& get() const { return _value; }
+    void markDirty() {}
+    bool isDirty() const { return false; }
+
+    unsigned int location() const { return invalidLocation(); }
+    Failable findLocation(unsigned int) { return Failable::ok({}); };
+    Failable passUniform(unsigned int) { return Failable::ok({}); };
+
+   private:
+    NoneType _value{};
 };
 
 // define none type for empty uniform collections
@@ -126,19 +180,51 @@ struct OkayMaterialUniformCollection {
         return std::get<idx>(uniforms);
     }
 
-    void setUniforms() {
+    Failable setUniforms(unsigned int shaderProgram) {
         // Iterate over all uniforms and set them if dirty
-        (setUniformIfDirty(std::get<Uniforms>(uniforms)), ...);
+        bool hasFailed = false;
+        std::stringstream errorMessages;
+        (
+            [&]() {
+                Failable result = std::get<Uniforms>(uniforms).passUniform(shaderProgram);
+                if (result.isError()) {
+                    hasFailed = true;
+                    errorMessages << result.error() << "\n";
+                }
+            }(),
+            ...);
+
+        if (hasFailed) {
+            return Failable::errorResult(errorMessages.str());
+        } else {
+            return Failable::ok({});
+        }
     }
 
-   private:
-    template <class U>
-    void setUniformIfDirty(U& uniform) {
-        if (!uniform.isDirty()) return;
+    Failable findLocations(unsigned int shaderProgram) {
+        // Iterate over all uniforms and find their locations
+        bool hasFailed = false;
+        std::stringstream errorMessages;
+        (
+            [&]() {
+                Failable result = std::get<Uniforms>(uniforms).findLocation(shaderProgram);
+                if (result.isError()) {
+                    hasFailed = true;
+                    errorMessages << result.error() << "\n";
+                }
+            }(),
+            ...);
 
-        // actually set the uniform in OpenGL here
+        if (hasFailed) {
+            return Failable::errorResult(errorMessages.str());
+        } else {
+            return Failable::ok({});
+        }
+    }
 
-        uniform.clearDirty();
+    bool markAllDirty() {
+        ([&]() { std::get<Uniforms>(uniforms).markDirty(); }(), ...);
+        return true;
     }
 };
 

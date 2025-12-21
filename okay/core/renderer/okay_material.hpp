@@ -16,9 +16,16 @@ namespace okay {
 
 enum class ShaderState { NOT_COMPILED, STANDBY, IN_USE };
 
+template <class UniformCollection>
+class OkayShader;
+
+template <class UniformCollection>
+class OkayMaterial;
+
 template <class... Uniforms>
-struct OkayShader {
+struct OkayShader<OkayMaterialUniformCollection<Uniforms...>> {
    public:
+
     OkayShader(const std::string vertexSrc, const std::string fragmentSrc)
         : vertexShader(std::move(vertexSrc)),
           fragmentShader(std::move(fragmentSrc)),
@@ -37,6 +44,7 @@ struct OkayShader {
 
     std::string vertexShader;
     std::string fragmentShader;
+    OkayMaterialUniformCollection<Uniforms...> uniforms;
 
     Failable compile() {
         // Compile vertex shader
@@ -94,39 +102,22 @@ struct OkayShader {
         if (_state != ShaderState::STANDBY && _state != ShaderState::IN_USE) {
             return Failable::errorResult("Shader must be compiled before setting it for use.");
         }
-
         glUseProgram(shaderProgram);
         _state = ShaderState::IN_USE;
+        uniforms.markAllDirty();
         return Failable::ok({});
     }
 
     Failable findUniformLocations() {
-        // For each uniform in Uniforms..., find its location in the shader program
-        // and collect errors if any
-        std::stringstream errors;
-        bool hasError = false;
-        (
-            [&]() {
-                auto& uniform = std::get<Uniforms>(uniforms);
-                Failable result = uniform.findLocation(shaderProgram);
-                if (result.isError()) {
-                    hasError = true;
-                    errors << result.error() << "\n";
-                }
-                return Failable::ok({});
-            }(),
-            ...);
+        return uniforms.findLocations(shaderProgram);
+    };
 
-        if (hasError) {
-            return Failable::errorResult(errors.str());
-        }
-        return Failable::ok({});
+    Failable passDirtyUniforms() {
+        return uniforms.setUniforms(shaderProgram);
     };
 
     ShaderState state() const { return _state; }
     std::uint32_t id() const { return _id; }
-
-    std::tuple<Uniforms...> uniforms;
 
    private:
     unsigned int shaderProgram;
@@ -142,18 +133,13 @@ class IOkayMaterial {
     virtual void passUniforms() {}
 };
 
-using OkayEngineUniforms =
-    OkayMaterialUniformCollection<OkayMaterialUniform<glm::mat4, FixedString("u_Model")>,
-                                  OkayMaterialUniform<glm::mat4, FixedString("u_View")>,
-                                  OkayMaterialUniform<glm::mat4, FixedString("u_Projection")>>;
-
+// template takes in a OkayMaterialUniformCollection<...>
 template <class... Uniforms>
-class OkayMaterial : public IOkayMaterial {
+class OkayMaterial<OkayMaterialUniformCollection<Uniforms...>> : public IOkayMaterial {
    public:
-    OkayEngineUniforms engineUniforms;
     OkayMaterialUniformCollection<Uniforms...> uniforms;
 
-    OkayMaterial(const OkayShader<Uniforms...>& shader) : _shader(shader) {
+    OkayMaterial(const OkayShader<Uniforms...>& shader) : _shader(shader), uniforms() {
         // hash the names of the uniforms + shader id to create a unique material id
         std::hash<std::string> hasher;
         std::string combined;
@@ -171,10 +157,7 @@ class OkayMaterial : public IOkayMaterial {
         }
     }
 
-    void passUniforms() override {
-        uniforms.setUniforms();
-        engineUniforms.setUniforms();
-    }
+    void passUniforms() override { uniforms.setUniforms(); }
 
    private:
     OkayShader<Uniforms...> _shader;

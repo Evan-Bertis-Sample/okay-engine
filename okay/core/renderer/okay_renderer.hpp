@@ -2,21 +2,19 @@
 #define __OKAY_RENDERER_H__
 
 #include <iostream>
+#include <okay/core/asset/generic/shader_loader.hpp>
+#include <okay/core/asset/okay_asset.hpp>
 #include <okay/core/renderer/okay_material.hpp>
 #include <okay/core/renderer/okay_mesh.hpp>
 #include <okay/core/renderer/okay_primitive.hpp>
 #include <okay/core/renderer/okay_surface.hpp>
 #include <okay/core/system/okay_system.hpp>
-#include <okay/core/asset/okay_asset.hpp>
-
-#include <okay/core/asset/generic/shader_loader.hpp>
 
 namespace okay {
 
 struct OkayRendererSettings {
     SurfaceConfig SurfaceConfig;
 };
-
 
 class OkayRenderer : public OkaySystem<OkaySystemScope::ENGINE> {
    public:
@@ -27,8 +25,11 @@ class OkayRenderer : public OkaySystem<OkaySystemScope::ENGINE> {
     OkayRenderer(const OkayRendererSettings& settings)
         : _settings(settings), _surface(std::make_unique<Surface>(settings.SurfaceConfig)) {}
 
+    using TestMaterialUniforms =
+        OkayMaterialUniformCollection<OkayMaterialUniform<glm::vec3, FixedString("u_color")>>;
+
     unsigned int VBO, VAO;
-    OkayShader<OkayMaterialUniformNone> shader;
+    OkayShader<TestMaterialUniforms> shader;
 
     void initialize() override {
         std::cout << "Okay Renderer initialized." << std::endl;
@@ -37,8 +38,11 @@ class OkayRenderer : public OkaySystem<OkaySystemScope::ENGINE> {
         OkayMesh model =
             _modelBuffer.AddModel(okay::primitives::box().sizeSet({10, 10, 10}).build());
 
-        Result<OkayAsset<OkayShader<OkayMaterialUniformNone>>> shaderRes = Engine.systems.getSystem<OkayAssetManager>().value()
-            ->loadEngineAssetSync<OkayShader<OkayMaterialUniformNone>>(std::filesystem::path("shaders/test"));
+        Result<OkayAsset<OkayShader<TestMaterialUniforms>>> shaderRes =
+            Engine.systems.getSystem<OkayAssetManager>()
+                .value()
+                ->loadEngineAssetSync<OkayShader<TestMaterialUniforms>>(
+                    std::filesystem::path("shaders/test"));
 
         if (shaderRes.isError()) {
             std::cerr << "Failed to load shader: " << shaderRes.error() << std::endl;
@@ -50,6 +54,20 @@ class OkayRenderer : public OkaySystem<OkaySystemScope::ENGINE> {
 
         if (compileResult.isError()) {
             std::cerr << "Shader compilation failed: " << compileResult.error() << std::endl;
+            return;
+        }
+
+        shader.uniforms.get<FixedString("u_color")>().set(glm::vec3(1.0f, 0.5f, 0.2f));
+
+        Failable findRes = shader.findUniformLocations();
+        if (findRes.isError()) {
+            std::cerr << "Failed to find uniform locations: " << findRes.error() << std::endl;
+            return;
+        }
+
+        Failable setRes = shader.passDirtyUniforms();
+        if (setRes.isError()) {
+            std::cerr << "Failed to set initial uniform values: " << setRes.error() << std::endl;
             return;
         }
 
@@ -97,7 +115,8 @@ class OkayRenderer : public OkaySystem<OkaySystemScope::ENGINE> {
         Failable f = shader.set();
         if (f.isError()) {
             std::cerr << "Failed to set shader: " << f.error() << std::endl;
-            while (true) {}
+            while (true) {
+            }
             return;
         }
 
