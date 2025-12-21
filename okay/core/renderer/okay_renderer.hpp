@@ -57,9 +57,15 @@ class OkayRenderer : public OkaySystem<OkaySystemScope::ENGINE> {
             return;
         }
 
-        // failling line -- not found?
-        shader.uniforms.get<FixedString("u_color")>().set(glm::vec3(1.0f, 0.5f, 0.2f));
+        Failable f = shader.set();
+        if (f.isError()) {
+            std::cerr << "Failed to set shader: " << f.error() << std::endl;
+            while (true) {
+            }
+            return;
+        }
 
+        shader.uniforms.get<FixedString("u_color")>().set(glm::vec3(1.0f, 1.0f, 1.0f));
 
         Failable findRes = shader.findUniformLocations();
         if (findRes.isError()) {
