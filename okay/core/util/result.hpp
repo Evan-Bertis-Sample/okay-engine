@@ -5,11 +5,9 @@
 #include <string>
 #include <type_traits>
 #include <utility>
+#include <okay/core/util/type.hpp>
 
 namespace okay {
-
-template <typename>
-inline constexpr bool dependent_false_v = false;
 
 /// @brief A class representing the result of a function: either a value (ok) or an error message.
 template <typename T>
@@ -95,7 +93,6 @@ class Result {
         : _value(std::nullopt), _errorMessage(std::move(errorMessage)) {}
 };
 
-struct NoneType {};
 using Failable = Result<NoneType>;
 
 }  // namespace okay

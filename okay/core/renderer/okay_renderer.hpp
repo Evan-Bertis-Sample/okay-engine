@@ -28,7 +28,7 @@ class OkayRenderer : public OkaySystem<OkaySystemScope::ENGINE> {
         : _settings(settings), _surface(std::make_unique<Surface>(settings.SurfaceConfig)) {}
 
     unsigned int VBO, VAO;
-    OkayShader shader;
+    OkayShader<OkayMaterialUniformNone> shader;
 
     void initialize() override {
         std::cout << "Okay Renderer initialized." << std::endl;
@@ -37,8 +37,8 @@ class OkayRenderer : public OkaySystem<OkaySystemScope::ENGINE> {
         OkayMesh model =
             _modelBuffer.AddModel(okay::primitives::box().sizeSet({10, 10, 10}).build());
 
-        Result<OkayAsset<OkayShader>> shaderRes = Engine.systems.getSystem<OkayAssetManager>().value()
-            ->loadEngineAssetSync<OkayShader>(std::filesystem::path("shaders/test"));
+        Result<OkayAsset<OkayShader<OkayMaterialUniformNone>>> shaderRes = Engine.systems.getSystem<OkayAssetManager>().value()
+            ->loadEngineAssetSync<OkayShader<OkayMaterialUniformNone>>(std::filesystem::path("shaders/test"));
 
         if (shaderRes.isError()) {
             std::cerr << "Failed to load shader: " << shaderRes.error() << std::endl;

@@ -14,29 +14,119 @@
 
 namespace okay {
 
+enum class ShaderState { NOT_COMPILED, STANDBY, IN_USE };
+
+template <class... Uniforms>
 struct OkayShader {
    public:
-    enum ShaderState { NOT_COMPILED, STANDBY, IN_USE };
-
     OkayShader(const std::string vertexSrc, const std::string fragmentSrc)
         : vertexShader(std::move(vertexSrc)),
           fragmentShader(std::move(fragmentSrc)),
           shaderProgram(0),
-          _state(NOT_COMPILED) {
+          _state(ShaderState::NOT_COMPILED) {
         std::hash<std::string> hasher;
         _id = hasher(vertexShader + fragmentShader);
     }
 
     OkayShader()
-        : vertexShader(""), fragmentShader(""), shaderProgram(0), _state(NOT_COMPILED), _id(1) {}
+        : vertexShader(""),
+          fragmentShader(""),
+          shaderProgram(0),
+          _state(ShaderState::NOT_COMPILED),
+          _id(1) {}
 
     std::string vertexShader;
     std::string fragmentShader;
 
-    Failable compile();
-    Failable set();
+    Failable compile() {
+        // Compile vertex shader
+        unsigned int vertex = glCreateShader(GL_VERTEX_SHADER);
+        const char* vertexSrcCStr = vertexShader.c_str();
+        glShaderSource(vertex, 1, &vertexSrcCStr, NULL);
+        glCompileShader(vertex);
+
+        // Check for compilation errors
+        int success;
+        char infoLog[512];
+        glGetShaderiv(vertex, GL_COMPILE_STATUS, &success);
+        if (!success) {
+            glGetShaderInfoLog(vertex, 512, NULL, infoLog);
+            return Failable::errorResult("Vertex shader compilation failed: " +
+                                         std::string(infoLog));
+        }
+
+        // Compile fragment shader
+        unsigned int fragment = glCreateShader(GL_FRAGMENT_SHADER);
+        const char* fragmentSrcCStr = fragmentShader.c_str();
+        glShaderSource(fragment, 1, &fragmentSrcCStr, NULL);
+        glCompileShader(fragment);
+
+        // Check for compilation errors
+        glGetShaderiv(fragment, GL_COMPILE_STATUS, &success);
+        if (!success) {
+            glGetShaderInfoLog(fragment, 512, NULL, infoLog);
+            return Failable::errorResult("Fragment shader compilation failed: " +
+                                         std::string(infoLog));
+        }
+
+        // Link shaders into a program
+        shaderProgram = glCreateProgram();
+        glAttachShader(shaderProgram, vertex);
+        glAttachShader(shaderProgram, fragment);
+        glLinkProgram(shaderProgram);
+
+        // Check for linking errors
+        glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+        if (!success) {
+            glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
+            return Failable::errorResult("Shader program linking failed: " + std::string(infoLog));
+        }
+
+        // Clean up shaders as they're linked into the program now and no longer necessary
+        glDeleteShader(vertex);
+        glDeleteShader(fragment);
+
+        _state = ShaderState::STANDBY;
+        return Failable::ok({});
+    }
+
+    Failable set() {
+        if (_state != ShaderState::STANDBY && _state != ShaderState::IN_USE) {
+            return Failable::errorResult("Shader must be compiled before setting it for use.");
+        }
+
+        glUseProgram(shaderProgram);
+        _state = ShaderState::IN_USE;
+        return Failable::ok({});
+    }
+
+    Failable findUniformLocations() {
+        // For each uniform in Uniforms..., find its location in the shader program
+        // and collect errors if any
+        std::stringstream errors;
+        bool hasError = false;
+        (
+            [&]() {
+                auto& uniform = std::get<Uniforms>(uniforms);
+                Failable result = uniform.findLocation(shaderProgram);
+                if (result.isError()) {
+                    hasError = true;
+                    errors << result.error() << "\n";
+                }
+                return Failable::ok({});
+            }(),
+            ...);
+
+        if (hasError) {
+            return Failable::errorResult(errors.str());
+        }
+        return Failable::ok({});
+    };
+
     ShaderState state() const { return _state; }
     std::uint32_t id() const { return _id; }
+
+    std::tuple<Uniforms...> uniforms;
 
    private:
     unsigned int shaderProgram;
@@ -63,7 +153,7 @@ class OkayMaterial : public IOkayMaterial {
     OkayEngineUniforms engineUniforms;
     OkayMaterialUniformCollection<Uniforms...> uniforms;
 
-    OkayMaterial(const OkayShader& shader) : _shader(shader) {
+    OkayMaterial(const OkayShader<Uniforms...>& shader) : _shader(shader) {
         // hash the names of the uniforms + shader id to create a unique material id
         std::hash<std::string> hasher;
         std::string combined;
@@ -76,7 +166,7 @@ class OkayMaterial : public IOkayMaterial {
     std::uint32_t shaderID() const override { return _shader.id(); }
 
     void setShader() override {
-        if (_shader.state() != OkayShader::IN_USE) {
+        if (_shader.state() != ShaderState::IN_USE) {
             _shader.set();
         }
     }
@@ -87,7 +177,7 @@ class OkayMaterial : public IOkayMaterial {
     }
 
    private:
-    OkayShader _shader;
+    OkayShader<Uniforms...> _shader;
     std::size_t _id{0};
 };
 

@@ -1,15 +1,12 @@
 #ifndef __OKAY_UNIFORM_H__
 #define __OKAY_UNIFORM_H__
 
-#include <glm/glm.hpp>  // you use glm types
+#include <glm/glm.hpp>
+#include <okay/core/util/result.hpp>
 #include <string_view>
 #include <tuple>
 #include <type_traits>
 #include <utility>
-#include <okay/core/util/result.hpp>
-
-// forward declare / include OkayTexture
-// #include <okay/core/renderer/okay_texture.hpp>
 
 namespace okay {
 
@@ -27,27 +24,28 @@ struct FixedString {
 template <std::size_t N>
 FixedString(const char (&)[N]) -> FixedString<N>;
 
-enum class UniformKind { Float, Int, Vec2, Vec3, Vec4, Mat3, Mat4, Texture };
-
+enum class UniformKind { FLOAT, INT, VEC2, VEC3, VEC4, MAT3, MAT4, TEXTURE, VOID };
 
 template <class T>
 constexpr UniformKind UniformKindOf() {
     if constexpr (std::is_same_v<T, float>)
-        return UniformKind::Float;
+        return UniformKind::FLOAT;
     else if constexpr (std::is_same_v<T, int>)
-        return UniformKind::Int;
+        return UniformKind::INT;
     else if constexpr (std::is_same_v<T, glm::vec2>)
-        return UniformKind::Vec2;
+        return UniformKind::VEC2;
     else if constexpr (std::is_same_v<T, glm::vec3>)
-        return UniformKind::Vec3;
+        return UniformKind::VEC3;
     else if constexpr (std::is_same_v<T, glm::vec4>)
-        return UniformKind::Vec4;
+        return UniformKind::VEC4;
     else if constexpr (std::is_same_v<T, glm::mat3>)
-        return UniformKind::Mat3;
+        return UniformKind::MAT3;
     else if constexpr (std::is_same_v<T, glm::mat4>)
-        return UniformKind::Mat4;
+        return UniformKind::MAT4;
     else if constexpr (std::is_same_v<T, OkayTexture>)
-        return UniformKind::Texture;
+        return UniformKind::TEXTURE;
+    else if constexpr (std::is_same_v<T, NoneType>)
+        return UniformKind::VOID;
     else
         static_assert(dependent_false_v<T>, "Unsupported uniform type");
 }
@@ -70,11 +68,23 @@ struct OkayMaterialUniform {
     const T& get() const { return _value; }
     bool isDirty() const { return _dirty; }
 
+    Failable findLocation(unsigned int shaderProgram) {
+        int location = glGetUniformLocation(shaderProgram, std::string(name.sv()).c_str());
+        if (location == -1) {
+            return Failable::errorResult("Uniform not found: " + std::string(name.sv()));
+        }
+        _location = static_cast<unsigned int>(location);
+        return Failable::ok({});
+    };
+
    private:
     T _value{};
     bool _dirty{true};
     unsigned int _location{invalidLocation()};
 };
+
+// define none type for empty uniform collections
+using OkayMaterialUniformNone = OkayMaterialUniform<NoneType, FixedString("")>;
 
 // Name matching
 template <auto Name, class U>
@@ -121,13 +131,12 @@ struct OkayMaterialUniformCollection {
         (setUniformIfDirty(std::get<Uniforms>(uniforms)), ...);
     }
 
-    private:
+   private:
     template <class U>
     void setUniformIfDirty(U& uniform) {
         if (!uniform.isDirty()) return;
 
         // actually set the uniform in OpenGL here
-
 
         uniform.clearDirty();
     }
