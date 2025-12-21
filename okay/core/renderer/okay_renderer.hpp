@@ -28,7 +28,7 @@ class OkayRenderer : public OkaySystem<OkaySystemScope::ENGINE> {
     using TestMaterialUniforms =
         OkayMaterialUniformCollection<OkayMaterialUniform<glm::vec3, FixedString("u_color")>>;
 
-    unsigned int VBO, VAO;
+    GLuint VBO, VAO;
     OkayShader<TestMaterialUniforms> shader;
 
     void initialize() override {

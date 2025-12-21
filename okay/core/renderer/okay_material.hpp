@@ -48,7 +48,7 @@ struct OkayShader<OkayMaterialUniformCollection<Uniforms...>> {
 
     Failable compile() {
         // Compile vertex shader
-        unsigned int vertex = glCreateShader(GL_VERTEX_SHADER);
+        GLuint vertex = glCreateShader(GL_VERTEX_SHADER);
         const char* vertexSrcCStr = vertexShader.c_str();
         glShaderSource(vertex, 1, &vertexSrcCStr, NULL);
         glCompileShader(vertex);
@@ -64,7 +64,7 @@ struct OkayShader<OkayMaterialUniformCollection<Uniforms...>> {
         }
 
         // Compile fragment shader
-        unsigned int fragment = glCreateShader(GL_FRAGMENT_SHADER);
+        GLuint fragment = glCreateShader(GL_FRAGMENT_SHADER);
         const char* fragmentSrcCStr = fragmentShader.c_str();
         glShaderSource(fragment, 1, &fragmentSrcCStr, NULL);
         glCompileShader(fragment);
@@ -120,7 +120,7 @@ struct OkayShader<OkayMaterialUniformCollection<Uniforms...>> {
     std::uint32_t id() const { return _id; }
 
    private:
-    unsigned int shaderProgram;
+    GLuint shaderProgram;
     ShaderState _state;
     std::size_t _id;
 };
