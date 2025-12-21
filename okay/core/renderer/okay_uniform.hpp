@@ -45,7 +45,7 @@ struct OkayMaterialUniform {
 
     static constexpr auto name = Name;
     static constexpr UniformKind kind = UniformKindOf<T>();
-    static constexpr unsigned int invalidLocation() { return 0xFFFFFFFFu; }
+    static constexpr GLuint invalidLocation() { return 0xFFFFFFFFu; }
 
     constexpr std::string_view name_sv() const { return name.sv(); }
 
@@ -56,18 +56,18 @@ struct OkayMaterialUniform {
     const T& get() const { return _value; }
     bool isDirty() const { return _dirty; }
     void markDirty() { _dirty = true; }
-    unsigned int location() const { return _location; }
+    GLuint location() const { return _location; }
 
-    Failable findLocation(unsigned int shaderProgram) {
+    Failable findLocation(GLuint shaderProgram) {
         int location = glGetUniformLocation(shaderProgram, std::string(name.sv()).c_str());
         if (location == -1) {
             return Failable::errorResult("Uniform not found: " + std::string(name.sv()));
         }
-        _location = static_cast<unsigned int>(location);
+        _location = static_cast<GLuint>(location);
         return Failable::ok({});
     };
 
-    Failable passUniform(unsigned int shaderProgram) {
+    Failable passUniform(GLuint shaderProgram) {
         if (location() == invalidLocation()) {
             Failable result = findLocation(shaderProgram);
             if (result.isError()) {
@@ -110,7 +110,7 @@ struct OkayMaterialUniform {
    private:
     T _value{};
     bool _dirty{true};
-    unsigned int _location{invalidLocation()};
+    GLuint _location{invalidLocation()};
 };
 
 // special definition for none type of uniforms
@@ -120,7 +120,7 @@ struct OkayMaterialUniform<NoneType, FixedString("")> {
 
     static constexpr auto name = FixedString("");
     static constexpr UniformKind kind = UniformKind::VOID;
-    static constexpr unsigned int invalidLocation() { return 0xFFFFFFFFu; }
+    static constexpr GLuint invalidLocation() { return 0xFFFFFFFFu; }
 
     constexpr std::string_view name_sv() const { return name.sv(); }
 
@@ -129,9 +129,9 @@ struct OkayMaterialUniform<NoneType, FixedString("")> {
     void markDirty() {}
     bool isDirty() const { return false; }
 
-    unsigned int location() const { return invalidLocation(); }
-    Failable findLocation(unsigned int) { return Failable::ok({}); };
-    Failable passUniform(unsigned int) { return Failable::ok({}); };
+    GLuint location() const { return invalidLocation(); }
+    Failable findLocation(GLuint) { return Failable::ok({}); };
+    Failable passUniform(GLuint) { return Failable::ok({}); };
 
    private:
     NoneType _value{};
@@ -180,7 +180,7 @@ struct OkayMaterialUniformCollection {
         return std::get<idx>(uniforms);
     }
 
-    Failable setUniforms(unsigned int shaderProgram) {
+    Failable setUniforms(GLuint shaderProgram) {
         // Iterate over all uniforms and set them if dirty
         bool hasFailed = false;
         std::stringstream errorMessages;
@@ -201,7 +201,7 @@ struct OkayMaterialUniformCollection {
         }
     }
 
-    Failable findLocations(unsigned int shaderProgram) {
+    Failable findLocations(GLuint shaderProgram) {
         // Iterate over all uniforms and find their locations
         bool hasFailed = false;
         std::stringstream errorMessages;
