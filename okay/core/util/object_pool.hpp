@@ -10,20 +10,25 @@
 
 namespace okay {
 
+struct ObjectPoolHandle {
+    std::uint32_t index{invalidIndex()};
+    std::uint32_t generation{0};
+
+    friend bool operator==(ObjectPoolHandle a, ObjectPoolHandle b) {
+        return a.index == b.index && a.generation == b.generation;
+    }
+    friend bool operator!=(ObjectPoolHandle a, ObjectPoolHandle b) { return !(a == b); }
+
+    static constexpr std::uint32_t invalidIndex() { return 0xFFFFFFFFu; }
+    static ObjectPoolHandle invalidHandle() { return ObjectPoolHandle(invalidIndex()); }
+};
+
 template <typename T>
 class ObjectPool final {
    public:
-    struct Handle {
-        std::uint32_t index{invalidIndex()};
-        std::uint32_t generation{0};
-
-        friend bool operator==(Handle a, Handle b) {
-            return a.index == b.index && a.generation == b.generation;
-        }
-        friend bool operator!=(Handle a, Handle b) { return !(a == b); }
-    };
-
-    static constexpr std::uint32_t invalidIndex() { return 0xFFFFFFFFu; }
+   
+    static constexpr std::uint32_t invalidIndex() { return ObjectPoolHandle::invalidHandle(); }
+    static ObjectPoolHandle invalidHandle() { return ObjectPoolHandle::invalidHandle(); }
 
     ObjectPool() = default;
     ~ObjectPool() { clear(); }
@@ -48,7 +53,7 @@ class ObjectPool final {
     }
 
     template <typename... Args>
-    Handle emplace(Args&&... args) {
+    ObjectPoolHandle emplace(Args&&... args) {
         const std::uint32_t idx = allocateSlot();
         Slot& s = _slots[idx];
 
@@ -57,10 +62,10 @@ class ObjectPool final {
         s.alive = true;
         ++_aliveCount;
 
-        return Handle{idx, s.generation};
+        return ObjectPoolHandle{idx, s.generation};
     }
 
-    void destroy(Handle h) {
+    void destroy(ObjectPoolHandle h) {
         if (!valid(h)) return;
 
         Slot& s = _slots[h.index];
@@ -97,7 +102,7 @@ class ObjectPool final {
         _aliveCount = 0;
     }
 
-    bool valid(Handle h) const {
+    bool valid(ObjectPoolHandle h) const {
         if (h.index == invalidIndex()) return false;
         if (h.index >= _slots.size()) return false;
         const Slot& s = _slots[h.index];
@@ -107,22 +112,22 @@ class ObjectPool final {
     std::size_t size() const { return _aliveCount; }
     std::size_t capacity() const { return _slots.size(); }
 
-    T& get(Handle h) {
+    T& get(ObjectPoolHandle h) {
         assert(valid(h));
         return _slots[h.index].ref();
     }
 
-    const T& get(Handle h) const {
+    const T& get(ObjectPoolHandle h) const {
         assert(valid(h));
         return _slots[h.index].ref();
     }
 
-    T* tryGet(Handle h) {
+    T* tryGet(ObjectPoolHandle h) {
         if (!valid(h)) return nullptr;
         return &_slots[h.index].ref();
     }
 
-    const T* tryGet(Handle h) const {
+    const T* tryGet(ObjectPoolHandle h) const {
         if (!valid(h)) return nullptr;
         return &_slots[h.index].ref();
     }

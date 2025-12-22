@@ -23,6 +23,9 @@ struct OkayMesh {
     std::size_t vertexCount;
     std::size_t indexOffset;
     std::size_t indexCount;
+
+    static OkayMesh none() { return {0, 0, 0, 0}; }
+    bool isEmpty() { return indexCount == 0; }
 };
 
 class OkayModelView;
