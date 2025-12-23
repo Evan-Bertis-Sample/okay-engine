@@ -75,10 +75,10 @@ struct OkayLog final {
     }
 
     template <Severity S, Verbosity V, typename... Ts>
-    void operator()(std::ostream& os, bool enableColor, Ts&&... ts) const {
+    void invoke(std::ostream& os, bool enableColor, Ts&&... ts) const {
         os << LogPhrases::severityColor(S, enableColor);
         os << LogPhrases::severityTag(S) << '[' << loc.file_name() << ':' << loc.line() << "] ";
-        os << std::vformat(fmt, std::forward<Ts>(ts)...);
+        os << std::vformat(fmt, std::make_format_args(ts...));
         if (enableColor) os << LogPhrases::COLOR_RESET;
         os << '\n';
     }
@@ -134,10 +134,10 @@ class OkayLogger {
 
         std::lock_guard<std::mutex> g(_mtx);
 
-        log<S, V, Ts...>(os, true, std::forward<Ts>(ts)...);
+        log.invoke<S, V, Ts...>(os, true, std::forward<Ts>(ts)...);
 
         if (_file.is_open()) {
-            log<S, V, Ts...>(_file, false, std::forward<Ts>(ts)...);
+            log.invoke<S, V, Ts...>(_file, false, std::forward<Ts>(ts)...);
             _file.flush();
         }
     }
