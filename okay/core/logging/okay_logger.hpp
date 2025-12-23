@@ -59,45 +59,30 @@ struct LogPhrases {
     }
 };
 
-template <Severity S, Verbosity V>
 struct OkayLog final {
     std::string_view fmt;
     std::source_location loc;
 
-    // converting ctor (NOT explicit) is the key
-    template <typename... Ts>
-    consteval OkayLog(std::format_string<Ts...> fmt,
+    template<typename T>
+    consteval OkayLog(T&& fmt,
                       std::source_location loc = std::source_location::current())
-        : fmt(fmt.get()), loc(loc) {}
+        : fmt(std::forward<T>(fmt)), loc(loc) {}
 
+    template <Severity S, Verbosity V>
     static consteval bool logEnabled() {
         return (OKAY_LOGGER_ENABLED != 0) && (static_cast<int>(S) >= OKAY_COMPILED_MIN_SEVERITY) &&
                (static_cast<int>(V) >= OKAY_COMPILED_MIN_VERBOSITY);
     }
 
-    template <typename... Ts>
+    template <Severity S, Verbosity V, typename... Ts>
     void operator()(std::ostream& os, bool enableColor, Ts&&... ts) const {
-        if constexpr (!logEnabled()) return;
-
         os << LogPhrases::severityColor(S, enableColor);
         os << LogPhrases::severityTag(S) << '[' << loc.file_name() << ':' << loc.line() << "] ";
-        os << std::format(fmt, std::forward<Ts>(ts)...);
+        os << std::vformat(fmt, std::forward<Ts>(ts)...);
         if (enableColor) os << LogPhrases::COLOR_RESET;
         os << '\n';
     }
 };
-
-template <Verbosity V, typename... Ts>
-using Debug = OkayLog<Severity::DEBUG, V>;
-
-template <Verbosity V, typename... Ts>
-using Info = OkayLog<Severity::INFO, V>;
-
-template <Verbosity V, typename... Ts>
-using Warning = OkayLog<Severity::WARNING, V>;
-
-template <Verbosity V, typename... Ts>
-using Error = OkayLog<Severity::ERROR, V>;
 
 class OkayLogger {
    public:
@@ -118,23 +103,23 @@ class OkayLogger {
     }
 
     template <Verbosity V = Verbosity::NORMAL, typename... Ts>
-    void debug(Debug<V> log, Ts&&... ts) {
-        _emit(std::cout, log, std::forward<Ts>(ts)...);
+    void debug(OkayLog log, Ts&&... ts) {
+        _emit<Severity::DEBUG, V, Ts...>(std::cout, log, std::forward<Ts>(ts)...);
     }
 
     template <Verbosity V = Verbosity::NORMAL, typename... Ts>
-    void info(Info<V> log, Ts&&... ts) {
-        _emit(std::cout, log, std::forward<Ts>(ts)...);
+    void info(OkayLog log, Ts&&... ts) {
+        _emit<Severity::INFO, V, Ts...>(std::cout, log, std::forward<Ts>(ts)...);
     }
 
     template <Verbosity V = Verbosity::NORMAL, typename... Ts>
-    void warning(Warning<V> log, Ts&&... ts) {
-        _emit(std::cerr, log, std::forward<Ts>(ts)...);
+    void warning(OkayLog log, Ts&&... ts) {
+        _emit<Severity::WARNING, V, Ts...>(std::cerr, log, std::forward<Ts>(ts)...);
     }
 
     template <Verbosity V = Verbosity::NORMAL, typename... Ts>
-    void error(Error<V> log, Ts&&... ts) {
-        _emit(std::cerr, log, std::forward<Ts>(ts)...);
+    void error(OkayLog log, Ts&&... ts) {
+        _emit<Severity::ERROR, V, Ts...>(std::cerr, log, std::forward<Ts>(ts)...);
     }
 
    private:
@@ -144,15 +129,15 @@ class OkayLogger {
     std::string _logFileName{};
 
     template <Severity S, Verbosity V, typename... Ts>
-    void _emit(std::ostream& os, const OkayLog<S, V, Ts...>& log, Ts&&... ts) {
-        if constexpr (!OkayLog<S, V, Ts...>::logEnabled()) return;
+    void _emit(std::ostream& os, const OkayLog& log, Ts&&... ts) {
+        if constexpr (!OkayLog::logEnabled<S, V>()) return;
 
         std::lock_guard<std::mutex> g(_mtx);
 
-        log(os, true, std::forward<Ts>(ts)...);
+        log<S, V, Ts...>(os, true, std::forward<Ts>(ts)...);
 
         if (_file.is_open()) {
-            log(_file, false, std::forward<Ts>(ts)...);
+            log<S, V, Ts...>(_file, false, std::forward<Ts>(ts)...);
             _file.flush();
         }
     }
