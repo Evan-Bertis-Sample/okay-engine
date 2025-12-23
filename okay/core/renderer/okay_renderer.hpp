@@ -9,6 +9,7 @@
 #include <okay/core/renderer/okay_primitive.hpp>
 #include <okay/core/renderer/okay_surface.hpp>
 #include <okay/core/system/okay_system.hpp>
+#include <okay/core/util/singleton.hpp>
 
 namespace okay {
 
@@ -60,7 +61,7 @@ class OkayRenderer : public OkaySystem<OkaySystemScope::ENGINE> {
                     shader.uniforms.get<FixedString("u_color")>().set(glm::vec3(1.0f, 1.0f, 1.0f));
                     return shader.passDirtyUniforms();
                 }),
-            [](const std::string& failMessage) { std::cerr << "Failed to setup shader!\n"; });
+            [](const std::string& failMessage) { Engine.logger.error("Cannot setup shader!"); });
 
         if (!shaderSetup) {
             return; // we have failed
