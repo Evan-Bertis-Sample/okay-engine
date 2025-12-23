@@ -61,18 +61,21 @@ struct LogPhrases {
 
 template <Severity S, Verbosity V>
 struct OkayLog final {
-    const char* fmt;
+    std::string_view fmt;
     std::source_location loc;
 
-    OkayLog(const char* fmt,
-            std::source_location loc = std::source_location::current())
-        : fmt(fmt), loc(loc) {}
+    // converting ctor (NOT explicit) is the key
+    template <typename... Ts>
+    consteval OkayLog(std::format_string<Ts...> fmt,
+                      std::source_location loc = std::source_location::current())
+        : fmt(fmt.get()), loc(loc) {}
 
     static consteval bool logEnabled() {
         return (OKAY_LOGGER_ENABLED != 0) && (static_cast<int>(S) >= OKAY_COMPILED_MIN_SEVERITY) &&
                (static_cast<int>(V) >= OKAY_COMPILED_MIN_VERBOSITY);
     }
 
+    template <typename... Ts>
     void operator()(std::ostream& os, bool enableColor, Ts&&... ts) const {
         if constexpr (!logEnabled()) return;
 
@@ -85,16 +88,16 @@ struct OkayLog final {
 };
 
 template <Verbosity V, typename... Ts>
-using Debug = OkayLog<Severity::DEBUG, V, Ts...>;
+using Debug = OkayLog<Severity::DEBUG, V>;
 
 template <Verbosity V, typename... Ts>
-using Info = OkayLog<Severity::INFO, V, Ts...>;
+using Info = OkayLog<Severity::INFO, V>;
 
 template <Verbosity V, typename... Ts>
-using Warning = OkayLog<Severity::WARNING, V, Ts...>;
+using Warning = OkayLog<Severity::WARNING, V>;
 
 template <Verbosity V, typename... Ts>
-using Error = OkayLog<Severity::ERROR, V, Ts...>;
+using Error = OkayLog<Severity::ERROR, V>;
 
 class OkayLogger {
    public:
@@ -115,22 +118,22 @@ class OkayLogger {
     }
 
     template <Verbosity V = Verbosity::NORMAL, typename... Ts>
-    void debug(Debug<V, Ts...> log, Ts&&... ts) {
+    void debug(Debug<V> log, Ts&&... ts) {
         _emit(std::cout, log, std::forward<Ts>(ts)...);
     }
 
     template <Verbosity V = Verbosity::NORMAL, typename... Ts>
-    void info(Info<V, Ts...> log, Ts&&... ts) {
+    void info(Info<V> log, Ts&&... ts) {
         _emit(std::cout, log, std::forward<Ts>(ts)...);
     }
 
     template <Verbosity V = Verbosity::NORMAL, typename... Ts>
-    void warning(Warning<V, Ts...> log, Ts&&... ts) {
+    void warning(Warning<V> log, Ts&&... ts) {
         _emit(std::cerr, log, std::forward<Ts>(ts)...);
     }
 
     template <Verbosity V = Verbosity::NORMAL, typename... Ts>
-    void error(Error<V, Ts...> log, Ts&&... ts) {
+    void error(Error<V> log, Ts&&... ts) {
         _emit(std::cerr, log, std::forward<Ts>(ts)...);
     }
 
