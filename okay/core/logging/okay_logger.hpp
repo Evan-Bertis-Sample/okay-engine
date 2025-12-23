@@ -50,12 +50,14 @@ struct LogPhrases {
 
     static constexpr std::string_view COLOR_RESET = "\033[0m";
 
-    static constexpr std::string_view severityTag(Severity s) {
+    template <Severity s>
+    static constexpr std::string_view severityTag() {
         return SEVERITY_TAG[static_cast<std::size_t>(s)];
     }
 
-    static constexpr std::string_view severityColor(Severity s, bool enableColor) {
-        return enableColor ? SEVERITY_COLOR[static_cast<std::size_t>(s)] : std::string_view{};
+    template <Severity S>
+    static std::string_view severityColor(bool enableColor) {
+        return enableColor ? SEVERITY_COLOR[static_cast<std::size_t>(S)] : "";
     }
 };
 
@@ -76,8 +78,8 @@ struct OkayLog final {
 
     template <Severity S, Verbosity V, typename... Ts>
     void invoke(std::ostream& os, bool enableColor, Ts&&... ts) const {
-        os << LogPhrases::severityColor(S, enableColor);
-        os << LogPhrases::severityTag(S) << '[' << loc.file_name() << ':' << loc.line() << "] ";
+        os << LogPhrases::severityColor<S>(enableColor);
+        os << LogPhrases::severityTag<S>() << '[' << loc.function_name() << ':' << loc.line() << "] ";
         os << std::vformat(fmt, std::make_format_args(ts...));
         if (enableColor) os << LogPhrases::COLOR_RESET;
         os << '\n';

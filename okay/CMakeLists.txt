@@ -125,8 +125,6 @@ include(${OKAY_PROJECT_ROOT_DIR}/okay.cmake)
 get_target_property(INCLUDE_DIRS okay INCLUDE_DIRECTORIES)
 message(STATUS "okay Include Directories: ${INCLUDE_DIRS}")
 
-target_link_libraries(${PROJECT} PRIVATE okay -static-libstdc++)
+target_link_libraries(${PROJECT} PRIVATE okay)
 
-# root CMakeLists.txt
-target_link_options(${PROJECT} PRIVATE -fuse-ld=lld)
 
