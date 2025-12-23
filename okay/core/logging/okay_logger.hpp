@@ -1,7 +1,6 @@
 #ifndef OKAY_LOGGER_HPP
 #define OKAY_LOGGER_HPP
 
-#include <array>
 #include <cstdint>
 #include <format>
 #include <fstream>
@@ -12,6 +11,11 @@
 #include <string_view>
 #include <type_traits>
 #include <utility>
+#include <iomanip>
+#include <ctime>
+#include <sstream>
+#include <chrono>
+#include <filesystem>
 
 #ifndef OKAY_COMPILED_MIN_SEVERITY
 #define OKAY_COMPILED_MIN_SEVERITY 0
@@ -37,15 +41,15 @@ enum class Verbosity : std::uint8_t {
 };
 
 struct OkayLoggerOptions {
-    bool ToFile = true;
-    std::string FilePrefix = "okay_log_";
+    bool ToFile{true};
+    std::string FilePrefix{"okay_log_"};
 };
 
 struct LogPhrases {
     static constexpr std::array<std::string_view, 4> SEVERITY_TAG = {"[DEBUG]", "[INFO]", "[WARN]",
                                                                      "[ERROR]"};
 
-    static constexpr std::array<std::string_view, 4> SEVERITY_COLOR = {"\033[37m", "\033[32m",
+    static constexpr std::array<std::string_view, 4> SEVERITY_COLOR = {"\03[37m", "\033[32m",
                                                                        "\033[33m", "\033[31m"};
 
     static constexpr std::string_view COLOR_RESET = "\033[0m";
@@ -60,6 +64,7 @@ struct LogPhrases {
         return enableColor ? SEVERITY_COLOR[static_cast<std::size_t>(S)] : "";
     }
 };
+
 
 struct OkayLog final {
     std::string_view fmt;
@@ -89,6 +94,7 @@ struct OkayLog final {
 class OkayLogger {
    public:
     OkayLogger() = default;
+
     explicit OkayLogger(const OkayLoggerOptions& options) : _options(options) {
         _openFileIfNeeded();
     }
@@ -129,6 +135,7 @@ class OkayLogger {
     std::ofstream _file{};
     std::mutex _mtx{};
     std::string _logFileName{};
+    bool _triedToOpenFile{false};
 
     template <Severity S, Verbosity V, typename... Ts>
     void _emit(std::ostream& os, const OkayLog& log, Ts&&... ts) {
@@ -138,20 +145,36 @@ class OkayLogger {
 
         log.invoke<S, V, Ts...>(os, true, std::forward<Ts>(ts)...);
 
+        if (_options.ToFile && !_triedToOpenFile) {
+            _openFileIfNeeded();
+            _triedToOpenFile = true;
+        }
+
         if (_file.is_open()) {
             log.invoke<S, V, Ts...>(_file, false, std::forward<Ts>(ts)...);
             _file.flush();
         }
     }
 
-    static std::string _makeStartFilename(const std::string& prefix);
+    static std::string _makeStartFilename(const std::string& prefix) {
+        auto now = std::chrono::system_clock::now();
+        auto time = std::chrono::system_clock::to_time_t(now);
+        auto tm = *std::localtime(&time);
+        std::stringstream ss;
+        // prepend cwd / logs
+        ss << std::filesystem::current_path() / "logs" / prefix << std::put_time(&tm, "%Y-%m-%d_%H-%M-%S") << ".log";
+        return ss.str();
+    }
 
     void _openFileIfNeeded() {
         if (!_options.ToFile) return;
         if (_logFileName.empty()) _logFileName = _makeStartFilename(_options.FilePrefix);
-        _file.open(_logFileName.c_str(), std::ios::out | std::ios::trunc);
-        if (!_file) {
-            std::cerr << "[WARN][logger] Failed to open log file: " << _logFileName << "\n";
+        // make the file if it doesn't exist
+        std::lock_guard<std::mutex> g(_mtx);
+        _file.open(_logFileName, std::ios::out | std::ios::app);
+        if (!_file.is_open()) {
+            auto log = OkayLog("Failed to open log file: {}");
+            log.invoke<Severity::ERROR, Verbosity::NORMAL>(std::cerr, true, _logFileName);
         }
     }
 };

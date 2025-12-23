@@ -67,7 +67,7 @@ class OkayRenderer : public OkaySystem<OkaySystemScope::ENGINE> {
             return; // we have failed
         }
 
-        Engine.logger.debug("Shader setup done! Test float {}", 0.0f);
+        Engine.logger.info("Shader setup done! Test float {}", 0.0f, 0.0f);
 
         float vertices[] = {
             -0.5f, -0.5f, 0.0f,  // left
