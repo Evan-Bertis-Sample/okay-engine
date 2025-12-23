@@ -1,7 +1,10 @@
 #ifndef __OKAY_MESH_H__
 #define __OKAY_MESH_H__
 
+#include <glad/gl.h>
+
 #include <glm/glm.hpp>
+#include <okay/core/util/result.hpp>
 #include <vector>
 
 namespace okay {
@@ -9,8 +12,10 @@ namespace okay {
 struct OkayVertex {
     glm::vec3 position;
     glm::vec3 normal;
-    glm::vec2 uv;
     glm::vec3 color;
+    glm::vec2 uv;
+
+    static std::size_t numFloats() { return 3 + 3 + 3 + 2; }
 };
 
 struct OkayMeshData {
@@ -32,15 +37,24 @@ class OkayModelView;
 
 class OkayMeshBuffer {
    private:
-    std::vector<glm::vec3> positions;
-    std::vector<glm::vec3> normals;
-    std::vector<glm::vec2> uvs;
-    std::vector<glm::vec3> colors;
-    std::vector<uint32_t> indices;
+    std::vector<float> _bufferData;
+    std::vector<uint32_t> _indices;
+
+    // openGL buffers
+    GLuint _vao{0};
+    GLuint _vbo{0};
+    GLuint _ebo{0};
+
+    bool _hasBound{false};
 
    public:
-    OkayMesh AddModel(const OkayMeshData& model);
-    std::size_t Size() const { return positions.size(); }
+    static Failable initVertexAttributes();
+
+    std::size_t Size() const { return _indices.size(); }
+    OkayMesh addMesh(const OkayMeshData& model);
+    void removeMesh(const OkayMesh& mesh);
+    Failable bindMeshData();
+
     OkayModelView GetModelView(OkayMesh model) const;
 
     class iterator {
@@ -53,9 +67,23 @@ class OkayMeshBuffer {
             : _buffer(buffer), _index(index) {}
 
         OkayVertex operator*() const {
-            std::size_t attrIndex = _buffer->indices[_index];
-            return OkayVertex{_buffer->positions[attrIndex], _buffer->normals[attrIndex],
-                              _buffer->uvs[attrIndex], _buffer->colors[attrIndex]};
+            std::size_t attrIndex = _buffer->_indices[_index];
+
+            // A SLIGHT bit of UB at the end of the reinterpret cast
+            // as vec3 is 12 bytes, and 4 byte aligned
+            // our buffer is tightly packed, which means that
+            // the padding of vec3 bleeds into the next vec3
+            // it's fine though
+
+            glm::vec3* position =
+                std::reinterpret_cast<glm::vec3*>(&_buffer->_bufferData[attrIndex + 0]);
+            glm::vec3* normal =
+                std::reinterpret_cast<glm::vec3*>(&_buffer->_bufferData[attrIndex + 3]);
+            glm::vec3* color =
+                std::reinterpret_cast<glm::vec3*>(&_buffer->_bufferData[attrIndex + 6]);
+            glm::vec2* uv = std::reinterpret_cast<glm::vec2*>(&_buffer->_bufferData[attrIndex + 9]);
+
+            return OkayVertex{*position, *normal, *color, *uv};
         }
 
         iterator& operator++() {
@@ -69,24 +97,24 @@ class OkayMeshBuffer {
         const OkayMeshBuffer* _buffer;
         std::size_t _index;
     };
-};
 
-class OkayModelView {
-   public:
-    OkayModelView(const OkayMeshBuffer* buffer, OkayMesh model) : _buffer(buffer), _model(model) {}
+    class OkayModelView {
+       public:
+        OkayModelView(const OkayMeshBuffer* buffer, OkayMesh model)
+            : _buffer(buffer), _model(model) {}
 
-    OkayMeshBuffer::iterator begin() const {
-        return OkayMeshBuffer::iterator(_buffer, _model.indexOffset);
-    }
+        OkayMeshBuffer::iterator begin() const {
+            return OkayMeshBuffer::iterator(_buffer, _model.indexOffset);
+        }
 
-    OkayMeshBuffer::iterator end() const {
-        return OkayMeshBuffer::iterator(_buffer, _model.indexOffset + _model.indexCount);
-    }
+        OkayMeshBuffer::iterator end() const {
+            return OkayMeshBuffer::iterator(_buffer, _model.indexOffset + _model.indexCount);
+        }
 
-   private:
-    const OkayMeshBuffer* _buffer;
-    OkayMesh _model;
-};
+       private:
+        const OkayMeshBuffer* _buffer;
+        OkayMesh _model;
+    };
 
 };  // namespace okay
 

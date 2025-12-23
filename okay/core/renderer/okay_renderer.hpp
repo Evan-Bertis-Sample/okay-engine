@@ -37,7 +37,7 @@ class OkayRenderer : public OkaySystem<OkaySystemScope::ENGINE> {
         _surface->initialize();
 
         OkayMesh model =
-            _modelBuffer.AddModel(okay::primitives::box().sizeSet({10, 10, 10}).build());
+            _modelBuffer.addMesh(okay::primitives::box().sizeSet({10, 10, 10}).build());
 
         Result<OkayAsset<OkayShader<TestMaterialUniforms>>> shaderRes =
             Engine.systems.getSystem<OkayAssetManager>()
