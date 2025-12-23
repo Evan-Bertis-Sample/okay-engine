@@ -1,15 +1,15 @@
 #ifndef __RESULT_H__
 #define __RESULT_H__
 
+#include <functional>
+#include <okay/core/util/type.hpp>
 #include <optional>
 #include <string>
 #include <type_traits>
 #include <utility>
-#include <okay/core/util/type.hpp>
 
 namespace okay {
 
-/// @brief A class representing the result of a function: either a value (ok) or an error message.
 template <typename T>
 class Result {
    public:
@@ -30,14 +30,12 @@ class Result {
     bool isError() const { return !_value.has_value(); }
     const std::string& error() const { return _errorMessage; }
 
-    /// @brief Copy the value out (only available when T is copyable).
     T value() const
         requires(std::is_copy_constructible_v<T>)
     {
         return *_value;
     }
 
-    /// @brief If you call value() on a move-only T, you get a clear compile-time error.
     T value() const
         requires(!std::is_copy_constructible_v<T>)
     {
@@ -50,7 +48,6 @@ class Result {
     T& valueRef() { return *_value; }
     const T& valueRef() const { return *_value; }
 
-    /// @brief Move the value out. After take(), Result becomes an error (empty message).
     T take() {
         T out = std::move(*_value);
         _value.reset();
@@ -58,13 +55,11 @@ class Result {
         return out;
     }
 
-    // Nice ergonomics
     T& operator*() { return valueRef(); }
     const T& operator*() const { return valueRef(); }
     T* operator->() { return &valueRef(); }
     const T* operator->() const { return &valueRef(); }
 
-    // Copy only if T is copyable
     Result(const Result& other)
         requires(std::is_copy_constructible_v<T>)
         : _value(other._value), _errorMessage(other._errorMessage) {}
@@ -81,6 +76,45 @@ class Result {
     Result(Result&&) noexcept = default;
     Result& operator=(Result&&) noexcept = default;
 
+    template <typename F>
+    auto then(F&& f) & -> std::invoke_result_t<F, T&>
+        requires requires(F&& fn, T& v) {
+            std::invoke(std::forward<F>(fn), v);
+            typename std::invoke_result_t<F, T&>::ValueType;
+            { std::invoke_result_t<F, T&>::errorResult(std::string{}) };
+        }
+    {
+        using Next = std::invoke_result_t<F, T&>;
+        if (!_value) return Next::errorResult(_errorMessage);
+        return std::invoke(std::forward<F>(f), *_value);
+    }
+
+    template <typename F>
+    auto then(F&& f) const& -> std::invoke_result_t<F, const T&>
+        requires requires(F&& fn, const T& v) {
+            std::invoke(std::forward<F>(fn), v);
+            typename std::invoke_result_t<F, const T&>::ValueType;
+            { std::invoke_result_t<F, const T&>::errorResult(std::string{}) };
+        }
+    {
+        using Next = std::invoke_result_t<F, const T&>;
+        if (!_value) return Next::errorResult(_errorMessage);
+        return std::invoke(std::forward<F>(f), *_value);
+    }
+
+    template <typename F>
+    auto then(F&& f) && -> std::invoke_result_t<F, T&&>
+        requires requires(F&& fn, T&& v) {
+            std::invoke(std::forward<F>(fn), std::move(v));
+            typename std::invoke_result_t<F, T&&>::ValueType;
+            { std::invoke_result_t<F, T&&>::errorResult(std::string{}) };
+        }
+    {
+        using Next = std::invoke_result_t<F, T&&>;
+        if (!_value) return Next::errorResult(_errorMessage);
+        return std::invoke(std::forward<F>(f), std::move(*_value));
+    }
+
    private:
     std::optional<T> _value;
     std::string _errorMessage;
@@ -93,8 +127,26 @@ class Result {
         : _value(std::nullopt), _errorMessage(std::move(errorMessage)) {}
 };
 
+template <typename U, typename F>
+Result<U> catchResult(Result<U>&& r, F&& handler)
+    requires(
+        requires(F&& fn) { std::invoke(std::forward<F>(fn)); } ||
+        requires(F&& fn, const std::string& e) { std::invoke(std::forward<F>(fn), e); })
+{
+    if (!r) {
+        if constexpr (requires(F&& fn, const std::string& e) {
+                          std::invoke(std::forward<F>(fn), e);
+                      }) {
+            std::invoke(std::forward<F>(handler), r.error());
+        } else {
+            std::invoke(std::forward<F>(handler));
+        }
+    }
+    return std::move(r);
+}
+
 using Failable = Result<NoneType>;
 
-}  // namespace okay
+};  // namespace okay
 
 #endif  // __RESULT_H__

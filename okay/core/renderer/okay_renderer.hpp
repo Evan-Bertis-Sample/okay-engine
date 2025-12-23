@@ -52,31 +52,18 @@ class OkayRenderer : public OkaySystem<OkaySystemScope::ENGINE> {
         shader = shaderRes.value().asset;
         Failable compileResult = shader.compile();
 
-        if (compileResult.isError()) {
-            std::cerr << "Shader compilation failed: " << compileResult.error() << std::endl;
-            return;
-        }
+        Failable shaderSetup = catchResult(
+            shader.compile()
+                .then([&](NoneType nt) { return shader.set(); })
+                .then([&](NoneType nt) { return shader.findUniformLocations(); })
+                .then([&](NoneType nt) {
+                    shader.uniforms.get<FixedString("u_color")>().set(glm::vec3(1.0f, 1.0f, 1.0f));
+                    return shader.passDirtyUniforms();
+                }),
+            [](const std::string& failMessage) { std::cerr << "Failed to setup shader!\n"; });
 
-        Failable f = shader.set();
-        if (f.isError()) {
-            std::cerr << "Failed to set shader: " << f.error() << std::endl;
-            while (true) {
-            }
-            return;
-        }
-
-        shader.uniforms.get<FixedString("u_color")>().set(glm::vec3(1.0f, 1.0f, 1.0f));
-
-        Failable findRes = shader.findUniformLocations();
-        if (findRes.isError()) {
-            std::cerr << "Failed to find uniform locations: " << findRes.error() << std::endl;
-            return;
-        }
-
-        Failable setRes = shader.passDirtyUniforms();
-        if (setRes.isError()) {
-            std::cerr << "Failed to set initial uniform values: " << setRes.error() << std::endl;
-            return;
+        if (!shaderSetup) {
+            return; // we have failed
         }
 
         float vertices[] = {
