@@ -127,4 +127,5 @@ message(STATUS "okay Include Directories: ${INCLUDE_DIRS}")
 
 target_link_libraries(${PROJECT} PRIVATE okay)
 
-
+# generate compile commands
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)

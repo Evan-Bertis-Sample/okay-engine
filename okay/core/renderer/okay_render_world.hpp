@@ -149,7 +149,7 @@ class OkayRenderWorld {
     std::vector<const OkayRenderItem> _memoizedRenderEntities;
 
     struct RenderItemDirtyHandlerContext {
-        OkayRenderWorld *world;
+        OkayRenderWorld* world;
         OkayRenderableHandle handle;
     };
 
@@ -216,8 +216,7 @@ class OkayRenderWorld {
             OkayRenderItem renderItem{entity.material.get(), entity.mesh.get()};
             OkayRenderableHandle renderItemHandle = _renderItemPool.emplace(std::move(renderItem));
 
-            _memoizedRenderEntities.push_back(
-                &_renderItemPool.get(renderItemHandle));
+            _memoizedRenderEntities.push_back(&_renderItemPool.get(renderItemHandle));
         }
 
         std::sort(_memoizedRenderEntities.begin(), _memoizedRenderEntities.end(),

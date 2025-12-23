@@ -50,12 +50,13 @@ class OkayMeshBuffer {
    public:
     static Failable initVertexAttributes();
 
-    std::size_t Size() const { return _indices.size(); }
+    std::size_t size() const { return _indices.size(); }
     OkayMesh addMesh(const OkayMeshData& model);
     void removeMesh(const OkayMesh& mesh);
     Failable bindMeshData();
+    void drawMesh(const OkayMesh& mesh);
 
-    OkayModelView GetModelView(OkayMesh model) const;
+    // TODO add model view again
 
     class iterator {
        public:
@@ -75,15 +76,18 @@ class OkayMeshBuffer {
             // the padding of vec3 bleeds into the next vec3
             // it's fine though
 
-            glm::vec3* position =
-                std::reinterpret_cast<glm::vec3*>(&_buffer->_bufferData[attrIndex + 0]);
-            glm::vec3* normal =
-                std::reinterpret_cast<glm::vec3*>(&_buffer->_bufferData[attrIndex + 3]);
-            glm::vec3* color =
-                std::reinterpret_cast<glm::vec3*>(&_buffer->_bufferData[attrIndex + 6]);
-            glm::vec2* uv = std::reinterpret_cast<glm::vec2*>(&_buffer->_bufferData[attrIndex + 9]);
+            return OkayVertex{};
 
-            return OkayVertex{*position, *normal, *color, *uv};
+            // glm::vec3* position =
+            //     std::reinterpret_cast<glm::vec3*>(&_buffer->_bufferData[attrIndex + 0]);
+            // glm::vec3* normal =
+            //     std::reinterpret_cast<glm::vec3*>(&_buffer->_bufferData[attrIndex + 3]);
+            // glm::vec3* color =
+            //     std::reinterpret_cast<glm::vec3*>(&_buffer->_bufferData[attrIndex + 6]);
+            // glm::vec2* uv = std::reinterpret_cast<glm::vec2*>(&_buffer->_bufferData[attrIndex +
+            // 9]);
+
+            // return OkayVertex{*position, *normal, *color, *uv};
         }
 
         iterator& operator++() {
@@ -115,7 +119,8 @@ class OkayMeshBuffer {
         const OkayMeshBuffer* _buffer;
         OkayMesh _model;
     };
+};
 
-};  // namespace okay
+}  // namespace okay
 
 #endif  // __OKAY_MESH_H__

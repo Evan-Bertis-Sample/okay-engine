@@ -13,7 +13,7 @@ OkayMesh OkayMeshBuffer::addMesh(const OkayMeshData& mesh) {
     m.indexCount = mesh.indices.size();
 
     // push the vertices of the mesh
-    for (const OkayVertex &v : mesh.vertices) {
+    for (const OkayVertex& v : mesh.vertices) {
         // push this vertex into the buffer, compactly
         // position
         _bufferData.push_back(v.position.x);
@@ -31,7 +31,7 @@ OkayMesh OkayMeshBuffer::addMesh(const OkayMeshData& mesh) {
         _bufferData.push_back(v.uv.x);
         _bufferData.push_back(v.uv.y);
     }
-    
+
     // Now add the indices, but with an offset
     for (std::uint32_t i : mesh.indices) {
         _indices.push_back(i + m.vertexOffset);
@@ -50,14 +50,12 @@ void OkayMeshBuffer::removeMesh(const OkayMesh& mesh) {
     }
 
     // remove the indices
-    _indices.erase(_indices.begin() + mesh.indexOffset, _indices.begin() + mesh.indexOffset + mesh.indexCount);
+    _indices.erase(_indices.begin() + mesh.indexOffset,
+                   _indices.begin() + mesh.indexOffset + mesh.indexCount);
     // remove the vertices
     _bufferData.erase(_bufferData.begin() + mesh.vertexOffset * OkayVertex::numFloats(),
-                      _bufferData.begin() + mesh.vertexOffset * OkayVertex::numFloats() + mesh.vertexCount * OkayVertex::numFloats());
-}
-
-OkayModelView OkayMeshBuffer::GetModelView(OkayMesh model) const {
-    return OkayModelView(this, model);
+                      _bufferData.begin() + mesh.vertexOffset * OkayVertex::numFloats() +
+                          mesh.vertexCount * OkayVertex::numFloats());
 }
 
 Failable OkayMeshBuffer::initVertexAttributes() {
@@ -93,15 +91,17 @@ Failable OkayMeshBuffer::bindMeshData() {
 
     glBindVertexArray(_vao);
     glBindBuffer(GL_ARRAY_BUFFER, _vbo);
-    glBufferData(GL_ARRAY_BUFFER, _bufferData.size() * sizeof(GLfloat), &_bufferData[0], GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, _bufferData.size() * sizeof(GLfloat), &_bufferData[0],
+                 GL_STATIC_DRAW);
 
-    // setup the vertex attributes 
+    // setup the vertex attributes
     initVertexAttributes();
 
     // init the ebo
     glGenBuffers(1, &_ebo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, _indices.size() * sizeof(GLuint), &_indices[0], GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, _indices.size() * sizeof(GLuint), &_indices[0],
+                 GL_STATIC_DRAW);
 
     // unbind
     glBindVertexArray(0);
@@ -109,4 +109,13 @@ Failable OkayMeshBuffer::bindMeshData() {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
     return Failable::ok({});
+}
+
+void OkayMeshBuffer::drawMesh(const OkayMesh& mesh) {
+    // bind the vao, draw, unbind
+    glBindVertexArray(_vao);
+    // draw from mesh.indexOffset to mesh.indexOffset + mesh.indexCount
+    glDrawElements(GL_TRIANGLES, mesh.indexCount, GL_UNSIGNED_INT,
+                   (void*)(mesh.indexOffset * sizeof(GLuint)));
+    glBindVertexArray(0);
 }
