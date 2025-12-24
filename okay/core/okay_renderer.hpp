@@ -11,4 +11,4 @@
 #include <okay/core/renderer/okay_texture.hpp>
 #include <okay/core/renderer/okay_uniform.hpp>
 
-#endif // __OKAY_RENDERER_H__
+#endif  // __OKAY_RENDERER_H__

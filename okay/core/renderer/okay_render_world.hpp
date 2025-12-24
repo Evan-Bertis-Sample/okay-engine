@@ -69,8 +69,8 @@ class OkayRenderWorld {
 
     // iterator for traversing the children of a render item
     class iterator {
-    public:
-        iterator(const OkayRenderWorld *world, OkayRenderableHandle handle) {
+       public:
+        iterator(const OkayRenderWorld* world, OkayRenderableHandle handle) {
             _world = world;
             _handle = handle;
         }
@@ -100,14 +100,12 @@ class OkayRenderWorld {
             return iterator(world, OkayRenderableHandle::invalidHandle());
         }
 
-    private:
-        const OkayRenderWorld *_world{nullptr};
+       private:
+        const OkayRenderWorld* _world{nullptr};
         OkayRenderableHandle _handle{OkayRenderableHandle::invalidHandle()};
     };
 
-    iterator iterateChildren(OkayRenderableHandle handle) {
-        return iterator(this, handle);
-    }
+    iterator iterateChildren(OkayRenderableHandle handle) { return iterator(this, handle); }
 
    private:
     ObjectPool<OkayRenderEntity> _entityPool;

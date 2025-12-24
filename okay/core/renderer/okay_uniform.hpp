@@ -108,7 +108,7 @@ struct OkayMaterialUniform {
         return Failable::ok({});
     }
 
-   private: 
+   private:
     T _value{};
     bool _dirty{true};
     GLuint _location{invalidLocation()};
@@ -148,7 +148,7 @@ struct UniformIndex;
 template <auto Name, class First, class... Rest>
 struct UniformIndex<Name, First, Rest...> {
     static constexpr std::size_t value =
-        std::bool_constant<First::name.sv() == Name.sv()>::value
+        std::bool_constant < First::name.sv() == Name.sv() > ::value
             ? 0
             : 1 + UniformIndex<Name, Rest...>::value;
 };
@@ -156,7 +156,7 @@ struct UniformIndex<Name, First, Rest...> {
 template <auto Name, class Last>
 struct UniformIndex<Name, Last> {
     static constexpr std::size_t value =
-        std::bool_constant<Last::name.sv() == Name.sv()>::value ? 0 : 0;
+        std::bool_constant < Last::name.sv() == Name.sv() > ::value ? 0 : 0;
 };
 
 template <auto Name>
@@ -165,7 +165,6 @@ struct UniformIndex<Name> {
                   "Uniform with the specified name not found in OkayMaterialUniformCollection");
     static constexpr std::size_t value = 0;
 };
-
 
 template <class... Uniforms>
 struct OkayMaterialUniformCollection {

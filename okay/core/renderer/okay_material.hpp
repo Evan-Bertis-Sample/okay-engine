@@ -28,9 +28,7 @@ struct OkayShader<OkayMaterialUniformCollection<Uniforms...>> {
           _state(ShaderState::NOT_COMPILED) {
         std::hash<std::string> hasher;
         _id = hasher(vertexShader + fragmentShader);
-
-        
-    } 
+    }
 
     OkayShader()
         : vertexShader(""),

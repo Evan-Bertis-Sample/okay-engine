@@ -26,7 +26,6 @@ struct ObjectPoolHandle {
 template <typename T>
 class ObjectPool final {
    public:
-   
     static constexpr std::uint32_t invalidIndex() { return ObjectPoolHandle::invalidHandle(); }
     static ObjectPoolHandle invalidHandle() { return ObjectPoolHandle::invalidHandle(); }
 

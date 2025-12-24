@@ -20,9 +20,7 @@ class Property {
             if (fn) fn(ctx);
         }
 
-        static Delegate fromFunction(CallbackFn f, void* c) {
-            return Delegate{f, c};
-        }
+        static Delegate fromFunction(CallbackFn f, void* c) { return Delegate{f, c}; }
     };
 
     Property() = default;

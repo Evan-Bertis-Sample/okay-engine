@@ -13,7 +13,7 @@ if ! command -v clang-format &> /dev/null; then
     exit 1
 fi
 
-echo "Formatting all .c and .h files under: $TARGET_DIR"
+echo "Formatting all .cpp and .hpp files under: $TARGET_DIR"
 echo
 
 # Find and format files in-place, but skip the okay/vendor directory and any .okay/ directories
