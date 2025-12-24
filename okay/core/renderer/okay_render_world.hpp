@@ -40,42 +40,6 @@ struct OkayRenderItem {
         sortKey = (std::uint64_t(material.shaderID()) << 32 | std::uint64_t(material.id()));
     }
 
-    struct ChildrenView {
-        OkayRenderItem* item;
-        OkayRenderableHandle current;
-
-        struct iterator {
-           public:
-            using value_type = OkayRenderItem&;
-            using difference_type = std::ptrdiff_t;
-            using iterator_category = std::forward_iterator_tag;
-
-            iterator(OkayRenderItem* parent, OkayRenderableHandle handle)
-                : _parent(parent), _current(handle) {}
-
-            OkayRenderItem& operator*() const {
-                return _parent->world->_renderItemPool.get(_current);
-            }
-
-            iterator& operator++() {
-                OkayRenderItem& currentItem = _parent->world->_renderItemPool.get(_current);
-                _current = currentItem.nextSibling;
-                return *this;
-            }
-
-            bool operator!=(const iterator& other) const { return _current != other._current; }
-
-           private:
-            OkayRenderItem* _parent;
-            OkayRenderableHandle _current;
-        };
-
-        iterator begin() { return iterator(item, item->firstChild); }
-        iterator end() { return iterator(item, OkayRenderableHandle::invalidHandle()); }
-    };
-
-    ChildrenView children() { return ChildrenView{this, firstChild}; }
-
    private:
     OkayRenderableHandle parent{OkayRenderableHandle::invalidHandle()};
     OkayRenderableHandle firstChild{OkayRenderableHandle::invalidHandle()};
@@ -141,6 +105,49 @@ class OkayRenderWorld {
         }
 
         return _memoizedRenderEntities;
+    }
+
+    
+    // iterator for traversing the children of a render item
+    class OkayRenderItemIterator {
+    public:
+        OkayRenderItemIterator(const OkayRenderWorld *world, OkayRenderableHandle handle) {
+            _world = world;
+            _handle = handle;
+        }
+
+        OkayRenderItemIterator& operator++() {
+            _handle = _world->_renderItemPool.get(_handle).nextSibling;
+            return *this;
+        }
+
+        OkayRenderItemIterator operator++(int) {
+            OkayRenderItemIterator tmp = *this;
+            ++*this;
+            return tmp;
+        }
+
+        bool operator==(const OkayRenderItemIterator& other) const { return _handle == other._handle; }
+        bool operator!=(const OkayRenderItemIterator& other) const { return _handle != other._handle; }
+
+        const OkayRenderItem& operator*() const { return _world->_renderItemPool.get(_handle); }
+
+        // begin and end iterators
+        static OkayRenderItemIterator begin(const OkayRenderWorld* world) {
+            return OkayRenderItemIterator(world, 0);
+        }
+
+        static OkayRenderItemIterator end(const OkayRenderWorld* world) {
+            return OkayRenderItemIterator(world, OkayRenderableHandle::invalidHandle());
+        }
+
+    private:
+        const OkayRenderWorld *_world{nullptr};
+        OkayRenderableHandle _handle{OkayRenderableHandle::invalidHandle()};
+    };
+
+    OkayRenderItemIterator iterateChildren(OkayRenderableHandle handle) {
+        return OkayRenderItemIterator(this, handle);
     }
 
    private:

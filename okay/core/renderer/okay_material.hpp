@@ -59,8 +59,6 @@ struct OkayShader<OkayMaterialUniformCollection<Uniforms...>> {
                                          std::string(infoLog));
         }
 
-        OkayTransform
-
         // Compile fragment shader
         GLuint fragment = glCreateShader(GL_FRAGMENT_SHADER);
         const char* fragmentSrcCStr = fragmentShader.c_str();
