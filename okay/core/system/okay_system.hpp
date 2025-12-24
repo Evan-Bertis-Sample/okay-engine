@@ -8,9 +8,7 @@
 #include <memory>
 #include <okay/core/util/option.hpp>
 #include <stdexcept>
-#include <string>
 #include <type_traits>
-#include <typeinfo>
 
 namespace okay {
 

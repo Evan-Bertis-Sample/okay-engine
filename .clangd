@@ -1,0 +1,7 @@
+CompileFlags:
+  Add:
+    - -std=gnu++20
+    - -ID:/Documents/Code/Personal-Projects/okay-engine
+    - -ID:/Documents/Code/Personal-Projects/okay-engine/okay/vendor/glm
+    - -ID:/Documents/Code/Personal-Projects/okay-engine/okay/vendor/glfw/include
+    - -ID:/Documents/Code/Personal-Projects/okay-engine/okay/vendor/glad

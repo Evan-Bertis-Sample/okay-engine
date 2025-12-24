@@ -6,8 +6,6 @@
 #include <okay/core/logging/okay_logger.hpp>
 
 #include <functional>
-#include <iostream>
-#include <string>
 
 namespace okay {
 

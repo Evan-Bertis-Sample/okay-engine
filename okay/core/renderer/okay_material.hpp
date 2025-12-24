@@ -2,15 +2,10 @@
 #define __OKAY_MATERIAL_H__
 
 #include <cstdint>
-#include <filesystem>
-#include <functional>
 #include <glm/glm.hpp>
 #include <okay/core/renderer/okay_texture.hpp>
 #include <okay/core/renderer/okay_uniform.hpp>
 #include <okay/core/util/result.hpp>
-#include <string>
-#include <type_traits>
-#include <unordered_map>
 
 namespace okay {
 
@@ -32,7 +27,9 @@ struct OkayShader<OkayMaterialUniformCollection<Uniforms...>> {
           _state(ShaderState::NOT_COMPILED) {
         std::hash<std::string> hasher;
         _id = hasher(vertexShader + fragmentShader);
-    }
+
+        
+    } 
 
     OkayShader()
         : vertexShader(""),
@@ -61,6 +58,8 @@ struct OkayShader<OkayMaterialUniformCollection<Uniforms...>> {
             return Failable::errorResult("Vertex shader compilation failed: " +
                                          std::string(infoLog));
         }
+
+        OkayTransform
 
         // Compile fragment shader
         GLuint fragment = glCreateShader(GL_FRAGMENT_SHADER);

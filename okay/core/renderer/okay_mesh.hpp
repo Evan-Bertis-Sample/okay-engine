@@ -76,18 +76,16 @@ class OkayMeshBuffer {
             // the padding of vec3 bleeds into the next vec3
             // it's fine though
 
-            return OkayVertex{};
+            const glm::vec3 *position = 
+                reinterpret_cast<const glm::vec3*>(&_buffer->_bufferData[attrIndex + 0]);
+            const glm::vec3 *normal =
+                reinterpret_cast<const glm::vec3*>(&_buffer->_bufferData[attrIndex + 3]);
+            const glm::vec3 *color =
+                reinterpret_cast<const glm::vec3*>(&_buffer->_bufferData[attrIndex + 6]);
+            const glm::vec2 *uv =
+                reinterpret_cast<const glm::vec2*>(&_buffer->_bufferData[attrIndex + 9]);
 
-            // glm::vec3* position =
-            //     std::reinterpret_cast<glm::vec3*>(&_buffer->_bufferData[attrIndex + 0]);
-            // glm::vec3* normal =
-            //     std::reinterpret_cast<glm::vec3*>(&_buffer->_bufferData[attrIndex + 3]);
-            // glm::vec3* color =
-            //     std::reinterpret_cast<glm::vec3*>(&_buffer->_bufferData[attrIndex + 6]);
-            // glm::vec2* uv = std::reinterpret_cast<glm::vec2*>(&_buffer->_bufferData[attrIndex +
-            // 9]);
-
-            // return OkayVertex{*position, *normal, *color, *uv};
+            return OkayVertex{*position, *normal, *color, *uv};
         }
 
         iterator& operator++() {

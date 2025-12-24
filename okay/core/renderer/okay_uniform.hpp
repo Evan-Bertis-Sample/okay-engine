@@ -5,10 +5,8 @@
 #include <okay/core/logging/okay_logger.hpp>
 #include <okay/core/util/result.hpp>
 #include <okay/core/util/type.hpp>
-#include <string_view>
 #include <tuple>
 #include <type_traits>
-#include <utility>
 
 namespace okay {
 
@@ -107,7 +105,7 @@ struct OkayMaterialUniform {
         return Failable::ok({});
     }
 
-   private:
+   private: 
     T _value{};
     bool _dirty{true};
     GLuint _location{invalidLocation()};
