@@ -10,6 +10,12 @@
 
 namespace okay {
 
+template <class R>
+concept ResultLike = requires {
+    typename R::ValueType;
+    { R::errorResult(std::string{}) } -> std::same_as<R>;
+};
+
 template <typename T>
 class Result {
    public:
@@ -76,43 +82,32 @@ class Result {
     Result(Result&&) noexcept = default;
     Result& operator=(Result&&) noexcept = default;
 
-    template <typename F>
+    template <class F>
     auto then(F&& f) & -> std::invoke_result_t<F, T&>
-        requires requires(F&& fn, T& v) {
-            std::invoke(std::forward<F>(fn), v);
-            typename std::invoke_result_t<F, T&>::ValueType;
-            { std::invoke_result_t<F, T&>::errorResult(std::string{}) };
-        }
+        requires ResultLike<std::invoke_result_t<F, T&>>
     {
-        using Next = std::invoke_result_t<F, T&>;
-        if (!_value) return Next::errorResult(_errorMessage);
-        return std::invoke(std::forward<F>(f), *_value);
+        return thenImpl<T&>(std::forward<F>(f));
     }
 
-    template <typename F>
+    template <class F>
     auto then(F&& f) const& -> std::invoke_result_t<F, const T&>
-        requires requires(F&& fn, const T& v) {
-            std::invoke(std::forward<F>(fn), v);
-            typename std::invoke_result_t<F, const T&>::ValueType;
-            { std::invoke_result_t<F, const T&>::errorResult(std::string{}) };
-        }
+        requires ResultLike<std::invoke_result_t<F, const T&>>
     {
-        using Next = std::invoke_result_t<F, const T&>;
-        if (!_value) return Next::errorResult(_errorMessage);
-        return std::invoke(std::forward<F>(f), *_value);
+        return thenImpl<const T&>(std::forward<F>(f));
     }
 
-    template <typename F>
-    auto then(F&& f) && -> std::invoke_result_t<F, T&&>
-        requires requires(F&& fn, T&& v) {
-            std::invoke(std::forward<F>(fn), std::move(v));
-            typename std::invoke_result_t<F, T&&>::ValueType;
-            { std::invoke_result_t<F, T&&>::errorResult(std::string{}) };
-        }
+    template <class F>
+    auto then(F&& f) && -> std::invoke_result_t<F, T&>
+        requires ResultLike<std::invoke_result_t<F, T&>>
     {
-        using Next = std::invoke_result_t<F, T&&>;
-        if (!_value) return Next::errorResult(_errorMessage);
-        return std::invoke(std::forward<F>(f), std::move(*_value));
+        return thenImpl<T&>(std::forward<F>(f));
+    }
+
+    template <class F>
+    auto then(F&& f) const&& -> std::invoke_result_t<F, const T&>
+        requires ResultLike<std::invoke_result_t<F, const T&>>
+    {
+        return thenImpl<const T&>(std::forward<F>(f));
     }
 
    private:
@@ -125,6 +120,19 @@ class Result {
 
     explicit Result(std::string errorMessage)
         : _value(std::nullopt), _errorMessage(std::move(errorMessage)) {}
+
+    template <class Ref, class F>
+    auto thenImpl(F&& f) -> std::invoke_result_t<F, Ref>
+        requires ResultLike<std::invoke_result_t<F, Ref>>
+    {
+        using R = std::invoke_result_t<F, Ref>;
+        if (isError()) return R::errorResult(_errorMessage);
+        if constexpr (std::is_const_v<std::remove_reference_t<Ref>>) {
+            return std::invoke(std::forward<F>(f), static_cast<const T&>(*_value));
+        } else {
+            return std::invoke(std::forward<F>(f), static_cast<T&>(*_value));
+        }
+    }
 };
 
 template <typename U, typename F>
@@ -147,6 +155,6 @@ Result<U> catchResult(Result<U>&& r, F&& handler)
 
 using Failable = Result<NoneType>;
 
-};  // namespace okay
+}  // namespace okay
 
 #endif  // __RESULT_H__

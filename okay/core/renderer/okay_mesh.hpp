@@ -56,8 +56,6 @@ class OkayMeshBuffer {
     Failable bindMeshData();
     void drawMesh(const OkayMesh& mesh);
 
-    // TODO add model view again
-
     class iterator {
        public:
         using value_type = OkayVertex;

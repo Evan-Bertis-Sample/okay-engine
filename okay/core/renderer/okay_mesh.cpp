@@ -1,5 +1,8 @@
 #include "okay_mesh.hpp"
 
+#include <okay/core/okay.hpp>
+#include <okay/core/logging/okay_logger.hpp>
+
 using namespace okay;
 
 OkayMesh OkayMeshBuffer::addMesh(const OkayMeshData& mesh) {
@@ -112,10 +115,11 @@ Failable OkayMeshBuffer::bindMeshData() {
 }
 
 void OkayMeshBuffer::drawMesh(const OkayMesh& mesh) {
+    Engine.logger.debug("Drawing mesh from {} to {}\n", mesh.indexOffset, mesh.indexOffset + mesh.indexOffset);
     // bind the vao, draw, unbind
     glBindVertexArray(_vao);
     // draw from mesh.indexOffset to mesh.indexOffset + mesh.indexCount
-    glDrawElements(GL_TRIANGLES, mesh.indexCount, GL_UNSIGNED_INT,
+    glDrawElements(GL_TRIANGLES, (GLsizei)mesh.indexCount, GL_UNSIGNED_INT,
                    (void*)(mesh.indexOffset * sizeof(GLuint)));
     glBindVertexArray(0);
 }

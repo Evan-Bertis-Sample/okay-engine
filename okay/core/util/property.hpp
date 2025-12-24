@@ -40,15 +40,15 @@ class Property {
     operator const T&() const { return _value; }
 
     void set(const T& value) {
-        if (_isSameValue(value)) return;
+        if (isSameValue(value)) return;
         _value = value;
-        _notifyDirty();
+        notifyDirty();
     }
 
     void set(T&& value) {
-        if (_isSameValue(value)) return;
+        if (isSameValue(value)) return;
         _value = std::move(value);
-        _notifyDirty();
+        notifyDirty();
     }
 
     Property& operator=(const T& value) {
@@ -61,7 +61,7 @@ class Property {
         return *this;
     }
 
-    void markDirty() { _notifyDirty(); }
+    void markDirty() { notifyDirty(); }
 
    private:
     template <class U, class = void>
@@ -72,7 +72,7 @@ class Property {
         : std::true_type {};
 
     template <class V>
-    bool _isSameValue(const V& value) const {
+    bool isSameValue(const V& value) const {
         if constexpr (HasEq<T>::value) {
             return _value == value;
         } else {
@@ -81,7 +81,7 @@ class Property {
         }
     }
 
-    void _notifyDirty() { _onDirty.invoke(); }
+    void notifyDirty() { _onDirty.invoke(); }
 
     T _value{};
     Delegate _onDirty{};

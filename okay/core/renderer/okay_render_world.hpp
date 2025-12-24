@@ -10,8 +10,6 @@
 #include <okay/core/util/dirty_set.hpp>
 #include <okay/core/util/object_pool.hpp>
 #include <okay/core/util/property.hpp>
-#include <set>
-#include <span>
 #include <vector>
 
 namespace okay {
@@ -109,36 +107,36 @@ class OkayRenderWorld {
 
     
     // iterator for traversing the children of a render item
-    class OkayRenderItemIterator {
+    class iterator {
     public:
-        OkayRenderItemIterator(const OkayRenderWorld *world, OkayRenderableHandle handle) {
+        iterator(const OkayRenderWorld *world, OkayRenderableHandle handle) {
             _world = world;
             _handle = handle;
         }
 
-        OkayRenderItemIterator& operator++() {
+        iterator& operator++() {
             _handle = _world->_renderItemPool.get(_handle).nextSibling;
             return *this;
         }
 
-        OkayRenderItemIterator operator++(int) {
-            OkayRenderItemIterator tmp = *this;
+        iterator operator++(int) {
+            iterator tmp = *this;
             ++*this;
             return tmp;
         }
 
-        bool operator==(const OkayRenderItemIterator& other) const { return _handle == other._handle; }
-        bool operator!=(const OkayRenderItemIterator& other) const { return _handle != other._handle; }
+        bool operator==(const iterator& other) const { return _handle == other._handle; }
+        bool operator!=(const iterator& other) const { return _handle != other._handle; }
 
         const OkayRenderItem& operator*() const { return _world->_renderItemPool.get(_handle); }
 
         // begin and end iterators
-        static OkayRenderItemIterator begin(const OkayRenderWorld* world) {
+        static iterator begin(const OkayRenderWorld* world) {
             return OkayRenderItemIterator(world, 0);
         }
 
-        static OkayRenderItemIterator end(const OkayRenderWorld* world) {
-            return OkayRenderItemIterator(world, OkayRenderableHandle::invalidHandle());
+        static iterator end(const OkayRenderWorld* world) {
+            return iterator(world, OkayRenderableHandle::invalidHandle());
         }
 
     private:
@@ -146,8 +144,8 @@ class OkayRenderWorld {
         OkayRenderableHandle _handle{OkayRenderableHandle::invalidHandle()};
     };
 
-    OkayRenderItemIterator iterateChildren(OkayRenderableHandle handle) {
-        return OkayRenderItemIterator(this, handle);
+    iterator iterateChildren(OkayRenderableHandle handle) {
+        return iterator(this, handle);
     }
 
    private:

@@ -5,6 +5,7 @@
 #include <okay/core/system/okay_system.hpp>
 #include <okay/core/logging/okay_logger.hpp>
 
+#include <vector>
 #include <functional>
 
 namespace okay {
@@ -49,7 +50,7 @@ class OkayGame {
     void run() {
         // check for required systems
         bool allRequiredSystems = true;
-        for (OkaySystemDescriptor systemDescriptor : _REQUIRED_SYSTEMS) {
+        for (OkaySystemDescriptor systemDescriptor : REQUIRED_SYSTEMS) {
             if (!Engine.systems.hasSystem(systemDescriptor.SysId)) {
                 Engine.logger.error("Missing required system {}", systemDescriptor.SystemName);
                 allRequiredSystems = false;
@@ -92,7 +93,7 @@ class OkayGame {
     std::function<void()> _onUpdate;
     std::function<void()> _onShutdown;
 
-    static const std::vector<OkaySystemDescriptor> _REQUIRED_SYSTEMS;
+    static const std::vector<OkaySystemDescriptor> REQUIRED_SYSTEMS;
 
     bool _shouldRun = true;
 };

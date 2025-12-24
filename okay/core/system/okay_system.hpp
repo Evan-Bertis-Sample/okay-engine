@@ -12,7 +12,7 @@
 
 namespace okay {
 
-enum OkaySystemScope : std::uint8_t { ENGINE, GAME, LEVEL, __COUNT };
+enum OkaySystemScope : std::uint8_t { ENGINE, GAME, LEVEL, SCOPE_COUNT };
 
 struct OkaySystemConfig {
     std::uint32_t tickTime;
@@ -47,10 +47,10 @@ class IOkaySystem {
 template <OkaySystemScope ScopeV>
 class OkaySystem : public IOkaySystem {
    public:
-    static_assert(ScopeV >= OkaySystemScope::ENGINE && ScopeV < OkaySystemScope::__COUNT,
+    static_assert(ScopeV >= OkaySystemScope::ENGINE && ScopeV < OkaySystemScope::SCOPE_COUNT,
                   "ScopeV must be a valid OkaySystemScope value.");
 
-    static const OkaySystemScope scope = ScopeV;
+    static const OkaySystemScope SCOPE = ScopeV;
 };
 
 struct OkaySystemDescriptor {
@@ -87,8 +87,6 @@ class OkaySystemPool {
         _systems.emplace(IOkaySystem::sysid<T>(), std::move(system));
     }
 
-    /// @brief Checks if a system of type T exists in the pool
-    /// @return True if the system exists, false otherwise
     template <typename T>
     bool hasSystem() const {
         static_assert(std::is_base_of_v<IOkaySystem, T>, "T must inherit from OkaySystem.");
@@ -150,17 +148,13 @@ class OkaySystemPool {
     std::size_t size() const noexcept { return _systems.size(); }
     bool empty() const noexcept { return _systems.empty(); }
 
-    IOkaySystem* nth_ptr(std::size_t i) {
-        auto it = _systems.begin();
-        std::advance(it, static_cast<std::ptrdiff_t>(i));
-        return it->second.get();
-    }
+    IOkaySystem* nthPtr(std::size_t i);
 
-    IOkaySystem* operator[](std::size_t i) { return nth_ptr(i); }
+    IOkaySystem* operator[](std::size_t i) { return nthPtr(i); }
 
     IOkaySystem* at(std::size_t i) {
         if (i >= _systems.size()) throw std::out_of_range("OkaySystemPool::at");
-        return nth_ptr(i);
+        return nthPtr(i);
     }
 
     iterator begin() { return iterator{_systems.begin()}; }
@@ -173,19 +167,31 @@ class OkaySystemPool {
 class OkaySystemManager {
    public:
     OkaySystemManager() {
-        for (std::size_t i = 0; i < OkaySystemScope::__COUNT; ++i) {
+        for (std::size_t i = 0; i < OkaySystemScope::SCOPE_COUNT; ++i) {
             _pools[i] = OkaySystemPool();
         }
     }
 
     template <typename T>
     Option<T*> getSystem() {
-        return _pools[T::scope].template getSystem<T>();
+        return _pools[T::SCOPE].template getSystem<T>();
+    }
+
+    template <typename T>
+    T* getSystemChecked() {
+        Option<T*> opt = getSystem<T>();
+        if (!opt) {
+            // Engine.logger.error("Unable to get system: {}\n", IOkaySystem::sysName<T>());
+            // for now, we just stall the program until a proper exit mechanismm is implemented
+            while (true) {
+            }
+        }
+        return opt.value();
     }
 
     template <typename T>
     void registerSystem(std::unique_ptr<T> system) {
-        _pools[T::scope].registerSystem(std::move(system));
+        _pools[T::SCOPE].registerSystem(std::move(system));
     }
 
     OkaySystemPool& getPool(const OkaySystemScope scope) { return _pools[scope]; }
@@ -198,7 +204,7 @@ class OkaySystemManager {
     }
 
    private:
-    static std::array<OkaySystemPool, OkaySystemScope::__COUNT> _pools;
+    static std::array<OkaySystemPool, OkaySystemScope::SCOPE_COUNT> _pools;
 };
 };  // namespace okay
 

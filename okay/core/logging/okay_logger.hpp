@@ -112,22 +112,22 @@ class OkayLogger {
 
     template <Verbosity V = Verbosity::NORMAL, typename... Ts>
     void debug(OkayLog log, Ts&&... ts) {
-        _emit<Severity::DEBUG, V, Ts...>(std::cout, log, std::forward<Ts>(ts)...);
+        emit<Severity::DEBUG, V, Ts...>(std::cout, log, std::forward<Ts>(ts)...);
     }
 
     template <Verbosity V = Verbosity::NORMAL, typename... Ts>
     void info(OkayLog log, Ts&&... ts) {
-        _emit<Severity::INFO, V, Ts...>(std::cout, log, std::forward<Ts>(ts)...);
+        emit<Severity::INFO, V, Ts...>(std::cout, log, std::forward<Ts>(ts)...);
     }
 
     template <Verbosity V = Verbosity::NORMAL, typename... Ts>
     void warning(OkayLog log, Ts&&... ts) {
-        _emit<Severity::WARNING, V, Ts...>(std::cerr, log, std::forward<Ts>(ts)...);
+        emit<Severity::WARNING, V, Ts...>(std::cerr, log, std::forward<Ts>(ts)...);
     }
 
     template <Verbosity V = Verbosity::NORMAL, typename... Ts>
     void error(OkayLog log, Ts&&... ts) {
-        _emit<Severity::ERROR, V, Ts...>(std::cerr, log, std::forward<Ts>(ts)...);
+        emit<Severity::ERROR, V, Ts...>(std::cerr, log, std::forward<Ts>(ts)...);
     }
 
    private:
@@ -138,7 +138,7 @@ class OkayLogger {
     bool _triedToOpenFile{false};
 
     template <Severity S, Verbosity V, typename... Ts>
-    void _emit(std::ostream& os, const OkayLog& log, Ts&&... ts) {
+    void emit(std::ostream& os, const OkayLog& log, Ts&&... ts) {
         if constexpr (!OkayLog::logEnabled<S, V>()) return;
 
         std::lock_guard<std::mutex> g(_mtx);
@@ -156,7 +156,7 @@ class OkayLogger {
         }
     }
 
-    static std::string _makeStartFilename(const std::string& prefix) {
+    static std::string makeStartFilename(const std::string& prefix) {
         auto now = std::chrono::system_clock::now();
         auto time = std::chrono::system_clock::to_time_t(now);
         auto tm = *std::localtime(&time);
@@ -168,7 +168,7 @@ class OkayLogger {
 
     void _openFileIfNeeded() {
         if (!_options.ToFile) return;
-        if (_logFileName.empty()) _logFileName = _makeStartFilename(_options.FilePrefix);
+        if (_logFileName.empty()) _logFileName = makeStartFilename(_options.FilePrefix);
         // make the file if it doesn't exist
         std::lock_guard<std::mutex> g(_mtx);
         _file.open(_logFileName, std::ios::out | std::ios::app);

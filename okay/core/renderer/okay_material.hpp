@@ -24,7 +24,7 @@ struct OkayShader<OkayMaterialUniformCollection<Uniforms...>> {
     OkayShader(const std::string vertexSrc, const std::string fragmentSrc)
         : vertexShader(std::move(vertexSrc)),
           fragmentShader(std::move(fragmentSrc)),
-          shaderProgram(0),
+          _shaderProgram(0),
           _state(ShaderState::NOT_COMPILED) {
         std::hash<std::string> hasher;
         _id = hasher(vertexShader + fragmentShader);
@@ -35,7 +35,7 @@ struct OkayShader<OkayMaterialUniformCollection<Uniforms...>> {
     OkayShader()
         : vertexShader(""),
           fragmentShader(""),
-          shaderProgram(0),
+          _shaderProgram(0),
           _state(ShaderState::NOT_COMPILED),
           _id(1) {}
 
@@ -75,15 +75,15 @@ struct OkayShader<OkayMaterialUniformCollection<Uniforms...>> {
         }
 
         // Link shaders into a program
-        shaderProgram = glCreateProgram();
-        glAttachShader(shaderProgram, vertex);
-        glAttachShader(shaderProgram, fragment);
-        glLinkProgram(shaderProgram);
+        _shaderProgram = glCreateProgram();
+        glAttachShader(_shaderProgram, vertex);
+        glAttachShader(_shaderProgram, fragment);
+        glLinkProgram(_shaderProgram);
 
         // Check for linking errors
-        glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+        glGetProgramiv(_shaderProgram, GL_LINK_STATUS, &success);
         if (!success) {
-            glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
+            glGetProgramInfoLog(_shaderProgram, 512, NULL, infoLog);
             return Failable::errorResult("Shader program linking failed: " + std::string(infoLog));
         }
 
@@ -99,21 +99,21 @@ struct OkayShader<OkayMaterialUniformCollection<Uniforms...>> {
         if (_state != ShaderState::STANDBY && _state != ShaderState::IN_USE) {
             return Failable::errorResult("Shader must be compiled before setting it for use.");
         }
-        glUseProgram(shaderProgram);
+        glUseProgram(_shaderProgram);
         _state = ShaderState::IN_USE;
         uniforms.markAllDirty();
         return Failable::ok({});
     }
 
-    Failable findUniformLocations() { return uniforms.findLocations(shaderProgram); };
+    Failable findUniformLocations() { return uniforms.findLocations(_shaderProgram); };
 
-    Failable passDirtyUniforms() { return uniforms.setUniforms(shaderProgram); };
+    Failable passDirtyUniforms() { return uniforms.setUniforms(_shaderProgram); };
 
     ShaderState state() const { return _state; }
     std::uint32_t id() const { return _id; }
 
    private:
-    GLuint shaderProgram;
+    GLuint _shaderProgram;
     ShaderState _state;
     std::size_t _id;
 };
