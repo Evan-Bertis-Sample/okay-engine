@@ -96,7 +96,7 @@ class OkayLogger {
     OkayLogger() = default;
 
     explicit OkayLogger(const OkayLoggerOptions& options) : _options(options) {
-        _openFileIfNeeded();
+        openFileIfNeeded();
     }
 
     void setOptions(const OkayLoggerOptions& options) {
@@ -107,7 +107,7 @@ class OkayLogger {
             _file.close();
         }
         _logFileName.clear();
-        _openFileIfNeeded();
+        openFileIfNeeded();
     }
 
     template <Verbosity V = Verbosity::NORMAL, typename... Ts>
@@ -146,7 +146,7 @@ class OkayLogger {
         log.invoke<S, V, Ts...>(os, true, std::forward<Ts>(ts)...);
 
         if (_options.ToFile && !_triedToOpenFile) {
-            _openFileIfNeeded();
+            openFileIfNeeded();
             _triedToOpenFile = true;
         }
 
@@ -166,7 +166,7 @@ class OkayLogger {
         return ss.str();
     }
 
-    void _openFileIfNeeded() {
+    void openFileIfNeeded() {
         if (!_options.ToFile) return;
         if (_logFileName.empty()) _logFileName = makeStartFilename(_options.FilePrefix);
         // make the file if it doesn't exist
