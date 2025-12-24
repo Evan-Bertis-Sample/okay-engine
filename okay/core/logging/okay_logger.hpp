@@ -9,13 +9,10 @@
 #include <source_location>
 #include <string>
 #include <string_view>
-#include <type_traits>
+
 #include <utility>
-#include <iomanip>
+
 #include <ctime>
-#include <sstream>
-#include <chrono>
-#include <filesystem>
 
 #ifndef OKAY_COMPILED_MIN_SEVERITY
 #define OKAY_COMPILED_MIN_SEVERITY 0
@@ -46,11 +43,10 @@ struct OkayLoggerOptions {
 };
 
 struct LogPhrases {
-    static constexpr std::array<std::string_view, 4> SEVERITY_TAG = {"[DEBUG]", "[INFO]", "[WARN]",
-                                                                     "[ERROR]"};
+    static constexpr std::string_view SEVERITY_TAG[4] = {"[DEBUG]", "[INFO]", "[WARN]", "[ERROR]"};
 
-    static constexpr std::array<std::string_view, 4> SEVERITY_COLOR = {"\03[37m", "\033[32m",
-                                                                       "\033[33m", "\033[31m"};
+    static constexpr std::string_view SEVERITY_COLOR[4] = {"\03[37m", "\033[32m", "\033[33m",
+                                                           "\033[31m"};
 
     static constexpr std::string_view COLOR_RESET = "\033[0m";
 
@@ -65,14 +61,12 @@ struct LogPhrases {
     }
 };
 
-
 struct OkayLog final {
     std::string_view fmt;
     std::source_location loc;
 
-    template<typename T>
-    consteval OkayLog(T&& fmt,
-                      std::source_location loc = std::source_location::current())
+    template <typename T>
+    consteval OkayLog(T&& fmt, std::source_location loc = std::source_location::current())
         : fmt(std::forward<T>(fmt)), loc(loc) {}
 
     template <Severity S, Verbosity V>
@@ -84,7 +78,8 @@ struct OkayLog final {
     template <Severity S, Verbosity V, typename... Ts>
     void invoke(std::ostream& os, bool enableColor, Ts&&... ts) const {
         os << LogPhrases::severityColor<S>(enableColor);
-        os << LogPhrases::severityTag<S>() << '[' << loc.function_name() << ':' << loc.line() << "] ";
+        os << LogPhrases::severityTag<S>() << '[' << loc.function_name() << ':' << loc.line()
+           << "] ";
         os << std::vformat(fmt, std::make_format_args(ts...));
         if (enableColor) os << LogPhrases::COLOR_RESET;
         os << '\n';
@@ -95,20 +90,9 @@ class OkayLogger {
    public:
     OkayLogger() = default;
 
-    explicit OkayLogger(const OkayLoggerOptions& options) : _options(options) {
-        openFileIfNeeded();
-    }
+    explicit OkayLogger(const OkayLoggerOptions& options);
 
-    void setOptions(const OkayLoggerOptions& options) {
-        std::lock_guard<std::mutex> g(_mtx);
-        _options = options;
-        if (_file.is_open()) {
-            _file.flush();
-            _file.close();
-        }
-        _logFileName.clear();
-        openFileIfNeeded();
-    }
+    void setOptions(const OkayLoggerOptions& options);
 
     template <Verbosity V = Verbosity::NORMAL, typename... Ts>
     void debug(OkayLog log, Ts&&... ts) {
@@ -156,27 +140,9 @@ class OkayLogger {
         }
     }
 
-    static std::string makeStartFilename(const std::string& prefix) {
-        auto now = std::chrono::system_clock::now();
-        auto time = std::chrono::system_clock::to_time_t(now);
-        auto tm = *std::localtime(&time);
-        std::stringstream ss;
-        // prepend cwd / logs
-        ss << std::filesystem::current_path() / "logs" / prefix << std::put_time(&tm, "%Y-%m-%d_%H-%M-%S") << ".log";
-        return ss.str();
-    }
+    static std::string makeStartFilename(const std::string& prefix);
 
-    void openFileIfNeeded() {
-        if (!_options.ToFile) return;
-        if (_logFileName.empty()) _logFileName = makeStartFilename(_options.FilePrefix);
-        // make the file if it doesn't exist
-        std::lock_guard<std::mutex> g(_mtx);
-        _file.open(_logFileName, std::ios::out | std::ios::app);
-        if (!_file.is_open()) {
-            auto log = OkayLog("Failed to open log file: {}");
-            log.invoke<Severity::ERROR, Verbosity::NORMAL>(std::cerr, true, _logFileName);
-        }
-    }
+    void openFileIfNeeded();
 };
 
 }  // namespace okay

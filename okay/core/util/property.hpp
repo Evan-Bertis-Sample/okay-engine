@@ -1,7 +1,6 @@
 #ifndef __PROPERTY_H__
 #define __PROPERTY_H__
 
-#pragma once
 #include <type_traits>
 #include <utility>
 

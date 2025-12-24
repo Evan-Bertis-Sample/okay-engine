@@ -1,10 +1,13 @@
 #ifndef __OKAY_UNIFORM_H__
 #define __OKAY_UNIFORM_H__
 
+#include <glad/gl.h>
 #include <glm/glm.hpp>
 #include <okay/core/logging/okay_logger.hpp>
 #include <okay/core/util/result.hpp>
 #include <okay/core/util/type.hpp>
+#include <okay/core/renderer/okay_texture.hpp>
+#include <sstream>
 #include <tuple>
 #include <type_traits>
 

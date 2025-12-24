@@ -63,49 +63,10 @@ struct OkayRenderEntity {
 class OkayRenderWorld {
    public:
     OkayRenderableHandle addRenderEntity(const OkayTransform& transform, IOkayMaterial& material,
-                                         const OkayMesh& mesh) {
-        OkayRenderableHandle handle = _entityPool.emplace(material, mesh);
+                                         const OkayMesh& mesh);
 
-        // Create properties
-        RenderItemDirtyHandlerContext context{this, handle};
+    const std::vector<const OkayRenderItem>& getRenderItems();
 
-        Property<OkayTransform> transformProperty(transform);
-        transformProperty.bind(Property<OkayTransform>::Delegate::fromFunction(
-            &OkayRenderWorld::handleDirtyTransform, &context));
-
-        Property<IOkayMaterial&> materialProperty(material);
-        materialProperty.bind(Property<IOkayMaterial&>::Delegate::fromFunction(
-            &OkayRenderWorld::handleDirtyMaterial, &context));
-
-        Property<OkayMesh> meshProperty(mesh);
-        meshProperty.bind(Property<OkayMesh>::Delegate::fromFunction(
-            &OkayRenderWorld::handleDirtyMesh, &context));
-
-        OkayRenderEntity& entity = _entityPool.get(handle);
-        entity.transform = std::move(transformProperty);
-        entity.material = std::move(materialProperty);
-        entity.mesh = std::move(meshProperty);
-
-        // add to dirty transforms and mark for rebuild
-        context->world->_dirtyTransforms.insert(handle);
-        context->world->_needsMaterialRebuild = true;
-
-        return handle;
-    };
-
-    const std::vector<const OkayRenderItem>& getRenderItems() {
-        if (!_dirtyTransforms.empty()) {
-            rebuildTransforms();
-        }
-
-        if (_needsMaterialRebuild) {
-            rebuildMaterials();
-        }
-
-        return _memoizedRenderEntities;
-    }
-
-    
     // iterator for traversing the children of a render item
     class iterator {
     public:
@@ -151,7 +112,7 @@ class OkayRenderWorld {
    private:
     ObjectPool<OkayRenderEntity> _entityPool;
     ObjectPool<OkayRenderItem> _renderItemPool;
-    std::vector<const OkayRenderItem> _memoizedRenderEntities;
+    std::vector<OkayRenderItem> _memoizedRenderEntities;
 
     struct RenderItemDirtyHandlerContext {
         OkayRenderWorld* world;
