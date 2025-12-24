@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <glm/glm.hpp>
+#include <glad/gl.h>
 #include <okay/core/renderer/okay_texture.hpp>
 #include <okay/core/renderer/okay_uniform.hpp>
 #include <okay/core/util/result.hpp>

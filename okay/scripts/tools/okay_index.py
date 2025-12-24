@@ -36,9 +36,9 @@ def main(args):
 
     include_subpaths = [
         ".",                          # <okay/...>
+        "okay/vendor/",            # <glad/...>
         "okay/vendor/glm",             # <glm/...>
         "okay/vendor/glfw/include",    # <GLFW/...>
-        "okay/vendor/glad",            # <glad/...>
     ]
 
     lines = []
