@@ -1,6 +1,6 @@
 # okay-engine
 
-Okay Engine is best described as a lightwork C++20 game engine that is able to target Windows and Linux-based systems. It was primarily developed to power `Northwestern Formula Racing`'s dashboard for NFR26, which runs off of a headless Rapsiban OS.
+Okay Engine is best described as a lightwork C++20 game engine that is able to target Windows and Linux-based systems. It was primarily developed to power `Northwestern Formula Racing`'s dashboard for NFR26, which runs off of a headless Rapsiban OS. Check out that project [here.](https://github.com/NU-Formula-Racing/daq-dash-26)
 
 ## Installation
 
@@ -8,6 +8,7 @@ Okay Engine is best described as a lightwork C++20 game engine that is able to t
 
 Before installing `okay-engine` you must have:
 * CMake, at least version 3.13
+* Ninja
 * Python 3 & pip
 * Git
 * A C++20 compiler, preferably Clang
@@ -45,7 +46,7 @@ source ./okay/scripts/install.bash
 1. Try to run the okay game!
 
 ```bash
-cd okay-game
+cd proto/core
 okay init
 okay build
 okay run
