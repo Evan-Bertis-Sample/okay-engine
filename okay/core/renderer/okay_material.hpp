@@ -7,6 +7,7 @@
 #include <okay/core/renderer/okay_texture.hpp>
 #include <okay/core/renderer/okay_uniform.hpp>
 #include <okay/core/util/result.hpp>
+#include <okay/core/okay.hpp>
 
 namespace okay {
 
@@ -42,6 +43,10 @@ struct OkayShader<OkayMaterialUniformCollection<Uniforms...>> {
     OkayMaterialUniformCollection<Uniforms...> uniforms;
 
     Failable compile() {
+        if (_state != ShaderState::NOT_COMPILED) {
+            return Failable::ok({});
+        }
+
         // Compile vertex shader
         GLuint vertex = glCreateShader(GL_VERTEX_SHADER);
         const char* vertexSrcCStr = vertexShader.c_str();
@@ -90,6 +95,8 @@ struct OkayShader<OkayMaterialUniformCollection<Uniforms...>> {
         glDeleteShader(fragment);
 
         _state = ShaderState::STANDBY;
+
+        Engine.logger.info("Shader compiled.");
         return Failable::ok({});
     }
 

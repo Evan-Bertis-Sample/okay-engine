@@ -7,33 +7,52 @@ void OkayRenderer::initialize() {
 
     OkayAssetManager* assetManager = Engine.systems.getSystemChecked<OkayAssetManager>();
 
+    // load -> compile -> set -> findUniformLocations -> setUniforms
     auto shaderSetup = catchResult(
         assetManager->loadEngineAssetSync<OkayShader<TestMaterialUniforms>>("shaders/test")
             .then([](auto& shaderAsset) {
                 return Result<OkayShader<TestMaterialUniforms>>::ok(shaderAsset.asset);
             })
             .then([](OkayShader<TestMaterialUniforms>& shader) {
+                Engine.logger.info("Compiling shader...");
+                shader.compile();
+                return Result<OkayShader<TestMaterialUniforms>>::ok(shader);
+            })
+            .then([](OkayShader<TestMaterialUniforms>& shader) {
+                Engine.logger.info("Setting shader...");
                 shader.set();
                 return Result<OkayShader<TestMaterialUniforms>>::ok(shader);
             })
             .then([](OkayShader<TestMaterialUniforms>& shader) {
+                Engine.logger.info("Finding uniform locations...");
                 shader.findUniformLocations();
                 return Result<OkayShader<TestMaterialUniforms>>::ok(shader);
             })
             .then([](OkayShader<TestMaterialUniforms>& shader) {
-                shader.uniforms.get<FixedString("u_color")>().set(glm::vec3(1.0f, 1.0f, 1.0f));
+                Engine.logger.info("Setting uniforms...");
+                shader.uniforms.get<FixedString("u_color")>().set(glm::vec3(1.0f, 0.0f, 1.0f));
                 return Result<OkayShader<TestMaterialUniforms>>::ok(shader);
             }),
         [](const std::string& failMessage) { Engine.logger.error("Cannot setup shader!"); });
 
     if (!shaderSetup) {
-        return;  // we have failed
+        Engine.logger.error("We have failed to setup the shader, stalling the program...");
+        while (true) {}
     }
 
     Engine.logger.info("Shader setup done! Test float {}", 0.0f, 0.0f);
 
-    _model = _modelBuffer.addMesh(primitives::box().sizeSet({0.1f, 0.1f, 0.1f}).build());
+    Failable modelBufferSetup = stepThrough(
+        [](const std::string& failMessage) { Engine.logger.error("Cannot setup model buffer!"); },
+        _modelBuffer.initVertexAttributes(), _modelBuffer.bindMeshData());
 
+    if (!modelBufferSetup) {
+        Engine.logger.error("We have failed to setup the model buffer, stalling the program...");
+        while (true) {}
+    }
+
+    _model = _modelBuffer.addMesh(primitives::box().sizeSet({0.01f, 0.01f, 0.01f}).build());
+    _modelBuffer.initVertexAttributes();
     _modelBuffer.bindMeshData();
 }
 
@@ -58,7 +77,7 @@ void OkayRenderer::tick() {
         return;
     }
 
-    _modelBuffer.drawMesh(_model);
+    // _modelBuffer.drawMesh(_model);
     _surface->swapBuffers();
 }
 

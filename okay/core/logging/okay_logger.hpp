@@ -78,7 +78,7 @@ struct OkayLog final {
     template <Severity S, Verbosity V, typename... Ts>
     void invoke(std::ostream& os, bool enableColor, Ts&&... ts) const {
         os << LogPhrases::severityColor<S>(enableColor);
-        os << LogPhrases::severityTag<S>() << '[' << loc.function_name() << ':' << loc.line()
+        os << LogPhrases::severityTag<S>() << '[' << loc.file_name() << ':' << loc.line()
            << "] ";
         os << std::vformat(fmt, std::make_format_args(ts...));
         if (enableColor) os << LogPhrases::COLOR_RESET;

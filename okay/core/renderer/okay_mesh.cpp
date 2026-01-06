@@ -62,6 +62,7 @@ void OkayMeshBuffer::removeMesh(const OkayMesh& mesh) {
 }
 
 Failable OkayMeshBuffer::initVertexAttributes() {
+    Engine.logger.info("Initializing vertex attributes");
     // describe vertex attributes
     // in memory the layout of vertices will be
     // position, normal, color, uv
@@ -88,6 +89,7 @@ Failable OkayMeshBuffer::initVertexAttributes() {
 }
 
 Failable OkayMeshBuffer::bindMeshData() {
+    Engine.logger.info("Binding mesh data");
     // init the vao
     glGenVertexArrays(1, &_vao);
     glGenBuffers(1, &_vbo);
@@ -120,7 +122,10 @@ void OkayMeshBuffer::drawMesh(const OkayMesh& mesh) {
     // bind the vao, draw, unbind
     glBindVertexArray(_vao);
     // draw from mesh.indexOffset to mesh.indexOffset + mesh.indexCount
-    glDrawElements(GL_TRIANGLES, (GLsizei)mesh.indexCount, GL_UNSIGNED_INT,
-                   (void*)(mesh.indexOffset * sizeof(GLuint)));
+    void *start = reinterpret_cast<void*>(mesh.indexOffset * sizeof(GLuint));
+    GLsizei count = (GLsizei)(mesh.indexCount) * sizeof(GLuint);
+
+    glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, start);
+
     glBindVertexArray(0);
 }

@@ -153,7 +153,41 @@ Result<U> catchResult(Result<U>&& r, F&& handler)
     return std::move(r);
 }
 
+
+
 using Failable = Result<NoneType>;
+
+template <typename F, typename... Fs>
+Failable stepThrough(F&& errorHandler, Fs&&... functions)
+    requires(
+        // F should be invokable with a const std::string& for the error message
+        requires(F&& fn, const std::string& e) { std::invoke(std::forward<F>(fn), e); } 
+    )
+{
+    // check if any of the functions return an error
+    bool error = false;
+    std::vector<std::string> errors;
+    std::initializer_list<int>{(error |= functions.isError(), 0)...};
+    std::initializer_list<int>{(errors.push_back(functions.error()), 0)...};
+
+    if (error) {
+        // concatenate the error messages into one string
+        std::string errorMessage;
+        for (const std::string &error : errors) {
+            if (error.empty()) {
+                continue;
+            }
+            errorMessage += error;
+            errorMessage += "\n";
+        }
+
+        errorHandler(errorMessage.c_str());
+
+        return Failable::errorResult(std::move(errorMessage));
+    }
+
+    return Failable::ok({});
+}
 
 }  // namespace okay
 

@@ -26,7 +26,7 @@ struct ObjectPoolHandle {
 template <typename T>
 class ObjectPool final {
    public:
-    static constexpr std::uint32_t invalidIndex() { return ObjectPoolHandle::invalidHandle(); }
+    static constexpr std::uint32_t invalidIndex() { return ObjectPoolHandle::invalidIndex(); }
     static ObjectPoolHandle invalidHandle() { return ObjectPoolHandle::invalidHandle(); }
 
     ObjectPool() = default;
@@ -73,7 +73,7 @@ class ObjectPool final {
         s.ref().~T();
         s.alive = false;
 
-        s.genera tion += 1;
+        s.generation += 1;
         s.freeNext = _freeHead;
         _freeHead = h.index;
 
