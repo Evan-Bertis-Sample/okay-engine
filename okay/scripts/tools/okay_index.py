@@ -1,10 +1,13 @@
-
 from pathlib import Path
 
 from tools.build_util import OkayBuildOptions, OkayBuildType
 from tools.tool_util import OkayToolUtil
 
 CLANGD_PATH = ".clangd"
+
+
+def require_okay_project():
+    return False
 
 
 def register_subparser(subparser):
@@ -23,7 +26,7 @@ def _abs_posix(p: Path) -> str:
 def main(args):
     build_options = OkayBuildOptions.from_args(args)
 
-    workspace_root = Path(OkayToolUtil.get_okay_parent_dir()).resolve()
+    workspace_root = Path(build_options.project_dir).resolve()
     clangd_file = workspace_root / CLANGD_PATH
 
     if clangd_file.exists() and not args.overwrite:
@@ -35,10 +38,10 @@ def main(args):
                 return
 
     include_subpaths = [
-        ".",                          # <okay/...>
-        "okay/vendor/",            # <glad/...>
-        "okay/vendor/glm",             # <glm/...>
-        "okay/vendor/glfw/include",    # <GLFW/...>
+        ".",  # <okay/...>
+        "okay/vendor/",  # <glad/...>
+        "okay/vendor/glm",  # <glm/...>
+        "okay/vendor/glfw/include",  # <GLFW/...>
     ]
 
     lines = []

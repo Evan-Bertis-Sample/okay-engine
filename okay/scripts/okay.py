@@ -83,8 +83,13 @@ def main():
     if not hasattr(tool_mod, "main"):
         parser.error(f"Tool '{args.tool}' does not define a main(args) function.")
 
+    # don't perform this check if there is a require_okay_project attribute and it returns true
+    perform_init_check = True
+    if hasattr(tool_mod, "require_okay_project"):
+       perform_init_check = bool(tool_mod.require_okay_project())         
+
     # if this tool is not "init" require that the work directory exists
-    if args.tool != "init" and not tool_util.OkayToolUtil.is_good_for_work():
+    if perform_init_check and not tool_util.OkayToolUtil.is_good_for_work():
         sys.stderr.write("Error: This command must be run in a valid Okay project directory.\n")
         sys.exit(1)
 
