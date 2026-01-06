@@ -105,7 +105,7 @@ class OkayLogger {
     }
 
     template <Verbosity V = Verbosity::NORMAL, typename... Ts>
-    void warning(OkayLog log, Ts&&... ts) {
+    void warn(OkayLog log, Ts&&... ts) {
         emit<Severity::WARNING, V, Ts...>(std::cerr, log, std::forward<Ts>(ts)...);
     }
 
@@ -117,7 +117,8 @@ class OkayLogger {
    private:
     OkayLoggerOptions _options{};
     std::ofstream _file{};
-    std::mutex _mtx{};
+    std::mutex _fileMtx{};
+    std::mutex _optionsMtx{};
     std::string _logFileName{};
     bool _triedToOpenFile{false};
 
@@ -125,16 +126,16 @@ class OkayLogger {
     void emit(std::ostream& os, const OkayLog& log, Ts&&... ts) {
         if constexpr (!OkayLog::logEnabled<S, V>()) return;
 
-        std::lock_guard<std::mutex> g(_mtx);
-
         log.invoke<S, V, Ts...>(os, true, std::forward<Ts>(ts)...);
 
         if (_options.ToFile && !_triedToOpenFile) {
+            std::lock_guard g(_fileMtx);
             openFileIfNeeded();
             _triedToOpenFile = true;
         }
 
         if (_file.is_open()) {
+            std::lock_guard g(_fileMtx);
             log.invoke<S, V, Ts...>(_file, false, std::forward<Ts>(ts)...);
             _file.flush();
         }

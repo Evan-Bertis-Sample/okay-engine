@@ -43,7 +43,10 @@ struct OkayShader<OkayMaterialUniformCollection<Uniforms...>> {
     OkayMaterialUniformCollection<Uniforms...> uniforms;
 
     Failable compile() {
+        Engine.logger.debug("Compiling shader...");
+        
         if (_state != ShaderState::NOT_COMPILED) {
+            Engine.logger.warn("Shader is already compiled.");
             return Failable::ok({});
         }
 

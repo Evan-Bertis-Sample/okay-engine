@@ -22,7 +22,6 @@ void OkayLogger::openFileIfNeeded() {
     if (!_options.ToFile) return;
     if (_logFileName.empty()) _logFileName = makeStartFilename(_options.FilePrefix);
     // make the file if it doesn't exist
-    std::lock_guard<std::mutex> g(_mtx);
     _file.open(_logFileName, std::ios::out | std::ios::app);
     if (!_file.is_open()) {
         auto log = OkayLog("Failed to open log file: {}");
@@ -31,7 +30,7 @@ void OkayLogger::openFileIfNeeded() {
 }
 
 void OkayLogger::setOptions(const OkayLoggerOptions& options) {
-    std::lock_guard<std::mutex> g(_mtx);
+    std::lock_guard<std::mutex> g(_optionsMtx);
     _options = options;
     if (_file.is_open()) {
         _file.flush();
