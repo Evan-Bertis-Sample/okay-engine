@@ -117,8 +117,6 @@ Failable OkayMeshBuffer::bindMeshData() {
 }
 
 void OkayMeshBuffer::drawMesh(const OkayMesh& mesh) {
-    Engine.logger.debug("Drawing mesh from {} to {}\n", mesh.indexOffset,
-                        mesh.indexOffset + mesh.indexOffset);
     // bind the vao, draw, unbind
     glBindVertexArray(_vao);
     // draw from mesh.indexOffset to mesh.indexOffset + mesh.indexCount

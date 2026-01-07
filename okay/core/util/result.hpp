@@ -14,6 +14,7 @@ template <class R>
 concept ResultLike = requires {
     typename R::ValueType;
     { R::errorResult(std::string{}) } -> std::same_as<R>;
+    { R::ok(typename R::ValueType{}) } -> std::same_as<R>;
 };
 
 template <typename T>
@@ -82,6 +83,8 @@ class Result {
     Result(Result&&) noexcept = default;
     Result& operator=(Result&&) noexcept = default;
 
+    // then for functions that take in the value of the reuslt
+
     template <class F>
     auto then(F&& f) & -> std::invoke_result_t<F, T&>
         requires ResultLike<std::invoke_result_t<F, T&>>
@@ -110,6 +113,36 @@ class Result {
         return thenImpl<const T&>(std::forward<F>(f));
     }
 
+    // then for functions that don't take in a value
+
+    template <class F>
+    auto then(F&& f) & -> std::invoke_result_t<F>
+        requires ResultLike<std::invoke_result_t<F>>
+    {
+        return thenImpl(std::forward<F>(f));
+    }
+
+    template <class F>
+    auto then(F&& f) const& -> std::invoke_result_t<F>
+        requires ResultLike<std::invoke_result_t<F>>
+    {
+        return thenImpl(std::forward<F>(f));
+    }
+
+    template <class F>
+    auto then(F&& f) && -> std::invoke_result_t<F>
+        requires ResultLike<std::invoke_result_t<F>>
+    {
+        return thenImpl(std::forward<F>(f));
+    }
+
+    template <class F>
+    auto then(F&& f) const&& -> std::invoke_result_t<F>
+        requires ResultLike<std::invoke_result_t<F>>
+    {
+        return thenImpl(std::forward<F>(f));
+    }
+
    private:
     std::optional<T> _value;
     std::string _errorMessage;
@@ -133,6 +166,15 @@ class Result {
             return std::invoke(std::forward<F>(f), static_cast<T&>(*_value));
         }
     }
+
+    template <class F>
+    auto thenImpl(F&& f) -> std::invoke_result_t<F>
+        requires ResultLike<std::invoke_result_t<F>>
+    {
+        using R = std::invoke_result_t<F>;
+        if (isError()) return R::errorResult(_errorMessage);
+        return std::invoke(std::forward<F>(f));
+    }
 };
 
 template <typename U, typename F>
@@ -153,41 +195,52 @@ Result<U> catchResult(Result<U>&& r, F&& handler)
     return std::move(r);
 }
 
-
-
 using Failable = Result<NoneType>;
 
-template <typename F, typename... Fs>
-Failable stepThrough(F&& errorHandler, Fs&&... functions)
-    requires(
-        // F should be invokable with a const std::string& for the error message
-        requires(F&& fn, const std::string& e) { std::invoke(std::forward<F>(fn), e); } 
-    )
-{
-    // check if any of the functions return an error
-    bool error = false;
-    std::vector<std::string> errors;
-    std::initializer_list<int>{(error |= functions.isError(), 0)...};
-    std::initializer_list<int>{(errors.push_back(functions.error()), 0)...};
 
-    if (error) {
-        // concatenate the error messages into one string
-        std::string errorMessage;
-        for (const std::string &error : errors) {
-            if (error.empty()) {
-                continue;
-            }
-            errorMessage += error;
-            errorMessage += "\n";
-        }
+// A deferred function object that, when invoked, returns a ResultLike
+template <class F>
+    requires ResultLike<std::invoke_result_t<F&>>
+struct DeferredResultFn {
+    using FnType = std::decay_t<F>;
+    FnType fn;
 
-        errorHandler(errorMessage.c_str());
+    decltype(auto) operator()() & { return std::invoke(fn); }
+    decltype(auto) operator()() const& { return std::invoke(fn); }
+    decltype(auto) operator()() && { return std::invoke(std::move(fn)); }
+};
 
-        return Failable::errorResult(std::move(errorMessage));
-    }
-
-    return Failable::ok({});
+// Deduction: store a decayed callable.
+template <class F>
+auto defer(F&& f) -> DeferredResultFn<F> {
+    return DeferredResultFn<F>{std::forward<F>(f)};
 }
+
+#define DEFER(expr) defer([&]() { return (expr); })
+
+template <class T>
+concept DeferredResultFnLike =
+    requires(T t) {
+        // Must be invocable with no args
+        { t() } -> ResultLike;
+    } &&
+    // and must not itself be a ResultLike (prevents passing an already-evaluated Result)
+    (!ResultLike<std::remove_cvref_t<T>>);
+
+template <class... Fs>
+Failable runAll(Fs&&... fs)
+    requires (DeferredResultFnLike<Fs> && ...)
+{
+    Failable out = Failable::ok(NoneType{});
+
+    auto step = [&](auto&& deferred) {
+        out = out.then(std::forward<decltype(deferred)>(deferred));
+    };
+
+    (step(std::forward<Fs>(fs)), ...);
+    return out;
+}
+
 
 }  // namespace okay
 

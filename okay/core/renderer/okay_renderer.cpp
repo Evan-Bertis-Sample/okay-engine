@@ -1,4 +1,5 @@
 #include "okay_renderer.hpp"
+#include "okay/core/util/result.hpp"
 
 using namespace okay;
 
@@ -8,52 +9,44 @@ void OkayRenderer::initialize() {
     OkayAssetManager* assetManager = Engine.systems.getSystemChecked<OkayAssetManager>();
 
     // load -> compile -> set -> findUniformLocations -> setUniforms
-    auto shaderSetup = catchResult(
-        assetManager->loadEngineAssetSync<OkayShader<TestMaterialUniforms>>("shaders/test")
-            .then([](auto& shaderAsset) {
-                return Result<OkayShader<TestMaterialUniforms>>::ok(shaderAsset.asset);
-            })
-            .then([](OkayShader<TestMaterialUniforms>& shader) {
-                Engine.logger.info("Compiling shader...");
-                shader.compile();
-                return Result<OkayShader<TestMaterialUniforms>>::ok(shader);
-            })
-            .then([](OkayShader<TestMaterialUniforms>& shader) {
-                Engine.logger.info("Setting shader...");
-                shader.set();
-                return Result<OkayShader<TestMaterialUniforms>>::ok(shader);
-            })
-            .then([](OkayShader<TestMaterialUniforms>& shader) {
-                Engine.logger.info("Finding uniform locations...");
-                shader.findUniformLocations();
-                return Result<OkayShader<TestMaterialUniforms>>::ok(shader);
-            })
-            .then([](OkayShader<TestMaterialUniforms>& shader) {
-                Engine.logger.info("Setting uniforms...");
-                shader.uniforms.get<FixedString("u_color")>().set(glm::vec3(1.0f, 0.0f, 1.0f));
-                return Result<OkayShader<TestMaterialUniforms>>::ok(shader);
-            }),
-        [](const std::string& failMessage) { Engine.logger.error("Cannot setup shader!"); });
+    auto loadShaderResult =
+        assetManager->loadEngineAssetSync<OkayShader<TestMaterialUniforms>>("shaders/test");
+
+    if (!loadShaderResult) {
+        Engine.logger.error("Failed to load shader: {}", loadShaderResult.error());
+    }
+
+    shader = loadShaderResult.value().asset;
+
+    Failable shaderSetup = runAll(
+        DEFER(shader.compile()),
+        DEFER(shader.set()),
+        DEFER(shader.findUniformLocations())
+    );
 
     if (!shaderSetup) {
-        Engine.logger.error("We have failed to setup the shader, stalling the program...");
+        Engine.logger.error("Failed to setup shader: {}", shaderSetup.error());
         while (true) {}
     }
 
-    Engine.logger.info("Shader setup done! Test float {}", 0.0f, 0.0f);
+    // set a uniform
+    shader.uniforms.get<FixedString("u_color")>().set(glm::vec3(1.0f, 0.0f, 1.0f));
 
-    Failable modelBufferSetup = stepThrough(
-        [](const std::string& failMessage) { Engine.logger.error("Cannot setup model buffer!"); },
-        _modelBuffer.initVertexAttributes(), _modelBuffer.bindMeshData());
+    // set mesh data
+    _model = _modelBuffer.addMesh(primitives::box().sizeSet({0.1f, 0.1f, 0.1f}).build());
 
-    if (!modelBufferSetup) {
+
+    Failable meshBufferSetup = runAll(
+        DEFER(_modelBuffer.initVertexAttributes()),
+        DEFER(_modelBuffer.bindMeshData())
+    );
+
+    if (!meshBufferSetup) {
         Engine.logger.error("We have failed to setup the model buffer, stalling the program...");
+        Engine.logger.error("Mesh Buffer Setup Error: {}", meshBufferSetup.error());
         while (true) {}
     }
 
-    _model = _modelBuffer.addMesh(primitives::box().sizeSet({0.01f, 0.01f, 0.01f}).build());
-    _modelBuffer.initVertexAttributes();
-    _modelBuffer.bindMeshData();
 }
 
 void OkayRenderer::postInitialize() {
@@ -71,13 +64,11 @@ void OkayRenderer::tick() {
     // draw our first triangle
     Failable f = shader.set();
     if (f.isError()) {
-        std::cerr << "Failed to set shader: " << f.error() << std::endl;
-        while (true) {
-        }
-        return;
+        Engine.logger.error("Failed to set shader: {}", f.error());
+        while (true) {}
     }
 
-    // _modelBuffer.drawMesh(_model);
+    _modelBuffer.drawMesh(_model);
     _surface->swapBuffers();
 }
 
