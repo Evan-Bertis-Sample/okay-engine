@@ -7,6 +7,7 @@ from tools.tool_util import OkayToolUtil, OkayLogType, OkayLogger
 import enum
 import os
 import sys
+import stat
 
 
 class OkayBuildType(enum.Enum):
@@ -341,6 +342,9 @@ class OkayBuildUtil:
         cmd = ["gdb", str(options.executable)] if use_gdb else [str(options.executable)]
         OkayLogger.log(f"Running → {' '.join(cmd)}", OkayLogType.INFO)
         try:
+            # give the executable permission to run
+            permissions = stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH
+            os.chmod(options.executable, permissions)
             subprocess.run(cmd, check=True, cwd=options.build_dir, shell=True)
         except subprocess.CalledProcessError as e:
             OkayLogger.log(f"Runtime error: {e}", OkayLogType.ERROR)
