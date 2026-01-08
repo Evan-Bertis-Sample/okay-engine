@@ -40,6 +40,7 @@ class Result {
     T value() const
         requires(std::is_copy_constructible_v<T>)
     {
+        if (!_value.has_value()) return T{};
         return *_value;
     }
 
