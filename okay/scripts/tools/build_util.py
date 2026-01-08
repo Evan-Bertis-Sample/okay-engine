@@ -298,7 +298,8 @@ class OkayBuildUtil:
             subprocess.run(
                 options.cmake_configure_cmd,
                 check=True,
-                cwd=cmake_dir
+                cwd=cmake_dir,
+                shell=True
             )
         except subprocess.CalledProcessError as e:
             OkayLogger.log(f"CMake configure failed: {e}", OkayLogType.ERROR)
@@ -310,6 +311,7 @@ class OkayBuildUtil:
                 options.cmake_build_cmd,
                 check=True,
                 cwd=OkayToolUtil.get_okay_dir(),
+                shell=True
             )
         except subprocess.CalledProcessError as e:
             width = shutil.get_terminal_size().columns
@@ -339,7 +341,7 @@ class OkayBuildUtil:
         cmd = ["gdb", str(options.executable)] if use_gdb else [str(options.executable)]
         OkayLogger.log(f"Running → {' '.join(cmd)}", OkayLogType.INFO)
         try:
-            subprocess.run(cmd, check=True, cwd=options.build_dir)
+            subprocess.run(cmd, check=True, cwd=options.build_dir, shell=True)
         except subprocess.CalledProcessError as e:
             OkayLogger.log(f"Runtime error: {e}", OkayLogType.ERROR)
 

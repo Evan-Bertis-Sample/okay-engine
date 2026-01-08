@@ -242,7 +242,6 @@ Failable runAll(Fs&&... fs)
     return out;
 }
 
-
 }  // namespace okay
 
 #endif  // __RESULT_H__
