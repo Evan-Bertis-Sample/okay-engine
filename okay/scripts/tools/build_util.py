@@ -342,8 +342,9 @@ class OkayBuildUtil:
         cmd = ["gdb", str(options.executable)] if use_gdb else [str(options.executable)]
         OkayLogger.log(f"Running → {' '.join(cmd)}", OkayLogType.INFO)
         try:
-            # give the executable permission to run
-            permissions = stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH
+            # give the executable permission to run and read/write because
+            # future build steps may need to modify the executable
+            permissions = stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH | stat.S_IWRITE | stat.S_IREAD
             os.chmod(options.executable, permissions)
             subprocess.run(cmd, check=True, cwd=options.build_dir, shell=True)
         except subprocess.CalledProcessError as e:
