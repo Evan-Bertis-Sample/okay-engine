@@ -306,13 +306,13 @@ class OkayBuildUtil:
             return
         options.build_dir.mkdir(parents=True, exist_ok=True)
 
-        OkayLogger.log("Executing command: " + " ".join(options.cmake_configure_cmd), OkayLogType.INFO)
-        cmake_dir = OkayToolUtil.get_okay_cmake_dir()
-        OkayLogger.log(f"Working directory: {cmake_dir}", OkayLogType.INFO)
-
         OkayLogger.log("Packaging assets…", OkayLogType.INFO)
         OkayBuildUtil.package_assets(options.user_asset_dir, options.packaged_game_asset_dir)
         OkayBuildUtil.package_assets(options.engine_asset_dir, options.packaged_engine_asset_dir)
+
+        OkayLogger.log("Executing command: " + " ".join(options.cmake_configure_cmd), OkayLogType.INFO)
+        cmake_dir = OkayToolUtil.get_okay_cmake_dir()
+        OkayLogger.log(f"Working directory: {cmake_dir}", OkayLogType.INFO)
 
         try:
             subprocess.run(
