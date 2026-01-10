@@ -25,7 +25,10 @@ target_compile_definitions(okay_platform PUBLIC __GLFW_SURFACE_H__)
 
 # link low-level deps INTO the platform lib
 target_link_libraries(okay_platform PUBLIC
+  glfw
   OpenGL::GL
+  user32 gdi32 shell32 advapi32 ole32 uuid winmm imm32 version uxtheme setupapi bcrypt
+  -static-libstdc++
   "-framework Cocoa"
   "-framework IOKit"
   "-framework CoreVideo"
