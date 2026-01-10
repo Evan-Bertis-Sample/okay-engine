@@ -126,27 +126,24 @@ class OkayBuildOptions:
             generator=args.generator
         )
     
-    def _decide_generator(self) -> list[str]:
+    def _decide_generator(self) -> str:
         gen = self.generator.lower()
         if gen == "ninja":
-            return ["-G", "Ninja"]
+            return "Ninja"
         if gen == "mingw-makefiles":
-            return ["-G", "MinGW Makefiles"]
+            return "MinGW Makefiles"
         if gen == "unix-makefiles":
-            return ["-G", "Unix Makefiles"]
-        if gen == "vs":
-            # Force MSVC. Don’t pass GCC compilers in this case.
-            return ["-G", "Visual Studio 17 2022", "-A", "x64"]
+            return "Unix Makefiles"
 
         # auto
         # Prefer Ninja if found
         if shutil.which("ninja"):
-            return ["-G", "Ninja"]
+            return "Ninja"
         # On Windows without Ninja, prefer MinGW Makefiles if you’re using GCC
         if os.name == "nt" and self.compiler in ("g++", "gcc"):
-            return ["-G", "MinGW Makefiles"]
+            return "MinGW Makefiles"
         # Fallback
-        return ["-G", "Unix Makefiles"]
+        return "Unix Makefiles"
     
 
     @property
@@ -184,7 +181,7 @@ class OkayBuildOptions:
 
         args = [
             "cmake",
-            *self._decide_generator(),
+            "-G", self._decide_generator(),
             "-S", str(OkayToolUtil.get_okay_cmake_dir()),
             "-B", str(self.build_dir),
             f"-DPROJECT={self.project_name}",
