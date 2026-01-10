@@ -155,6 +155,8 @@ class OkayBuildOptions:
         path = Path(OkayToolUtil.get_okay_work_dir(self.project_dir)) / "build"
         # make sure the path exists
         path.mkdir(parents=True, exist_ok=True)
+        # turn this into the absolute path
+        path = path.resolve()
         return path / f"{self.target.lower()}_{self.build_type.name.lower()}"
     
 
@@ -183,7 +185,7 @@ class OkayBuildOptions:
         args = [
             "cmake",
             *self._decide_generator(),
-            "-S", ".",
+            "-S", str(OkayToolUtil.get_okay_cmake_dir()),
             "-B", str(self.build_dir),
             f"-DPROJECT={self.project_name}",
             f"-DOKAY_PROJECT_NAME={self.project_name}",
