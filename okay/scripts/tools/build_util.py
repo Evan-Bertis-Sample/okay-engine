@@ -79,7 +79,7 @@ class OkayBuildOptions:
         sp.add_argument(
             "--target",
             type=str,
-            default="windows",
+            default="native",
             help="CMake target to build (default: native)",
         )
         sp.add_argument(
@@ -98,8 +98,25 @@ class OkayBuildOptions:
         )
 
     @classmethod
+    def get_host_platform(cls) -> str:
+        plat = sys.platform
+        if plat.startswith("linux"):
+            return "linux"
+        if plat == "darwin":
+            return "macos"
+        if plat in ("win32", "cygwin"):
+            return "windows"
+        return "unknown"
+
+    @classmethod
     def from_args(cls, args) -> "OkayBuildOptions":
         bt = OkayBuildType.from_string(args.build_type) or OkayBuildType.Debug
+
+        # if this is native, set target to the platform
+        if args.target.lower() == "native":
+            plat = OkayBuildOptions.get_host_platform()
+            args.target = plat
+
         return cls(
             project_dir=args.project_dir.resolve(),
             build_type=bt,
