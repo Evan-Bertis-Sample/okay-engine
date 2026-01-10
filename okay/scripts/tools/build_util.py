@@ -212,7 +212,7 @@ class OkayBuildOptions:
 
     @property
     def cmake_build_cmd(self) -> list[str]:
-        cmd = ["cmake", "--build", str(self.build_dir), "--target", self.project_name, "-v"]
+        cmd = ["cmake", "--build", str(self.build_dir), "--target", self.project_name]
         # Add --config for multi-config generators like Visual Studio / Ninja Multi-Config
         gens = self._decide_generator()
         if "Visual Studio 17 2022" in gens:
