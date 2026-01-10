@@ -131,9 +131,9 @@ class OkayBuildOptions:
         if gen == "ninja":
             return "Ninja"
         if gen == "mingw-makefiles":
-            return "MinGW Makefiles"
+            return "\"MinGW Makefiles\""
         if gen == "unix-makefiles":
-            return "Unix Makefiles"
+            return "\"Unix Makefiles\""
 
         # auto
         # Prefer Ninja if found
@@ -141,9 +141,9 @@ class OkayBuildOptions:
             return "Ninja"
         # On Windows without Ninja, prefer MinGW Makefiles if you’re using GCC
         if os.name == "nt" and self.compiler in ("g++", "gcc"):
-            return "MinGW Makefiles"
+            return "\"MinGW Makefiles\""
         # Fallback
-        return "Unix Makefiles"
+        return "\"Unix Makefiles\""
     
 
     @property
