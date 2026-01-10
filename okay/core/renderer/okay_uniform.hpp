@@ -69,6 +69,8 @@ struct OkayMaterialUniform {
     };
 
     Failable passUniform(GLuint shaderProgram) {
+        if (!isDirty()) return Failable::ok({});
+
         if (location() == invalidLocation()) {
             Failable result = findLocation(shaderProgram);
             if (result.isError()) {

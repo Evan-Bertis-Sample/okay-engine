@@ -31,6 +31,7 @@ void OkayRenderer::initialize() {
 
     // set a uniform
     shader.uniforms.get<FixedString("u_color")>().set(glm::vec3(1.0f, 0.0f, 1.0f));
+    shader.passDirtyUniforms();
 
     // set mesh data
     _model = _modelBuffer.addMesh(primitives::box().sizeSet({0.1f, 0.1f, 0.1f}).build());

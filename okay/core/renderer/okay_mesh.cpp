@@ -82,8 +82,8 @@ Failable OkayMeshBuffer::initVertexAttributes() {
 
     // uv
     glEnableVertexAttribArray(3);
-    glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(OkayVertex),
-                          (void*)offsetof(OkayVertex, uv));
+    glVertexAttribPointer(
+        3, 2, GL_FLOAT, GL_FALSE, sizeof(OkayVertex), (void*)offsetof(OkayVertex, uv));
 
     return Failable::ok({});
 }
