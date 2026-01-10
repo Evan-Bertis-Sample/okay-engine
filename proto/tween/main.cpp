@@ -3,6 +3,9 @@
 #include <okay/core/renderer/okay_surface.hpp>
 #include <okay/core/level/okay_level_manager.hpp>
 #include <okay/core/asset/okay_asset.hpp>
+#include <okay/core/logging/okay_logger.hpp>
+
+#include <utility>
 
 static void __gameInitialize();
 static void __gameUpdate();
@@ -30,8 +33,8 @@ int main() {
 }
 
 static void __gameInitialize() {
-    std::cout << "Game initialized." << std::endl;
     // Additional game initialization logic
+    okay::Engine.logger.info("Game initialized.");
 }
 
 static void __gameUpdate() {
@@ -40,6 +43,6 @@ static void __gameUpdate() {
 }
 
 static void __gameShutdown() {
-    std::cout << "Game shutdown." << std::endl;
     // Cleanup logic before game shutdown
+    okay::Engine.logger.info("Game shutdown.");
 }
