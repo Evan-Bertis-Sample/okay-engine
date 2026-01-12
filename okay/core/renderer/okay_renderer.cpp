@@ -1,5 +1,6 @@
 #include "okay_renderer.hpp"
 #include "okay/core/util/result.hpp"
+#include "okay_render_world.hpp"
 
 using namespace okay;
 
@@ -18,15 +19,13 @@ void OkayRenderer::initialize() {
 
     shader = loadShaderResult.value().asset;
 
-    Failable shaderSetup = runAll(
-        DEFER(shader.compile()),
-        DEFER(shader.set()),
-        DEFER(shader.findUniformLocations())
-    );
+    Failable shaderSetup =
+        runAll(DEFER(shader.compile()), DEFER(shader.set()), DEFER(shader.findUniformLocations()));
 
     if (!shaderSetup) {
         Engine.logger.error("Failed to setup shader: {}", shaderSetup.error());
-        while (true) {}
+        while (true) {
+        }
     }
 
     // set a uniform
@@ -36,18 +35,24 @@ void OkayRenderer::initialize() {
     // set mesh data
     _model = _modelBuffer.addMesh(primitives::box().sizeSet({0.1f, 0.1f, 0.1f}).build());
 
-
-    Failable meshBufferSetup = runAll(
-        DEFER(_modelBuffer.initVertexAttributes()),
-        DEFER(_modelBuffer.bindMeshData())
-    );
+    Failable meshBufferSetup =
+        runAll(DEFER(_modelBuffer.initVertexAttributes()), DEFER(_modelBuffer.bindMeshData()));
 
     if (!meshBufferSetup) {
         Engine.logger.error("We have failed to setup the model buffer, stalling the program...");
         Engine.logger.error("Mesh Buffer Setup Error: {}", meshBufferSetup.error());
-        while (true) {}
+        while (true) {
+        }
     }
 
+    OkayRenderWorld world;
+    OkayRenderEntity e = world.addRenderEntity(OkayTransform(), nullptr, _model);
+
+    e.prop().transform = OkayTransform(
+        glm::vec3(0.0f, 0.0f, 0.0f),
+        glm::vec3(1.0f, 1.0f, 1.0f),
+        glm::quat(1.0f, 0.0f, 0.0f, 0.0f)
+    );
 }
 
 void OkayRenderer::postInitialize() {
@@ -66,7 +71,8 @@ void OkayRenderer::tick() {
     Failable f = shader.set();
     if (f.isError()) {
         Engine.logger.error("Failed to set shader: {}", f.error());
-        while (true) {}
+        while (true) {
+        }
     }
 
     _modelBuffer.drawMesh(_model);

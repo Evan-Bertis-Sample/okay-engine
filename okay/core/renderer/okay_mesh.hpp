@@ -10,12 +10,31 @@
 namespace okay {
 
 struct OkayVertex {
-    glm::vec3 position;
-    glm::vec3 normal;
-    glm::vec3 color;
-    glm::vec2 uv;
+    glm::vec3 position{0.0f, 0.0f, 0.0f};
+    glm::vec3 normal{0.0f, 0.0f, 0.0f};
+    glm::vec3 color{1.0f, 1.0f, 1.0f};
+    glm::vec2 uv{0.0f, 0.0f};
 
-    static std::size_t numFloats() { return 3 + 3 + 3 + 2; }
+    static std::size_t numFloats() {
+        return 3 + 3 + 3 + 2;
+    }
+
+    OkayVertex& operator=(const OkayVertex& other) {
+        position = other.position;
+        normal = other.normal;
+        color = other.color;
+        uv = other.uv;
+        return *this;
+    }
+
+    bool operator==(const OkayVertex& other) const {
+        return position == other.position && normal == other.normal && color == other.color &&
+               uv == other.uv;
+    }
+
+    bool operator!=(const OkayVertex& other) const {
+        return !(*this == other);
+    }
 };
 
 struct OkayMeshData {
@@ -24,13 +43,40 @@ struct OkayMeshData {
 };
 
 struct OkayMesh {
-    std::size_t vertexOffset;
-    std::size_t vertexCount;
-    std::size_t indexOffset;
-    std::size_t indexCount;
+    std::size_t vertexOffset{0};
+    std::size_t vertexCount{0};
+    std::size_t indexOffset{0};
+    std::size_t indexCount{0};
 
-    static OkayMesh none() { return {0, 0, 0, 0}; }
-    bool isEmpty() { return indexCount == 0; }
+    OkayMesh() = default;
+    OkayMesh(std::size_t vOffset, std::size_t vCount, std::size_t iOffset, std::size_t iCount)
+        : vertexOffset(vOffset), vertexCount(vCount), indexOffset(iOffset), indexCount(iCount) {}
+
+    static OkayMesh none() {
+        return OkayMesh(0, 0, 0, 0);
+    }
+    
+    bool isEmpty() {
+        return indexCount == 0;
+    }
+
+
+    OkayMesh& operator=(const OkayMesh& other) {
+        vertexOffset = other.vertexOffset;
+        vertexCount = other.vertexCount;
+        indexOffset = other.indexOffset;
+        indexCount = other.indexCount;
+        return *this;
+    }
+
+    bool operator==(const OkayMesh& other) const {
+        return vertexOffset == other.vertexOffset && vertexCount == other.vertexCount &&
+               indexOffset == other.indexOffset && indexCount == other.indexCount;
+    }
+
+    bool operator!=(const OkayMesh& other) const {
+        return !(*this == other);
+    }
 };
 
 class OkayModelView;

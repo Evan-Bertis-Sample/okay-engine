@@ -1,49 +1,60 @@
 #ifndef __PROPERTY_H__
 #define __PROPERTY_H__
 
+#include <functional>
 #include <type_traits>
 #include <utility>
 
 namespace okay {
 
+// requires an asignment, and equality comparison
+template <typename T>
+concept PropertyValue = requires(T a, T b) {
+    { a = b } -> std::same_as<T&>;
+    { a == b } -> std::convertible_to<bool>;
+    { a != b } -> std::convertible_to<bool>;
+};
+
 template <class T>
+    requires PropertyValue<T>
 class Property {
    public:
-    using CallbackFn = void (*)(void*);
-
-    struct Delegate {
-        CallbackFn fn = nullptr;
-        void* ctx = nullptr;
-
-        constexpr bool valid() const { return fn != nullptr; }
-        void invoke() const {
-            if (fn) fn(ctx);
-        }
-
-        static Delegate fromFunction(CallbackFn f, void* c) { return Delegate{f, c}; }
-    };
-
     Property() = default;
 
-    explicit Property(T initial) : _value(std::move(initial)) {}
+    explicit Property(T initial) : _value(std::move(initial)) {
+    }
 
-    Property(T initial, Delegate onDirty) : _value(std::move(initial)), _onDirty(onDirty) {}
+    Property(T initial, std::function<void(T)> onDirty)
+        : _value(std::move(initial)), _onDirty(onDirty) {
+    }
 
-    void bind(Delegate onDirty) { _onDirty = onDirty; }
-    void clear() { _onDirty = {}; }
+    void bind(std::function<void(T)> onDirty) {
+        _onDirty = onDirty;
+    }
+    void clear() {
+        _onDirty = {};
+    }
 
-    const T& get() const { return _value; }
-    T& getMutable() { return _value; }
-    operator const T&() const { return _value; }
+    const T& get() const {
+        return _value;
+    }
+    T& getMutable() {
+        return _value;
+    }
+    operator const T&() const {
+        return _value;
+    }
 
     void set(const T& value) {
-        if (isSameValue(value)) return;
+        if (isSameValue(value))
+            return;
         _value = value;
         notifyDirty();
     }
 
     void set(T&& value) {
-        if (isSameValue(value)) return;
+        if (isSameValue(value))
+            return;
         _value = std::move(value);
         notifyDirty();
     }
@@ -58,30 +69,17 @@ class Property {
         return *this;
     }
 
-    void markDirty() { notifyDirty(); }
-
-   private:
-    template <class U, class = void>
-    struct HasEq : std::false_type {};
-
-    template <class U>
-    struct HasEq<U, std::void_t<decltype(std::declval<const U&>() == std::declval<const U&>())>>
-        : std::true_type {};
-
-    template <class V>
-    bool isSameValue(const V& value) const {
-        if constexpr (HasEq<T>::value) {
-            return _value == value;
-        } else {
-            (void)value;
-            return false;
-        }
+    void markDirty() {
+        notifyDirty();
     }
 
-    void notifyDirty() { _onDirty.invoke(); }
+   private:
+    void notifyDirty() {
+        _onDirty.invoke(_value);
+    }
 
     T _value{};
-    Delegate _onDirty{};
+    std::function<void(T)> _onDirty;
 };
 
 }  // namespace okay
