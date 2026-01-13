@@ -51,8 +51,8 @@ def main():
     tool_files = discover_tools(tools_dir)
 
     # Header
-    print(OKAY_ASCII_LOGO)
-    print("okay engine – an okay game engine for okay games.\n")
+    # print(OKAY_ASCII_LOGO)
+    # print("okay engine – an okay game engine for okay games.\n")
 
     # Set up top‑level parser
     parser = argparse.ArgumentParser(description="Dispatcher for all okay_ sub-tools.")
@@ -64,7 +64,7 @@ def main():
     modules: dict[str, object] = {}
     for fp in tool_files:
         cmd, mod_path = build_module_info(fp, project_root)
-        print(f"Loading module: {mod_path}")
+        # print(f"Loading module: {mod_path}")
         module = importlib.import_module(mod_path)
 
         # Create its subparser
@@ -74,7 +74,7 @@ def main():
 
         modules[cmd] = module
     
-    print("") # Blank line for better readability
+    # print("") # Blank line for better readability
 
     args = parser.parse_args()
 
