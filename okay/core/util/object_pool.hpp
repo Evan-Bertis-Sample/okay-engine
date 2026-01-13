@@ -19,7 +19,23 @@ struct ObjectPoolHandle {
     friend bool operator!=(ObjectPoolHandle a, ObjectPoolHandle b) { return !(a == b); }
 
     static constexpr std::uint32_t invalidIndex() { return 0xFFFFFFFFu; }
-    static ObjectPoolHandle invalidHandle() { return ObjectPoolHandle(invalidIndex()); }
+    static ObjectPoolHandle invalidHandle() {
+        return ObjectPoolHandle(invalidIndex());
+    }
+
+    // operator overloads for std::map
+    bool operator<(const ObjectPoolHandle& other) const {
+        return index < other.index;
+    }
+    bool operator>(const ObjectPoolHandle& other) const {
+        return index > other.index;
+    }
+    bool operator<=(const ObjectPoolHandle& other) const {
+        return index <= other.index;
+    }
+    bool operator>=(const ObjectPoolHandle& other) const {
+        return index >= other.index;
+    }
 };
 
 template <typename T>

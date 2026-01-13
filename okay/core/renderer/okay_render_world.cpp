@@ -5,7 +5,8 @@ using namespace okay;
 // OkayRenderWorld::ChildIterator
 
 OkayRenderWorld::ChildIterator& OkayRenderWorld::ChildIterator::operator++() {
-    if (_renderItem == RenderItemHandle::invalidHandle()) return *this;
+    if (_renderItem == RenderItemHandle::invalidHandle())
+        return *this;
     const OkayRenderItem& item = world._renderItemPool.get(_renderItem);
     _renderItem = item.nextSibling;
     return *this;
@@ -27,7 +28,6 @@ OkayRenderEntity OkayRenderWorld::ChildIterator::operator->() const {
     return world.getRenderEntity(_renderItem);
 }
 
-
 // OkayRenderEntity
 
 OkayRenderEntity::Properties::~Properties() {
@@ -36,7 +36,7 @@ OkayRenderEntity::Properties::~Properties() {
 }
 
 OkayRenderEntity::Properties OkayRenderEntity::operator*() const {
-    Properties p(_renderItem, _owner);
+    Properties p(_owner, _renderItem);
     const OkayRenderItem& item = _owner.getRenderItem(_renderItem);
     p.material = item.material;
     p.mesh = item.mesh;
@@ -52,30 +52,16 @@ OkayRenderEntity::Properties OkayRenderEntity::operator->() const {
 
 OkayRenderWorld::ChildRange OkayRenderWorld::children(OkayRenderEntity parent) {
     if (!_renderItemPool.valid(parent._renderItem)) {
-        return ChildRange(
-            ChildIterator(this, RenderItemHandle::invalidHandle()),
-            ChildIterator(this, RenderItemHandle::invalidHandle())
-        );
+        return ChildRange(ChildIterator(*this, RenderItemHandle::invalidHandle()),
+                          ChildIterator(*this, RenderItemHandle::invalidHandle()));
     }
     const OkayRenderItem& p = _renderItemPool.get(parent._renderItem);
-    return ChildRange(
-        ChildIterator(this, p.firstChild),
-        ChildIterator(this, RenderItemHandle::invalidHandle())
-    );
+    return ChildRange(ChildIterator(*this, p.firstChild),
+                      ChildIterator(*this, RenderItemHandle::invalidHandle()));
 }
 
 const OkayRenderWorld::ChildRange OkayRenderWorld::children(OkayRenderEntity parent) const {
-    if (!_renderItemPool.valid(parent._renderItem)) {
-        return ChildRange(
-            ChildIterator(*this, RenderItemHandle::invalidHandle()),
-            ChildIterator(*this, RenderItemHandle::invalidHandle())
-        );
-    }
-    const OkayRenderItem& p = _renderItemPool.get(parent._renderItem);
-    return ChildRange(
-        ChildIterator(*this, p.firstChild),
-        ChildIterator(*this, RenderItemHandle::invalidHandle())
-    );
+    return const_cast<OkayRenderWorld*>(this)->children(parent);
 }
 
 void OkayRenderWorld::rebuildTransforms() {
@@ -83,7 +69,6 @@ void OkayRenderWorld::rebuildTransforms() {
 }
 
 void OkayRenderWorld::rebuildMaterials() {
-
 }
 
 void OkayRenderWorld::handleDirtyMesh(RenderItemHandle dirtyEntity) {
@@ -107,8 +92,10 @@ void OkayRenderWorld::handleDirtyTransform(RenderItemHandle dirtyEntity) {
 }
 
 const std::vector<const OkayRenderItem*>& OkayRenderWorld::getRenderItems() {
-    if (_needsMaterialRebuild) rebuildMaterials();
-    if (!_dirtyEntities.empty()) rebuildTransforms();
+    if (_needsMaterialRebuild)
+        rebuildMaterials();
+    if (!_dirtyEntities.empty())
+        rebuildTransforms();
     return _memoizedRenderItems;
 }
 
@@ -116,7 +103,6 @@ OkayRenderEntity OkayRenderWorld::addRenderEntity(const OkayTransform& transform
                                                   IOkayMaterial* material,
                                                   const OkayMesh& mesh,
                                                   OkayRenderEntity parent) {
-
     RenderItemHandle handle = _renderItemPool.emplace(material, mesh);
     OkayRenderItem& item = _renderItemPool.get(handle);
 
@@ -169,6 +155,8 @@ Failable OkayRenderWorld::addChild(OkayRenderEntity parent, OkayRenderEntity chi
         parentItem.firstChild = children._renderItem;
         childItem.nextSibling = oldFirstChild;
     }
+
+    return Failable::ok({});
 }
 
 bool OkayRenderWorld::isChildOf(OkayRenderEntity parent, OkayRenderEntity child) const {
@@ -191,16 +179,40 @@ bool OkayRenderWorld::isChildOf(OkayRenderEntity parent, OkayRenderEntity child)
     return false;
 }
 
+void OkayRenderWorld::updateEntity(RenderItemHandle renderItem, const OkayRenderEntity::Properties&& properties) {
+    if (!_renderItemPool.valid(renderItem)) {
+        return;
+    }
+
+    OkayRenderItem& item = _renderItemPool.get(renderItem);
+
+    // check for changes and mark dirty as needed
+    if (item.material != properties.material) {
+        item.material = properties.material;
+        handleDirtyMaterial(renderItem);
+    }
+    if (item.mesh != properties.mesh) {
+        item.mesh = properties.mesh;
+        handleDirtyMesh(renderItem);
+    }
+    if (item.transform != properties.transform) {
+        item.transform = properties.transform;
+        handleDirtyTransform(renderItem);
+    }
+}
+
 // OkayRenderItem
 
-OkayRenderItem::OkayRenderItem(const IOkayMaterial* mat, OkayMesh m) : material(mat), mesh(m) {
+OkayRenderItem::OkayRenderItem(IOkayMaterial* mat, OkayMesh m) : material(mat), mesh(m) {
     if (!mat || mesh.isEmpty()) {
         sortKey = std::numeric_limits<std::uint64_t>::max();
     } else {
         // 64 bit sort key
         // highest bits are shader id
         // lower bits are material id
-        // this has the effect such that when you sort by sort key, materials are sorted into shader buckets
-        sortKey = (static_cast<std::uint64_t>(mat->shaderID()) << 32) | static_cast<std::uint64_t>(mat->id());
+        // this has the effect such that when you sort by sort key, materials are sorted into shader
+        // buckets
+        sortKey = (static_cast<std::uint64_t>(mat->shaderID()) << 32) |
+                  static_cast<std::uint64_t>(mat->id());
     }
 }

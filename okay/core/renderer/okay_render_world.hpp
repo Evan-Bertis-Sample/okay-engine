@@ -71,36 +71,55 @@ struct OkayRenderItem {
 
     OkayRenderItem() = default;
 
-    OkayRenderItem(const IOkayMaterial* mat, OkayMesh m);
+    OkayRenderItem(IOkayMaterial* mat, OkayMesh m);
+
+    // operator overloads for std::map
+    bool operator<(const OkayRenderItem& other) const {
+        return sortKey < other.sortKey;
+    }
+
+    bool operator>(const OkayRenderItem& other) const {
+        return sortKey > other.sortKey;
+    }
+
+    bool operator==(const OkayRenderItem& other) const {
+        return sortKey == other.sortKey;
+    }
+
+    bool operator!=(const OkayRenderItem& other) const {
+        return !(*this == other);
+    }
+
+    bool operator<=(const OkayRenderItem& other) const {
+        return sortKey <= other.sortKey;
+    }
+
+    bool operator>=(const OkayRenderItem& other) const {
+        return sortKey >= other.sortKey;
+    }
 };
 
 struct OkayRenderEntity {
    public:
-   
-   struct Properties {
-       friend class OkayRenderEntity;
-       friend class OkayRenderWorld;
-       
+    struct Properties {
+        friend class OkayRenderEntity;
+        friend class OkayRenderWorld;
+
         IOkayMaterial* material{nullptr};
         OkayTransform transform{};
         OkayMesh mesh{};
 
         ~Properties();
-        
-        Properties(const Properties&) = delete;
-        Properties& operator=(const Properties&) = delete;
-        Properties(Properties&&) noexcept = default;
-        Properties& operator=(Properties&&) noexcept = default;
 
-        Properties *operator->() {
+        Properties* operator->() {
             return this;
         }
 
-        const Properties *operator->() const {
+        const Properties* operator->() const {
             return this;
         }
 
-        private:
+       private:
         RenderItemHandle _renderItem{RenderItemHandle::invalidHandle()};
         OkayRenderWorld& _owner;
 
@@ -110,7 +129,7 @@ struct OkayRenderEntity {
     };
 
     friend class OkayRenderWorld;
-    
+
     OkayRenderEntity(OkayRenderWorld& owner, RenderItemHandle renderItem)
         : _owner(owner), _renderItem(renderItem) {
     }
@@ -199,7 +218,7 @@ class OkayRenderWorld {
         return OkayRenderEntity(*this, handle);
     }
 
-    void updateEntity(RenderItemHandle renderItem, const Properties&& properties);
+    void updateEntity(RenderItemHandle renderItem, const OkayRenderEntity::Properties&& properties);
 
     Failable addChild(OkayRenderEntity parent, OkayRenderEntity children);
     bool isChildOf(OkayRenderEntity parent, OkayRenderEntity child) const;
