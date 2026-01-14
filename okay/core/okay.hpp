@@ -5,11 +5,24 @@
 #include <okay/core/system/okay_system.hpp>
 #include <okay/core/logging/okay_logger.hpp>
 
+#include <chrono>
 #include <utility>
 #include <functional>
 
 namespace okay {
 
+class OkayTime {
+    using TimePoint = std::chrono::time_point<std::chrono::high_resolution_clock>;
+
+    public:
+        OkayTime() : 
+            _timeStart(std::chrono::high_resolution_clock::now())
+            {}
+
+    private:
+        const TimePoint _timeStart;
+
+};
 
 class OkayEngine {
    public:
@@ -19,7 +32,7 @@ class OkayEngine {
     // const OkayTime &getTime() {} 
     // private:
 
-    // OkayTime _time;
+    OkayTime _time;
 
     OkayEngine() {}
     ~OkayEngine() {}
