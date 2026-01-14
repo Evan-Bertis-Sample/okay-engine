@@ -10,10 +10,16 @@
 
 namespace okay {
 
+
 class OkayEngine {
    public:
     OkaySystemManager systems;
     OkayLogger logger;
+
+    // const OkayTime &getTime() {} 
+    // private:
+
+    // OkayTime _time;
 
     OkayEngine() {}
     ~OkayEngine() {}
@@ -74,6 +80,8 @@ class OkayGame {
         }
 
         _onInitialize();
+
+        //_time
 
         while (_shouldRun) {
             for (IOkaySystem* system : enginePool) {

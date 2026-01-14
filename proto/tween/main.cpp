@@ -6,6 +6,12 @@
 #include <okay/core/logging/okay_logger.hpp>
 
 #include <utility>
+#include "okay/core/system/okay_system.hpp"
+
+// template <typename T>
+// class Tween;
+
+// Tween<float> tween;
 
 static void __gameInitialize();
 static void __gameUpdate();
@@ -32,14 +38,19 @@ int main() {
     return 0;
 }
 
+// class TweenEngine : public okay::OkaySystem<okay::OkaySystemScope::ENGINE> {}
+
 static void __gameInitialize() {
     // Additional game initialization logic
     okay::Engine.logger.info("Game initialized.");
+
+    // tween = okay::Engine.systems.getSystemChecked<TweenEngine>().createTween(....);
 }
 
 static void __gameUpdate() {
-    // std::cout << "Game updated." << std::endl;
+    std::cout << "Game updated." << std::endl;
     // Game update logic
+    // okay::Engine.logger.debug("Value {}\n", tween.value());
 }
 
 static void __gameShutdown() {
