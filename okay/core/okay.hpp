@@ -2,6 +2,7 @@
 #define __OKAY_H__
 
 #include <glad/gl.h>
+#include <iostream>
 #include <okay/core/system/okay_system.hpp>
 #include <okay/core/logging/okay_logger.hpp>
 
@@ -22,7 +23,10 @@ class OkayTime {
     
         long long deltaTime()
         {
-            return std::chrono::duration_cast<std::chrono::milliseconds>(HighResClock::now() - _timeStart).count();
+            TimePoint newTime = HighResClock::now();
+            TimePoint oldTime = this->_timeStart;
+            this->_timeStart = newTime;
+            return std::chrono::duration_cast<std::chrono::milliseconds>(newTime - oldTime).count();
         }
 
    private:
@@ -35,10 +39,9 @@ class OkayEngine {
     OkaySystemManager systems;
     OkayLogger logger;
 
-    // const OkayTime &getTime() {} 
-    // private:
+    OkayTime* time { new OkayTime() };
 
-    OkayTime _time;
+    std::cout << "dt: " << time.deltaTime() << '\n';
 
     OkayEngine() {}
     ~OkayEngine() {}
