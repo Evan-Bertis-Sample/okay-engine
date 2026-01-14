@@ -35,6 +35,7 @@ int main() {
         .onShutdown(__gameShutdown)
         .run();
 
+
     return 0;
 }
 
@@ -50,7 +51,7 @@ static void __gameInitialize() {
 static void __gameUpdate() {
     std::cout << "Game updated." << std::endl;
     // Game update logic
-    // okay::Engine.logger.debug("Value {}\n", tween.value());
+    okay::Engine.logger.debug("Delta time {}\n", okay::Engine.time->deltaTime());
 }
 
 static void __gameShutdown() {
