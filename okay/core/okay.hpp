@@ -15,13 +15,13 @@ class OkayTime {
     using HighResClock = std::chrono::high_resolution_clock;
     using TimePoint = std::chrono::time_point<HighResClock>;
 
-    public:
-        OkayTime() : 
-            _timeStart(HighResClock::now())
-            {}
+   public:
+    OkayTime() : 
+        _timeStart(HighResClock::now())
+        {}
 
-    private:
-        const TimePoint _timeStart;
+   private:
+    TimePoint _timeStart;
 
 };
 
