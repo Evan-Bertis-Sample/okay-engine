@@ -12,11 +12,12 @@
 namespace okay {
 
 class OkayTime {
-    using TimePoint = std::chrono::time_point<std::chrono::high_resolution_clock>;
+    using HighResClock = std::chrono::high_resolution_clock;
+    using TimePoint = std::chrono::time_point<HighResClock>;
 
     public:
         OkayTime() : 
-            _timeStart(std::chrono::high_resolution_clock::now())
+            _timeStart(HighResClock::now())
             {}
 
     private:
