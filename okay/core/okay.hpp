@@ -19,10 +19,15 @@ class OkayTime {
     OkayTime() : 
         _timeStart(HighResClock::now())
         {}
+    
+        long long deltaTime()
+        {
+            return std::chrono::duration_cast<std::chrono::milliseconds>(HighResClock::now() - _timeStart).count();
+        }
 
    private:
     TimePoint _timeStart;
-
+    
 };
 
 class OkayEngine {
