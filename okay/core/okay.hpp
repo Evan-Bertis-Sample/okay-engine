@@ -21,8 +21,7 @@ class OkayTime {
         _timeStart(HighResClock::now())
         {}
     
-        long long deltaTime()
-        {
+        long long deltaTime() {
             TimePoint newTime = HighResClock::now();
             TimePoint oldTime = this->_timeStart;
             this->_timeStart = newTime;
