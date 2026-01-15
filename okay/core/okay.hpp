@@ -40,8 +40,6 @@ class OkayEngine {
 
     OkayTime* time { new OkayTime() };
 
-    std::cout << "dt: " << time.deltaTime() << '\n';
-
     OkayEngine() {}
     ~OkayEngine() {}
 };
