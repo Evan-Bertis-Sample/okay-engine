@@ -31,7 +31,6 @@ class OkayTime {
 
    private:
     TimePoint _timeStart;
-    
 };
 
 class OkayEngine {
