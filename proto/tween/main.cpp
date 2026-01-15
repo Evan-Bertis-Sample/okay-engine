@@ -19,10 +19,12 @@ class Tween {
     //     this.
     // }
 
-    Tween(T object, T target) {
-        this->_object = object;
-        this->_target = target;
-        this->_distance = target - object;        
+    Tween(T object, T target)
+        : _object { object },
+          _target { target },
+          _distance { target - object }
+        //   _dT { static_cast<std::float_t>(okay::Engine.time->deltaTime()) / 1000 }
+    {
         this->_dT = static_cast<std::float_t>(okay::Engine.time->deltaTime()) / 1000;
     }
     
