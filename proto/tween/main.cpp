@@ -35,7 +35,6 @@ int main() {
         .onShutdown(__gameShutdown)
         .run();
 
-
     return 0;
 }
 
@@ -44,14 +43,11 @@ int main() {
 static void __gameInitialize() {
     // Additional game initialization logic
     okay::Engine.logger.info("Game initialized.");
-
-    // tween = okay::Engine.systems.getSystemChecked<TweenEngine>().createTween(....);
 }
 
 static void __gameUpdate() {
-    std::cout << "Game updated." << std::endl;
+    // std::cout << "Game updated." << std::endl;
     // Game update logic
-    okay::Engine.logger.debug("Delta time {}\n", okay::Engine.time->deltaTime());
 }
 
 static void __gameShutdown() {
