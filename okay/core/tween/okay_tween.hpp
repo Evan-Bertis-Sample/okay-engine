@@ -21,7 +21,6 @@ class OkayTween {
           _target { target },
           _distance { target - object },
           _timeElapsed { 0 }
-        //   _dT { static_cast<std::float_t>(okay::Engine.time->deltaTime()) / 1000 }
     {}
     
     void start() {
