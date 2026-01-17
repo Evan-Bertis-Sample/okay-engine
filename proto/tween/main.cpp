@@ -30,14 +30,20 @@ class Tween {
     {
     }
     
-    // void start() {
-    //     this->_object = this->_target;
-    // }
+    void start() {
+        _start = true;
+    }
 
     void tick() {
-        this->_object = static_cast<T>(this->_timeElapsed / this->_duration * this->_distance);
-        this->_timeElapsed += okay::Engine.time->deltaTime();
-        okay::Engine.logger.debug("\nCurrent val: {}{}{}{}{}", this->_object, "\nTime elapsed: ", this->_timeElapsed, "\nDeltaTime: ", okay::Engine.time->deltaTime());
+        if (_start) {
+            this->_object = static_cast<T>(this->_timeElapsed / this->_duration * this->_distance);
+            this->_timeElapsed += okay::Engine.time->deltaTime();
+            okay::Engine.logger.debug("\nCurrent val: {}{}{}{}{}", this->_object, "\nTime elapsed: ", this->_timeElapsed, "\nDeltaTime: ", okay::Engine.time->deltaTime());
+
+            if (_object >= _target) {
+                _start = false;
+            }
+        }
     }
 
    private:
@@ -46,6 +52,7 @@ class Tween {
     std::float_t _duration { 20000 };
     std::float_t _timeElapsed;
     T _distance;
+    bool _start { false };
     // EasingStyle.LINEAR;
     // EasignDirection.IN;
     // std::int8_t loops;
@@ -88,7 +95,7 @@ static void __gameInitialize() {
     // Additional game initialization logic
     okay::Engine.logger.info("Game initialized.");
     testTween = Tween(0.0f, 4.0f);
-    // testTween.start();
+    testTween.start();
 }
 
 static void __gameUpdate() {
