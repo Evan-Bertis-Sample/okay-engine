@@ -25,10 +25,9 @@ class Tween {
         : _object { object },
           _target { target },
           _distance { target - object },
-          _timeElapsed{ 0 }
+          _timeElapsed { 0 }
         //   _dT { static_cast<std::float_t>(okay::Engine.time->deltaTime()) / 1000 }
-    {
-    }
+    {}
     
     void start() {
         _start = true;
@@ -46,13 +45,17 @@ class Tween {
         }
     }
 
+    T distance() {
+        return this->_distance;
+    }
+
    private:
     T _object;
     T _target;
-    std::float_t _duration { 20000 };
-    std::float_t _timeElapsed;
     T _distance;
     bool _start { false };
+    long long _duration { 2000 };
+    long long _timeElapsed;
     // EasingStyle.LINEAR;
     // EasignDirection.IN;
     // std::int8_t loops;

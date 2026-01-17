@@ -30,7 +30,7 @@ class OkayTime {
             TimePoint oldTime = this->_timeStart;
             this->_timeStart = newTime;
             this->_dt =  std::chrono::duration_cast<std::chrono::milliseconds>(newTime - oldTime).count();
-            return _dt;
+            return this->_dt;
         }
 
    private:
