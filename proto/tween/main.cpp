@@ -30,17 +30,21 @@ class Tween {
     {}
     
     void start() {
-        _start = true;
+        this->_isTweenStarted = true;
     }
 
     void tick() {
-        if (_start) {
-            this->_object = static_cast<T>(this->_timeElapsed / this->_duration * this->_distance);
+        if (this->_isTweenStarted && this->_timeElapsed >= this->_duration) {
+            this->_object = static_cast<T>(this->_timeElapsed) / this->_duration * this->_distance;
             this->_timeElapsed += okay::Engine.time->deltaTime();
+
             okay::Engine.logger.debug("\nCurrent val: {}{}{}{}{}", this->_object, "\nTime elapsed: ", this->_timeElapsed, "\nDeltaTime: ", okay::Engine.time->deltaTime());
 
-            if (_object >= _target) {
-                _start = false;
+            if (this->_timeElapsed >= this->_duration) {
+                this->_isTweenStarted = false;
+                this->_object = this->_target;
+                // dequeue
+                // delte
             }
         }
     }
@@ -53,7 +57,7 @@ class Tween {
     T _object;
     T _target;
     T _distance;
-    bool _start { false };
+    bool _isTweenStarted { false };
     long long _duration { 2000 };
     long long _timeElapsed;
     // EasingStyle.LINEAR;
