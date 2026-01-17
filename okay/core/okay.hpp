@@ -20,16 +20,22 @@ class OkayTime {
     OkayTime() : 
         _timeStart(HighResClock::now())
         {}
+
+        void restart() { _timeStart = HighResClock::now(); }
+
+        long long deltaTime() const { return _dt; }
     
-        long long deltaTime() {
+        long long recalcDT() {
             TimePoint newTime = HighResClock::now();
             TimePoint oldTime = this->_timeStart;
             this->_timeStart = newTime;
-            return std::chrono::duration_cast<std::chrono::milliseconds>(newTime - oldTime).count();
+            this->_dt =  std::chrono::duration_cast<std::chrono::milliseconds>(newTime - oldTime).count();
+            return _dt;
         }
 
    private:
     TimePoint _timeStart;
+    long long _dt;
 };
 
 class OkayEngine {
@@ -98,9 +104,11 @@ class OkayGame {
 
         _onInitialize();
 
-        //_time
+        Engine.time->restart();
 
         while (_shouldRun) {
+            Engine.time->recalcDT();
+
             for (IOkaySystem* system : enginePool) {
                 system->tick();
             }
