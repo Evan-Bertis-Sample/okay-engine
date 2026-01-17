@@ -30,9 +30,9 @@ class Tween {
     {
     }
     
-    void start() {
-        this->_object = this->_target;
-    }
+    // void start() {
+    //     this->_object = this->_target;
+    // }
 
     void tick() {
         this->_object = static_cast<T>(this->_timeElapsed / this->_duration * this->_distance);
@@ -43,7 +43,7 @@ class Tween {
    private:
     T _object;
     T _target;
-    std::float_t _duration { 2 };
+    std::float_t _duration { 20000 };
     std::float_t _timeElapsed;
     T _distance;
     // EasingStyle.LINEAR;
@@ -87,13 +87,13 @@ Tween<std::float_t> testTween;
 static void __gameInitialize() {
     // Additional game initialization logic
     okay::Engine.logger.info("Game initialized.");
-    Tween testTween(0.0f, 4.0f);
-    testTween.start();
+    testTween = Tween(0.0f, 4.0f);
+    // testTween.start();
 }
 
 static void __gameUpdate() {
     // std::cout << "Game updated." << std::endl;
-    // Game update logi
+    // Game update logic
     testTween.tick();
 }
 
