@@ -1,7 +1,7 @@
-CompileFlags:
+ompileFlags:
   Add:
     - -std=gnu++20
-    - -IC:/Users/kirit/Documents/Formula/okay-engine
-    - -IC:/Users/kirit/Documents/Formula/okay-engine/okay/vendor
-    - -IC:/Users/kirit/Documents/Formula/okay-engine/okay/vendor/glm
-    - -IC:/Users/kirit/Documents/Formula/okay-engine/okay/vendor/glfw/include
+    - -ID:/Documents/Code/Personal-Projects/okay-engine
+    - -ID:/Documents/Code/Personal-Projects/okay-engine/okay/vendor
+    - -ID:/Documents/Code/Personal-Projects/okay-engine/okay/vendor/glm
+    - -ID:/Documents/Code/Personal-Projects/okay-engine/okay/vendor/glfw/include
