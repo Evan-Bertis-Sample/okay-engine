@@ -34,18 +34,17 @@ class Tween {
     }
 
     void tick() {
-        if (this->_isTweenStarted && this->_timeElapsed >= this->_duration) {
-            this->_object = static_cast<T>(this->_timeElapsed) / this->_duration * this->_distance;
-            this->_timeElapsed += okay::Engine.time->deltaTime();
-
-            okay::Engine.logger.debug("\nCurrent val: {}{}{}{}{}", this->_object, "\nTime elapsed: ", this->_timeElapsed, "\nDeltaTime: ", okay::Engine.time->deltaTime());
-
-            if (this->_timeElapsed >= this->_duration) {
+        if (this->_isTweenStarted) {
+            if (this->_timeElapsed < this->_duration) {
+                this->_object = static_cast<T>(this->_timeElapsed) / this->_duration * this->_distance;
+                this->_timeElapsed += okay::Engine.time->deltaTime();
+            } else {
                 this->_isTweenStarted = false;
                 this->_object = this->_target;
                 // dequeue
                 // delte
             }
+            okay::Engine.logger.debug("\nCurrent val: {}{}{}{}{}", this->_object, "\nTime elapsed: ", this->_timeElapsed, "\nDeltaTime: ", okay::Engine.time->deltaTime());
         }
     }
 
