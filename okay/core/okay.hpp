@@ -27,10 +27,10 @@ class OkayTime {
     
         long long recalcDT() {
             TimePoint newTime = HighResClock::now();
-            TimePoint oldTime = this->_timeStart;
-            this->_timeStart = newTime;
-            this->_dt =  std::chrono::duration_cast<std::chrono::milliseconds>(newTime - oldTime).count();
-            return this->_dt;
+            TimePoint oldTime = _timeStart;
+            _timeStart = newTime;
+            _dt =  std::chrono::duration_cast<std::chrono::milliseconds>(newTime - oldTime).count();
+            return _dt;
         }
 
    private:

@@ -24,21 +24,21 @@ class OkayTween {
     {}
     
     void start() {
-        this->_isTweenStarted = true;
+        _isTweenStarted = true;
     }
 
     void tick() {
-        if (this->_isTweenStarted) {
-            if (this->_timeElapsed < this->_duration) {
-                this->_object = static_cast<T>(this->_timeElapsed) / this->_duration * this->_distance;
-                this->_timeElapsed += okay::Engine.time->deltaTime();
+        if (_isTweenStarted) {
+            if (_timeElapsed < _duration) {
+                _object = static_cast<T>(_timeElapsed) / _duration * _distance;
+                _timeElapsed += okay::Engine.time->deltaTime();
             } else {
-                this->_isTweenStarted = false;
-                this->_object = this->_target;
+                _isTweenStarted = false;
+                _object = _target;
                 // dequeue
                 // delte
             }
-            okay::Engine.logger.debug("\nCurrent val: {}{}{}{}{}", this->_object, "\nTime elapsed: ", this->_timeElapsed, "\nDeltaTime: ", okay::Engine.time->deltaTime());
+            okay::Engine.logger.debug("\nCurrent val: {}{}{}{}{}", _object, "\nTime elapsed: ", _timeElapsed, "\nDeltaTime: ", okay::Engine.time->deltaTime());
         }
     }
 
