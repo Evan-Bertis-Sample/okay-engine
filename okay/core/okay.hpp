@@ -40,7 +40,7 @@ class OkayEngine {
    public:
     OkaySystemManager systems;
     OkayLogger logger;
-    OkayTime* time { new OkayTime() };
+    std::unique_ptr<OkayTime> time { new OkayTime() };
 
     OkayEngine() {}
     ~OkayEngine() {}
