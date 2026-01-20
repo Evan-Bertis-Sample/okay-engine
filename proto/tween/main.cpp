@@ -34,14 +34,12 @@ int main() {
     return 0;
 }
 
-// class TweenEngine : public okay::OkaySystem<okay::OkaySystemScope::ENGINE> {
-
-okay::OkayTween<std::float_t> testTween;
+okay::OkayTween<glm::vec3> testTween;
 
 static void __gameInitialize() {
     // Additional game initialization logic
     okay::Engine.logger.info("Game initialized.");
-    testTween = okay::OkayTween(0.0f, 4.0f);
+    testTween = okay::OkayTween(glm::vec3 (1.0f, 2.0f, 3.0f), glm::vec3 (2.0f, 3.0f, 4.0f));
     testTween.start();
 }
 

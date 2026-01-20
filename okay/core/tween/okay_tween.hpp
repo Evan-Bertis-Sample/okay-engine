@@ -16,10 +16,11 @@ class OkayTween {
     //     this.
     // }
 
-    OkayTween(T object, T target)
-        : _object { object },
-          _target { target },
-          _distance { target - object },
+    OkayTween(T start, T end)
+        : _start { start },
+          _current { start },
+          _end { end },
+          _distance { end - start },
           _timeElapsed { 0 }
     {}
     
@@ -27,24 +28,28 @@ class OkayTween {
         _isTweenStarted = true;
     }
 
-    void tick() {
+    void tick() { // linear tween for vec3
         if (_isTweenStarted) {
             if (_timeElapsed < _duration) {
-                _object = static_cast<T>(_timeElapsed) / _duration * _distance;
-                _timeElapsed += okay::Engine.time->deltaTime();
+                _timeElapsed += okay::Engine.time->deltaMs();
+                _current = _start + static_cast<float>(_timeElapsed) / _duration * _distance;
             } else {
                 _isTweenStarted = false;
-                _object = _target;
+                _start = _end;
                 // dequeue
                 // delte
             }
-            okay::Engine.logger.debug("\nCurrent val: {}{}{}{}{}", _object, "\nTime elapsed: ", _timeElapsed, "\nDeltaTime: ", okay::Engine.time->deltaTime());
+
+            // specific logger.debug for a vec3 Tween
+            okay::Engine.logger.debug("\nCurrent val: ({}, {}, {})\nTime elapsed: {}\nDeltaMs: {}",
+                _current.x, _current.y, _current.z, _timeElapsed, okay::Engine.time->deltaMs());
         }
     }
 
    private:
-    T _object;
-    T _target;
+    T _start;
+    T _current;
+    T _end;
     T _distance;
     bool _isTweenStarted { false };
     long long _duration { 2000 };
