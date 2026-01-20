@@ -18,24 +18,22 @@ class OkayTime {
 
    public:
     OkayTime() : 
-        _timeStart(HighResClock::now())
+        _lastTime(HighResClock::now())
         {}
 
-        void restart() { _timeStart = HighResClock::now(); }
+    void reset() { _lastTime = HighResClock::now(); }
 
-        long long deltaTime() const { return _dt; }
+    long long deltaMs() const { return _deltaMs; }
     
-        long long recalcDT() {
-            TimePoint newTime = HighResClock::now();
-            TimePoint oldTime = _timeStart;
-            _timeStart = newTime;
-            _dt =  std::chrono::duration_cast<std::chrono::milliseconds>(newTime - oldTime).count();
-            return _dt;
-        }
+    void updateDeltaMs() {
+        TimePoint prevTime = _lastTime;
+        _lastTime = HighResClock::now();
+        _deltaMs =  std::chrono::duration_cast<std::chrono::milliseconds>(_lastTime - prevTime).count();
+    }
 
    private:
-    TimePoint _timeStart;
-    long long _dt;
+    TimePoint _lastTime;
+    long long _deltaMs;
 };
 
 class OkayEngine {
@@ -104,10 +102,10 @@ class OkayGame {
 
         _onInitialize();
 
-        Engine.time->restart();
+        Engine.time->reset();
 
         while (_shouldRun) {
-            Engine.time->recalcDT();
+            Engine.time->updateDeltaMs();
 
             for (IOkaySystem* system : enginePool) {
                 system->tick();
