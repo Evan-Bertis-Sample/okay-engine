@@ -7,6 +7,12 @@
 namespace okay {
 
 template <typename T>
+concept Tweenable = requires(T t) {
+    t + t;
+    1.0f * t;
+};
+
+template <Tweenable T>
 class OkayTween {
    public:
     OkayTween() = default;
@@ -28,7 +34,7 @@ class OkayTween {
         _isTweenStarted = true;
     }
 
-    void tick() { // linear tween for vec3
+    void tick() { // linear tween
         if (_isTweenStarted) {
             if (_timeElapsed < _duration) {
                 _timeElapsed += okay::Engine.time->deltaMs();
