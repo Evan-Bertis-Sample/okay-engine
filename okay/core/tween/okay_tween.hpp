@@ -3,6 +3,7 @@
 
 #include <okay/core/okay.hpp>
 #include <okay/core/logging/okay_logger.hpp>
+#include "okay/core/tween/okay_tween_engine.hpp"
 
 namespace okay {
 
@@ -41,11 +42,26 @@ class OkayTween : IOkayTween {
           _timeElapsed { 0 }
     {}
     
-    void start();
-    void tick();
-    void endTween();
+    void start() {
+        okay::Engine.systems.getSystemChecked<OkayTweenEngine>()->addTween(this);
+    }
 
-    std::uint32_t timeRemaining();
+    void tick() {
+        _timeElapsed += okay::Engine.time->deltaTime();
+        _current = START + static_cast<float>(_timeElapsed) / _duration * DISTANCE;
+
+        // specific logger.debug for a vec3 Tween
+        okay::Engine.logger.debug("\nCurrent val: ({}, {}, {})\nTime elapsed: {}\nDeltaMs: {}",
+        _current.x, _current.y, _current.z, _timeElapsed, okay::Engine.time->deltaTime());
+    }
+
+    std::uint32_t timeRemaining() {
+        return _duration - _timeElapsed;
+    }
+
+    void endTween() {
+        START = END;
+    };
 
    private:
     const T START;
