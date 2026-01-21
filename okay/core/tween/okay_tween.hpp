@@ -3,7 +3,6 @@
 
 #include <okay/core/okay.hpp>
 #include <okay/core/logging/okay_logger.hpp>
-#include "okay_tween_engine.hpp"
 
 namespace okay {
 
@@ -42,26 +41,11 @@ class OkayTween : IOkayTween {
           _timeElapsed { 0 }
     {}
     
-    void start() {
-        Engine.systems.getSystemChecked<OkayTweenEngine>()->addTween(this);
-    }
+    void start();
+    void tick();
+    void endTween();
 
-    void tick() {
-        _timeElapsed += okay::Engine.time->deltaTime();
-        _current = START + static_cast<float>(_timeElapsed) / _duration * DISTANCE;
-
-        // specific logger.debug for a vec3 Tween
-        okay::Engine.logger.debug("\nCurrent val: ({}, {}, {})\nTime elapsed: {}\nDeltaMs: {}",
-        _current.x, _current.y, _current.z, _timeElapsed, okay::Engine.time->deltaTime());
-    }
-
-    std::uint32_t timeRemaining() {
-        return _duration - _timeElapsed;
-    }
-
-    void endTween() {
-        START = END;
-    };
+    std::uint32_t timeRemaining();
 
    private:
     const T START;
@@ -69,8 +53,8 @@ class OkayTween : IOkayTween {
     const T DISTANCE;
     T _current;
     bool _isTweenStarted { false };
-    long long _duration { 2000 };
-    long long _timeElapsed;
+    std::uint32_t _duration { 2000 };
+    std::uint32_t _timeElapsed;
     // EasingStyle.LINEAR;
     // EasignDirection.IN;
     // std::int8_t loops;
