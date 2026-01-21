@@ -1,3 +1,4 @@
+#include <memory>
 #include <okay/core/okay.hpp>
 #include <okay/core/renderer/okay_renderer.hpp>
 #include <okay/core/renderer/okay_surface.hpp>
@@ -8,6 +9,7 @@
 #include <utility>
 #include "okay/core/system/okay_system.hpp"
 #include "okay/core/tween/okay_tween.hpp"
+#include "okay/core/tween/okay_tween_engine.hpp"
 
 static void __gameInitialize();
 static void __gameUpdate();
@@ -25,7 +27,8 @@ int main() {
 
     okay::OkayGame::create()
         .addSystems(std::move(renderer), std::move(levelManager),
-                    std::make_unique<okay::OkayAssetManager>())
+                    std::make_unique<okay::OkayAssetManager>(),
+                    std::make_unique<okay::OkayTweenEngine>())
         .onInitialize(__gameInitialize)
         .onUpdate(__gameUpdate)
         .onShutdown(__gameShutdown)

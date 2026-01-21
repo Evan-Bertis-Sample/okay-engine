@@ -3,6 +3,7 @@
 
 #include <okay/core/okay.hpp>
 #include <okay/core/logging/okay_logger.hpp>
+#include "okay_tween_engine.hpp"
 
 namespace okay {
 
@@ -15,8 +16,16 @@ concept Tweenable = requires(T t) {
     1.0f * t;
 };
 
+class IOkayTween {
+   public:
+    virtual void start();
+    virtual void tick();
+    virtual std::uint32_t timeRemaining();
+    virtual void endTween();
+};
+
 template <Tweenable T>
-class OkayTween {
+class OkayTween : IOkayTween {
    public:
     OkayTween() = default;
 
@@ -34,26 +43,25 @@ class OkayTween {
     {}
     
     void start() {
-        _isTweenStarted = true;
+        Engine.systems.getSystemChecked<OkayTweenEngine>()->addTween(this);
     }
 
-    void tick() { // linear tween
-        if (_isTweenStarted) {
-            if (_timeElapsed <= _duration) {
-                _timeElapsed += okay::Engine.time->deltaTime();
-                _current = START + static_cast<float>(_timeElapsed) / _duration * DISTANCE;
-            } else {
-                _isTweenStarted = false;
-                START = END;
-                // dequeue
-                // delte
-            }
+    void tick() {
+        _timeElapsed += okay::Engine.time->deltaTime();
+        _current = START + static_cast<float>(_timeElapsed) / _duration * DISTANCE;
 
-            // specific logger.debug for a vec3 Tween
-            okay::Engine.logger.debug("\nCurrent val: ({}, {}, {})\nTime elapsed: {}\nDeltaMs: {}",
-                _current.x, _current.y, _current.z, _timeElapsed, okay::Engine.time->deltaTime());
-        }
+        // specific logger.debug for a vec3 Tween
+        okay::Engine.logger.debug("\nCurrent val: ({}, {}, {})\nTime elapsed: {}\nDeltaMs: {}",
+        _current.x, _current.y, _current.z, _timeElapsed, okay::Engine.time->deltaTime());
     }
+
+    std::uint32_t timeRemaining() {
+        return _duration - _timeElapsed;
+    }
+
+    void endTween() {
+        START = END;
+    };
 
    private:
     const T START;
