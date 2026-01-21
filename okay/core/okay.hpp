@@ -22,7 +22,7 @@ class OkayTime {
 
     void reset() { _lastTime = HighResClock::now(); }
 
-    long long deltaTime() const { return _deltaTime; }
+    std::uint32_t deltaTime() const { return _deltaTime; }
     
     void updateDeltaTime() {
         TimePoint prevTime = _lastTime;
@@ -32,7 +32,7 @@ class OkayTime {
 
    private:
     TimePoint _lastTime;
-    long long _deltaTime;
+    std::uint32_t _deltaTime;
 };
 
 class OkayEngine {
