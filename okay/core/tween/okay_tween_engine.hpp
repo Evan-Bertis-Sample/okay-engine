@@ -12,12 +12,11 @@ namespace okay {
         OkayTweenEngine()
         {}
         
-        template <typename T>
-        void addTween(OkayTween<T> tween) {
-            _activeTweens.push_back(tween);
+        void addTween(IOkayTween& tween) {
+            _activeTweens.push_back(std::make_unique<IOkayTween>(tween));
         }
         
-        void removeTween(unsigned long long index) {
+        void removeTween(std::uint64_t index) {
             _activeTweens.erase(_activeTweens.begin() + static_cast<std::uint32_t>(index));
         }
 
