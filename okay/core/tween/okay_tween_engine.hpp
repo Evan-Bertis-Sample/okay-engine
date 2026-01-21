@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <okay/core/system/okay_system.hpp>
+#include <vector>
 
 namespace okay {
     class IOkayTween;
