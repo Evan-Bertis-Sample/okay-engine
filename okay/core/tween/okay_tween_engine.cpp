@@ -24,7 +24,7 @@ void OkayTweenEngine::tick() {
         }
     }
 
-    for (std::uint64_t i { tweenIndicesToErase.size() }; i >= 0; --i) {
-        removeTween(i);
+    for (auto it = tweenIndicesToErase.rbegin(); it != tweenIndicesToErase.rend(); ++it) {
+        removeTween(*it);
     }
 }
