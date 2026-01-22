@@ -43,8 +43,7 @@ static void __gameInitialize() {
     okay::Engine.logger.info("Game initialized.");
     glm::vec3 vec1 {glm::vec3(1.0f, 2.0f, 3.0f)};
     glm::vec3 vec2 {glm::vec3 (2.0f, 3.0f, 4.0f)};
-    okay::OkayTween<glm::vec3> testTween {okay::OkayTween(vec1, vec2)};
-    testTween.start();
+    okay::OkayTween(vec1, vec2).start();
 }
 
 static void __gameUpdate() {

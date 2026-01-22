@@ -7,7 +7,7 @@ class IOkayTween {
    public:
     virtual void start() = 0;
     virtual void tick() = 0;
-    virtual std::uint32_t timeRemaining() = 0;
+    virtual std::int64_t timeRemaining() = 0;
     virtual void endTween() = 0;
     virtual ~IOkayTween() = default;
 };

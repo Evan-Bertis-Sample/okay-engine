@@ -1,6 +1,7 @@
 #ifndef __TWEEN_H__
 #define __TWEEN_H__
 
+#include <cstdint>
 #include <okay/core/okay.hpp>
 #include <okay/core/logging/okay_logger.hpp>
 #include "okay/core/tween/okay_tween_engine.hpp"
@@ -44,12 +45,12 @@ class OkayTween : public IOkayTween {
         _current = _start + static_cast<float>(_timeElapsed) / _duration * DISTANCE;
 
         // specific logger.debug for a vec3 Tween
-        okay::Engine.logger.debug("\nCurrent val: ({}, {}, {})\nTime elapsed: {}\nDeltaMs: {}",
-        _current.x, _current.y, _current.z, _timeElapsed, okay::Engine.time->deltaTime());
+        // okay::Engine.logger.debug("\nCurrent val: ({}, {}, {})\nTime elapsed: {}\nDeltaMs: {}",
+        // _current.x, _current.y, _current.z, _timeElapsed, okay::Engine.time->deltaTime());
     }
 
-    std::uint32_t timeRemaining() {
-        return _duration - _timeElapsed;
+    std::int64_t timeRemaining() {
+        return static_cast<std::int64_t>(_duration) - _timeElapsed;
     }
 
     void endTween() {

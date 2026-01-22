@@ -1,4 +1,5 @@
 #include "okay_tween_engine.hpp"
+#include "okay/core/okay.hpp"
 #include "okay_tween.hpp"
 
 using namespace okay;
@@ -15,8 +16,9 @@ void OkayTweenEngine::tick() {
     std::vector<std::uint64_t> tweenIndicesToErase;
     for (std::uint64_t i {}; i < _activeTweens.size(); ++i) {
         std::unique_ptr<IOkayTween>& tween { _activeTweens[i] };
-
-        if (tween->timeRemaining() <= 0) {
+        
+        if (tween->timeRemaining() > 0) {
+            // Engine.logger.debug("{}", tween->timeRemaining());
             tween->tick();
         } else {
             tween->endTween();
