@@ -4,6 +4,7 @@
 #include <okay/core/okay.hpp>
 #include <okay/core/logging/okay_logger.hpp>
 #include "okay/core/tween/okay_tween_engine.hpp"
+#include "okay/core/tween/i_okay_tween_engine.hpp"
 
 namespace okay {
 
@@ -14,14 +15,6 @@ template <typename T>
 concept Tweenable = requires(T t) {
     t + t;
     1.0f * t;
-};
-
-class IOkayTween {
-   public:
-    virtual void start();
-    virtual void tick();
-    virtual std::uint32_t timeRemaining();
-    virtual void endTween();
 };
 
 template <Tweenable T>
