@@ -35,7 +35,7 @@ class OkayTween : IOkayTween {
     // }
 
     OkayTween(T& start, T& end)
-        : START { start },
+        : _start { start },
           END { end },
           DISTANCE { end - start },
           _current { start },
@@ -43,12 +43,12 @@ class OkayTween : IOkayTween {
     {}
     
     void start() {
-        okay::Engine.systems.getSystemChecked<OkayTweenEngine>()->addTween(this);
+        okay::Engine.systems.getSystemChecked<OkayTweenEngine>()->addTween(*this);
     }
 
     void tick() {
         _timeElapsed += okay::Engine.time->deltaTime();
-        _current = START + static_cast<float>(_timeElapsed) / _duration * DISTANCE;
+        _current = _start + static_cast<float>(_timeElapsed) / _duration * DISTANCE;
 
         // specific logger.debug for a vec3 Tween
         okay::Engine.logger.debug("\nCurrent val: ({}, {}, {})\nTime elapsed: {}\nDeltaMs: {}",
@@ -60,11 +60,11 @@ class OkayTween : IOkayTween {
     }
 
     void endTween() {
-        START = END;
+        _start = END;
     };
 
    private:
-    const T START;
+    T _start;
     const T END;
     const T DISTANCE;
     T _current;
