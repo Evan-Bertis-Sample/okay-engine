@@ -3,8 +3,8 @@
 
 using namespace okay;
 
-void OkayTweenEngine::addTween(IOkayTween& tween) {
-    _activeTweens.push_back(std::make_unique<IOkayTween>(tween));
+void OkayTweenEngine::addTween(std::unique_ptr<IOkayTween> tween) {
+    _activeTweens.push_back(std::move(tween));
 }
 
 void OkayTweenEngine::removeTween(std::uint64_t index) {

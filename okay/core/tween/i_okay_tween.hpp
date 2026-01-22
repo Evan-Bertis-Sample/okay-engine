@@ -5,10 +5,11 @@
 
 class IOkayTween {
    public:
-    virtual void start();
-    virtual void tick();
-    virtual std::uint32_t timeRemaining();
-    virtual void endTween();
+    virtual void start() = 0;
+    virtual void tick() = 0;
+    virtual std::uint32_t timeRemaining() = 0;
+    virtual void endTween() = 0;
+    virtual ~IOkayTween() = default;
 };
 
 #endif

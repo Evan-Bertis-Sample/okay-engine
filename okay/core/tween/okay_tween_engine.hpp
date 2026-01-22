@@ -12,19 +12,19 @@ namespace okay {
         OkayTweenEngine()
         {}
         
-        void addTween(IOkayTween& tween);
+        void addTween(std::unique_ptr<IOkayTween> tween);
         
         void removeTween(std::uint64_t index);
 
-        void initialize() override;
+        // void initialize() override;
 
-        void postInitialize() override;
+        // void postInitialize() override;
 
         void tick() override;
 
-        void postTick() override;
+        // void postTick() override;
 
-        void shutdown() override;
+        // void shutdown() override;
 
        private:
         std::vector<std::unique_ptr<IOkayTween>> _activeTweens;

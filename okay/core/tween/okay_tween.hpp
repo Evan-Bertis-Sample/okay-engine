@@ -18,7 +18,7 @@ concept Tweenable = requires(T t) {
 };
 
 template <Tweenable T>
-class OkayTween : IOkayTween {
+class OkayTween : public IOkayTween {
    public:
     OkayTween() = default;
 
@@ -31,12 +31,12 @@ class OkayTween : IOkayTween {
         : _start { start },
           END { end },
           DISTANCE { end - start },
-          _current { start },
-          _timeElapsed { 0 }
+          _current { start }
     {}
     
     void start() {
-        okay::Engine.systems.getSystemChecked<OkayTweenEngine>()->addTween(*this);
+        auto ptr = std::make_unique<OkayTween<T>>(*this);
+        okay::Engine.systems.getSystemChecked<OkayTweenEngine>()->addTween(std::move(ptr));
     }
 
     void tick() {
@@ -63,7 +63,7 @@ class OkayTween : IOkayTween {
     T _current;
     bool _isTweenStarted { false };
     std::uint32_t _duration { 2000 };
-    std::uint32_t _timeElapsed;
+    std::uint32_t _timeElapsed {};
     // EasingStyle.LINEAR;
     // EasignDirection.IN;
     // std::int8_t loops;
