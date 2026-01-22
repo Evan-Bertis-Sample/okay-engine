@@ -4,7 +4,7 @@
 #include <memory>
 #include <okay/core/system/okay_system.hpp>
 #include <vector>
-#include "okay/core/tween/i_okay_tween_engine.hpp"
+#include "okay/core/tween/i_okay_tween.hpp"
 
 namespace okay {
     class OkayTweenEngine : public OkaySystem<OkaySystemScope::ENGINE> {

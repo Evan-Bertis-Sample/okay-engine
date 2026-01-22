@@ -4,7 +4,7 @@
 #include <okay/core/okay.hpp>
 #include <okay/core/logging/okay_logger.hpp>
 #include "okay/core/tween/okay_tween_engine.hpp"
-#include "okay/core/tween/i_okay_tween_engine.hpp"
+#include "okay/core/tween/i_okay_tween.hpp"
 
 namespace okay {
 
