@@ -1,6 +1,4 @@
 #include "okay_tween_engine.hpp"
-#include "okay/core/okay.hpp"
-#include "okay_tween.hpp"
 
 using namespace okay;
 
