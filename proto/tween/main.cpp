@@ -45,7 +45,7 @@ static void __gameInitialize() {
     // glm::vec3 vec2 {glm::vec3 (2.0f, 3.0f, 4.0f)};
     std::float_t f1 { 0.0f };
     std::float_t f2 { 1.0f };
-    okay::OkayTween(f1, f2, 1000, okay::OkayTweenEasingStyle::SINE).start();
+    okay::OkayTween(f1, f2, 1000, okay::OkayTweenEasingStyle::BOUNCE, okay::OkayTweenEasingDirection::INOUT).start();
 }
 
 static void __gameUpdate() {
