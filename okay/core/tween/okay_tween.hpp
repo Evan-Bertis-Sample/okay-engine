@@ -28,11 +28,28 @@ class OkayTween : public IOkayTween {
     //     this.
     // }
 
-    OkayTween(T& start, T& end)
+    OkayTween(T& start,
+              T& end, 
+              std::uint32_t duration = 1000, 
+              OkayTweenEasingStyle easingStyle = LINEAR,
+              OkayTweenEasingDirection easingDirection = IN,
+              bool loops = false,
+              bool inOutBack = false,
+              std::uint32_t buffer = 0,
+              std::function<void()> onEnd = [](){},
+              std::function<void()> onPause = [](){})
         : _start { start },
           END { end },
           DISTANCE { end - start },
-          _current { start }
+          _current { start },
+          _duration { duration },
+          _easingStyle { easingStyle },
+          _easingDirection { easingDirection },
+          _loops { loops },
+          _inOutBack { inOutBack },
+          _buffer { buffer },
+          _onEnd { onEnd },
+          _onPause { onPause }
     {}
     
     void start() {
@@ -65,11 +82,14 @@ class OkayTween : public IOkayTween {
     bool _isTweenStarted { false };
     std::uint32_t _duration { 2000 };
     std::uint32_t _timeElapsed {};
-    // EasingStyle.LINEAR;
-    // EasignDirection.IN;
-    // std::int8_t loops;
-    // bool isOutAndBack;
-    // std::float_t buffer;
+    OkayTweenEasingStyle _easingStyle;
+    OkayTweenEasingDirection _easingDirection;
+    bool _loops;
+    bool _inOutBack;
+    std::uint32_t _buffer;
+    std::function<void()> _onEnd;
+    std::function<void()> _onPause;
+    bool _isPaused { false };
 };
 
 }; // namespace okay
