@@ -10,6 +10,7 @@
 #include "okay/core/system/okay_system.hpp"
 #include "okay/core/tween/okay_tween.hpp"
 #include "okay/core/tween/okay_tween_engine.hpp"
+#include "okay/core/tween/okay_tween_easing.hpp"
 
 static void __gameInitialize();
 static void __gameUpdate();
@@ -45,7 +46,7 @@ static void __gameInitialize() {
     // glm::vec3 vec2 {glm::vec3 (2.0f, 3.0f, 4.0f)};
     std::float_t f1 { 0.0f };
     std::float_t f2 { 1.0f };
-    okay::OkayTween(f1, f2, 1000, okay::OkayTweenEasingStyle::BOUNCE, okay::OkayTweenEasingDirection::INOUT).start();
+    okay::OkayTween(f1, f2, 1000, okay::easing::bounceInOut).start();
 }
 
 static void __gameUpdate() {
