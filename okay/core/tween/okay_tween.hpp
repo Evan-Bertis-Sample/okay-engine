@@ -16,9 +16,6 @@
 
 namespace okay {
 
-enum OkayTweenEasingStyle : std::uint8_t { LINEAR, SINE, QUAD, CUBIC, QUART, QUINT, EXPO, CIRC, BACK, ELASTIC, BOUNCE };
-enum OkayTweenEasingDirection : std::uint8_t { IN, OUT, INOUT };
-
 template <typename T>
 concept Tweenable = requires(T t) {
     t + t;
@@ -90,11 +87,8 @@ class OkayTween : public IOkayTween {
     std::uint32_t _timeElapsed {};
     std::float_t _progress {};
 
-    EasingFn _easingFn;
-
     // optional logical params
-    OkayTweenEasingStyle _easingStyle;
-    OkayTweenEasingDirection _easingDirection;
+    EasingFn _easingFn;
     bool _loops;
     bool _inOutBack;
     std::uint32_t _buffer;
