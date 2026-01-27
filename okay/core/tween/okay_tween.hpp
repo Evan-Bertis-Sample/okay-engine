@@ -41,7 +41,7 @@ class OkayTween : public IOkayTween {
           DISTANCE { end - start },
           _current { start },
           _duration { duration },
-          _easingFn {easingFn},
+          _easingFn { easingFn },
           _loops { loops },
           _inOutBack { inOutBack },
           _buffer { buffer },
@@ -57,8 +57,8 @@ class OkayTween : public IOkayTween {
     void tick() {
         std::float_t step {};
         _timeElapsed += okay::Engine.time->deltaTime();
-        _progress = _timeElapsed > _duration ? 1 : static_cast<std::float_t>(_timeElapsed) / _duration;
-        step = _easingFn(_progress);
+        std::float_t progress { _timeElapsed > _duration ? 1 : static_cast<std::float_t>(_timeElapsed) / _duration };
+        step = _easingFn(progress);
         _current = START + step * DISTANCE;
 
         okay::Engine.logger.debug("\nCurrent val: {}\nTime elapsed: {}\nDeltaMs: {}",
@@ -85,7 +85,6 @@ class OkayTween : public IOkayTween {
     bool _isTweening { false };
     std::uint32_t _duration;
     std::uint32_t _timeElapsed {};
-    std::float_t _progress {};
 
     // optional logical params
     EasingFn _easingFn;
