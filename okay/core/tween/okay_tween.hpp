@@ -55,10 +55,9 @@ class OkayTween : public IOkayTween {
     }
 
     void tick() {
-        std::float_t step {};
         _timeElapsed += okay::Engine.time->deltaTime();
         std::float_t progress { _timeElapsed > _duration ? 1 : static_cast<std::float_t>(_timeElapsed) / _duration };
-        step = _easingFn(progress);
+        std::float_t step = { _easingFn(progress) };
         _current = START + step * DISTANCE;
 
         okay::Engine.logger.debug("\nCurrent val: {}\nTime elapsed: {}\nDeltaMs: {}",
