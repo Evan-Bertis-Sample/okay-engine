@@ -4,7 +4,7 @@
 #include <unistd.h>
 #include <xf86drm.h>
 #include <xf86drmMode.h>
-
+#include <fcntl.h>
 #include <atomic>
 #include <csignal>
 #include <okay/core/renderer/okay_surface.hpp>
@@ -74,10 +74,10 @@ struct Surface::SurfaceImpl {
     gbm_bo* frontBo = nullptr;
     uint32_t frontFb = 0;
 
-    explicit Impl(const SurfaceConfig& c) : cfg(c) {}
+    explicit SurfaceImpl(const SurfaceConfig& c) : cfg(c) {}
 };
 
-Surface::Surface(const SurfaceConfig& cfg) : _impl(std::make_unique<Impl>(cfg)) {}
+Surface::Surface(const SurfaceConfig& cfg) : _impl(std::make_unique<SurfaceImpl>(cfg)) {}
 Surface::~Surface() {
     destroy();
 }
