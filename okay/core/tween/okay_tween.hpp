@@ -52,25 +52,23 @@ class OkayTween : public IOkayTween {
     }
 
     void tick() {
-        if (_isTweening) {
-            if (_isReversing) {
-                _timeElapsed = std::max(static_cast<int64_t>(0), static_cast<int64_t>(_timeElapsed) - okay::Engine.time->deltaTime());
-            } else {
-                _timeElapsed += okay::Engine.time->deltaTime();
-            }
+        _timeElapsed += okay::Engine.time->deltaTime();
 
-            std::float_t progress { _timeElapsed > _duration 
-                                    ? 1 
-                                    : static_cast<std::float_t>(_timeElapsed) / _duration };
-            std::float_t step = { _easingFn(progress) };
-            _current = START + step * DISTANCE;
+        if (_timeElapsed > _duration) {
+            _timeElapsed = _duration;
         }
 
-        okay::Engine.logger.debug("\nCurrent val: {}\nTime elapsed: {}\nDeltaMs: {}\nLoops: {}/{}",
-                _current, _timeElapsed, okay::Engine.time->deltaTime(), _loopsCompleted, _numLoops);
-        // specific logger.debug for a vec3 Tween
-        // okay::Engine.logger.debug("\nCurrent val: ({}, {}, {})\nTime elapsed: {}\nDeltaMs: {}",
-        // _current.x, _current.y, _current.z, _timeElapsed, okay::Engine.time->deltaTime());
+        std::float_t progress = static_cast<std::float_t>(_timeElapsed) / _duration;
+
+        if (_isReversing) {
+            progress = 1.0f - progress;
+        }
+
+        std::float_t step = _easingFn(progress);
+        _current = START + step * DISTANCE;
+
+        okay::Engine.logger.debug("\nCurrent val: {}\nTime elapsed: {}\nReversing: {}",
+                _current, _timeElapsed, _isReversing);
     }
 
     void pause() {
@@ -88,21 +86,27 @@ class OkayTween : public IOkayTween {
     }
 
     bool isFinished() {
-        if (_inOutBack && _isReversing && _timeElapsed == 0 
-            || !_inOutBack && _timeElapsed >= static_cast<std::int64_t>(_duration))
-        {
-            if (_loopsCompleted == _numLoops) {
-                return true;
-            } else {
-                _current = START;
-                _timeElapsed = 0;
-                ++_loopsCompleted;
-            }
+        if (_timeElapsed < _duration) {
+            return false;
         }
 
-        if (_inOutBack) {
-            _isReversing = !_isReversing;
+        if (_inOutBack && !_isReversing) {
+            _isReversing = true;
+            //okay::Engine.logger.debug("reversing...\n");
+            _timeElapsed = 0;
+            return false;
         }
+
+        if (_numLoops == _loopsCompleted) {
+            return true;
+        } else {
+            _timeElapsed = 0;
+            _current = START;
+            ++_loopsCompleted;
+            //okay::Engine.logger.debug("looping...\n");
+        }
+
+        _isReversing = false;
 
         return false;
     }
