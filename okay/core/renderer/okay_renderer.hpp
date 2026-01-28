@@ -14,7 +14,7 @@
 namespace okay {
 
 struct OkayRendererSettings {
-    SurfaceConfig SurfaceConfig;
+    SurfaceConfig surfaceConfig;
 };
 
 class OkayRenderer : public OkaySystem<OkaySystemScope::ENGINE> {
@@ -24,7 +24,7 @@ class OkayRenderer : public OkaySystem<OkaySystemScope::ENGINE> {
     }
 
     OkayRenderer(const OkayRendererSettings& settings)
-        : _settings(settings), _surface(std::make_unique<Surface>(settings.SurfaceConfig)) {}
+        : _settings(settings), _surface(std::make_unique<Surface>(settings.surfaceConfig)) {}
 
     using TestMaterialUniforms =
         OkayMaterialUniformCollection<OkayMaterialUniform<glm::vec3, FixedString("u_color")>>;
