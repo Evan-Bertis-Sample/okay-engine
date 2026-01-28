@@ -1,5 +1,4 @@
-#define GLAD_GL_IMPLEMENTATION
-#include <glad/gl.h>
+#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <okay/core/renderer/okay_surface.hpp>
@@ -33,7 +32,7 @@ void Surface::initialize() {
     glfwSwapInterval(_impl->cfg.vsync ? 1 : 0);
 
     // load all open gl function pointers
-    if (!gladLoadGL(glfwGetProcAddress)) {
+    if (!gladLoadGL()) {
         std::cout << "Failed to initialize GLAD" << std::endl;
     }
 }

@@ -49,7 +49,7 @@ message(STATUS "Engine dir: ${OKAY_ENGINE_DIR}")
 message(STATUS "Vendor dir: ${OKAY_VENDOR_DIR}")
 
 # collect core sources and headers
-file(GLOB_RECURSE OKAY_CORE_SOURCES ${OKAY_ENGINE_DIR}/core/*.cpp)
+file(GLOB_RECURSE OKAY_CORE_SOURCES ${OKAY_ENGINE_DIR}/core/*.cpp ${OKAY_VENDOR_DIR}/glad/src/glad.c)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 file(GLOB_RECURSE OKAY_CORE_HEADERS ${OKAY_ENGINE_DIR}/core/*.hpp)
 
@@ -99,6 +99,7 @@ option(GLM_STATIC "Static build" OFF)
 option(GLM_USE_TEST "Enable Tests" OFF)
 add_subdirectory(${OKAY_VENDOR_DIR}/glm)
 
+
 # platform selection (creates INTERFACE target 'okay_platform')
 # set OKAY_PLATFORM to override autodetect (e.g., -DOKAY_PLATFORM=windows)
 add_subdirectory(${OKAY_ENGINE_DIR}/platform)
@@ -106,8 +107,7 @@ add_subdirectory(${OKAY_ENGINE_DIR}/platform)
 # allow glm & glad to be included in the game
 target_include_directories(okay
   PUBLIC ${OKAY_VENDOR_DIR}/glm
-  # for glad/gl.h
-  PUBLIC ${OKAY_VENDOR_DIR}
+  PUBLIC ${OKAY_VENDOR_DIR}/glad/include
 )
 
 # link common libs and platform bundle into the engine

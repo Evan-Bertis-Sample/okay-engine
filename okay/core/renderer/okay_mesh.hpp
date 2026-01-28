@@ -1,7 +1,7 @@
 #ifndef __OKAY_MESH_H__
 #define __OKAY_MESH_H__
 
-#include <glad/gl.h>
+#include <glad/glad.h>
 
 #include <glm/glm.hpp>
 #include <okay/core/util/result.hpp>

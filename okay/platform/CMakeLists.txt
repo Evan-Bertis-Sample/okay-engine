@@ -20,5 +20,14 @@ add_library(okay_platform STATIC)
 # C++ standard for platform code
 set_property(TARGET okay_platform PROPERTY CXX_STANDARD 20)
 
+# add to the sources of okay_platform glad.c
+target_sources(okay_platform PRIVATE
+  ${OKAY_VENDOR_DIR}/glad/src/glad.c
+)
+
+target_include_directories(okay_platform PRIVATE
+ ${OKAY_VENDOR_DIR}/glad/include
+)
+
 # Let the backend subdir add sources/defs/libs to 'okay_platform'
 add_subdirectory(${OKAY_PLATFORM})
