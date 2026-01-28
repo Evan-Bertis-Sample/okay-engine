@@ -15,7 +15,7 @@ void OkayTweenEngine::tick() {
     for (std::uint64_t i {}; i < _activeTweens.size(); ++i) {
         std::unique_ptr<IOkayTween>& tween { _activeTweens[i] };
         
-        if (tween->timeRemaining() > 0) {
+        if (!tween->isFinished()) {
             // Engine.logger.debug("{}", tween->timeRemaining());
             tween->tick();
         } else {
