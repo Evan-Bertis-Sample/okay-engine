@@ -1,8 +1,8 @@
 #include "okay/core/tween/okay_tween_sequence.hpp"
 #include "okay/core/tween/i_okay_tween.hpp"
 
-void okay::OkayTweenSequence::append(std::shared_ptr<IOkayTween> tween) {
-    _sequence.push_back(tween);
+void okay::OkayTweenSequence::append(std::shared_ptr<IOkayTween> tweenPtr) {
+    _sequence.push_back(tweenPtr);
 }
 
 void okay::OkayTweenSequence::start() {

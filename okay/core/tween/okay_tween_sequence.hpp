@@ -10,7 +10,7 @@ namespace okay {
        public:
         OkayTweenSequence() = default;
 
-        void append(std::shared_ptr<IOkayTween> tween);
+        void append(std::shared_ptr<IOkayTween> tweenPtr);
 
         void start();
 
