@@ -11,6 +11,7 @@
 #include "okay/core/tween/okay_tween.hpp"
 #include "okay/core/tween/okay_tween_engine.hpp"
 #include "okay/core/tween/okay_tween_easing.hpp"
+#include "okay/core/tween/okay_tween_sequence.hpp"
 
 static void __gameInitialize();
 static void __gameUpdate();
@@ -42,11 +43,15 @@ int main() {
 static void __gameInitialize() {
     // Additional game initialization logic
     okay::Engine.logger.info("Game initialized.");
-    // glm::vec3 vec1 {glm::vec3(1.0f, 2.0f, 3.0f)};
-    // glm::vec3 vec2 {glm::vec3 (2.0f, 3.0f, 4.0f)};
+    glm::vec3 vec1 {glm::vec3(1.0f, 2.0f, 3.0f)};
+    glm::vec3 vec2 {glm::vec3 (2.0f, 3.0f, 4.0f)};
     std::float_t f1 { 0.0f };
     std::float_t f2 { 1.0f };
-    okay::OkayTween(f1, f2, 1000, okay::easing::bounceInOut, 2, true).start();
+    // okay::OkayTween(f1, f2, 1000, okay::easing::bounceInOut, 2, true).start();
+    okay::OkayTweenSequence seq;
+    okay::OkayTween tween1 { f1, f2, 1000, okay::easing::bounceInOut, 2, true };
+    seq.append(tween1);
+    seq.start();
 }
 
 static void __gameUpdate() {

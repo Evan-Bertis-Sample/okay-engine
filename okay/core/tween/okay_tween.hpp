@@ -44,31 +44,35 @@ class OkayTween : public IOkayTween {
           _buffer { buffer },
           _onEnd { onEnd },
           _onPause { onPause }
-    {}
+    {
+        okay::Engine.systems.getSystemChecked<OkayTweenEngine>()
+            ->addTween(std::move(std::make_unique<OkayTween<T>>(*this)));
+    }
     
     void start() {
-        auto ptr = std::make_unique<OkayTween<T>>(*this);
-        okay::Engine.systems.getSystemChecked<OkayTweenEngine>()->addTween(std::move(ptr));
+        _isTweening = true;
     }
 
     void tick() {
-        _timeElapsed += okay::Engine.time->deltaTime();
-
-        if (_timeElapsed > _duration) {
-            _timeElapsed = _duration;
-        }
-
-        std::float_t progress = static_cast<std::float_t>(_timeElapsed) / _duration;
-
-        if (_isReversing) {
-            progress = 1.0f - progress;
-        }
-
-        std::float_t step = _easingFn(progress);
-        _current = START + step * DISTANCE;
-
-        okay::Engine.logger.debug("\nCurrent val: {}\nTime elapsed: {}\nReversing: {}",
+        if (_isTweening) {
+            _timeElapsed += okay::Engine.time->deltaTime();
+            
+            if (_timeElapsed > _duration) {
+                _timeElapsed = _duration;
+            }
+            
+            std::float_t progress = static_cast<std::float_t>(_timeElapsed) / _duration;
+            
+            if (_isReversing) {
+                progress = 1.0f - progress;
+            }
+            
+            std::float_t step = _easingFn(progress);
+            _current = START + step * DISTANCE;
+            
+            okay::Engine.logger.debug("\nCurrent val: {}\nTime elapsed: {}\nReversing: {}",
                 _current, _timeElapsed, _isReversing);
+        }
     }
 
     void pause() {
@@ -122,7 +126,7 @@ class OkayTween : public IOkayTween {
     const T END;
     const T DISTANCE;
     T _current;
-    bool _isTweening { true };
+    bool _isTweening { false };
     std::uint32_t _duration;
     std::uint32_t _timeElapsed {};
     EasingFn _easingFn;
