@@ -89,8 +89,8 @@ class OkayTween : public IOkayTween {
             std::float_t step = _easingFn(progress);
             _current = START + step * DISTANCE;
             
-            okay::Engine.logger.debug("\nCurrent val: {}\nTime elapsed: {}\nReversing: {}",
-                _current, _timeElapsed, _isReversing);
+            okay::Engine.logger.debug("\nProgress: {}\nTime elapsed: {}\nReversing: {}",
+                progress, _timeElapsed, _isReversing);
         }
     }
 

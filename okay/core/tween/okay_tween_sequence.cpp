@@ -6,25 +6,25 @@ void okay::OkayTweenSequence::append(std::shared_ptr<IOkayTween> tweenPtr) {
 }
 
 void okay::OkayTweenSequence::start() {
-    for (std::shared_ptr<IOkayTween>& tween : _sequence) {
-        tween.get()->start();
+    for (std::shared_ptr<IOkayTween> tween : _sequence) {
+        tween->start();
     }
 }
 
 void okay::OkayTweenSequence::pause() {
-    for (std::shared_ptr<IOkayTween>& tween : _sequence) {
-        tween.get()->pause();
+    for (std::shared_ptr<IOkayTween> tween : _sequence) {
+        tween->pause();
     }
 }
 
 void okay::OkayTweenSequence::resume() {
-    for (std::shared_ptr<IOkayTween>& tween : _sequence) {
-        tween.get()->resume();
+    for (std::shared_ptr<IOkayTween> tween : _sequence) {
+        tween->resume();
     }
 }
 
 void okay::OkayTweenSequence::kill() {
-    for (std::shared_ptr<IOkayTween>& tween : _sequence) {
-        tween.get()->kill();
+    for (std::shared_ptr<IOkayTween> tween : _sequence) {
+        tween->kill();
     }
 }

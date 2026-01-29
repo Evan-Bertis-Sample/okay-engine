@@ -49,11 +49,12 @@ static void __gameInitialize() {
     std::float_t f2 { 1.0f };
     okay::OkayTween(f1, f2, 1000, okay::easing::bounceInOut, 2, true).start();
     okay::OkayTweenSequence seq;
-    auto tween1 { okay::OkayTween<std::float_t>::create(f1, f2, 1000, okay::easing::bounceInOut, 2, true) };
-    auto tween2 { okay::OkayTween<glm::vec3>::create(vec1, vec2, 2000, okay::easing::backIn) };
+    auto tween1 { okay::OkayTween<std::float_t>::create(f1, f2, 100, okay::easing::bounceInOut) };
+    auto tween2 { okay::OkayTween<glm::vec3>::create(vec1, vec2, 100, okay::easing::backIn) };
     seq.append(tween1);
     seq.append(tween2);
     seq.start();
+}
 
 static void __gameUpdate() {
     // std::cout << "Game updated." << std::endl;

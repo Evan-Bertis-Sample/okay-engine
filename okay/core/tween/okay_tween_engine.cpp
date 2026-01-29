@@ -2,7 +2,7 @@
 
 using namespace okay;
 
-void OkayTweenEngine::addTween(std::unique_ptr<IOkayTween> tween) {
+void OkayTweenEngine::addTween(std::shared_ptr<IOkayTween> tween) {
     _activeTweens.push_back(std::move(tween));
 }
 
@@ -13,7 +13,7 @@ void OkayTweenEngine::removeTween(std::uint64_t index) {
 void OkayTweenEngine::tick() {
     std::vector<std::uint64_t> tweenIndicesToErase;
     for (std::uint64_t i {}; i < _activeTweens.size(); ++i) {
-        std::unique_ptr<IOkayTween>& tween { _activeTweens[i] };
+        std::shared_ptr<IOkayTween>& tween { _activeTweens[i] };
         
         if (!tween->isFinished()) {
             // Engine.logger.debug("{}", tween->timeRemaining());

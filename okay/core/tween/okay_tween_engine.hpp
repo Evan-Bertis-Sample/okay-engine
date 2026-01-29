@@ -12,7 +12,7 @@ namespace okay {
         OkayTweenEngine()
         {}
         
-        void addTween(std::unique_ptr<IOkayTween> tween);
+        void addTween(std::shared_ptr<IOkayTween> tween);
         
         void removeTween(std::uint64_t index);
 
@@ -27,7 +27,7 @@ namespace okay {
         // void shutdown() override;
 
        private:
-        std::vector<std::unique_ptr<IOkayTween>> _activeTweens;
+        std::vector<std::shared_ptr<IOkayTween>> _activeTweens;
     };
     
 }; // namespace okay
