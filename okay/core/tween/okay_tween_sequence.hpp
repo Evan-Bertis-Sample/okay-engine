@@ -1,7 +1,7 @@
 #ifndef __OKAY_TWEEN_SEQUENCE_H__
 #define __OKAY_TWEEN_SEQUENCE_H__
 
-#include <functional>
+#include <memory>
 #include <vector>
 #include "okay/core/tween/i_okay_tween.hpp"
 
@@ -10,7 +10,7 @@ namespace okay {
        public:
         OkayTweenSequence() = default;
 
-        void append(IOkayTween& tween);
+        void append(std::shared_ptr<IOkayTween> tween);
 
         void start();
 
@@ -21,7 +21,7 @@ namespace okay {
         void kill();
        
        private:
-        std::vector<std::reference_wrapper<IOkayTween>> _sequence;
+        std::vector<std::shared_ptr<IOkayTween>> _sequence;
     };
 } // namespace okay
 

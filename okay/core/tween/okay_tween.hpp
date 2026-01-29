@@ -1,7 +1,6 @@
 #ifndef __TWEEN_H__
 #define __TWEEN_H__
 
-#include <algorithm>
 #include <cstdint>
 #include <cmath>
 #include <memory>
@@ -10,6 +9,7 @@
 #include "okay/core/tween/okay_tween_engine.hpp"
 #include "okay/core/tween/i_okay_tween.hpp"
 #include "okay/core/tween/okay_tween_easing.hpp"
+#include "okay_tween_engine.hpp"
 
 namespace okay {
 
@@ -32,7 +32,8 @@ class OkayTween : public IOkayTween {
               bool inOutBack = false,
               std::uint32_t buffer = 0,
               std::function<void()> onEnd = [](){},
-              std::function<void()> onPause = [](){})
+              std::function<void()> onPause = [](){},
+              std::function<void()> onResume = [](){})
         : START { start },
           END { end },
           DISTANCE { end - start },
@@ -44,16 +45,34 @@ class OkayTween : public IOkayTween {
           _buffer { buffer },
           _onEnd { onEnd },
           _onPause { onPause }
+    {}
+
+    static std::shared_ptr<OkayTween<T>> create(T& start,
+                                                T& end,
+                                                std::uint32_t duration = 1000,
+                                                EasingFn easingFn = okay::easing::linear,
+                                                std::int64_t numLoops = 0,
+                                                bool inOutBack = false,
+                                                std::uint32_t buffer = 0,
+                                                std::function<void()> onEnd = [](){},
+                                                std::function<void()> onPause = [](){},
+                                                std::function<void()> onResume = [](){})
     {
-        okay::Engine.systems.getSystemChecked<OkayTweenEngine>()
-            ->addTween(std::move(std::make_unique<OkayTween<T>>(*this)));
+        auto tweenPtr { std::make_shared<OkayTween<T>>(start, end, duration, easingFn, numLoops, inOutBack, buffer, onEnd, onPause, onResume) };
+
+        okay::Engine.systems.getSystemChecked<OkayTweenEngine>()->addTween(tweenPtr);
+
+        return tweenPtr;
     }
     
     void start() {
         _isTweening = true;
+        okay::Engine.logger.debug("starting tween!");
+        okay::Engine.logger.debug("INITIAL is tweening? {}", _isTweening);
     }
 
     void tick() {
+        okay::Engine.logger.debug("is tweening? {}", _isTweening);
         if (_isTweening) {
             _timeElapsed += okay::Engine.time->deltaTime();
             
@@ -82,6 +101,7 @@ class OkayTween : public IOkayTween {
 
     void resume() {
         _isTweening = true;
+        _onResume();
     }
 
     void kill() {
@@ -140,6 +160,7 @@ class OkayTween : public IOkayTween {
     std::uint32_t _buffer;
     std::function<void()> _onEnd;
     std::function<void()> _onPause;
+    std::function<void()> _onResume;
 };
 
 }; // namespace okay

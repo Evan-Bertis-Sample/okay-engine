@@ -47,12 +47,13 @@ static void __gameInitialize() {
     glm::vec3 vec2 {glm::vec3 (2.0f, 3.0f, 4.0f)};
     std::float_t f1 { 0.0f };
     std::float_t f2 { 1.0f };
-    // okay::OkayTween(f1, f2, 1000, okay::easing::bounceInOut, 2, true).start();
+    okay::OkayTween(f1, f2, 1000, okay::easing::bounceInOut, 2, true).start();
     okay::OkayTweenSequence seq;
-    okay::OkayTween tween1 { f1, f2, 1000, okay::easing::bounceInOut, 2, true };
+    auto tween1 { okay::OkayTween<std::float_t>::create(f1, f2, 1000, okay::easing::bounceInOut, 2, true) };
+    auto tween2 { okay::OkayTween<glm::vec3>::create(vec1, vec2, 2000, okay::easing::backIn) };
     seq.append(tween1);
+    seq.append(tween2);
     seq.start();
-}
 
 static void __gameUpdate() {
     // std::cout << "Game updated." << std::endl;
