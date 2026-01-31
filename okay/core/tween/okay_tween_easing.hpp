@@ -6,6 +6,11 @@
 
 namespace okay {
 
+/**
+  * @brief Easing functions adapted from https://easings.net/ for use in OkayTween.
+  * 
+  * @param progress interpolation percentage completed
+  */
 using EasingFn = std::function<std::float_t(std::float_t& progress)>;
 
 namespace easing {

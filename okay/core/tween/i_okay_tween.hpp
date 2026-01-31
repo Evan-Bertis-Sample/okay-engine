@@ -1,6 +1,9 @@
 #ifndef __I_OKAY_TWEEN_ENGINE_H__
 #define __I_OKAY_TWEEN_ENGINE_H__
 
+/**
+ * @brief Interface for OkayTween dependency injection
+ */
 class IOkayTween {
    public:
     virtual void start() = 0;

@@ -13,12 +13,25 @@
 
 namespace okay {
 
+/**
+  * Ensure an OkayTween can only be created if 
+  * addition and scalar multiplication is possible on its type.
+  */
 template <typename T>
 concept Tweenable = requires(T t) {
     t + t;
     1.0f * t;
 };
 
+/**
+  * @brief A tween
+  *
+  * @param start The start position of the tween
+  * @param end The end position of the tween
+  * @param easingFn The easing function to apply on the tween
+  * @param numLoops The number of times the tween should loop
+  * @param inOutBack Whether the tween should in-out-back
+ */
 template <Tweenable T>
 class OkayTween : public IOkayTween {
    public:
