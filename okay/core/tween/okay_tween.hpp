@@ -67,12 +67,9 @@ class OkayTween : public IOkayTween {
     
     void start() {
         _isTweening = true;
-        okay::Engine.logger.debug("starting tween!");
-        okay::Engine.logger.debug("INITIAL is tweening? {}", _isTweening);
     }
 
     void tick() {
-        okay::Engine.logger.debug("is tweening? {}", _isTweening);
         if (_isTweening) {
             _timeElapsed += okay::Engine.time->deltaTime();
             
@@ -88,9 +85,18 @@ class OkayTween : public IOkayTween {
             
             std::float_t step = _easingFn(progress);
             _current = START + step * DISTANCE;
-            
-            okay::Engine.logger.debug("\nProgress: {}\nTime elapsed: {}\nReversing: {}",
-                progress, _timeElapsed, _isReversing);
+
+            // visualize tween in console
+            std::cout << '\n';
+            for (T i { START }; i < _current; i += DISTANCE / 150)
+            {
+                std::cout << ':';
+            }
+            std::cout << "O";
+            for (T i { _current }; i <= END; i += DISTANCE / 150)
+            {
+                std::cout << '-';
+            }
         }
     }
 

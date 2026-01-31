@@ -43,17 +43,20 @@ int main() {
 static void __gameInitialize() {
     // Additional game initialization logic
     okay::Engine.logger.info("Game initialized.");
-    glm::vec3 vec1 {glm::vec3(1.0f, 2.0f, 3.0f)};
-    glm::vec3 vec2 {glm::vec3 (2.0f, 3.0f, 4.0f)};
-    std::float_t f1 { 0.0f };
-    std::float_t f2 { 1.0f };
-    okay::OkayTween(f1, f2, 1000, okay::easing::bounceInOut, 2, true).start();
-    okay::OkayTweenSequence seq;
-    auto tween1 { okay::OkayTween<std::float_t>::create(f1, f2, 100, okay::easing::bounceInOut) };
-    auto tween2 { okay::OkayTween<glm::vec3>::create(vec1, vec2, 100, okay::easing::backIn) };
-    seq.append(tween1);
-    seq.append(tween2);
-    seq.start();
+    // glm::vec3 vec1 {glm::vec3(1.0f, 2.0f, 3.0f)};
+    // glm::vec3 vec2 {glm::vec3 (2.0f, 3.0f, 4.0f)};
+    // std::float_t f1 { 0.0f };
+    // std::float_t f2 { 1.0f };
+    // okay::OkayTween(f1, f2, 1000, okay::easing::bounceInOut, 2, true).start();
+    // okay::OkayTweenSequence seq;
+    // auto tween1 { okay::OkayTween<std::float_t>::create(f1, f2, 100, okay::easing::bounceInOut) };
+    // auto tween2 { okay::OkayTween<glm::vec3>::create(vec1, vec2, 100, okay::easing::backIn) };
+    // seq.append(tween1);
+    // seq.append(tween2);
+    // seq.start();
+    int n1 { 30 };
+    int n2 { 1000 };
+    okay::OkayTween<int>::create(n1, n2, 1000, okay::easing::bounceInOut, -1, true)->start();
 }
 
 static void __gameUpdate() {
