@@ -76,7 +76,6 @@ class OkayTween : public IOkayTween {
         if (_isTweening) {
             if (_buffer > 0) {
                 _buffer -= okay::Engine.time->deltaTime();
-                okay::Engine.logger.debug("buffering: {}\n", _buffer);
             }
             else {
                 _timeElapsed += okay::Engine.time->deltaTime();
@@ -120,7 +119,7 @@ class OkayTween : public IOkayTween {
                     std::cout << ':';
                 }
             }
-            Engine.logger.debug("val {}", _current);
+            // Engine.logger.debug("val {}", _current);
         }
     }
 

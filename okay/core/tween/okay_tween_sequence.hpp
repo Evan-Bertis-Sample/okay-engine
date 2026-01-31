@@ -22,6 +22,8 @@ namespace okay {
        
        private:
         std::vector<std::shared_ptr<IOkayTween>> _sequence;
+
+        void removeTween(std::uint64_t index);
     };
 } // namespace okay
 

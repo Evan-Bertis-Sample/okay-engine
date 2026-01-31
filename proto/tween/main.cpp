@@ -39,6 +39,7 @@ int main() {
     return 0;
 }
 
+okay::OkayTweenSequence seq;
 
 static void __gameInitialize() {
     // Additional game initialization logic
@@ -55,19 +56,28 @@ static void __gameInitialize() {
     // seq.append(tween2);
     // seq.start();
     int n1 { 30 };
+    int n2 { 30 };
+    int n3 { 30 };
     // okay::Engine.logger.debug("TweenEngine size init: {}", sizeof(okay::OkayTweenEngine));
-    okay::OkayTween<int>::create(n1, 1000)->start();
+    
+    seq.append(okay::OkayTween<int>::create(n1, 2000, 2000));
+    seq.append(okay::OkayTween<int>::create(n2, 1000));
+    seq.append(okay::OkayTween<int>::create(n3, 400, 4000));
+    seq.start();
     // okay::Engine.logger.debug("TweenEngine size started: {}", sizeof(okay::OkayTweenEngine));
-    // okay::Engine.logger.debug("Tween size started: {}", sizeof(tween));
-    // tween->kill();
-    // okay::Engine.logger.debug("Tween size killed: {}", sizeof(tween));
+    // okay::Engine.logger.debug("Tween size started: {}", sizeof(tween))
 }
 
 static void __gameUpdate() {
     // std::cout << "Game updated." << std::endl;
     // Game update logic
     // okay::Engine.logger.debug("TweenEngine size killed: {}", sizeof(okay::OkayTweenEngine));
+    static int aaa { 0 };
 
+    if (aaa == 500)
+    {
+        seq.kill();
+    }
 }
 
 static void __gameShutdown() {

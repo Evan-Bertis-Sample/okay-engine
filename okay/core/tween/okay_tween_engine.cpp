@@ -6,10 +6,6 @@ void OkayTweenEngine::addTween(std::shared_ptr<IOkayTween> tween) {
     _activeTweens.push_back(std::move(tween));
 }
 
-void OkayTweenEngine::removeTween(std::uint64_t index) {
-    _activeTweens.erase(_activeTweens.begin() + static_cast<std::uint32_t>(index));
-}
-
 void OkayTweenEngine::tick() {
     std::vector<std::uint64_t> tweenIndicesToErase;
     for (std::uint64_t i {}; i < _activeTweens.size(); ++i) {
@@ -23,7 +19,11 @@ void OkayTweenEngine::tick() {
         }
     }
 
-    for (auto it = tweenIndicesToErase.rbegin(); it != tweenIndicesToErase.rend(); ++it) {
+    for (auto it { tweenIndicesToErase.rbegin() }; it != tweenIndicesToErase.rend(); ++it) {
         removeTween(*it);
     }
+}
+
+void OkayTweenEngine::removeTween(std::uint64_t index) {
+    _activeTweens.erase(_activeTweens.begin() + static_cast<std::uint32_t>(index));
 }
