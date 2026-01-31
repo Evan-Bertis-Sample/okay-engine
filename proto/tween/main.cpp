@@ -55,13 +55,19 @@ static void __gameInitialize() {
     // seq.append(tween2);
     // seq.start();
     int n1 { 30 };
-    int n2 { 1000 };
-    okay::OkayTween<int>::create(n1, n2, 1000, okay::easing::bounceInOut, -1, true)->start();
+    // okay::Engine.logger.debug("TweenEngine size init: {}", sizeof(okay::OkayTweenEngine));
+    okay::OkayTween<int>::create(n1, 1000)->start();
+    // okay::Engine.logger.debug("TweenEngine size started: {}", sizeof(okay::OkayTweenEngine));
+    // okay::Engine.logger.debug("Tween size started: {}", sizeof(tween));
+    // tween->kill();
+    // okay::Engine.logger.debug("Tween size killed: {}", sizeof(tween));
 }
 
 static void __gameUpdate() {
     // std::cout << "Game updated." << std::endl;
     // Game update logic
+    // okay::Engine.logger.debug("TweenEngine size killed: {}", sizeof(okay::OkayTweenEngine));
+
 }
 
 static void __gameShutdown() {
