@@ -46,6 +46,7 @@ class OkayTween : public IOkayTween {
           _buffer { buffer },
           _onEnd { onEnd },
           _onPause { onPause },
+          _onResume { onResume },
           _onLoop { onLoop }
     {}
 
@@ -73,54 +74,52 @@ class OkayTween : public IOkayTween {
     }
 
     void tick() {
-        if (_isTweening) {
-            if (_buffer > 0) {
-                _buffer -= okay::Engine.time->deltaTime();
-            }
-            else {
-                _timeElapsed += okay::Engine.time->deltaTime();
-            
-                if (_timeElapsed > _duration) {
-                    _timeElapsed = _duration;
-                }
-                
-                std::float_t progress = static_cast<std::float_t>(_timeElapsed) / _duration;
-                
-                if (_isReversing) {
-                    progress = 1.0f - progress;
-                }
-                
-                std::float_t step = _easingFn(progress);
-                _current = START + step * DISPLACEMENT;
+        if (!_isTweening) return;
+
+        if (_buffer > 0) {
+            _buffer -= okay::Engine.time->deltaTime();
+        } else {
+            _timeElapsed += okay::Engine.time->deltaTime();
+        
+            if (_timeElapsed > _duration) {
+                _timeElapsed = _duration;
             }
             
-            // visualize tween in console
-            if (START < END)
-            {
-                std::cout << '\n';
-                for (T i { START }; i < _current; i += DISPLACEMENT / 150)
-                {
-                    std::cout << ':';
-                }
-                std::cout << "O";
-                for (T i { _current }; i <= END; i += DISPLACEMENT / 150)
-                {
-                    std::cout << '-';
-                }
-            } else {
-                std::cout << '\n';
-                for (T i { START }; i > _current; i += DISPLACEMENT / 150)
-                {
-                    std::cout << '-';
-                }
-                std::cout << "O";
-                for (T i { _current }; i >= END; i += DISPLACEMENT / 150)
-                {
-                    std::cout << ':';
-                }
+            std::float_t progress = static_cast<std::float_t>(_timeElapsed) / _duration;
+            
+            if (_isReversing) {
+                progress = 1.0f - progress;
             }
-            // Engine.logger.debug("val {}", _current);
+            
+            std::float_t step = _easingFn(progress);
+            _current = START + step * DISPLACEMENT;
         }
+            
+        // visualize tween in console
+        if (START < END) {
+            std::cout << '\n';
+            for (T i { START }; i < _current; i += DISPLACEMENT / 150)
+            {
+                std::cout << ':';
+            }
+            std::cout << "O";
+            for (T i { _current }; i <= END; i += DISPLACEMENT / 150)
+            {
+                std::cout << '-';
+            }
+        } else {
+            std::cout << '\n';
+            for (T i { START }; i > _current; i += DISPLACEMENT / 150)
+            {
+                std::cout << '-';
+            }
+            std::cout << "O";
+            for (T i { _current }; i >= END; i += DISPLACEMENT / 150)
+            {
+                std::cout << ':';
+            }
+        }
+        // Engine.logger.debug("val {}", _current);
     }
 
     void pause() {

@@ -7,10 +7,8 @@
 #include <okay/core/logging/okay_logger.hpp>
 
 #include <utility>
-#include "okay/core/system/okay_system.hpp"
 #include "okay/core/tween/okay_tween.hpp"
 #include "okay/core/tween/okay_tween_engine.hpp"
-#include "okay/core/tween/okay_tween_easing.hpp"
 #include "okay/core/tween/okay_tween_sequence.hpp"
 
 static void __gameInitialize();
@@ -74,10 +72,19 @@ static void __gameUpdate() {
     // okay::Engine.logger.debug("TweenEngine size killed: {}", sizeof(okay::OkayTweenEngine));
     static int aaa { 0 };
 
-    if (aaa == 500)
+    if (aaa == 50)
     {
-        seq.kill();
+        okay::Engine.logger.debug("pausing!");
+        seq.pause();
     }
+    
+    if (aaa == 100)
+    {
+        okay::Engine.logger.debug("resuming!");
+        seq.resume();
+    }
+
+    ++aaa;
 }
 
 static void __gameShutdown() {
