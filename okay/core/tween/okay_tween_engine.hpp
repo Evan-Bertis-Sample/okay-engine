@@ -14,20 +14,12 @@ namespace okay {
         
         void addTween(std::shared_ptr<IOkayTween> tween);
         
-        void removeTween(std::uint64_t index);
-
-        // void initialize() override;
-
-        // void postInitialize() override;
-
         void tick() override;
-
-        // void postTick() override;
-
-        // void shutdown() override;
-
+        
        private:
         std::vector<std::shared_ptr<IOkayTween>> _activeTweens;
+
+        void removeTween(std::uint64_t index);
     };
     
 }; // namespace okay
