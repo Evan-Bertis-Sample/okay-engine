@@ -16,7 +16,6 @@ void OkayTweenEngine::tick() {
         std::shared_ptr<IOkayTween>& tween { _activeTweens[i] };
         
         if (!tween->isFinished()) {
-            // Engine.logger.debug("{}", tween->timeRemaining());
             tween->tick();
         } else {
             tween->endTween();

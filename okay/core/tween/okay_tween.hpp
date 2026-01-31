@@ -116,13 +116,16 @@ class OkayTween : public IOkayTween {
     }
 
     bool isFinished() {
+        if (_killTween) {
+            return true;
+        }
+
         if (_timeElapsed < _duration) {
             return false;
         }
 
         if (_inOutBack && !_isReversing) {
             _isReversing = true;
-            //okay::Engine.logger.debug("reversing...\n");
             _timeElapsed = 0;
             return false;
         }
@@ -133,7 +136,6 @@ class OkayTween : public IOkayTween {
             _timeElapsed = 0;
             _current = START;
             ++_loopsCompleted;
-            //okay::Engine.logger.debug("looping...\n");
         }
 
         _isReversing = false;
