@@ -36,7 +36,7 @@ namespace okay {
           * 
           * @param index index of tween ptr
           */
-        void removeTween(std::uint64_t index);
+        void removeTween(size_t index);
     };
     
 }; // namespace okay

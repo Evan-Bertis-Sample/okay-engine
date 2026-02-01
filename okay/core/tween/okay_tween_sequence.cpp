@@ -46,7 +46,3 @@ void OkayTweenSequence::kill() {
 
     _sequence.clear();
 }
-
-void OkayTweenSequence::removeTween(std::uint64_t index) {
-    _sequence.erase(_sequence.begin() + static_cast<std::uint32_t>(index));
-}
