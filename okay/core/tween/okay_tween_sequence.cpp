@@ -1,7 +1,7 @@
 #include "okay/core/tween/okay_tween_sequence.hpp"
-#include <cstdint>
-#include "okay/core/okay.hpp"
 #include "okay/core/tween/i_okay_tween.hpp"
+
+#include <cstdint>
 
 using namespace okay;
 

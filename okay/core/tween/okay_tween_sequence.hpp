@@ -1,9 +1,9 @@
 #ifndef __OKAY_TWEEN_SEQUENCE_H__
 #define __OKAY_TWEEN_SEQUENCE_H__
 
+#include <okay/core/tween/i_okay_tween.hpp>
 #include <memory>
 #include <vector>
-#include "okay/core/tween/i_okay_tween.hpp"
 
 /**
   * @brief Sequence of composed tweens; control lifetime of multiple tweens together.

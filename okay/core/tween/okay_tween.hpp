@@ -1,15 +1,15 @@
-#ifndef __TWEEN_H__
-#define __TWEEN_H__
+#ifndef __OKAY_TWEEN_H__
+#define __OKAY_TWEEN_H__
+
+#include <okay/core/okay.hpp>
+#include <okay/core/logging/okay_logger.hpp>
+#include <okay/core/tween/okay_tween_engine.hpp>
+#include <okay/core/tween/i_okay_tween.hpp>
+#include <okay/core/tween/okay_tween_easing.hpp>
 
 #include <cstdint>
 #include <cmath>
 #include <memory>
-#include <okay/core/okay.hpp>
-#include <okay/core/logging/okay_logger.hpp>
-#include "okay/core/tween/okay_tween_engine.hpp"
-#include "okay/core/tween/i_okay_tween.hpp"
-#include "okay/core/tween/okay_tween_easing.hpp"
-#include "okay_tween_engine.hpp"
 
 namespace okay {
 
@@ -210,6 +210,6 @@ class OkayTween : public IOkayTween {
     std::function<void()> _onLoop;
 };
 
-}; // namespace okay
+} // namespace okay
 
 #endif
