@@ -1,6 +1,9 @@
 #ifndef __I_OKAY_TWEEN_ENGINE_H__
 #define __I_OKAY_TWEEN_ENGINE_H__
 
+
+namespace okay {
+
 /**
  * @brief Interface for OkayTween dependency injection
  */
@@ -15,5 +18,7 @@ class IOkayTween {
     virtual void kill() = 0;
     virtual ~IOkayTween() = default;
 };
+
+} // namespace okay
 
 #endif

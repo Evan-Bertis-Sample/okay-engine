@@ -58,7 +58,7 @@ void OkayTweenSequence::kill() {
 
     _sequence.clear();
 
-    okay::Engine.logger.debug("Size: {}", _sequence.size());
+    // okay::Engine.logger.debug("Size: {}", _sequence.size());
 }
 
 void OkayTweenSequence::removeTween(std::uint64_t index) {
