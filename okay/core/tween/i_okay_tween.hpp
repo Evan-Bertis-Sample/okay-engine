@@ -12,7 +12,7 @@ class IOkayTween {
     virtual void start() = 0;
     virtual void tick() = 0;
     virtual bool isFinished() = 0;
-    virtual void endTween() = 0;
+    virtual void end() = 0;
     virtual void pause() = 0;
     virtual void resume() = 0;
     virtual void kill() = 0;

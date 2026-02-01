@@ -25,6 +25,8 @@ namespace okay {
           */
         void start();
 
+        void tick();
+
         /**
           * @brief Call pause() on all tweens in _sequence; filter out ended tweens.
           */
@@ -39,9 +41,12 @@ namespace okay {
           * @brief Call kill() on all tweens in _sequence; clear _sequence.
           */
         void kill();
+
+
        
        private:
         std::vector<std::shared_ptr<IOkayTween>> _sequence;
+        std::uint32_t _index { 0 };
 
         /**
           * @brief Erase tween ptr from _activeTweens at given index.

@@ -31,9 +31,15 @@ concept Tweenable = requires(T t) {
   * @param easingFn The easing function to apply on the tween
   * @param numLoops The number of times the tween should loop
   * @param inOutBack Whether the tween should in-out-back
+  * @param buffer The amount of wait time before tweening begins
+  * @param onUpdate Callback for every time tween is updated
+  * @param onEnd Callback for when the tween ends
+  * @param onPause Callback for when the tween pauses
+  * @param onResume Callback for when the tween resumes
+  * @param onLoop Callback for when the tween completes a loop
  */
 template <Tweenable T>
-class OkayTween : public IOkayTween {
+class OkayTween : public IOkayTween, public std::enable_shared_from_this<OkayTween<T>> {
    public:
     OkayTween() = default;
 
@@ -44,6 +50,7 @@ class OkayTween : public IOkayTween {
               std::int64_t numLoops = 0,
               bool inOutBack = false,
               std::int32_t buffer = 0,
+              std::function<void()> onUpdate = [](){},
               std::function<void()> onEnd = [](){},
               std::function<void()> onPause = [](){},
               std::function<void()> onResume = [](){},
@@ -57,6 +64,7 @@ class OkayTween : public IOkayTween {
           _numLoops { numLoops },
           _inOutBack { inOutBack },
           _buffer { buffer },
+          _onUpdate { onUpdate },
           _onEnd { onEnd },
           _onPause { onPause },
           _onResume { onResume },
@@ -70,19 +78,19 @@ class OkayTween : public IOkayTween {
                                                 std::int64_t numLoops = 0,
                                                 bool inOutBack = false,
                                                 std::int32_t buffer = 0,
+                                                std::function<void()> onUpdate = [](){},
                                                 std::function<void()> onEnd = [](){},
                                                 std::function<void()> onPause = [](){},
                                                 std::function<void()> onResume = [](){},
                                                 std::function<void()> onLoop = [](){})
     {
-        auto tweenPtr { std::make_shared<OkayTween<T>>(start, end, duration, easingFn, numLoops, inOutBack, buffer, onEnd, onPause, onResume, onLoop) };
-
-        okay::Engine.systems.getSystemChecked<OkayTweenEngine>()->addTween(tweenPtr);
+        auto tweenPtr { std::make_shared<OkayTween<T>>(start, end, duration, easingFn, numLoops, inOutBack, buffer, onUpdate, onEnd, onPause, onResume, onLoop) };
 
         return tweenPtr;
     }
     
     void start() {
+        okay::Engine.systems.getSystemChecked<OkayTweenEngine>()->addTween(this->shared_from_this());
         _isTweening = true;
     }
 
@@ -106,33 +114,8 @@ class OkayTween : public IOkayTween {
             
             std::float_t step = _easingFn(progress);
             _current = START + step * DISPLACEMENT;
+            _onUpdate();
         }
-            
-        // visualize tween in console
-        // if (START < END) {
-        //     std::cout << '\n';
-        //     for (T i { START }; i < _current; i += DISPLACEMENT / 150)
-        //     {
-        //         std::cout << ':';
-        //     }
-        //     std::cout << "O";
-        //     for (T i { _current }; i <= END; i += DISPLACEMENT / 150)
-        //     {
-        //         std::cout << '-';
-        //     }
-        // } else {
-        //     std::cout << '\n';
-        //     for (T i { START }; i > _current; i += DISPLACEMENT / 150)
-        //     {
-        //         std::cout << '-';
-        //     }
-        //     std::cout << "O";
-        //     for (T i { _current }; i >= END; i += DISPLACEMENT / 150)
-        //     {
-        //         std::cout << ':';
-        //     }
-        // }
-        // Engine.logger.debug("val {}", _current);
     }
 
     void pause() {
@@ -179,8 +162,7 @@ class OkayTween : public IOkayTween {
         return false;
     }
 
-    void endTween() {
-        //_current = END;
+    void end() {
         _onEnd();
     }
 
@@ -204,6 +186,7 @@ class OkayTween : public IOkayTween {
     bool _inOutBack;
     bool _isReversing { false };
     std::int32_t _buffer;
+    std::function<void()> _onUpdate;
     std::function<void()> _onEnd;
     std::function<void()> _onPause;
     std::function<void()> _onResume;

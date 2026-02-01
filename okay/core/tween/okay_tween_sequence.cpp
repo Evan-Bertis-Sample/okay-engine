@@ -1,5 +1,6 @@
 #include "okay/core/tween/okay_tween_sequence.hpp"
 #include "okay/core/tween/i_okay_tween.hpp"
+#include <okay/core/okay.hpp> // for erroring
 
 #include <cstdint>
 
@@ -10,45 +11,32 @@ void OkayTweenSequence::append(std::shared_ptr<IOkayTween> tweenPtr) {
 }
 
 void OkayTweenSequence::start() {
-    for (std::shared_ptr<IOkayTween> tween : _sequence) {
-        tween->start();
+    if (_sequence.size() > 0) {
+        _sequence[_index]->start();
+    } else {
+        okay::Engine.logger.error("Sequence is empty\n");
     }
 }
 
-void OkayTweenSequence::pause() {
-    std::vector<std::uint64_t> tweenIndicesToErase;
+void OkayTweenSequence::tick() {
+    if (_index >= _sequence.size()) return;
 
-    for (std::uint64_t i {}; i < _sequence.size(); ++i) {
-        auto tween { _sequence[i] };
-
-        if (tween->isFinished()) {
-            tweenIndicesToErase.push_back(i);
-        } else {
-            tween->pause();
+    if (_sequence[_index]->isFinished()) {
+        _sequence[_index]->kill();
+        ++_index;
+        if (_index < _sequence.size()) {
+            _sequence[_index]->start();
         }
     }
+}
 
-    for (auto it { tweenIndicesToErase.rbegin() }; it != tweenIndicesToErase.rend(); ++it) {
-        removeTween(*it);
-    }
+
+void OkayTweenSequence::pause() {
+    _sequence[_index]->pause();
 }
 
 void OkayTweenSequence::resume() {
-    std::vector<std::uint64_t> tweenIndicesToErase;
-
-    for (std::uint64_t i {}; i < _sequence.size(); ++i) {
-        auto tween { _sequence[i] };
-
-        if (tween->isFinished()) {
-            tweenIndicesToErase.push_back(i);
-        } else {
-            tween->resume();
-        }
-    }
-
-    for (auto it { tweenIndicesToErase.rbegin() }; it != tweenIndicesToErase.rend(); ++it) {
-        removeTween(*it);
-    }
+    _sequence[_index]->resume();
 }
 
 void OkayTweenSequence::kill() {
@@ -57,8 +45,6 @@ void OkayTweenSequence::kill() {
     }
 
     _sequence.clear();
-
-    // okay::Engine.logger.debug("Size: {}", _sequence.size());
 }
 
 void OkayTweenSequence::removeTween(std::uint64_t index) {

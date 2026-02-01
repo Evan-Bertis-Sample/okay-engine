@@ -14,7 +14,7 @@ void OkayTweenEngine::tick() {
         if (!tween->isFinished()) {
             tween->tick();
         } else {
-            tween->endTween();
+            tween->end();
             tweenIndicesToErase.push_back(i);
         }
     }

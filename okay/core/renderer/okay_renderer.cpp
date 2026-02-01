@@ -82,6 +82,8 @@ void OkayRenderer::shutdown() {
     // Cleanup rendering resources here
 }
 
+// rendering functions for tween demo purposes only
+
 void OkayRenderer::setBoxPosition(const glm::vec3& position) {
     _modelBuffer.removeMesh(_model);
     _model = _modelBuffer.addMesh(
