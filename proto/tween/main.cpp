@@ -1,3 +1,4 @@
+#include <concepts>
 #include <memory>
 #include <okay/core/okay.hpp>
 #include <okay/core/renderer/okay_renderer.hpp>
@@ -8,12 +9,15 @@
 
 #include <utility>
 #include "okay/core/tween/okay_tween.hpp"
+#include "okay/core/tween/okay_tween_easing.hpp"
 #include "okay/core/tween/okay_tween_engine.hpp"
 #include "okay/core/tween/okay_tween_sequence.hpp"
 
 static void __gameInitialize();
 static void __gameUpdate();
 static void __gameShutdown();
+
+std::shared_ptr<okay::OkayTween<float>> tween1;
 
 int main() {
     okay::SurfaceConfig surfaceConfig;
@@ -53,14 +57,16 @@ static void __gameInitialize() {
     // seq.append(tween1);
     // seq.append(tween2);
     // seq.start();
-    int n1 { 30 };
-    int n2 { 30 };
-    int n3 { 30 };
+    // int n1 { 30 };
+    // int n2 { 30 };
+    // int n3 { 30 };
     // okay::Engine.logger.debug("TweenEngine size init: {}", sizeof(okay::OkayTweenEngine));
     
-    seq.append(okay::OkayTween<int>::create(n1, 2000, 2000));
-    seq.append(okay::OkayTween<int>::create(n2, 1000));
-    seq.append(okay::OkayTween<int>::create(n3, 400, 4000));
+    tween1 = okay::OkayTween<float>::create(-0.5f, 0.5f, 2000, okay::easing::cubicIn, 2, true);
+    seq.append(tween1);
+    // seq.append(okay::OkayTween<int>::create(n1, 2000, 2000));
+    // seq.append(okay::OkayTween<int>::create(n2, 1000));
+    // seq.append(okay::OkayTween<int>::create(n3, 400, 4000));
     seq.start();
     // okay::Engine.logger.debug("TweenEngine size started: {}", sizeof(okay::OkayTweenEngine));
     // okay::Engine.logger.debug("Tween size started: {}", sizeof(tween))
@@ -70,21 +76,25 @@ static void __gameUpdate() {
     // std::cout << "Game updated." << std::endl;
     // Game update logic
     // okay::Engine.logger.debug("TweenEngine size killed: {}", sizeof(okay::OkayTweenEngine));
-    static int aaa { 0 };
+    // static int aaa { 0 };
 
-    if (aaa == 50)
-    {
-        okay::Engine.logger.debug("pausing!");
-        seq.pause();
-    }
+    // if (aaa == 50)
+    // {
+    //     okay::Engine.logger.debug("pausing!");
+    //     seq.pause();
+    // }
     
-    if (aaa == 100)
-    {
-        okay::Engine.logger.debug("resuming!");
-        seq.resume();
-    }
+    // if (aaa == 100)
+    // {
+    //     okay::Engine.logger.debug("resuming!");
+    //     seq.resume();
+    // }
 
-    ++aaa;
+    // ++aaa;
+    auto* renderer = okay::Engine.systems.getSystemChecked<okay::OkayRenderer>();
+    if (renderer) {
+        renderer->setBoxPosition(glm::vec3(tween1->value(), 0.0f, 0.0f));
+    }
 }
 
 static void __gameShutdown() {

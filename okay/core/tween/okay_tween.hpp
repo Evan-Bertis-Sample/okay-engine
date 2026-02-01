@@ -109,29 +109,29 @@ class OkayTween : public IOkayTween {
         }
             
         // visualize tween in console
-        if (START < END) {
-            std::cout << '\n';
-            for (T i { START }; i < _current; i += DISPLACEMENT / 150)
-            {
-                std::cout << ':';
-            }
-            std::cout << "O";
-            for (T i { _current }; i <= END; i += DISPLACEMENT / 150)
-            {
-                std::cout << '-';
-            }
-        } else {
-            std::cout << '\n';
-            for (T i { START }; i > _current; i += DISPLACEMENT / 150)
-            {
-                std::cout << '-';
-            }
-            std::cout << "O";
-            for (T i { _current }; i >= END; i += DISPLACEMENT / 150)
-            {
-                std::cout << ':';
-            }
-        }
+        // if (START < END) {
+        //     std::cout << '\n';
+        //     for (T i { START }; i < _current; i += DISPLACEMENT / 150)
+        //     {
+        //         std::cout << ':';
+        //     }
+        //     std::cout << "O";
+        //     for (T i { _current }; i <= END; i += DISPLACEMENT / 150)
+        //     {
+        //         std::cout << '-';
+        //     }
+        // } else {
+        //     std::cout << '\n';
+        //     for (T i { START }; i > _current; i += DISPLACEMENT / 150)
+        //     {
+        //         std::cout << '-';
+        //     }
+        //     std::cout << "O";
+        //     for (T i { _current }; i >= END; i += DISPLACEMENT / 150)
+        //     {
+        //         std::cout << ':';
+        //     }
+        // }
         // Engine.logger.debug("val {}", _current);
     }
 
@@ -183,6 +183,8 @@ class OkayTween : public IOkayTween {
         _current = END;
         _onEnd();
     }
+
+    const T& value() const { return _current; }
 
    private:
     // core tween logic

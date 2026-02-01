@@ -41,6 +41,8 @@ class OkayRenderer : public OkaySystem<OkaySystemScope::ENGINE> {
 
     void shutdown() override;
 
+    void setBoxPosition(const glm::vec3& position);
+
    private:
     OkayRendererSettings _settings;
     std::unique_ptr<Surface> _surface;
