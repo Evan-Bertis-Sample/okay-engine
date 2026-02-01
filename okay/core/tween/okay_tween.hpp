@@ -180,7 +180,7 @@ class OkayTween : public IOkayTween {
     }
 
     void endTween() {
-        _current = END;
+        //_current = END;
         _onEnd();
     }
 
