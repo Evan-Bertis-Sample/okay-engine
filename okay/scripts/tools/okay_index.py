@@ -39,7 +39,8 @@ def main(args):
 
     include_subpaths = [
         ".",  # <okay/...>
-        "okay/vendor/",  # <glad/...>
+        "okay/vendor/",
+        "okay/vendor/glad/include",  # <glad/...>
         "okay/vendor/glm",  # <glm/...>
         "okay/vendor/glfw/include",  # <GLFW/...>
     ]

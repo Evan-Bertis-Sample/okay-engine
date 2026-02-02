@@ -1,5 +1,7 @@
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
+#include <glad/glad.h>
+#include <iostream>
 #include <gbm.h>
 #include <unistd.h>
 #include <xf86drm.h>
@@ -11,7 +13,7 @@
 #include <stdexcept>
 
 #ifndef DRM_DEVICE_PATH
-#define DRM_DEVICE_PATH "/dev/dri/card0"
+#define DRM_DEVICE_PATH "/dev/dri/card1"
 #endif
 
 namespace {
@@ -91,6 +93,12 @@ void Surface::initialize() {
     // open DRM
     _impl->drmFd = open(DRM_DEVICE_PATH, O_RDWR | O_CLOEXEC);
     if (_impl->drmFd < 0) throw std::runtime_error("open DRM device failed");
+
+    // Set master
+    if (drmSetMaster(_impl->drmFd) != 0) {
+        std::cerr << "drmSetMaster failed" << std::endl;
+        throw std::runtime_error("drmSetMaster failed");
+    }
 
     _impl->res = drmModeGetResources(_impl->drmFd);
     if (!_impl->res) throw std::runtime_error("drmModeGetResources failed");
@@ -180,6 +188,10 @@ void Surface::initialize() {
         throw std::runtime_error("eglMakeCurrent failed");
 
     eglSwapInterval(_impl->dpy, _impl->cfg.vsync ? 1 : 0);
+
+    if (!gladLoadGL()) {
+        std::cout << "Failed to initialize GLAD" << std::endl;
+    }
 }
 
 bool Surface::shouldClose() const {

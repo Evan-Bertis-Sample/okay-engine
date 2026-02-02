@@ -1,5 +1,6 @@
 #include "okay_renderer.hpp"
 #include "okay/core/util/result.hpp"
+#include "okay_primitive.hpp"
 #include "okay_render_world.hpp"
 
 using namespace okay;
@@ -33,7 +34,12 @@ void OkayRenderer::initialize() {
     shader.passDirtyUniforms();
 
     // set mesh data
-    _model = _modelBuffer.addMesh(primitives::box().sizeSet({0.1f, 0.1f, 0.1f}).build());
+    // _model = _modelBuffer.addMesh(primitives::box().sizeSet({0.1f, 0.1f, 0.1f}).build());
+    _model = _modelBuffer.addMesh(
+        primitives::uvSphere()
+            .radiusSet(0.1f)
+            .build()
+    );
 
     Failable meshBufferSetup =
         runAll(DEFER(_modelBuffer.initVertexAttributes()), DEFER(_modelBuffer.bindMeshData()));

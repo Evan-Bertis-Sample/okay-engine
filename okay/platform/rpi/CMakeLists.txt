@@ -6,7 +6,7 @@ pkg_check_modules(GBM REQUIRED gbm)
 pkg_check_modules(DRM REQUIRED libdrm)
 pkg_check_modules(EGL REQUIRED egl)
 
-target_include_directories()(okay_platform PRIVATE
+target_include_directories(okay_platform PRIVATE
     ${GBM_INCLUDE_DIRS}
     ${DRM_INCLUDE_DIRS}
     ${EGL_INCLUDE_DIRS}
