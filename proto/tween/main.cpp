@@ -16,9 +16,6 @@ static void __gameInitialize();
 static void __gameUpdate();
 static void __gameShutdown();
 
-std::shared_ptr<okay::OkayTween<float>> tween1;
-std::shared_ptr<okay::OkayTween<float>> tween2;
-
 int main() {
     okay::SurfaceConfig surfaceConfig;
     okay::Surface surface(surfaceConfig);
@@ -41,6 +38,10 @@ int main() {
     return 0;
 }
 
+std::shared_ptr<okay::OkayTween<float>> tween1;
+std::shared_ptr<okay::OkayTween<float>> tween2;
+std::shared_ptr<okay::OkayTween<float>> tween3;
+std::shared_ptr<okay::OkayTween<float>> tween4;
 okay::OkayTweenSequence seq;
 
 static void __gameInitialize() {
@@ -57,10 +58,22 @@ static void __gameInitialize() {
     tween2 = okay::OkayTween<float>::create(-0.5f, 0.5f, 2000, okay::easing::bounceIn, 
         0, true, 0, [&]() {
             auto* renderer = okay::Engine.systems.getSystemChecked<okay::OkayRenderer>();
-            renderer->setBoxPosition(glm::vec3(tween2->value(), 0.0f, 0.0f));
+            renderer->setBoxPosition(glm::vec3(0.0f, tween2->value(), 0.0f));
+        });
+    tween3 = okay::OkayTween<float>::create(-0.5f, 0.5f, 2000, okay::easing::backInOut, 
+        1, true, 0, [&]() {
+            auto* renderer = okay::Engine.systems.getSystemChecked<okay::OkayRenderer>();
+            renderer->setBoxPosition(glm::vec3(tween3->value(), tween3->value(), 0.0f));
+        });
+    tween4 = okay::OkayTween<float>::create(-0.5f, 0.5f, 2000, okay::easing::quadOut, 
+        0, true, 0, [&]() {
+            auto* renderer = okay::Engine.systems.getSystemChecked<okay::OkayRenderer>();
+            renderer->setBoxPosition(glm::vec3(0.0f, tween4->value(), 0.0f));
         });
     seq.append(tween1);
     seq.append(tween2);
+    seq.append(tween3);
+    seq.append(tween4);
 
     seq.start();
 }
