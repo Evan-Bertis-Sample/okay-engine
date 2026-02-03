@@ -18,12 +18,15 @@ class OkayMaterial;
 
 class OkayShader {
    public:
+    static constexpr std::uint32_t invalidID() {
+        return 0xFFFFFFFFu;
+    }
+
     OkayShader(const std::string& vertexSource, const std::string& fragmentSource)
         : vertexShader(std::move(vertexSource)),
           fragmentShader(std::move(fragmentSource)),
           _shaderProgram(0),
-          _state(ShaderState::NOT_COMPILED),
-    {
+          _state(ShaderState::NOT_COMPILED) {
         std::hash<std::string> hasher;
         _id = hasher(vertexShader + fragmentShader);
     }
@@ -33,15 +36,18 @@ class OkayShader {
           fragmentShader(""),
           _shaderProgram(0),
           _state(ShaderState::NOT_COMPILED),
-          _id(1) {
+          _id(invalidID()) {
     }
 
     std::string vertexShader;
     std::string fragmentShader;
 
     Failable compile();
-
     Failable set();
+
+    bool isNone() const {
+        return _id == invalidID();
+    }
 
     ShaderState state() const {
         return _state;
@@ -55,6 +61,36 @@ class OkayShader {
         return _shaderProgram;
     }
 
+    // enable move semantics
+    OkayShader(OkayShader&& other) : _shaderProgram(other._shaderProgram), _state(other._state), _id(other._id) {}
+
+    OkayShader& operator=(OkayShader&& other) {
+        _shaderProgram = other._shaderProgram;
+        _state = other._state;
+        _id = other._id;
+        return *this;
+    }
+
+    // enable copy semantics
+    OkayShader(const OkayShader& other) : _shaderProgram(other._shaderProgram), _state(other._state), _id(other._id) {}
+
+    OkayShader& operator=(const OkayShader& other) {
+        _shaderProgram = other._shaderProgram;
+        _state = other._state;
+        _id = other._id;
+        return *this;
+    }
+
+    // enable equality operator
+    bool operator==(const OkayShader& other) const {
+        return _shaderProgram == other._shaderProgram && _state == other._state && _id == other._id;
+    }
+
+    // enable inequality operator
+    bool operator!=(const OkayShader& other) const {
+        return !(*this == other);
+    }
+
    private:
     GLuint _shaderProgram;
     ShaderState _state;
@@ -63,11 +99,25 @@ class OkayShader {
 
 class OkayMaterial {
    public:
-    std::unique_ptr<IOkayMaterialUniformCollection> uniforms;
+    static constexpr std::uint32_t invalidID() {
+        return 0xFFFFFFFFu;
+    }
+
+    
+    OkayMaterial() : _id(invalidID()) {}
+    
+    OkayMaterial(const OkayShader& shader, std::unique_ptr<IOkayMaterialUniformCollection> uniforms)
+    : _shader(shader), _uniforms(std::move(uniforms)) {
+    }
+    
+    bool isNone() const {
+        return _id == invalidID();
+    }
 
     std::uint32_t id() const {
         return _id;
     }
+    
     std::uint32_t shaderID() const {
         return _shader.id();
     }
@@ -79,12 +129,39 @@ class OkayMaterial {
     }
 
     void passUniforms() {
-        uniforms->setUniforms(_shader.programID());
+        _uniforms->setUniforms(_shader.programID());
     }
 
-   private:
+    // enable move semantics
+    OkayMaterial(OkayMaterial&& other) : _shader(std::move(other._shader)), _id(other._id) {}
+    OkayMaterial& operator=(OkayMaterial&& other) {
+        _shader = std::move(other._shader);
+        _id = other._id;
+        return *this;
+    }
+
+    OkayMaterial(const OkayMaterial& other) : _shader(other._shader), _id(other._id) {}
+
+    // enable copy semantics
+    OkayMaterial& operator=(const OkayMaterial& other) {
+        _shader = other._shader;
+        _id = other._id;
+        return *this;
+    }
+
+    // equality operator
+    bool operator==(const OkayMaterial& other) const {
+        return _shader == other._shader && _id == other._id;
+    }
+
+    bool operator!=(const OkayMaterial& other) const {
+        return !(*this == other);
+    }
+
+    private:
     OkayShader _shader;
-    std::size_t _id{0};
+    std::size_t _id{invalidID()};
+    std::unique_ptr<IOkayMaterialUniformCollection> _uniforms;
 
     void setMaterial() {
         setShader();

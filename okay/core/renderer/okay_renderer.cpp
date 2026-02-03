@@ -1,6 +1,7 @@
 #include "okay_renderer.hpp"
 #include "okay/core/util/result.hpp"
 #include "okay_primitive.hpp"
+#include "okay_render_pipeline.hpp"
 #include "okay_render_world.hpp"
 
 using namespace okay;
@@ -16,6 +17,10 @@ void OkayRenderer::initialize() {
         while (true) {
         }
     }
+
+    _renderTargetPool.initializeBuiltins();
+    _pipeline.initialize();
+    _pipeline.resize(_settings.surfaceConfig.width, _settings.surfaceConfig.height);
 }
 
 void OkayRenderer::postInitialize() {
@@ -37,6 +42,8 @@ void OkayRenderer::tick() {
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
+    OkayRenderContext context{_world, _renderTargetPool};
+    _pipeline.render(context);
     _surface->swapBuffers();
 }
 

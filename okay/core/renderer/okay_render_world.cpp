@@ -34,12 +34,12 @@ OkayRenderEntity OkayRenderWorld::ChildIterator::operator->() const {
 
 OkayRenderEntity::Properties::~Properties() {
     // submit to render world for update
-    _owner.updateEntity(_renderItem, std::move(*this));
+    _owner->updateEntity(_renderItem, std::move(*this));
 }
 
 OkayRenderEntity::Properties OkayRenderEntity::operator*() const {
     Properties p(_owner, _renderItem);
-    const OkayRenderItem& item = _owner.getRenderItem(_renderItem);
+    const OkayRenderItem& item = _owner->getRenderItem(_renderItem);
     p.material = item.material;
     p.mesh = item.mesh;
     p.transform = item.transform;
@@ -124,13 +124,11 @@ void OkayRenderWorld::rebuildTransforms() {
 
 void OkayRenderWorld::rebuildMaterials() {
     // resort the _memoizedRenderItems based on the sort key of the render item
-    std::sort(
-        _memoizedRenderItems.begin(),
-        _memoizedRenderItems.end(),
-        [this](const RenderItemHandle& a, const RenderItemHandle& b) { 
-            return getRenderItem(a).sortKey < getRenderItem(b).sortKey;
-        }
-    );
+    std::sort(_memoizedRenderItems.begin(),
+              _memoizedRenderItems.end(),
+              [this](const RenderItemHandle& a, const RenderItemHandle& b) {
+                  return getRenderItem(a).sortKey < getRenderItem(b).sortKey;
+              });
 }
 
 void OkayRenderWorld::handleDirtyMesh(RenderItemHandle dirtyEntity) {
@@ -159,7 +157,7 @@ const std::vector<RenderItemHandle>& OkayRenderWorld::getRenderItems() {
 }
 
 OkayRenderEntity OkayRenderWorld::addRenderEntity(const OkayTransform& transform,
-                                                  OkayMaterial* material,
+                                                  const OkayMaterial& material,
                                                   const OkayMesh& mesh,
                                                   OkayRenderEntity parent) {
     RenderItemHandle handle = _renderItemPool.emplace(material, mesh);
@@ -171,7 +169,7 @@ OkayRenderEntity OkayRenderWorld::addRenderEntity(const OkayTransform& transform
     item.material = material;
     item.mesh = mesh;
 
-    OkayRenderEntity entity(*this, handle);
+    OkayRenderEntity entity(this, handle);
 
     // set up parent-child relationship
     if (parent._renderItem != RenderItemHandle::invalidHandle()) {
@@ -179,7 +177,7 @@ OkayRenderEntity OkayRenderWorld::addRenderEntity(const OkayTransform& transform
         if (f.isError()) {
             // failed to add child, clean up and return invalid entity
             _renderItemPool.destroy(handle);
-            return OkayRenderEntity(*this, RenderItemHandle::invalidHandle());
+            return OkayRenderEntity(this, RenderItemHandle::invalidHandle());
         }
     }
 
@@ -273,8 +271,8 @@ void OkayRenderWorld::updateEntity(RenderItemHandle renderItem,
 
 // OkayRenderItem
 
-OkayRenderItem::OkayRenderItem(OkayMaterial* mat, OkayMesh m) : material(mat), mesh(m) {
-    if (!mat || mesh.isEmpty()) {
+OkayRenderItem::OkayRenderItem(OkayMaterial mat, OkayMesh m) : material(mat), mesh(m) {
+    if (mat.isNone() || mesh.isEmpty()) {
         sortKey = std::numeric_limits<std::uint64_t>::max();
     } else {
         // 64 bit sort key
@@ -282,7 +280,7 @@ OkayRenderItem::OkayRenderItem(OkayMaterial* mat, OkayMesh m) : material(mat), m
         // lower bits are material id
         // this has the effect such that when you sort by sort key, materials are sorted into shader
         // buckets
-        sortKey = (static_cast<std::uint64_t>(mat->shaderID()) << 32) |
-                  static_cast<std::uint64_t>(mat->id());
+        sortKey = (static_cast<std::uint64_t>(mat.shaderID()) << 32) |
+                  static_cast<std::uint64_t>(mat.id());
     }
 }

@@ -7,8 +7,6 @@
 #include <okay/core/util/result.hpp>
 #include <okay/core/util/type.hpp>
 #include <okay/core/renderer/okay_texture.hpp>
-#include <sstream>
-#include <tuple>
 #include <type_traits>
 
 namespace okay {
@@ -42,32 +40,33 @@ constexpr UniformKind kindFromType() {
 }
 
 template <class T>
-Failable set(GLuint uniformLoc, T value) {
+Failable set(GLuint uniformLoc, const T& value) {
     constexpr UniformKind kind = kindFromType<T>();
 
-    // Set the uniform value
     if constexpr (kind == UniformKind::FLOAT) {
-        glUniform1f(location(), get());
+        glUniform1f(uniformLoc, value);
     } else if constexpr (kind == UniformKind::INT) {
-        glUniform1i(location(), get());
+        glUniform1i(uniformLoc, value);
     } else if constexpr (kind == UniformKind::VEC2) {
-        glUniform2fv(location(), 1, &get().x);
+        glUniform2fv(uniformLoc, 1, &value.x);
     } else if constexpr (kind == UniformKind::VEC3) {
-        glUniform3fv(location(), 1, &get().x);
+        glUniform3fv(uniformLoc, 1, &value.x);
     } else if constexpr (kind == UniformKind::VEC4) {
-        glUniform4fv(location(), 1, &get().x);
+        glUniform4fv(uniformLoc, 1, &value.x);
     } else if constexpr (kind == UniformKind::MAT3) {
-        glUniformMatrix3fv(location(), 1, GL_FALSE, &get()[0][0]);
+        glUniformMatrix3fv(uniformLoc, 1, GL_FALSE, &value[0][0]);
     } else if constexpr (kind == UniformKind::MAT4) {
-        glUniformMatrix4fv(location(), 1, GL_FALSE, &get()[0][0]);
+        glUniformMatrix4fv(uniformLoc, 1, GL_FALSE, &value[0][0]);
     } else if constexpr (kind == UniformKind::TEXTURE) {
-        // Texture binding handled elsewhere
-        return Failable::errorResult("Direct setting of texture uniforms is not supported");
+        return Failable::errorResult("Texture uniforms are bound via samplers/units elsewhere");
     } else if constexpr (kind == UniformKind::VOID) {
-        // No action needed
+        // no-op
     } else {
         return Failable::errorResult("Unsupported uniform type");
     }
+
+    return Failable::ok({});
+}
 
 };  // namespace uni
 
@@ -138,6 +137,21 @@ struct TemplatedMaterialUniform {
         return Failable::ok({});
     }
 
+    bool operator==(const TemplatedMaterialUniform& other) const {
+        return _value == other._value && nameView() == other.nameView();
+    }
+
+    // set operators
+    TemplatedMaterialUniform& operator=(const T& value) {
+        set(value);
+        return *this;
+    }
+
+    TemplatedMaterialUniform& operator=(const TemplatedMaterialUniform& other) {
+        set(other._value);
+        return *this;
+    }
+
    private:
     T _value{};
     bool _dirty{true};
@@ -151,6 +165,59 @@ class IOkayMaterialUniformCollection {
     virtual bool markAllDirty() = 0;
 };
 
-}  // namespace okay
+template <class Derived>
+class OkayMaterialUniformCollection : public IOkayMaterialUniformCollection {
+   public:
+    Failable setUniforms(GLuint shaderProgram) override {
+        auto& d = static_cast<Derived&>(*this);
+
+        Failable out = Failable::ok({});
+        tupleForEach(d.uniformRefs(), [&](auto& u) {
+            if (out.isError())
+                return;  // stop on first error
+            auto r = u.passUniform(shaderProgram);
+            if (r.isError())
+                out = r;
+        });
+        return out;
+    }
+
+    Failable findLocations(GLuint shaderProgram) override {
+        auto& d = static_cast<Derived&>(*this);
+
+        Failable out = Failable::ok({});
+        tupleForEach(d.uniformRefs(), [&](auto& u) {
+            if (out.isError())
+                return;
+            auto r = u.findLocation(shaderProgram);
+            if (r.isError())
+                out = r;
+        });
+        return out;
+    }
+
+    bool markAllDirty() override {
+        auto& d = static_cast<Derived&>(*this);
+
+        bool any = false;
+        tupleForEach(d.uniformRefs(), [&](auto& u) {
+            u.markDirty();
+            any = true;
+        });
+        return any;
+    }
+};
+
+struct BaseMaterialUniforms : public OkayMaterialUniformCollection<BaseMaterialUniforms> {
+    TemplatedMaterialUniform<glm::mat4, FixedString("u_modelMatrix")> modelMatrix{};
+    TemplatedMaterialUniform<glm::mat4, FixedString("u_viewMatrix")> viewMatrix{};
+    TemplatedMaterialUniform<glm::mat4, FixedString("u_projectionMatrix")> projectionMatrix{};
+
+    auto uniformRefs() {
+        return std::tie(modelMatrix, viewMatrix, projectionMatrix);
+    }
+};
+
+};  // namespace okay
 
 #endif  // __OKAY_UNIFORM_H__

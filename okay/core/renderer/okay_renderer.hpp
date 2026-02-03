@@ -12,6 +12,7 @@
 #include <okay/core/util/singleton.hpp>
 #include <okay/core/renderer/okay_render_world.hpp>
 #include "okay_render_pipeline.hpp"
+#include "okay_render_target.hpp"
 
 namespace okay {
 
@@ -29,10 +30,7 @@ class OkayRenderer : public OkaySystem<OkaySystemScope::ENGINE> {
         : _settings(settings), _surface(std::make_unique<Surface>(settings.surfaceConfig)) {
     }
 
-    using TestMaterialUniforms =
-        TemplatedMaterialUniformCollection<OkayMaterialUniform<glm::vec3, FixedString("u_color")>>;
-
-    OkayShader<TestMaterialUniforms> shader;
+    OkayShader shader;
 
     void initialize() override;
     void postInitialize() override;
@@ -52,16 +50,11 @@ class OkayRenderer : public OkaySystem<OkaySystemScope::ENGINE> {
     OkayRenderWorld _world;
     OkayMeshBuffer _meshBuffer;
     OkayRenderPipeline _pipeline;
+    OkayRenderTargetPool _renderTargetPool;
     std::unique_ptr<Surface> _surface;
 
     // dirty flags
     bool _meshBufferDirty{false};
-
-    template <class UniformCollection>
-    Failable setupShader(OkayShader<UniformCollection>& shader) {
-        return runAll(
-            DEFER(shader.compile()), DEFER(shader.set()), DEFER(shader.findUniformLocations()));
-    }
 };
 
 }  // namespace okay

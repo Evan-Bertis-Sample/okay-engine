@@ -110,10 +110,10 @@ class OkayRenderWorld;
 using RenderItemHandle = ObjectPoolHandle;
 
 struct OkayRenderItem {
-    OkayMaterial* material{nullptr};
-    OkayMesh mesh{};
-    OkayTransform transform{};
-    std::uint64_t sortKey{0};
+    OkayMaterial material;
+    OkayMesh mesh;
+    OkayTransform transform;
+    std::uint64_t sortKey;
     glm::mat4 worldMatrix{1.0f};
 
     RenderItemHandle parent{RenderItemHandle::invalidHandle()};
@@ -122,8 +122,7 @@ struct OkayRenderItem {
     RenderItemHandle nextSibling{RenderItemHandle::invalidHandle()};
 
     OkayRenderItem() = default;
-
-    OkayRenderItem(OkayMaterial* mat, OkayMesh m);
+    OkayRenderItem(OkayMaterial mat, OkayMesh m);
 
     // operator overloads for std::map
     bool operator<(const OkayRenderItem& other) const {
@@ -157,7 +156,7 @@ struct OkayRenderEntity {
         friend class OkayRenderEntity;
         friend class OkayRenderWorld;
 
-        OkayMaterial* material{nullptr};
+        OkayMaterial material;
         OkayTransform transform{};
         OkayMesh mesh{};
 
@@ -173,16 +172,18 @@ struct OkayRenderEntity {
 
        private:
         RenderItemHandle _renderItem{RenderItemHandle::invalidHandle()};
-        OkayRenderWorld& _owner;
+        OkayRenderWorld* _owner;
 
-        Properties(OkayRenderWorld& owner, RenderItemHandle renderItem)
+        Properties(OkayRenderWorld* owner, RenderItemHandle renderItem)
             : _owner(owner), _renderItem(renderItem) {
         }
     };
 
     friend class OkayRenderWorld;
 
-    OkayRenderEntity(OkayRenderWorld& owner, RenderItemHandle renderItem)
+    constexpr OkayRenderEntity() = default;
+
+    OkayRenderEntity(OkayRenderWorld *owner, RenderItemHandle renderItem)
         : _owner(owner), _renderItem(renderItem) {
     }
 
@@ -202,7 +203,7 @@ struct OkayRenderEntity {
     }
 
    private:
-    OkayRenderWorld& _owner;
+    OkayRenderWorld* _owner{nullptr};
     RenderItemHandle _renderItem{RenderItemHandle::invalidHandle()};
 };
 
@@ -246,19 +247,23 @@ class OkayRenderWorld {
         }
     };
 
+    OkayCamera& camera() {
+        return _camera;
+    }
+
     ChildRange children(OkayRenderEntity parent);
     const ChildRange children(OkayRenderEntity parent) const;
 
     OkayRenderEntity addRenderEntity(const OkayTransform& transform,
-                                     OkayMaterial* material,
+                                     const OkayMaterial& material,
                                      const OkayMesh& mesh,
                                      OkayRenderEntity parent);
 
     OkayRenderEntity addRenderEntity(const OkayTransform& transform,
-                                     OkayMaterial* material,
+                                     const OkayMaterial& material,
                                      const OkayMesh& mesh) {
         return addRenderEntity(
-            transform, material, mesh, OkayRenderEntity(*this, RenderItemHandle::invalidHandle()));
+            transform, material, mesh, OkayRenderEntity(this, RenderItemHandle::invalidHandle()));
     }
 
     const std::vector<RenderItemHandle>& getRenderItems();
@@ -267,7 +272,7 @@ class OkayRenderWorld {
     }
 
     OkayRenderEntity getRenderEntity(RenderItemHandle handle) {
-        return OkayRenderEntity(*this, handle);
+        return OkayRenderEntity(this, handle);
     }
 
     void updateEntity(RenderItemHandle renderItem, const OkayRenderEntity::Properties&& properties);
@@ -280,6 +285,7 @@ class OkayRenderWorld {
     std::vector<RenderItemHandle> _memoizedRenderItems;
     std::set<RenderItemHandle> _dirtyTransforms;
     bool _needsMaterialRebuild{true};
+    OkayCamera _camera;
 
     void rebuildTransforms();
     void rebuildMaterials();

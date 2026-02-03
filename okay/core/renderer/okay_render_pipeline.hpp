@@ -11,7 +11,6 @@ namespace okay {
 
 struct OkayRenderContext {
     OkayRenderWorld& world;
-    OkayCamera& camera;
     OkayRenderTargetPool& renderTargetPool;
 };
 
@@ -26,9 +25,30 @@ class IOkayRenderPass {
 };
 
 class OkayRenderPipeline {
+   public:
     void addPass(std::unique_ptr<IOkayRenderPass> pass) {
         _passes.push_back(std::move(pass));
     }
+
+    void initialize() {
+        for (auto& pass : _passes) {
+            pass->initialize();
+        }
+    }
+
+    void resize(int newWidth, int newHeight) {
+        for (auto& pass : _passes) {
+            pass->resize(newWidth, newHeight);
+        }
+    }
+
+    void render(const OkayRenderContext& context) {
+        for (auto& pass : _passes) {
+            pass->render(context);
+        }
+    }
+
+    const std::vector<std::unique_ptr<IOkayRenderPass>>& passes() const { return _passes; }
 
    private:
     std::vector<std::unique_ptr<IOkayRenderPass>> _passes;
