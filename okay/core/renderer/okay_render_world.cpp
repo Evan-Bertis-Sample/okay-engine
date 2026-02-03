@@ -1,4 +1,6 @@
 #include "okay_render_world.hpp"
+#include <queue>
+#include "glm/ext/matrix_transform.hpp"
 
 using namespace okay;
 
@@ -66,9 +68,69 @@ const OkayRenderWorld::ChildRange OkayRenderWorld::children(OkayRenderEntity par
 
 void OkayRenderWorld::rebuildTransforms() {
     // iterate through the dirty entities, and update their transforms
+
+    // first, filter through the transforms
+    // if any transform is in the same subtree as another dirty transform,
+    // take the one higher in the tree
+    std::queue<RenderItemHandle> workList;
+
+    for (RenderItemHandle current : _dirtyTransforms) {
+        RenderItemHandle parent = _renderItemPool.get(current).parent;
+        bool foundParent = false;
+
+        while (parent != RenderItemHandle::invalidHandle()) {
+            if (_dirtyTransforms.find(parent) != _dirtyTransforms.end()) {
+                current = parent;
+                parent = _renderItemPool.get(current).parent;
+            } else {
+                foundParent = true;
+                break;
+            }
+        }
+
+        if (!foundParent) {
+            // this is a top-level transform
+            // update it's worldMatrix and add it to the worklist
+            OkayRenderItem& item = _renderItemPool.get(current);
+            glm::mat4 parentMat = item.parent == RenderItemHandle::invalidHandle()
+                                      ? glm::identity<glm::mat4>()
+                                      : _renderItemPool.get(item.parent).worldMatrix;
+
+            item.worldMatrix = parentMat * item.transform.toMatrix();
+
+            workList.push(current);
+        }
+    }
+
+    // now recalculate the model matrix for each transform
+    while (!workList.empty()) {
+        RenderItemHandle root = workList.front();
+        workList.pop();
+
+        OkayRenderItem& rootItem = _renderItemPool.get(root);
+        glm::mat4 rootMat = rootItem.transform.toMatrix();
+
+        // update the children
+        RenderItemHandle current = rootItem.firstChild;
+        while (current != RenderItemHandle::invalidHandle()) {
+            OkayRenderItem& child = _renderItemPool.get(current);
+            glm::mat4 childMat = child.transform.toMatrix();
+            child.worldMatrix = rootMat * childMat;
+            workList.push(current);
+            current = child.nextSibling;
+        }
+    }
 }
 
 void OkayRenderWorld::rebuildMaterials() {
+    // resort the _memoizedRenderItems based on the sort key of the render item
+    std::sort(
+        _memoizedRenderItems.begin(),
+        _memoizedRenderItems.end(),
+        [this](const RenderItemHandle& a, const RenderItemHandle& b) { 
+            return getRenderItem(a).sortKey < getRenderItem(b).sortKey;
+        }
+    );
 }
 
 void OkayRenderWorld::handleDirtyMesh(RenderItemHandle dirtyEntity) {
@@ -81,20 +143,17 @@ void OkayRenderWorld::handleDirtyMaterial(RenderItemHandle dirtyEntity) {
 
 void OkayRenderWorld::handleDirtyTransform(RenderItemHandle dirtyEntity) {
     // is the entity already in the dirty set?
-    if (_dirtyEntities.find(dirtyEntity) != _dirtyEntities.end()) {
+    if (_dirtyTransforms.find(dirtyEntity) != _dirtyTransforms.end()) {
         return;
     }
 
-    _dirtyEntities.insert(dirtyEntity);
-
-    for (OkayRenderEntity child : children(OkayRenderEntity(*this, dirtyEntity)))
-        handleDirtyTransform(child._renderItem);
+    _dirtyTransforms.insert(dirtyEntity);
 }
 
-const std::vector<const OkayRenderItem*>& OkayRenderWorld::getRenderItems() {
+const std::vector<RenderItemHandle>& OkayRenderWorld::getRenderItems() {
     if (_needsMaterialRebuild)
         rebuildMaterials();
-    if (!_dirtyEntities.empty())
+    if (!_dirtyTransforms.empty())
         rebuildTransforms();
     return _memoizedRenderItems;
 }
@@ -104,6 +163,8 @@ OkayRenderEntity OkayRenderWorld::addRenderEntity(const OkayTransform& transform
                                                   const OkayMesh& mesh,
                                                   OkayRenderEntity parent) {
     RenderItemHandle handle = _renderItemPool.emplace(material, mesh);
+    // add this handle to the _memozedRenderItems vector
+    _memoizedRenderItems.push_back(handle);
     OkayRenderItem& item = _renderItemPool.get(handle);
 
     item.transform = transform;
@@ -121,6 +182,11 @@ OkayRenderEntity OkayRenderWorld::addRenderEntity(const OkayTransform& transform
             return OkayRenderEntity(*this, RenderItemHandle::invalidHandle());
         }
     }
+
+    // add to dirty set
+    handleDirtyTransform(handle);
+    handleDirtyMaterial(handle);
+    handleDirtyMesh(handle);
 
     return entity;
 }
@@ -156,6 +222,9 @@ Failable OkayRenderWorld::addChild(OkayRenderEntity parent, OkayRenderEntity chi
         childItem.nextSibling = oldFirstChild;
     }
 
+    // mark the transforms dirty
+    handleDirtyTransform(parent._renderItem);
+
     return Failable::ok({});
 }
 
@@ -179,7 +248,8 @@ bool OkayRenderWorld::isChildOf(OkayRenderEntity parent, OkayRenderEntity child)
     return false;
 }
 
-void OkayRenderWorld::updateEntity(RenderItemHandle renderItem, const OkayRenderEntity::Properties&& properties) {
+void OkayRenderWorld::updateEntity(RenderItemHandle renderItem,
+                                   const OkayRenderEntity::Properties&& properties) {
     if (!_renderItemPool.valid(renderItem)) {
         return;
     }

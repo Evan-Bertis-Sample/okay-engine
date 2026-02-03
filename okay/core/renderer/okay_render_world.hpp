@@ -192,6 +192,7 @@ class OkayRenderWorld {
 
         ChildRange(ChildIterator b, ChildIterator e) : b(b), e(e) {
         }
+        
     };
 
     ChildRange children(OkayRenderEntity parent);
@@ -209,7 +210,7 @@ class OkayRenderWorld {
             transform, material, mesh, OkayRenderEntity(*this, RenderItemHandle::invalidHandle()));
     }
 
-    const std::vector<const OkayRenderItem*>& getRenderItems();
+    const std::vector<RenderItemHandle>& getRenderItems();
     const OkayRenderItem& getRenderItem(RenderItemHandle handle) const {
         return _renderItemPool.get(handle);
     }
@@ -225,8 +226,8 @@ class OkayRenderWorld {
 
    private:
     ObjectPool<OkayRenderItem> _renderItemPool;
-    std::vector<const OkayRenderItem*> _memoizedRenderItems;
-    std::set<RenderItemHandle> _dirtyEntities;
+    std::vector<RenderItemHandle> _memoizedRenderItems;
+    std::set<RenderItemHandle> _dirtyTransforms;
     bool _needsMaterialRebuild{true};
 
     void rebuildTransforms();

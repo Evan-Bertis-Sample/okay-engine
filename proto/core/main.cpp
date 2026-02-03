@@ -4,6 +4,7 @@
 #include <okay/core/level/okay_level_manager.hpp>
 #include <okay/core/asset/okay_asset.hpp>
 #include <okay/core/logging/okay_logger.hpp>
+#include <okay/core/okay_renderer.hpp>
 
 #include <utility>
 
@@ -35,6 +36,17 @@ int main() {
 static void __gameInitialize() {
     // Additional game initialization logic
     okay::Engine.logger.info("Game initialized.");
+
+    okay::OkayRenderer *renderer = okay::Engine.systems.getSystemChecked<okay::OkayRenderer>();
+
+    okay::OkayMesh mesh = renderer->meshBuffer().addMesh(
+        okay::primitives::box().sizeSet({0.1f, 0.1f, 0.1f}).build()
+    );
+
+    renderer->world().addRenderEntity(
+        okay::OkayTransform(),
+        
+    )
 }
 
 static void __gameUpdate() {
