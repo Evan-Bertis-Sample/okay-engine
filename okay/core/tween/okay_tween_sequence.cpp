@@ -40,9 +40,9 @@ void OkayTweenSequence::resume() {
 }
 
 void OkayTweenSequence::kill() {
-    for (std::shared_ptr<IOkayTween> tween : _sequence) {
+    for (auto& tween : _sequence) {
         tween->kill();
     }
-
     _sequence.clear();
+    _index = 0;
 }

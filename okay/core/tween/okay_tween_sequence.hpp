@@ -21,24 +21,28 @@ namespace okay {
         void append(std::shared_ptr<IOkayTween> tweenPtr);
 
         /**
-          * @brief Call start() on all tweens in _sequence.
+          * @brief Call start() on the first tween in the sequence.
           */
         void start();
-
+        
+        /**
+          * @brief Check if the current tween has ended. If it has move on to the next tween.
+          * Otherwise tick the current tween.
+          */
         void tick();
 
         /**
-          * @brief Call pause() on all tweens in _sequence; filter out ended tweens.
+          * @brief Call pause() on the current tween.
           */
         void pause();
 
         /**
-          * @brief Call resume() on all tweens in _sequence; filter out ended tweens.
+          * @brief Call resume() on the current tween.
           */
         void resume();
 
         /**
-          * @brief Call kill() on all tweens in _sequence; clear _sequence.
+          * @brief Kills all tweens in the sequence.
           */
         void kill();
 
