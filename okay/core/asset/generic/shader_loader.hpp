@@ -37,7 +37,7 @@ struct OkayAssetLoader<OkayShader> {
             assetIO.open(path.string() + ".frag");
 
         if (fragmentStreamRes.isError()) {
-            return Result<OkayShader<Uniforms...>>::errorResult("Failed to open fragment shader: " +
+            return Result<OkayShader>::errorResult("Failed to open fragment shader: " +
                                                                 path.string());
         }
 
