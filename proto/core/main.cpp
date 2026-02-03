@@ -7,10 +7,14 @@
 #include <okay/core/okay_renderer.hpp>
 
 #include <utility>
+#include "okay/core/renderer/okay_material.hpp"
+#include "okay/core/renderer/okay_uniform.hpp"
 
 static void __gameInitialize();
 static void __gameUpdate();
 static void __gameShutdown();
+
+static okay::OkayRenderEntity g_renderEntity;
 
 int main() {
     okay::SurfaceConfig surfaceConfig;
@@ -23,7 +27,8 @@ int main() {
     auto levelManager = okay::OkayLevelManager::create(levelManagerSettings);
 
     okay::OkayGame::create()
-        .addSystems(std::move(renderer), std::move(levelManager),
+        .addSystems(std::move(renderer),
+                    std::move(levelManager),
                     std::make_unique<okay::OkayAssetManager>())
         .onInitialize(__gameInitialize)
         .onUpdate(__gameUpdate)
@@ -37,21 +42,31 @@ static void __gameInitialize() {
     // Additional game initialization logic
     okay::Engine.logger.info("Game initialized.");
 
-    okay::OkayRenderer *renderer = okay::Engine.systems.getSystemChecked<okay::OkayRenderer>();
+    okay::OkayRenderer* renderer = okay::Engine.systems.getSystemChecked<okay::OkayRenderer>();
 
-    okay::OkayMesh mesh = renderer->meshBuffer().addMesh(
-        okay::primitives::box().sizeSet({0.1f, 0.1f, 0.1f}).build()
-    );
+    okay::OkayMesh mesh =
+        renderer->meshBuffer().addMesh(okay::primitives::box().sizeSet({0.1f, 0.1f, 0.1f}).build());
 
-    renderer->world().addRenderEntity(
-        okay::OkayTransform(),
-        
-    )
+    okay::OkayAssetManager* assetManager =
+        okay::Engine.systems.getSystemChecked<okay::OkayAssetManager>();
+    auto shaderLoadRes = assetManager->loadEngineAssetSync<okay::OkayShader>("shaders/test");
+
+    if (!shaderLoadRes) {
+        okay::Engine.logger.error("Failed to load shader: {}", shaderLoadRes.error());
+        return;
+    }
+
+    okay::OkayShader shader = shaderLoadRes.value().asset;
+    okay::OkayMaterial mat =
+        okay::OkayMaterial(shader, std::make_unique<okay::BaseMaterialUniforms>());
+
+    g_renderEntity = renderer->world().addRenderEntity(okay::OkayTransform(), mat, mesh);
 }
 
 static void __gameUpdate() {
     // std::cout << "Game updated." << std::endl;
     // Game update logic
+    g_renderEntity->transform.position.x += 0.01f;
 }
 
 static void __gameShutdown() {
