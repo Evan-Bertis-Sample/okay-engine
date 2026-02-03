@@ -10,6 +10,8 @@
 #include <okay/core/renderer/okay_surface.hpp>
 #include <okay/core/system/okay_system.hpp>
 #include <okay/core/util/singleton.hpp>
+#include <okay/core/renderer/okay_render_world.hpp>
+#include "okay_render_pipeline.hpp"
 
 namespace okay {
 
@@ -24,29 +26,42 @@ class OkayRenderer : public OkaySystem<OkaySystemScope::ENGINE> {
     }
 
     OkayRenderer(const OkayRendererSettings& settings)
-        : _settings(settings), _surface(std::make_unique<Surface>(settings.surfaceConfig)) {}
+        : _settings(settings), _surface(std::make_unique<Surface>(settings.surfaceConfig)) {
+    }
 
     using TestMaterialUniforms =
-        OkayMaterialUniformCollection<OkayMaterialUniform<glm::vec3, FixedString("u_color")>>;
+        TemplatedMaterialUniformCollection<OkayMaterialUniform<glm::vec3, FixedString("u_color")>>;
 
     OkayShader<TestMaterialUniforms> shader;
 
     void initialize() override;
-
     void postInitialize() override;
-
     void tick() override;
-
     void postTick() override;
-
     void shutdown() override;
+
+    OkayRenderWorld& world() {
+        return _world;
+    }
+    OkayMeshBuffer& meshBuffer() {
+        return _meshBuffer;
+    }
 
    private:
     OkayRendererSettings _settings;
+    OkayRenderWorld _world;
+    OkayMeshBuffer _meshBuffer;
+    OkayRenderPipeline _pipeline;
     std::unique_ptr<Surface> _surface;
 
-    OkayMeshBuffer _modelBuffer;
-    OkayMesh _model;
+    // dirty flags
+    bool _meshBufferDirty{false};
+
+    template <class UniformCollection>
+    Failable setupShader(OkayShader<UniformCollection>& shader) {
+        return runAll(
+            DEFER(shader.compile()), DEFER(shader.set()), DEFER(shader.findUniformLocations()));
+    }
 };
 
 }  // namespace okay

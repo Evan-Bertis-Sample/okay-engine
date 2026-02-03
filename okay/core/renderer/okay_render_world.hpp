@@ -1,19 +1,19 @@
 #ifndef __OKAY_RENDER_WORLD_H__
 #define __OKAY_RENDER_WORLD_H__
 
-#include <algorithm>
+#include <set>
+#include <vector>
 #include <cstdint>
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
-#include <limits>
+
 #include <okay/core/renderer/okay_material.hpp>
 #include <okay/core/renderer/okay_mesh.hpp>
 #include <okay/core/util/dirty_set.hpp>
 #include <okay/core/util/object_pool.hpp>
 #include <okay/core/util/property.hpp>
-#include <set>
-#include <vector>
 
 namespace okay {
 
@@ -53,12 +53,64 @@ struct OkayTransform {
     }
 };
 
+class OkayCamera {
+   public:
+    enum class ProjectionType { PERPSECTIVE, ORTHOGRAPHIC };
+
+    struct PerpsectiveConfig {
+        float fov{45.0f};
+        float near{0.1f};
+        float far{1000.0f};
+    };
+
+    struct OrthographicConfig {
+        float left{-1.0f};
+        float right{1.0f};
+        float bottom{-1.0f};
+        float top{1.0f};
+        float near{0.1f};
+        float far{1000.0f};
+    };
+
+    OkayTransform transform{};
+
+    template <typename T>
+        requires(std::is_same_v<T, PerpsectiveConfig> || std::is_same_v<T, OrthographicConfig>)
+    void setConfig(const T& config) {
+        if (std::is_same_v<T, PerpsectiveConfig>) {
+            _projectionType = ProjectionType::PERPSECTIVE;
+            _perpConfig = config;
+        } else if (std::is_same_v<T, OrthographicConfig>) {
+            _projectionType = ProjectionType::ORTHOGRAPHIC;
+            _orthoConfig = config;
+        }
+    }
+
+    template <typename T>
+        requires(std::is_same_v<T, PerpsectiveConfig> || std::is_same_v<T, OrthographicConfig>)
+    Option<T&> getConfig() const {
+        if (std::is_same_v<T, PerpsectiveConfig>) {
+            return _perpConfig;
+        } else if (std::is_same_v<T, OrthographicConfig>) {
+            return _orthoConfig;
+        }
+        return Option<T&>::none();
+    }
+
+   private:
+    ProjectionType _projectionType{ProjectionType::PERPSECTIVE};
+    union {
+        PerpsectiveConfig _perpConfig;
+        OrthographicConfig _orthoConfig;
+    };
+};
+
 class OkayRenderWorld;
 
 using RenderItemHandle = ObjectPoolHandle;
 
 struct OkayRenderItem {
-    IOkayMaterial* material{nullptr};
+    OkayMaterial* material{nullptr};
     OkayMesh mesh{};
     OkayTransform transform{};
     std::uint64_t sortKey{0};
@@ -71,7 +123,7 @@ struct OkayRenderItem {
 
     OkayRenderItem() = default;
 
-    OkayRenderItem(IOkayMaterial* mat, OkayMesh m);
+    OkayRenderItem(OkayMaterial* mat, OkayMesh m);
 
     // operator overloads for std::map
     bool operator<(const OkayRenderItem& other) const {
@@ -105,7 +157,7 @@ struct OkayRenderEntity {
         friend class OkayRenderEntity;
         friend class OkayRenderWorld;
 
-        IOkayMaterial* material{nullptr};
+        OkayMaterial* material{nullptr};
         OkayTransform transform{};
         OkayMesh mesh{};
 
@@ -192,19 +244,18 @@ class OkayRenderWorld {
 
         ChildRange(ChildIterator b, ChildIterator e) : b(b), e(e) {
         }
-        
     };
 
     ChildRange children(OkayRenderEntity parent);
     const ChildRange children(OkayRenderEntity parent) const;
 
     OkayRenderEntity addRenderEntity(const OkayTransform& transform,
-                                     IOkayMaterial* material,
+                                     OkayMaterial* material,
                                      const OkayMesh& mesh,
                                      OkayRenderEntity parent);
 
     OkayRenderEntity addRenderEntity(const OkayTransform& transform,
-                                     IOkayMaterial* material,
+                                     OkayMaterial* material,
                                      const OkayMesh& mesh) {
         return addRenderEntity(
             transform, material, mesh, OkayRenderEntity(*this, RenderItemHandle::invalidHandle()));

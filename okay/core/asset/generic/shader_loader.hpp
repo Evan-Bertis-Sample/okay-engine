@@ -11,10 +11,10 @@
 
 namespace okay {
 
-template <class... Uniforms>
-struct OkayAssetLoader<OkayShader<Uniforms...>> {
-    static Result<OkayShader<Uniforms...>> loadAsset(const std::filesystem::path& path,
-                                                     const OkayAssetIO& assetIO) {
+template <>
+struct OkayAssetLoader<OkayShader> {
+    static Result<OkayShader> loadAsset(const std::filesystem::path& path,
+                                        const OkayAssetIO& assetIO) {
         // by standard, the fragment shader will be path + .frag
         // and the vertex shader will be path + .vert
 
@@ -23,8 +23,8 @@ struct OkayAssetLoader<OkayShader<Uniforms...>> {
             assetIO.open(path.string() + ".vert");
 
         if (vertexStreamRes.isError()) {
-            return Result<OkayShader<Uniforms...>>::errorResult("Failed to open vertex shader: " +
-                                                                path.string());
+            return Result<OkayShader>::errorResult("Failed to open vertex shader: " +
+                                                   path.string());
         }
 
         // read vertex shader code
@@ -46,8 +46,7 @@ struct OkayAssetLoader<OkayShader<Uniforms...>> {
         std::string fragmentShaderCode((std::istreambuf_iterator<char>(*fragmentStream)),
                                        std::istreambuf_iterator<char>());
 
-        return Result<OkayShader<Uniforms...>>::ok(
-            OkayShader<Uniforms...>(vertexShaderCode, fragmentShaderCode));
+        return Result<OkayShader>::ok(OkayShader(vertexShaderCode, fragmentShaderCode));
     }
 };
 

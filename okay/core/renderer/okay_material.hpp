@@ -13,20 +13,17 @@ namespace okay {
 
 enum class ShaderState { NOT_COMPILED, STANDBY, IN_USE };
 
-template <class UniformCollection>
 class OkayShader;
-
-template <class UniformCollection>
 class OkayMaterial;
 
-template <class... Uniforms>
-struct OkayShader<OkayMaterialUniformCollection<Uniforms...>> {
+class OkayShader {
    public:
-    OkayShader(const std::string vertexSrc, const std::string fragmentSrc)
-        : vertexShader(std::move(vertexSrc)),
-          fragmentShader(std::move(fragmentSrc)),
+    OkayShader(const std::string& vertexSource, const std::string& fragmentSource)
+        : vertexShader(std::move(vertexSource)),
+          fragmentShader(std::move(fragmentSource)),
           _shaderProgram(0),
-          _state(ShaderState::NOT_COMPILED) {
+          _state(ShaderState::NOT_COMPILED),
+    {
         std::hash<std::string> hasher;
         _id = hasher(vertexShader + fragmentShader);
     }
@@ -36,87 +33,27 @@ struct OkayShader<OkayMaterialUniformCollection<Uniforms...>> {
           fragmentShader(""),
           _shaderProgram(0),
           _state(ShaderState::NOT_COMPILED),
-          _id(1) {}
+          _id(1) {
+    }
 
     std::string vertexShader;
     std::string fragmentShader;
-    OkayMaterialUniformCollection<Uniforms...> uniforms;
 
-    Failable compile() {
-        if (_state != ShaderState::NOT_COMPILED) {
-            Engine.logger.warn("Shader is already compiled.");
-            return Failable::ok({});
-        }
+    Failable compile();
 
-        // Compile vertex shader
-        GLuint vertex = glCreateShader(GL_VERTEX_SHADER);
-        const char* vertexSrcCStr = vertexShader.c_str();
-        glShaderSource(vertex, 1, &vertexSrcCStr, NULL);
-        glCompileShader(vertex);
+    Failable set();
 
-        // Check for compilation errors
-        int success;
-        char infoLog[512];
-        glGetShaderiv(vertex, GL_COMPILE_STATUS, &success);
-        if (!success) {
-            glGetShaderInfoLog(vertex, 512, NULL, infoLog);
-            return Failable::errorResult("Vertex shader compilation failed: " +
-                                         std::string(infoLog));
-        }
-
-        // Compile fragment shader
-        GLuint fragment = glCreateShader(GL_FRAGMENT_SHADER);
-        const char* fragmentSrcCStr = fragmentShader.c_str();
-        glShaderSource(fragment, 1, &fragmentSrcCStr, NULL);
-        glCompileShader(fragment);
-
-        // Check for compilation errors
-        glGetShaderiv(fragment, GL_COMPILE_STATUS, &success);
-        if (!success) {
-            glGetShaderInfoLog(fragment, 512, NULL, infoLog);
-            return Failable::errorResult("Fragment shader compilation failed: " +
-                                         std::string(infoLog));
-        }
-
-        // Link shaders into a program
-        _shaderProgram = glCreateProgram();
-        glAttachShader(_shaderProgram, vertex);
-        glAttachShader(_shaderProgram, fragment);
-        glLinkProgram(_shaderProgram);
-
-        // Check for linking errors
-        glGetProgramiv(_shaderProgram, GL_LINK_STATUS, &success);
-        if (!success) {
-            glGetProgramInfoLog(_shaderProgram, 512, NULL, infoLog);
-            return Failable::errorResult("Shader program linking failed: " + std::string(infoLog));
-        }
-
-        // Clean up shaders as they're linked into the program now and no longer necessary
-        glDeleteShader(vertex);
-        glDeleteShader(fragment);
-
-        _state = ShaderState::STANDBY;
-
-        Engine.logger.info("Shader compiled.");
-        return Failable::ok({});
+    ShaderState state() const {
+        return _state;
     }
 
-    Failable set() {
-        if (_state != ShaderState::STANDBY && _state != ShaderState::IN_USE) {
-            return Failable::errorResult("Shader must be compiled before setting it for use.");
-        }
-        glUseProgram(_shaderProgram);
-        _state = ShaderState::IN_USE;
-        uniforms.markAllDirty();
-        return Failable::ok({});
+    std::uint32_t id() const {
+        return _id;
     }
 
-    Failable findUniformLocations() { return uniforms.findLocations(_shaderProgram); };
-
-    Failable passDirtyUniforms() { return uniforms.setUniforms(_shaderProgram); };
-
-    ShaderState state() const { return _state; }
-    std::uint32_t id() const { return _id; }
+    GLuint programID() const {
+        return _shaderProgram;
+    }
 
    private:
     GLuint _shaderProgram;
@@ -124,43 +61,35 @@ struct OkayShader<OkayMaterialUniformCollection<Uniforms...>> {
     std::size_t _id;
 };
 
-class IOkayMaterial {
+class OkayMaterial {
    public:
-    virtual std::uint32_t id() const { return 0; }
-    virtual std::uint32_t shaderID() const { return 0; }
-    virtual void setShader() {}
-    virtual void passUniforms() {}
-};
+    std::unique_ptr<IOkayMaterialUniformCollection> uniforms;
 
-// template takes in a OkayMaterialUniformCollection<...>
-template <class... Uniforms>
-class OkayMaterial<OkayMaterialUniformCollection<Uniforms...>> : public IOkayMaterial {
-   public:
-    OkayMaterialUniformCollection<Uniforms...> uniforms;
-
-    OkayMaterial(const OkayShader<Uniforms...>& shader) : _shader(shader), uniforms() {
-        // hash the names of the uniforms + shader id to create a unique material id
-        std::hash<std::string> hasher;
-        std::string combined;
-        ((combined += std::string(Uniforms::name.sv()) + ";"), ...);
-        combined += std::to_string(shader.id());
-        _id = hasher(combined);
+    std::uint32_t id() const {
+        return _id;
+    }
+    std::uint32_t shaderID() const {
+        return _shader.id();
     }
 
-    std::uint32_t id() const override { return _id; }
-    std::uint32_t shaderID() const override { return _shader.id(); }
-
-    void setShader() override {
+    void setShader() {
         if (_shader.state() != ShaderState::IN_USE) {
             _shader.set();
         }
     }
 
-    void passUniforms() override { uniforms.setUniforms(); }
+    void passUniforms() {
+        uniforms->setUniforms(_shader.programID());
+    }
 
    private:
-    OkayShader<Uniforms...> _shader;
+    OkayShader _shader;
     std::size_t _id{0};
+
+    void setMaterial() {
+        setShader();
+        passUniforms();
+    }
 };
 
 };  // namespace okay

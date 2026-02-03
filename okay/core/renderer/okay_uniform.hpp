@@ -46,18 +46,31 @@ struct OkayMaterialUniform {
 
     static constexpr auto name = Name;
     static constexpr UniformKind kind = UniformKindOf<T>();
-    static constexpr GLuint invalidLocation() { return 0xFFFFFFFFu; }
+    static constexpr GLuint invalidLocation() {
+        return 0xFFFFFFFFu;
+    }
 
-    constexpr std::string_view name_sv() const { return name.sv(); }
+    constexpr std::string_view name_sv() const {
+        return name.sv();
+    }
 
     void set(const T& v) {
-        if (_value != v) _dirty = true;
+        if (_value != v)
+            _dirty = true;
         _value = v;
     }
-    const T& get() const { return _value; }
-    bool isDirty() const { return _dirty; }
-    void markDirty() { _dirty = true; }
-    GLuint location() const { return _location; }
+    const T& get() const {
+        return _value;
+    }
+    bool isDirty() const {
+        return _dirty;
+    }
+    void markDirty() {
+        _dirty = true;
+    }
+    GLuint location() const {
+        return _location;
+    }
 
     Failable findLocation(GLuint shaderProgram) {
         int location = glGetUniformLocation(shaderProgram, std::string(name.sv()).c_str());
@@ -69,7 +82,8 @@ struct OkayMaterialUniform {
     };
 
     Failable passUniform(GLuint shaderProgram) {
-        if (!isDirty()) return Failable::ok({});
+        if (!isDirty())
+            return Failable::ok({});
 
         if (location() == invalidLocation()) {
             Failable result = findLocation(shaderProgram);
@@ -123,18 +137,34 @@ struct OkayMaterialUniform<NoneType, FixedString("")> {
 
     static constexpr auto name = FixedString("");
     static constexpr UniformKind kind = UniformKind::VOID;
-    static constexpr GLuint invalidLocation() { return 0xFFFFFFFFu; }
+    static constexpr GLuint invalidLocation() {
+        return 0xFFFFFFFFu;
+    }
 
-    constexpr std::string_view name_sv() const { return name.sv(); }
+    constexpr std::string_view name_sv() const {
+        return name.sv();
+    }
 
-    void set(const NoneType&) {}
-    const NoneType& get() const { return _value; }
-    void markDirty() {}
-    bool isDirty() const { return false; }
+    void set(const NoneType&) {
+    }
+    const NoneType& get() const {
+        return _value;
+    }
+    void markDirty() {
+    }
+    bool isDirty() const {
+        return false;
+    }
 
-    GLuint location() const { return invalidLocation(); }
-    Failable findLocation(GLuint) { return Failable::ok({}); };
-    Failable passUniform(GLuint) { return Failable::ok({}); };
+    GLuint location() const {
+        return invalidLocation();
+    }
+    Failable findLocation(GLuint) {
+        return Failable::ok({});
+    };
+    Failable passUniform(GLuint) {
+        return Failable::ok({});
+    };
 
    private:
     NoneType _value{};
@@ -168,8 +198,16 @@ struct UniformIndex<Name> {
     static constexpr std::size_t value = 0;
 };
 
+class IOkayMaterialUniformCollection {
+   public:
+    virtual Failable setUniforms(GLuint shaderProgram) = 0;
+    virtual Failable findLocations(GLuint shaderProgram) = 0;
+    virtual bool markAllDirty() = 0;
+};
+
 template <class... Uniforms>
-struct OkayMaterialUniformCollection {
+class TemplatedMaterialUniformCollection : public IOkayMaterialUniformCollection {
+   public:
     std::tuple<Uniforms...> uniforms;
 
     template <auto Name, std::size_t I = UniformIndex<Name, Uniforms...>::value>
@@ -182,7 +220,9 @@ struct OkayMaterialUniformCollection {
         return std::get<I>(uniforms);
     }
 
-    std::size_t size() const { return sizeof...(Uniforms); }
+    std::size_t size() const {
+        return sizeof...(Uniforms);
+    }
 
     template <auto Name>
     constexpr std::size_t index() const {

@@ -159,7 +159,7 @@ const std::vector<RenderItemHandle>& OkayRenderWorld::getRenderItems() {
 }
 
 OkayRenderEntity OkayRenderWorld::addRenderEntity(const OkayTransform& transform,
-                                                  IOkayMaterial* material,
+                                                  OkayMaterial* material,
                                                   const OkayMesh& mesh,
                                                   OkayRenderEntity parent) {
     RenderItemHandle handle = _renderItemPool.emplace(material, mesh);
@@ -273,7 +273,7 @@ void OkayRenderWorld::updateEntity(RenderItemHandle renderItem,
 
 // OkayRenderItem
 
-OkayRenderItem::OkayRenderItem(IOkayMaterial* mat, OkayMesh m) : material(mat), mesh(m) {
+OkayRenderItem::OkayRenderItem(OkayMaterial* mat, OkayMesh m) : material(mat), mesh(m) {
     if (!mat || mesh.isEmpty()) {
         sortKey = std::numeric_limits<std::uint64_t>::max();
     } else {
