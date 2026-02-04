@@ -11,6 +11,7 @@
 #include <okay/core/tween/okay_tween_easing.hpp>
 #include <okay/core/tween/okay_tween_engine.hpp>
 #include <okay/core/tween/okay_tween_sequence.hpp>
+#include "okay/core/tween/okay_tween_collection.hpp"
 
 static void __gameInitialize();
 static void __gameUpdate();
@@ -43,6 +44,7 @@ std::shared_ptr<okay::OkayTween<float>> tween2;
 std::shared_ptr<okay::OkayTween<float>> tween3;
 std::shared_ptr<okay::OkayTween<float>> tween4;
 okay::OkayTweenSequence seq;
+okay::OkayTweenCollection col;
 
 static void __gameInitialize() {
     // Additional game initialization logic
@@ -75,7 +77,15 @@ static void __gameInitialize() {
     seq.append(tween3);
     seq.append(tween4);
 
+    // int n1 {0};
+    // int n2 {2};
+    // col.append(okay::OkayTween<int>::create(n1, 200));
+    // col.append(okay::OkayTween<int>::create(n1, 500, 2000));
+
     seq.start();
+    // col.start();
+
+    // okay::Engine.logger.debug("size: {}", sizeof(tween4));
 }
 
 static void __gameUpdate() {
