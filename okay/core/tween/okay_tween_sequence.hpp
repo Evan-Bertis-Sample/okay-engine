@@ -26,8 +26,8 @@ namespace okay {
         void start();
         
         /**
-          * @brief Check if the current tween has ended. If it has move on to the next tween.
-          * Otherwise tick the current tween.
+          * @brief Check if the current tween has ended. If so, move on to the next tween.
+          * Else, tick the current tween.
           */
         void tick();
 
@@ -45,12 +45,9 @@ namespace okay {
           * @brief Kills all tweens in the sequence.
           */
         void kill();
-
-
        
        private:
         std::vector<std::shared_ptr<IOkayTween>> _sequence;
-        std::uint32_t _index { 0 };
     };
 } // namespace okay
 

@@ -24,6 +24,6 @@ void OkayTweenEngine::tick() {
     }
 }
 
-void OkayTweenEngine::removeTween(size_t index) {
+void OkayTweenEngine::removeTween(std::size_t index) {
     _activeTweens.erase(_activeTweens.begin() + static_cast<std::uint32_t>(index));
 }

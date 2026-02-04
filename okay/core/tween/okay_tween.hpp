@@ -26,13 +26,13 @@ concept Tweenable = requires(T t) {
 /**
   * @brief A tween
   *
-  * @param start The start position of the tween
-  * @param end The end position of the tween
-  * @param easingFn The easing function to apply on the tween
-  * @param numLoops The number of times the tween should loop
-  * @param inOutBack Whether the tween should in-out-back
-  * @param buffer The amount of wait time before tweening begins
-  * @param onUpdate Callback for every time tween is updated
+  * @param start Reference to the starting value to change
+  * @param end End value to tween to
+  * @param easingFn Easing function to interpolate with
+  * @param numLoops Number of times the tween should loop, excluding the initial run (-1 if infinite, default 0)
+  * @param inOutBack Whether the tween should in-out-back (yoyo)
+  * @param buffer Time to wait before tween beins ticking
+  * @param onTick Callback for every time tween is updated
   * @param onEnd Callback for when the tween ends
   * @param onPause Callback for when the tween pauses
   * @param onResume Callback for when the tween resumes
@@ -50,7 +50,7 @@ class OkayTween : public IOkayTween, public std::enable_shared_from_this<OkayTwe
               std::int64_t numLoops = 0,
               bool inOutBack = false,
               std::int32_t buffer = 0,
-              std::function<void()> onUpdate = [](){},
+              std::function<void()> onTick = [](){},
               std::function<void()> onEnd = [](){},
               std::function<void()> onPause = [](){},
               std::function<void()> onResume = [](){},
@@ -64,7 +64,7 @@ class OkayTween : public IOkayTween, public std::enable_shared_from_this<OkayTwe
           _numLoops { numLoops },
           _inOutBack { inOutBack },
           _buffer { buffer },
-          _onUpdate { onUpdate },
+          _onTick { onTick },
           _onEnd { onEnd },
           _onPause { onPause },
           _onResume { onResume },
@@ -78,13 +78,13 @@ class OkayTween : public IOkayTween, public std::enable_shared_from_this<OkayTwe
                                                 std::int64_t numLoops = 0,
                                                 bool inOutBack = false,
                                                 std::int32_t buffer = 0,
-                                                std::function<void()> onUpdate = [](){},
+                                                std::function<void()> onTick = [](){},
                                                 std::function<void()> onEnd = [](){},
                                                 std::function<void()> onPause = [](){},
                                                 std::function<void()> onResume = [](){},
                                                 std::function<void()> onLoop = [](){})
     {
-        auto tweenPtr { std::make_shared<OkayTween<T>>(start, end, duration, easingFn, numLoops, inOutBack, buffer, onUpdate, onEnd, onPause, onResume, onLoop) };
+        auto tweenPtr { std::make_shared<OkayTween<T>>(start, end, duration, easingFn, numLoops, inOutBack, buffer, onTick, onEnd, onPause, onResume, onLoop) };
 
         return tweenPtr;
     }
@@ -114,7 +114,7 @@ class OkayTween : public IOkayTween, public std::enable_shared_from_this<OkayTwe
             
             std::float_t step = _easingFn(progress);
             _current = START + step * DISPLACEMENT;
-            _onUpdate();
+            _onTick();
         }
     }
 
@@ -186,7 +186,7 @@ class OkayTween : public IOkayTween, public std::enable_shared_from_this<OkayTwe
     bool _inOutBack;
     bool _isReversing { false };
     std::int32_t _buffer;
-    std::function<void()> _onUpdate;
+    std::function<void()> _onTick;
     std::function<void()> _onEnd;
     std::function<void()> _onPause;
     std::function<void()> _onResume;
