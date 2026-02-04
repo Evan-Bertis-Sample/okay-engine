@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
-# Adds an alias to the user's shell configuration file to run the okay-engine script.
+set -euo pipefail
 
-# install the okay.py script
-# it is located in the same directory as this script
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 OKAY_SCRIPT="$SCRIPT_DIR/okay.py"
 
@@ -11,13 +10,29 @@ if [[ ! -f "$OKAY_SCRIPT" ]]; then
     exit 1
 fi
 
-# Determine the shell configuration file based on the user's shell
+# Directory where the okay wrapper will live
+BIN_DIR="$HOME/.local/bin"
+OKAY_WRAPPER="$BIN_DIR/okay"
+
+mkdir -p "$BIN_DIR"
+
+# Create/update the wrapper script
+cat > "$OKAY_WRAPPER" <<EOF
+#!/usr/bin/env bash
+exec python3 "$OKAY_SCRIPT" "\$@"
+EOF
+
+chmod +x "$OKAY_WRAPPER"
+
+echo "Installed okay wrapper at: $OKAY_WRAPPER"
+
+# Choose correct shell config file for PATH exports
 case "$SHELL" in
     */bash)
-        CONFIG_FILE="$HOME/.bashrc"
+        CONFIG_FILE="$HOME/.profile"
         ;;
     */zsh)
-        CONFIG_FILE="$HOME/.zshrc"
+        CONFIG_FILE="$HOME/.zprofile"
         ;;
     */fish)
         CONFIG_FILE="$HOME/.config/fish/config.fish"
@@ -28,13 +43,19 @@ case "$SHELL" in
         ;;
 esac
 
-# Add the alias to the configuration file
-ALIAS_LINE="alias okay='python3 \"$OKAY_SCRIPT\"'"
-if ! grep -qF "$ALIAS_LINE" "$CONFIG_FILE"; then
-    echo "Adding alias to $CONFIG_FILE"
-    echo "$ALIAS_LINE" >> "$CONFIG_FILE"
+# Export PATH (shell-specific)
+if [[ "$SHELL" == */fish ]]; then
+    EXPORT_LINE="set -gx PATH \$HOME/.local/bin \$PATH"
 else
-    echo "Alias already exists in $CONFIG_FILE"
+    EXPORT_LINE='export PATH="$HOME/.local/bin:$PATH"'
+fi
+
+# Add PATH export if missing
+if ! grep -qF "$EXPORT_LINE" "$CONFIG_FILE" 2>/dev/null; then
+    echo "Adding PATH export to $CONFIG_FILE"
+    echo "$EXPORT_LINE" >> "$CONFIG_FILE"
+else
+    echo "PATH export already exists in $CONFIG_FILE"
 fi
 
 # Inform the user to source their configuration file
