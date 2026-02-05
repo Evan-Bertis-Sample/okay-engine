@@ -4,6 +4,7 @@
 #include <set>
 #include <vector>
 #include <cstdint>
+#include <variant>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -74,35 +75,40 @@ class OkayCamera {
 
     OkayTransform transform{};
 
+    OkayCamera() = default;
+
     template <typename T>
         requires(std::is_same_v<T, PerpsectiveConfig> || std::is_same_v<T, OrthographicConfig>)
     void setConfig(const T& config) {
-        if (std::is_same_v<T, PerpsectiveConfig>) {
+        if constexpr (std::is_same_v<T, PerpsectiveConfig>) {
             _projectionType = ProjectionType::PERPSECTIVE;
-            _perpConfig = config;
-        } else if (std::is_same_v<T, OrthographicConfig>) {
+        } else {
             _projectionType = ProjectionType::ORTHOGRAPHIC;
-            _orthoConfig = config;
         }
+        _config = config;
     }
 
     template <typename T>
         requires(std::is_same_v<T, PerpsectiveConfig> || std::is_same_v<T, OrthographicConfig>)
-    Option<T&> getConfig() const {
-        if (std::is_same_v<T, PerpsectiveConfig>) {
-            return _perpConfig;
-        } else if (std::is_same_v<T, OrthographicConfig>) {
-            return _orthoConfig;
+    Option<T&> getConfig() {
+        if (auto* p = std::get_if<T>(&_config)) {
+            return *p;
         }
         return Option<T&>::none();
     }
 
+    template <typename T>
+        requires(std::is_same_v<T, PerpsectiveConfig> || std::is_same_v<T, OrthographicConfig>)
+    Option<const T&> getConfig() const {
+        if (auto* p = std::get_if<T>(&_config)) {
+            return *p;
+        }
+        return Option<const T&>::none();
+    }
+
    private:
     ProjectionType _projectionType{ProjectionType::PERPSECTIVE};
-    union {
-        PerpsectiveConfig _perpConfig;
-        OrthographicConfig _orthoConfig;
-    };
+    std::variant<PerpsectiveConfig, OrthographicConfig> _config{PerpsectiveConfig{}};
 };
 
 class OkayRenderWorld;
@@ -183,7 +189,7 @@ struct OkayRenderEntity {
 
     constexpr OkayRenderEntity() = default;
 
-    OkayRenderEntity(OkayRenderWorld *owner, RenderItemHandle renderItem)
+    OkayRenderEntity(OkayRenderWorld* owner, RenderItemHandle renderItem)
         : _owner(owner), _renderItem(renderItem) {
     }
 

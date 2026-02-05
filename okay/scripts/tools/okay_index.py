@@ -28,6 +28,7 @@ def main(args):
 
     workspace_root = Path(build_options.project_dir).resolve()
     clangd_file = workspace_root / CLANGD_PATH
+    engine_root = OkayToolUtil.get_okay_parent_dir()
 
     if clangd_file.exists() and not args.overwrite:
         while True:
@@ -36,6 +37,7 @@ def main(args):
                 break
             if choice == "n":
                 return
+        
 
     include_subpaths = [
         ".",  # <okay/...>
@@ -51,7 +53,7 @@ def main(args):
     lines.append("    - -std=gnu++20")
 
     for sp in include_subpaths:
-        inc = _abs_posix(workspace_root / sp)
+        inc = _abs_posix(engine_root / sp)
         lines.append(f"    - -I{inc}")
 
     clangd_file.write_text(

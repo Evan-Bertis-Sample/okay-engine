@@ -27,7 +27,9 @@ class OkayRenderer : public OkaySystem<OkaySystemScope::ENGINE> {
     }
 
     OkayRenderer(const OkayRendererSettings& settings)
-        : _settings(settings), _surface(std::make_unique<Surface>(settings.surfaceConfig)) {
+        : _settings(settings),
+          _surface(std::make_unique<Surface>(settings.surfaceConfig)),
+          _renderTargetPool(settings.surfaceConfig.width, settings.surfaceConfig.height) {
     }
 
     OkayShader shader;
