@@ -86,6 +86,12 @@ class OkayGame {
 
             _onUpdate();
         }
+
+        _onShutdown();
+    }
+
+    void shutdown() {
+        _shouldRun = false;
     }
 
    private:
