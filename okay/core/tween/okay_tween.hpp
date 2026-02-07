@@ -39,9 +39,43 @@ concept Tweenable = requires(T t) {
   * @param onLoop Callback for when the tween completes a loop
   */
 template <Tweenable T>
+struct TweenConfig {
+    T start;
+    T end;
+    std::uint32_t durationMs = 1000;
+    EasingFn easingFn = okay::easing::linear;
+    std::int64_t numLoops = 0;
+    bool inOutBack = false;
+    std::int32_t prefixMs = 0;
+    std::function<void()> onTick = [](){};
+    std::function<void()> onEnd = [](){};
+    std::function<void()> onPause = [](){};
+    std::function<void()> onResume = [](){};
+    std::function<void()> onLoop = [](){};
+};
+
+template <Tweenable T>
 class OkayTween : public IOkayTween, public std::enable_shared_from_this<OkayTween<T>> {
    public:
     OkayTween() = default;
+
+    explicit OkayTween(const TweenConfig<T>& cfg)
+        : START { cfg.start },
+          END { cfg.end },
+          DISPLACEMENT { cfg.end - cfg.start },
+          _current { cfg.start },
+          _durationMs { cfg.durationMs },
+          _easingFn { cfg.easingFn },
+          _numLoops { cfg.numLoops },
+          _inOutBack { cfg.inOutBack },
+          _prefixMs { cfg.prefixMs },
+          _remainingPrefixMs { cfg.prefixMs },
+          _onTick { cfg.onTick },
+          _onReset { cfg.onEnd },
+          _onPause { cfg.onPause },
+          _onResume { cfg.onResume },
+          _onLoop { cfg.onLoop }
+    {}
 
     OkayTween(T start,
               T end,
@@ -86,6 +120,13 @@ class OkayTween : public IOkayTween, public std::enable_shared_from_this<OkayTwe
                                                 std::function<void()> onLoop = [](){})
     {
         auto tweenPtr { std::make_shared<OkayTween<T>>(start, end, durationMs, easingFn, numLoops, inOutBack, prefixMs, onTick, onEnd, onPause, onResume, onLoop) };
+
+        return tweenPtr;
+    }
+
+    static std::shared_ptr<OkayTween<T>> create(const TweenConfig<T>& cfg)
+    {
+        auto tweenPtr { std::make_shared<OkayTween<T>>(cfg.start, cfg.end, cfg.durationMs, cfg.easingFn, cfg.numLoops, cfg.inOutBack, cfg.prefixMs, cfg.onTick, cfg.onEnd, cfg.onPause, cfg.onResume, cfg.onLoop) };
 
         return tweenPtr;
     }
