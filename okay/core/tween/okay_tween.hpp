@@ -64,8 +64,9 @@ class OkayTween : public IOkayTween, public std::enable_shared_from_this<OkayTwe
           _numLoops { numLoops },
           _inOutBack { inOutBack },
           _prefixMs { prefixMs },
+          _remainingPrefixMs { prefixMs },
           _onTick { onTick },
-          _onEnd { onEnd },
+          _onReset { onEnd },
           _onPause { onPause },
           _onResume { onResume },
           _onLoop { onLoop }
@@ -91,14 +92,14 @@ class OkayTween : public IOkayTween, public std::enable_shared_from_this<OkayTwe
     
     void start() {
         okay::Engine.systems.getSystemChecked<OkayTweenEngine>()->addTween(this->shared_from_this());
-        _isTweening = true;
+        setIsTweening(true);
     }
 
     void tick() {
         if (!_isTweening) return;
 
-        if (_prefixMs > 0) {
-            _prefixMs -= okay::Engine.time->deltaTime();
+        if (_remainingPrefixMs > 0) {
+            _remainingPrefixMs -= okay::Engine.time->deltaTime();
         } else {
             _timeElapsed += okay::Engine.time->deltaTime();
         
@@ -119,18 +120,27 @@ class OkayTween : public IOkayTween, public std::enable_shared_from_this<OkayTwe
     }
 
     void pause() {
-        _isTweening = false;
+        setIsTweening(false);
         _onPause();
     }
 
     void resume() {
-        _isTweening = true;
+        setIsTweening(true);
         _onResume();
+    }
+    
+    void reset() {
+        _current = START;
+        _loopsCompleted = 0;
+        _isReversing = false;
+        _remainingPrefixMs = _prefixMs;
+        _timeElapsed = 0;
+        setIsTweening(false);
+        _onReset();
     }
 
     void kill() {
         _killTween = true;
-        _onEnd();
     }
 
     bool isFinished() {
@@ -162,11 +172,14 @@ class OkayTween : public IOkayTween, public std::enable_shared_from_this<OkayTwe
         return false;
     }
 
-    void end() {
-        _onEnd();
+
+    void setIsTweening(bool isTweening) {
+        _isTweening = isTweening;
     }
 
-    const T& value() const { return _current; }
+    const T& value() const { 
+        return _current; 
+    }
 
    private:
     // core tween logic
@@ -186,8 +199,9 @@ class OkayTween : public IOkayTween, public std::enable_shared_from_this<OkayTwe
     bool _inOutBack;
     bool _isReversing { false };
     std::int32_t _prefixMs;
+    std::int32_t _remainingPrefixMs;
     std::function<void()> _onTick;
-    std::function<void()> _onEnd;
+    std::function<void()> _onReset;
     std::function<void()> _onPause;
     std::function<void()> _onResume;
     std::function<void()> _onLoop;

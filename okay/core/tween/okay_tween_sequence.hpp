@@ -9,9 +9,18 @@
   * @brief Sequence of composed tweens; control lifetime of multiple tweens together.
   */
 namespace okay {
-    class OkayTweenSequence : public IOkayTween {
+    class OkayTweenSequence : public IOkayTween, public std::enable_shared_from_this<OkayTweenSequence> {
        public:
         OkayTweenSequence() = default;
+
+        /**
+          * @brief Return a shared_ptr to this sequence.
+          */
+        static std::shared_ptr<OkayTweenSequence> create() {
+            auto sequencePtr { std::make_shared<OkayTweenSequence>() };
+
+            return sequencePtr;
+        }
 
         /**
           * @brief Push back a tween ptr into _sequence.
@@ -42,9 +51,24 @@ namespace okay {
         void resume();
 
         /**
+          * @brief Resets the index to 0.
+          */
+        void reset();
+
+        /**
           * @brief Kills all tweens in the sequence.
           */
         void kill();
+
+        /**
+          * @brief Check if the sequence is finished.
+          */
+        bool isFinished();
+
+        /**
+          * @brief Set whether the current tween is ticking.
+          */
+        void setIsTweening(bool isTweening);
        
        private:
         std::vector<std::shared_ptr<IOkayTween>> _sequence;
