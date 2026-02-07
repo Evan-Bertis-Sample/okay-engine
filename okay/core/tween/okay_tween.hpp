@@ -26,7 +26,7 @@ concept Tweenable = requires(T t) {
 /**
   * @brief A tween
   *
-  * @param start Reference to the starting value to change
+  * @param start Starting value to tween to
   * @param end End value to tween to
   * @param easingFn Easing function to interpolate with
   * @param numLoops Number of times the tween should loop, excluding the initial run (-1 if infinite, default 0)
@@ -37,19 +37,19 @@ concept Tweenable = requires(T t) {
   * @param onPause Callback for when the tween pauses
   * @param onResume Callback for when the tween resumes
   * @param onLoop Callback for when the tween completes a loop
- */
+  */
 template <Tweenable T>
 class OkayTween : public IOkayTween, public std::enable_shared_from_this<OkayTween<T>> {
    public:
     OkayTween() = default;
 
-    OkayTween(T& start,
+    OkayTween(T start,
               T end,
-              std::uint32_t duration = 1000,
+              std::uint32_t durationMs = 1000,
               EasingFn easingFn = okay::easing::linear,
               std::int64_t numLoops = 0,
               bool inOutBack = false,
-              std::int32_t buffer = 0,
+              std::int32_t prefixMs = 0,
               std::function<void()> onTick = [](){},
               std::function<void()> onEnd = [](){},
               std::function<void()> onPause = [](){},
@@ -59,11 +59,11 @@ class OkayTween : public IOkayTween, public std::enable_shared_from_this<OkayTwe
           END { end },
           DISPLACEMENT { end - start },
           _current { start },
-          _duration { duration },
+          _durationMs { durationMs },
           _easingFn { easingFn },
           _numLoops { numLoops },
           _inOutBack { inOutBack },
-          _buffer { buffer },
+          _prefixMs { prefixMs },
           _onTick { onTick },
           _onEnd { onEnd },
           _onPause { onPause },
@@ -73,18 +73,18 @@ class OkayTween : public IOkayTween, public std::enable_shared_from_this<OkayTwe
 
     static std::shared_ptr<OkayTween<T>> create(T start,
                                                 T end,
-                                                std::uint32_t duration = 1000,
+                                                std::uint32_t durationMs = 1000,
                                                 EasingFn easingFn = okay::easing::linear,
                                                 std::int64_t numLoops = 0,
                                                 bool inOutBack = false,
-                                                std::int32_t buffer = 0,
+                                                std::int32_t prefixMs = 0,
                                                 std::function<void()> onTick = [](){},
                                                 std::function<void()> onEnd = [](){},
                                                 std::function<void()> onPause = [](){},
                                                 std::function<void()> onResume = [](){},
                                                 std::function<void()> onLoop = [](){})
     {
-        auto tweenPtr { std::make_shared<OkayTween<T>>(start, end, duration, easingFn, numLoops, inOutBack, buffer, onTick, onEnd, onPause, onResume, onLoop) };
+        auto tweenPtr { std::make_shared<OkayTween<T>>(start, end, durationMs, easingFn, numLoops, inOutBack, prefixMs, onTick, onEnd, onPause, onResume, onLoop) };
 
         return tweenPtr;
     }
@@ -97,16 +97,16 @@ class OkayTween : public IOkayTween, public std::enable_shared_from_this<OkayTwe
     void tick() {
         if (!_isTweening) return;
 
-        if (_buffer > 0) {
-            _buffer -= okay::Engine.time->deltaTime();
+        if (_prefixMs > 0) {
+            _prefixMs -= okay::Engine.time->deltaTime();
         } else {
             _timeElapsed += okay::Engine.time->deltaTime();
         
-            if (_timeElapsed > _duration) {
-                _timeElapsed = _duration;
+            if (_timeElapsed > _durationMs) {
+                _timeElapsed = _durationMs;
             }
             
-            std::float_t progress = static_cast<std::float_t>(_timeElapsed) / _duration;
+            std::float_t progress = static_cast<std::float_t>(_timeElapsed) / _durationMs;
             
             if (_isReversing) {
                 progress = 1.0f - progress;
@@ -138,7 +138,7 @@ class OkayTween : public IOkayTween, public std::enable_shared_from_this<OkayTwe
             return true;
         }
 
-        if (_timeElapsed < _duration) {
+        if (_timeElapsed < _durationMs) {
             return false;
         }
 
@@ -175,7 +175,7 @@ class OkayTween : public IOkayTween, public std::enable_shared_from_this<OkayTwe
     const T DISPLACEMENT;
     T _current;
     bool _isTweening { false };
-    std::uint32_t _duration;
+    std::uint32_t _durationMs;
     std::uint32_t _timeElapsed {};
     EasingFn _easingFn;
 
@@ -185,7 +185,7 @@ class OkayTween : public IOkayTween, public std::enable_shared_from_this<OkayTwe
     std::int64_t _loopsCompleted {};
     bool _inOutBack;
     bool _isReversing { false };
-    std::int32_t _buffer;
+    std::int32_t _prefixMs;
     std::function<void()> _onTick;
     std::function<void()> _onEnd;
     std::function<void()> _onPause;
