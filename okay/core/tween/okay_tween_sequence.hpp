@@ -9,7 +9,7 @@
   * @brief Sequence of composed tweens; control lifetime of multiple tweens together.
   */
 namespace okay {
-    class OkayTweenSequence {
+    class OkayTweenSequence : public IOkayTween {
        public:
         OkayTweenSequence() = default;
 

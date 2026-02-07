@@ -1,6 +1,6 @@
 #include "okay/core/tween/okay_tween_sequence.hpp"
 #include "okay/core/tween/i_okay_tween.hpp"
-#include <okay/core/okay.hpp> // for erroring
+#include <okay/core/okay.hpp>
 
 using namespace okay;
 
