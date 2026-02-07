@@ -2,6 +2,7 @@
 #include <cstdint>
 #include "okay/core/okay.hpp"
 #include "okay/core/tween/i_okay_tween.hpp"
+#include "okay/core/tween/okay_tween_engine.hpp"
 
 using namespace okay;
 
@@ -10,44 +11,32 @@ void OkayTweenCollection::append(std::shared_ptr<IOkayTween> tweenPtr) {
 }
 
 void OkayTweenCollection::start() {
-    for (std::shared_ptr<IOkayTween> tween : _collection) {
-        tween->start();
+    if (_collection.size() > 0) {
+        okay::Engine.systems.getSystemChecked<OkayTweenEngine>()->addTween(this->shared_from_this());
+        for (auto& tween : _collection) {
+            tween->reset();
+            tween->setIsTweening(true);
+        }
+    } else {
+        okay::Engine.logger.error("Collection is empty\n");
+    }
+}
+
+void OkayTweenCollection::tick() {
+    for (auto& tween : _collection) {
+        tween->tick();
     }
 }
 
 void OkayTweenCollection::pause() {
-    std::vector<std::uint64_t> tweenIndicesToErase;
-
-    for (std::uint64_t i {}; i < _collection.size(); ++i) {
-        auto tween { _collection[i] };
-
-        if (tween->isFinished()) {
-            tweenIndicesToErase.push_back(i);
-        } else {
-            tween->pause();
-        }
-    }
-
-    for (auto it { tweenIndicesToErase.rbegin() }; it != tweenIndicesToErase.rend(); ++it) {
-        removeTween(*it);
+    for (auto& tween : _collection) {
+        tween->pause();
     }
 }
 
 void OkayTweenCollection::resume() {
-    std::vector<std::uint64_t> tweenIndicesToErase;
-
-    for (std::uint64_t i {}; i < _collection.size(); ++i) {
-        auto tween { _collection[i] };
-
-        if (tween->isFinished()) {
-            tweenIndicesToErase.push_back(i);
-        } else {
-            tween->resume();
-        }
-    }
-
-    for (auto it { tweenIndicesToErase.rbegin() }; it != tweenIndicesToErase.rend(); ++it) {
-        removeTween(*it);
+    for (auto& tween : _collection) {
+        tween->resume();
     }
 }
 
@@ -57,10 +46,24 @@ void OkayTweenCollection::kill() {
     }
 
     _collection.clear();
-
-    okay::Engine.logger.debug("Size: {}", _collection.size());
 }
 
-void OkayTweenCollection::removeTween(std::uint64_t index) {
-    _collection.erase(_collection.begin() + static_cast<std::uint32_t>(index));
+bool OkayTweenCollection::isFinished() {
+    for (auto& tween : _collection) {
+        if (!tween->isFinished()) return false;
+    }
+    
+    return true;
+}
+
+void OkayTweenCollection::reset() {
+    for (auto& tween : _collection) {
+        tween->reset();
+    }
+}
+
+void OkayTweenCollection::setIsTweening(bool isTweening) {
+    for (auto& tween : _collection) {
+        tween->setIsTweening(isTweening);
+    }
 }
