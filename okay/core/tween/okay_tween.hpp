@@ -1,6 +1,7 @@
 #ifndef __OKAY_TWEEN_H__
 #define __OKAY_TWEEN_H__
 
+#include <functional>
 #include <okay/core/okay.hpp>
 #include <okay/core/logging/okay_logger.hpp>
 #include <okay/core/tween/okay_tween_engine.hpp>
@@ -10,6 +11,7 @@
 #include <cstdint>
 #include <cmath>
 #include <memory>
+#include <optional>
 
 namespace okay {
 
@@ -42,6 +44,7 @@ template <Tweenable T>
 struct TweenConfig {
     T start;
     T end;
+    std::optional<std::reference_wrapper<T>> ref = std::nullopt;
     std::uint32_t durationMs = 1000;
     EasingFn easingFn = okay::easing::linear;
     std::int64_t numLoops = 0;
@@ -63,6 +66,7 @@ class OkayTween : public IOkayTween, public std::enable_shared_from_this<OkayTwe
         : START { cfg.start },
           END { cfg.end },
           DISPLACEMENT { cfg.end - cfg.start },
+          _reference { cfg.ref },
           _current { cfg.start },
           _durationMs { cfg.durationMs },
           _easingFn { cfg.easingFn },
@@ -79,6 +83,7 @@ class OkayTween : public IOkayTween, public std::enable_shared_from_this<OkayTwe
 
     OkayTween(T start,
               T end,
+              std::optional<T&> ref = std::nullopt,
               std::uint32_t durationMs = 1000,
               EasingFn easingFn = okay::easing::linear,
               std::int64_t numLoops = 0,
@@ -108,6 +113,7 @@ class OkayTween : public IOkayTween, public std::enable_shared_from_this<OkayTwe
 
     static std::shared_ptr<OkayTween<T>> create(T start,
                                                 T end,
+                                                std::optional<std::reference_wrapper<T>> ref = std::nullopt,
                                                 std::uint32_t durationMs = 1000,
                                                 EasingFn easingFn = okay::easing::linear,
                                                 std::int64_t numLoops = 0,
@@ -119,14 +125,14 @@ class OkayTween : public IOkayTween, public std::enable_shared_from_this<OkayTwe
                                                 std::function<void()> onResume = [](){},
                                                 std::function<void()> onLoop = [](){})
     {
-        auto tweenPtr { std::make_shared<OkayTween<T>>(start, end, durationMs, easingFn, numLoops, inOutBack, prefixMs, onTick, onEnd, onPause, onResume, onLoop) };
+        auto tweenPtr { std::make_shared<OkayTween<T>>(start, end, ref, durationMs, easingFn, numLoops, inOutBack, prefixMs, onTick, onEnd, onPause, onResume, onLoop) };
 
         return tweenPtr;
     }
 
     static std::shared_ptr<OkayTween<T>> create(const TweenConfig<T>& cfg)
     {
-        auto tweenPtr { std::make_shared<OkayTween<T>>(cfg.start, cfg.end, cfg.durationMs, cfg.easingFn, cfg.numLoops, cfg.inOutBack, cfg.prefixMs, cfg.onTick, cfg.onEnd, cfg.onPause, cfg.onResume, cfg.onLoop) };
+        auto tweenPtr { std::make_shared<OkayTween<T>>(cfg.start, cfg.end, cfg.ref, cfg.durationMs, cfg.easingFn, cfg.numLoops, cfg.inOutBack, cfg.prefixMs, cfg.onTick, cfg.onEnd, cfg.onPause, cfg.onResume, cfg.onLoop) };
 
         return tweenPtr;
     }
@@ -233,7 +239,7 @@ class OkayTween : public IOkayTween, public std::enable_shared_from_this<OkayTwe
     std::uint32_t _timeElapsed {};
     EasingFn _easingFn;
 
-    // optional logical params
+    // std::optionalal logical params
     bool _killTween { false };
     std::int64_t _numLoops;
     std::int64_t _loopsCompleted {};
@@ -246,6 +252,8 @@ class OkayTween : public IOkayTween, public std::enable_shared_from_this<OkayTwe
     std::function<void()> _onPause;
     std::function<void()> _onResume;
     std::function<void()> _onLoop;
+
+    std::optional<std::reference_wrapper<T>> _reference;
 };
 
 } // namespace okay

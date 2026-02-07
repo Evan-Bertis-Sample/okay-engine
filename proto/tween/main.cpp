@@ -1,3 +1,4 @@
+#include <functional>
 #include <memory>
 #include <okay/core/okay.hpp>
 #include <okay/core/renderer/okay_renderer.hpp>
@@ -16,6 +17,8 @@
 static void __gameInitialize();
 static void __gameUpdate();
 static void __gameShutdown();
+
+static float ref;
 
 int main() {
     okay::SurfaceConfig surfaceConfig;
@@ -38,7 +41,14 @@ int main() {
 
     return 0;
 }
-okay::TweenConfig<float> tween5Config { -0.5, 0.5, 3000 };
+
+
+
+okay::TweenConfig<float> tween5Config {
+    .start = -0.5,
+    .end = 0.5,
+    .ref = ref
+};
 
 std::shared_ptr<okay::OkayTween<float>> tween1;
 std::shared_ptr<okay::OkayTween<float>> tween2;
@@ -54,20 +64,20 @@ static void __gameInitialize() {
 
     // DEMO
     
-    tween1 = okay::OkayTween<float>::create(0.5f, -0.5f, 2000, okay::easing::linear, 
-        0, true, 0);
-    tween2 = okay::OkayTween<float>::create(0.5f, -0.5f, 2000, okay::easing::linear, 
-        0, true, 0);
-    tween3 = okay::OkayTween<float>::create(-0.5f, 0.5f, 2000, okay::easing::backInOut, 
-        1, true, 0, [&]() {
-            auto* renderer = okay::Engine.systems.getSystemChecked<okay::OkayRenderer>();
-            renderer->setBoxPosition(glm::vec3(tween3->value(), tween3->value(), 0.0f));
-        });
-    tween4 = okay::OkayTween<float>::create(-0.5f, 0.5f, 2000, okay::easing::quadOut, 
-        0, true, 0, [&]() {
-            auto* renderer = okay::Engine.systems.getSystemChecked<okay::OkayRenderer>();
-            renderer->setBoxPosition(glm::vec3(0.0f, tween4->value(), 0.0f));
-        });
+    // tween1 = okay::OkayTween<float>::create(0.5f, -0.5f, std::nullopt, 2000, okay::easing::linear, 
+    //     0, true, 0);
+    // tween2 = okay::OkayTween<float>::create(0.5f, -0.5f, std::nullopt, 2000, okay::easing::linear, 
+    //     0, true, 0);
+    // tween3 = okay::OkayTween<float>::create(-0.5f, 0.5f, std::nullopt, 2000, okay::easing::backInOut, 
+    //     1, true, 0, [&]() {
+    //         auto* renderer = okay::Engine.systems.getSystemChecked<okay::OkayRenderer>();
+    //         renderer->setBoxPosition(glm::vec3(tween3->value(), tween3->value(), 0.0f));
+    //     });
+    // tween4 = okay::OkayTween<float>::create(-0.5f, 0.5f, std::nullopt, 2000, okay::easing::quadOut, 
+    //     0, true, 0, [&]() {
+    //         auto* renderer = okay::Engine.systems.getSystemChecked<okay::OkayRenderer>();
+    //         renderer->setBoxPosition(glm::vec3(0.0f, tween4->value(), 0.0f));
+    //     });
 
     tween5 = okay::OkayTween<float>::create(tween5Config);
     col->append(tween1);
@@ -91,8 +101,8 @@ static void __gameInitialize() {
 }
 
 static void __gameUpdate() {
-    auto* renderer = okay::Engine.systems.getSystemChecked<okay::OkayRenderer>();
-    renderer->setBoxPosition(glm::vec3(tween5->value(), 0.0f, 0.0f));
+    // auto* renderer = okay::Engine.systems.getSystemChecked<okay::OkayRenderer>();
+    // renderer->setBoxPosition(glm::vec3(tween5->value(), 0.0f, 0.0f));
 
     // static int i {};
     

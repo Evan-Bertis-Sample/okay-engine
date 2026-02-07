@@ -16,7 +16,7 @@ class Option {
 
     /// @brief Create an option with no value
     /// @return Return an option with no value
-    static Option<T> none() { return Option<T>(); }
+    static constexpr Option<T> none() { return Option<T>(); }
 
     /// @brief Ctor
     Option() : _hasValue(false), _value(T()) {}
