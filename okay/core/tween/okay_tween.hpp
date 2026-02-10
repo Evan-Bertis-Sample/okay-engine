@@ -31,6 +31,7 @@ concept Tweenable = requires(T t) {
   * @param start Starting value to tween to
   * @param end End value to tween to
   * @param easingFn Easing function to interpolate with
+  * @param ref Optional reference to a variable the user wants to tween
   * @param numLoops Number of times the tween should loop, excluding the initial run (-1 if infinite, default 0)
   * @param inOutBack Whether the tween should in-out-back (yoyo)
   * @param buffer Time to wait before tween beins ticking
