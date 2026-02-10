@@ -1,5 +1,4 @@
 #include "okay/core/tween/okay_tween_collection.hpp"
-#include <cstdint>
 #include "okay/core/okay.hpp"
 #include "okay/core/tween/i_okay_tween.hpp"
 #include "okay/core/tween/okay_tween_engine.hpp"
@@ -49,11 +48,13 @@ void OkayTweenCollection::kill() {
 }
 
 bool OkayTweenCollection::isFinished() {
+    bool allTweensFinished { true };
+
     for (auto& tween : _collection) {
-        if (!tween->isFinished()) return false;
+        if (!tween->isFinished()) allTweensFinished = false;
     }
     
-    return true;
+    return allTweensFinished;
 }
 
 void OkayTweenCollection::reset() {
