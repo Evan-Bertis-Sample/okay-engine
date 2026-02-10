@@ -81,12 +81,3 @@ void OkayRenderer::shutdown() {
     std::cout << "Okay Renderer shutdown." << std::endl;
     // Cleanup rendering resources here
 }
-
-// rendering functions for tween demo purposes only
-
-void OkayRenderer::setBoxPosition(const glm::vec3& position) {
-    _modelBuffer.removeMesh(_model);
-    _model = _modelBuffer.addMesh(
-        primitives::box().sizeSet({0.1f, 0.1f, 0.1f}).withCenter(position).build());
-    _modelBuffer.bindMeshData();
-}

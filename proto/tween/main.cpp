@@ -65,6 +65,22 @@ okay::TweenConfig<float> tweenConfig2 {
     .durationMs = 2000,
     .inOutBack = true,
 };
+okay::TweenConfig<float> tweenConfig3 {
+    .start = -0.5f,
+    .end = 0.5f,
+    .ref = ref3,
+    .easingFn = okay::easing::cubicIn,
+    .durationMs = 2000,
+    .inOutBack = true,
+};
+okay::TweenConfig<float> tweenConfig4 {
+    .start = -0.5f,
+    .end = 0.5f,
+    .ref = ref4,
+    .easingFn = okay::easing::bounceInOut,
+    .durationMs = 2000,
+    .inOutBack = true,
+};
 
 std::shared_ptr<okay::OkayTween<float>> tween0;
 std::shared_ptr<okay::OkayTween<float>> tween1;
@@ -77,54 +93,25 @@ std::shared_ptr<okay::OkayTweenCollection> col {okay::OkayTweenCollection::creat
 static void __gameInitialize() {
     // Additional game initialization logic
     okay::Engine.logger.info("Game initialized.");
-
-    // DEMO
     
-    // tween0 = okay::OkayTween<float>::create(tweenConfig0);
+    tween0 = okay::OkayTween<float>::create(tweenConfig0);
+    // tween0->start();
 
     tween1 = okay::OkayTween<float>::create(tweenConfig1);
     tween2 = okay::OkayTween<float>::create(tweenConfig2);
+    // col->append(tween1);
+    // col->append(tween2);
+    // col->start();
 
-    // tween3 = okay::OkayTween<float>::create(-0.5f, 0.5f, ref3, 2000, okay::easing::backInOut, 
-    //     1, true, 0, [&]() {
-    //         auto* renderer = okay::Engine.systems.getSystemChecked<okay::OkayRenderer>();
-    //         renderer->setBoxPosition(glm::vec3(ref3, ref3, 0.0f));
-    //     });
-    // tween4 = okay::OkayTween<float>::create(-0.5f, 0.5f, ref4, 2000, okay::easing::quadOut, 
-    //     0, true, 0, [&]() {
-    //         auto* renderer = okay::Engine.systems.getSystemChecked<okay::OkayRenderer>();
-    //         renderer->setBoxPosition(glm::vec3(0.0f, ref4, 0.0f));
-    //     });
-
-    col->append(tween1);
-    col->append(tween2);
-
+    tween3 = okay::OkayTween<float>::create(tweenConfig3);
+    tween4 = okay::OkayTween<float>::create(tweenConfig4);
     // seq->append(tween3);
     // seq->append(tween4);
-
-    // tween0->start();
-    col->start();
     // seq.start();
 }
 
 static void __gameUpdate() {
-    // comment out these lines when testing sequence
-    auto* renderer = okay::Engine.systems.getSystemChecked<okay::OkayRenderer>();
-    renderer->setBoxPosition(glm::vec3(ref1, ref2, 0.0f));
-
-    // static int i {};
-    
-    // okay::Engine.logger.debug("tick: {}", i);
-    // if (i == 300) {
-    //     seq->kill();
-    //     seq->pause();
-    // }
-
-    // if (i == 500) {
-    //     seq->resume();
-    // }
-
-    // ++i;
+    // Game update logic
 }
 
 static void __gameShutdown() {
