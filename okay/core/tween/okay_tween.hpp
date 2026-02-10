@@ -97,6 +97,7 @@ class OkayTween : public IOkayTween, public std::enable_shared_from_this<OkayTwe
         : START { start },
           END { end },
           DISPLACEMENT { end - start },
+          _reference { ref },
           _current { start },
           _durationMs { durationMs },
           _easingFn { easingFn },
@@ -162,6 +163,9 @@ class OkayTween : public IOkayTween, public std::enable_shared_from_this<OkayTwe
             
             std::float_t step = _easingFn(progress);
             _current = START + step * DISPLACEMENT;
+            
+            if (_reference.has_value()) _reference->get() = _current;
+
             _onTick();
         }
     }

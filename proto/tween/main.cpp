@@ -19,6 +19,8 @@ static void __gameUpdate();
 static void __gameShutdown();
 
 static float ref;
+static float ref1;
+static float ref2;
 
 int main() {
     okay::SurfaceConfig surfaceConfig;
@@ -45,7 +47,21 @@ int main() {
 okay::TweenConfig<float> tween5Config {
     .start = -0.5,
     .end = 0.5,
-    .ref = ref
+    .ref = ref,
+};
+okay::TweenConfig<float> tweenConfig1 {
+    .start = -0.5f,
+    .end = 0.5f,
+    .ref = ref1,
+    .durationMs = 2000,
+    .inOutBack = true,
+};
+okay::TweenConfig<float> tweenConfig2 {
+    .start = -0.5f,
+    .end = 0.5f,
+    .ref = ref2,
+    .durationMs = 2000,
+    .inOutBack = true,
 };
 
 std::shared_ptr<okay::OkayTween<float>> tween1;
@@ -62,10 +78,8 @@ static void __gameInitialize() {
 
     // DEMO
     
-    // tween1 = okay::OkayTween<float>::create(0.5f, -0.5f, std::nullopt, 2000, okay::easing::linear, 
-    //     0, true, 0);
-    // tween2 = okay::OkayTween<float>::create(0.5f, -0.5f, std::nullopt, 2000, okay::easing::linear, 
-    //     0, true, 0);
+    tween1 = okay::OkayTween<float>::create(tweenConfig1);
+    tween2 = okay::OkayTween<float>::create(tweenConfig2);
     // tween3 = okay::OkayTween<float>::create(-0.5f, 0.5f, std::nullopt, 2000, okay::easing::backInOut, 
     //     1, true, 0, [&]() {
     //         auto* renderer = okay::Engine.systems.getSystemChecked<okay::OkayRenderer>();
@@ -81,8 +95,8 @@ static void __gameInitialize() {
     col->append(tween1);
     col->append(tween2);
 
-    seq->append(tween3);
-    seq->append(tween4);
+    // seq->append(tween3);
+    // seq->append(tween4);
 
 
     // int n1 {0};
@@ -90,9 +104,9 @@ static void __gameInitialize() {
     // col.append(okay::OkayTween<int>::create(n1, 200));
     // col.append(okay::OkayTween<int>::create(n1, 500, 2000));
 
-    //col->start();
+    col->start();
     
-    tween5->start();
+    // tween5->start();
     // col.start();
 
     // okay::Engine.logger.debug("size: {}", sizeof(tween4));
@@ -100,7 +114,7 @@ static void __gameInitialize() {
 
 static void __gameUpdate() {
     auto* renderer = okay::Engine.systems.getSystemChecked<okay::OkayRenderer>();
-    renderer->setBoxPosition(glm::vec3(ref, 0.0f, 0.0f));
+    renderer->setBoxPosition(glm::vec3(ref1, ref2, 0.0f));
 
     // static int i {};
     
