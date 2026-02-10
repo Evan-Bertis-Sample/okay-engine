@@ -5,15 +5,41 @@
 #include <okay/core/system/okay_system.hpp>
 #include <okay/core/logging/okay_logger.hpp>
 
+#include <chrono>
 #include <utility>
 #include <functional>
 
 namespace okay {
 
+class OkayTime {
+    using HighResClock = std::chrono::high_resolution_clock;
+    using TimePoint = std::chrono::time_point<HighResClock>;
+
+   public:
+    OkayTime() : 
+        _lastTime(HighResClock::now())
+        {}
+
+    void reset() { _lastTime = HighResClock::now(); }
+
+    std::uint32_t deltaTime() const { return _deltaTime; }
+    
+    void updateDeltaTime() {
+        TimePoint prevTime = _lastTime;
+        _lastTime = HighResClock::now();
+        _deltaTime =  std::chrono::duration_cast<std::chrono::milliseconds>(_lastTime - prevTime).count();
+    }
+
+   private:
+    TimePoint _lastTime;
+    std::uint32_t _deltaTime;
+};
+
 class OkayEngine {
    public:
     OkaySystemManager systems;
     OkayLogger logger;
+    std::unique_ptr<OkayTime> time { std::make_unique<OkayTime>() };
 
     OkayEngine() {}
     ~OkayEngine() {}
@@ -75,7 +101,11 @@ class OkayGame {
 
         _onInitialize();
 
+        Engine.time->reset();
+
         while (_shouldRun) {
+            Engine.time->updateDeltaTime();
+
             for (IOkaySystem* system : enginePool) {
                 system->tick();
             }

@@ -1,4 +1,4 @@
-CompileFlags:
+ompileFlags:
   Add:
     - -std=gnu++20
     - -ID:/Documents/Code/Personal-Projects/okay-engine
