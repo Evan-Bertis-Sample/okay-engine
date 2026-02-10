@@ -83,7 +83,7 @@ class OkayTween : public IOkayTween, public std::enable_shared_from_this<OkayTwe
 
     OkayTween(T start,
               T end,
-              std::optional<T&> ref = std::nullopt,
+              std::optional<std::reference_wrapper<T>> ref = std::nullopt,
               std::uint32_t durationMs = 1000,
               EasingFn easingFn = okay::easing::linear,
               std::int64_t numLoops = 0,

@@ -42,8 +42,6 @@ int main() {
     return 0;
 }
 
-
-
 okay::TweenConfig<float> tween5Config {
     .start = -0.5,
     .end = 0.5,
@@ -101,8 +99,8 @@ static void __gameInitialize() {
 }
 
 static void __gameUpdate() {
-    // auto* renderer = okay::Engine.systems.getSystemChecked<okay::OkayRenderer>();
-    // renderer->setBoxPosition(glm::vec3(tween5->value(), 0.0f, 0.0f));
+    auto* renderer = okay::Engine.systems.getSystemChecked<okay::OkayRenderer>();
+    renderer->setBoxPosition(glm::vec3(ref, 0.0f, 0.0f));
 
     // static int i {};
     
