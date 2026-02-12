@@ -45,6 +45,8 @@ def main(args):
         "okay/vendor/glad/include",  # <glad/...>
         "okay/vendor/glm",  # <glm/...>
         "okay/vendor/glfw/include",  # <GLFW/...>
+        "okay/vendor/imgui",
+        "okay/vendor/imgui/backends",
     ]
 
     lines = []
