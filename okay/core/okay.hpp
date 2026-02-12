@@ -17,6 +17,12 @@ class OkayEngine {
 
     OkayEngine() {}
     ~OkayEngine() {}
+
+    void shutdown() { _shouldRun = false; }
+    bool shouldRun() { return _shouldRun; }
+
+    private:
+    bool _shouldRun{true};
 };
 
 extern OkayEngine Engine;
@@ -75,7 +81,7 @@ class OkayGame {
 
         _onInitialize();
 
-        while (_shouldRun) {
+        while (Engine.shouldRun()) {
             for (IOkaySystem* system : enginePool) {
                 system->tick();
             }
@@ -90,9 +96,6 @@ class OkayGame {
         _onShutdown();
     }
 
-    void shutdown() {
-        _shouldRun = false;
-    }
 
    private:
     std::function<void()> _onInitialize;
@@ -100,8 +103,6 @@ class OkayGame {
     std::function<void()> _onShutdown;
 
     static const std::vector<OkaySystemDescriptor> REQUIRED_SYSTEMS;
-
-    bool _shouldRun = true;
 };
 
 }  // namespace okay
