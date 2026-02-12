@@ -12,15 +12,13 @@
 #include <okay/core/tween/okay_tween_easing.hpp>
 #include <okay/core/tween/okay_tween_engine.hpp>
 
+#include <imgui.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
+
 static void __gameInitialize();
 static void __gameUpdate();
 static void __gameShutdown();
-
-static float ref0;
-static float ref1;
-static float ref2;
-static float ref3;
-static float ref4;
 
 int main() {
     okay::SurfaceConfig surfaceConfig;
@@ -31,6 +29,18 @@ int main() {
 
     okay::OkayLevelManagerSettings levelManagerSettings;
     auto levelManager = okay::OkayLevelManager::create(levelManagerSettings);
+    
+    // Setup Dear ImGui context
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+    // io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // IF using Docking Branch
+    
+    // // Setup Platform/Renderer backends
+    ImGui_ImplGlfw_InitForOpenGL(YOUR_WINDOW, true);          // Second param install_callback=true will install GLFW callbacks and chain to existing ones.
+    ImGui_ImplOpenGL3_Init();
 
     okay::OkayGame::create()
         .addSystems(std::move(renderer), std::move(levelManager),
@@ -48,6 +58,14 @@ int main() {
 static void __gameInitialize() {
     // Additional game initialization logic
     okay::Engine.logger.info("Game initialized.");
+
+    // (Your code calls glfwPollEvents())
+    // ...
+    // Start the Dear ImGui frame
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+    ImGui::ShowDemoWindow(); // Show demo window! :)
 }
 
 static void __gameUpdate() {
@@ -57,4 +75,14 @@ static void __gameUpdate() {
 static void __gameShutdown() {
     // Cleanup logic before game shutdown
     okay::Engine.logger.info("Game shutdown.");
+
+    // Rendering
+    // (Your code clears your framebuffer, renders your other stuff etc.)
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+    // // (Your code calls glfwSwapBuffers() etc.)
+
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
 }
