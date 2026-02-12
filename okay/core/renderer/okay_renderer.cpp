@@ -44,10 +44,10 @@ void OkayRenderer::tick() {
 
     OkayRenderContext context{_world, _renderTargetPool};
     _pipeline.render(context);
-    _surface->swapBuffers();
 }
 
 void OkayRenderer::postTick() {
+    _surface->swapBuffers();
 }
 
 void OkayRenderer::shutdown() {

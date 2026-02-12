@@ -115,6 +115,14 @@ class OkayGame {
             }
 
             _onUpdate();
+
+            for (IOkaySystem* system : enginePool) {
+                system->postTick();
+            }
+
+            for (IOkaySystem* system : gamePool) {
+                system->postTick();
+            }
         }
 
         _onShutdown();
