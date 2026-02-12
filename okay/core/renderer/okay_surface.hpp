@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <okay/core/system/okay_system.hpp>
+#include "GLFW/glfw3.h"
 
 namespace okay {
 
@@ -26,6 +27,7 @@ class Surface {
     void pollEvents();
     void swapBuffers();
     void destroy();
+    GLFWwindow* getWindow();
 
    private:
     struct SurfaceImpl;                  // defined in the backend .cpp

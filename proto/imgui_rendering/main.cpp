@@ -1,3 +1,4 @@
+#include <cstddef>
 #include <functional>
 #include <memory>
 #include <okay/core/okay.hpp>
@@ -20,27 +21,25 @@ static void __gameInitialize();
 static void __gameUpdate();
 static void __gameShutdown();
 
+
 int main() {
     okay::SurfaceConfig surfaceConfig;
     okay::Surface surface(surfaceConfig);
-
+    
     okay::OkayRendererSettings rendererSettings{surfaceConfig};
     auto renderer = okay::OkayRenderer::create(rendererSettings);
 
     okay::OkayLevelManagerSettings levelManagerSettings;
     auto levelManager = okay::OkayLevelManager::create(levelManagerSettings);
-    
-    // Setup Dear ImGui context
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO();
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+ 
     // io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // IF using Docking Branch
     
-    // // Setup Platform/Renderer backends
-    ImGui_ImplGlfw_InitForOpenGL(YOUR_WINDOW, true);          // Second param install_callback=true will install GLFW callbacks and chain to existing ones.
-    ImGui_ImplOpenGL3_Init();
+    // Setup Platform/Renderer backends
+    // ImGui_ImplGlfw_InitForOpenGL(okay::Engine.systems.getSystem<okay::OkayRenderer>().value()->getSurfaceWindow(), true);          // Second param install_callback=true will install GLFW callbacks and chain to existing ones.
+
+    // (Your code calls glfwPollEvents())
+    // ...
+    // Start the Dear ImGui frame
 
     okay::OkayGame::create()
         .addSystems(std::move(renderer), std::move(levelManager),
@@ -59,28 +58,38 @@ static void __gameInitialize() {
     // Additional game initialization logic
     okay::Engine.logger.info("Game initialized.");
 
-    // (Your code calls glfwPollEvents())
-    // ...
-    // Start the Dear ImGui frame
-    ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplGlfw_NewFrame();
-    ImGui::NewFrame();
-    ImGui::ShowDemoWindow(); // Show demo window! :)
+        // Setup Dear ImGui context
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+
+    okay::OkayRenderer *renderer = okay::Engine.systems.getSystemChecked<okay::OkayRenderer>();
+    auto win = renderer->getSurfaceWindow();
+    ImGui_ImplGlfw_InitForOpenGL(win, true);          // Second param install_callback=true will install GLFW callbacks and chain to existing ones.
+    ImGui_ImplOpenGL3_Init();
+    
 }
 
 static void __gameUpdate() {
     // Game update logic
+     // Rendering
+    // (Your code clears your framebuffer, renders your other stuff etc.)
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+    ImGui::ShowDemoWindow(); // Show demo window! :)
+
+
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+    // // (Your code calls glfwSwapBuffers() etc.)
 }
 
 static void __gameShutdown() {
     // Cleanup logic before game shutdown
     okay::Engine.logger.info("Game shutdown.");
-
-    // Rendering
-    // (Your code clears your framebuffer, renders your other stuff etc.)
-    ImGui::Render();
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-    // // (Your code calls glfwSwapBuffers() etc.)
 
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();

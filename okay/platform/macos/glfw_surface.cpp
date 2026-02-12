@@ -37,6 +37,10 @@ void Surface::initialize() {
     }
 }
 
+GLFWwindow* Surface::getWindow() {
+    return _impl->window;
+}
+
 bool Surface::shouldClose() const {
     return _impl->window ? glfwWindowShouldClose(_impl->window) : true;
 }

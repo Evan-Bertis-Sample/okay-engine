@@ -47,6 +47,10 @@ class OkayRenderer : public OkaySystem<OkaySystemScope::ENGINE> {
         return _meshBuffer;
     }
 
+    GLFWwindow* getSurfaceWindow() {
+        return _surface->getWindow();
+    }
+
    private:
     OkayRendererSettings _settings;
     OkayRenderWorld _world;
