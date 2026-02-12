@@ -96,7 +96,7 @@ Failable OkayMeshBuffer::bindMeshData() {
 
     glBindVertexArray(_vao);
     glBindBuffer(GL_ARRAY_BUFFER, _vbo);
-    glBufferData(GL_ARRAY_BUFFER, _bufferData.size() * sizeof(GLfloat), &_bufferData[0],
+    glBufferData(GL_ARRAY_BUFFER, _bufferData.size() * sizeof(GLfloat), _bufferData.data(),
                  GL_STATIC_DRAW);
 
     // setup the vertex attributes
@@ -105,7 +105,7 @@ Failable OkayMeshBuffer::bindMeshData() {
     // init the ebo
     glGenBuffers(1, &_ebo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, _indices.size() * sizeof(GLuint), &_indices[0],
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, _indices.size() * sizeof(GLuint), _indices.data(),
                  GL_STATIC_DRAW);
 
     // unbind
