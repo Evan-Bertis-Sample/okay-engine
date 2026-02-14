@@ -73,7 +73,7 @@ namespace okay {
        private:
         std::vector<std::shared_ptr<IOkayTween>> _sequence;
         bool _started { false };
-        std::uint32_t _index { 0 };
+        uint32_t _index { 0 };
     };
 } // namespace okay
 
