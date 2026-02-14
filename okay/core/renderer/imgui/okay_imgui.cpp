@@ -29,7 +29,31 @@ void OkayIMGUI::tick() {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
-    ImGui::ShowDemoWindow();
+    
+    ImGui::Begin("Properties");
+    if (ImGui::CollapsingHeader("test", ImGuiTreeNodeFlags_DefaultOpen)) {
+        if (ImGui::Button("testButton")) {
+            okay::Engine.logger.debug("aaa");
+        }
+    }
+    float placeholder {};
+    bool b1 {};
+    bool b2 {};
+    bool b3 {};
+    if (ImGui::CollapsingHeader("stuff")) {
+        ImGui::Text("Name");
+        ImGui::ColorPicker3("Color", &placeholder, ImGuiColorEditFlags_PickerHueWheel);
+        ImGui::SliderFloat("Metallic", &placeholder, 0.0f, 1.0f);
+        ImGui::Separator();
+        if (ImGui::BeginTable("split", 3))
+        {
+            ImGui::TableNextColumn(); ImGui::Checkbox("No titlebar", &b1);
+            ImGui::TableNextColumn(); ImGui::Checkbox("No scrollbar", &b2);
+            ImGui::TableNextColumn(); ImGui::Checkbox("No menu", &b3);
+            ImGui::EndTable();
+        }
+    }
+    ImGui::End();
 
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
