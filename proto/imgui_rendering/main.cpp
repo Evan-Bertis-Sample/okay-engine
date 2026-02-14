@@ -14,8 +14,6 @@
 #include <okay/core/tween/okay_tween_easing.hpp>
 #include <okay/core/tween/okay_tween_engine.hpp>
 
-#include <wingdi.h>
-
 static void __gameInitialize();
 static void __gameUpdate();
 static void __gameShutdown();
