@@ -4,25 +4,28 @@ import subprocess
 def require_okay_project():
     return False
 
+def register_subparser(sp):
+    sp.add_argument("-y", "--yes", action="store_true", help="Automatically confirm the update without prompting")
+
 def main(args):
     okay_root = OkayToolUtil.get_root_dir()
 
-    # now we can run a git pull command, but first ask the user if they want to
-    print("Attempting to update Raxel")
-    print("This will run a git pull command in the Raxel directory")
-    print("Specifically, this will run 'git pull' in the following directory:")
-    print(okay_root)
-
     # ask the user if they want to continue
-    while True:
-        user_input = input("Continue? (y/n): ")
-        if user_input.lower() == "y":
-            break
-        elif user_input.lower() == "n":
-            print("Exiting")
-            return
-        else:
-            print("Invalid input")
+    if not args.yes:
+        print("Attempting to update Raxel")
+        print("This will run a git pull command in the Raxel directory")
+        print("Specifically, this will run 'git pull' in the following directory:")
+        print(okay_root)
+
+        while True:
+            user_input = input("Continue? (y/n): ")
+            if user_input.lower() == "y":
+                break
+            elif user_input.lower() == "n":
+                print("Exiting")
+                return
+            else:
+                print("Invalid input")
 
     # run the git pull command
     print("Running git pull")
