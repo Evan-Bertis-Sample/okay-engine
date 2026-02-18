@@ -48,6 +48,12 @@ class OkayRenderer : public OkaySystem<OkaySystemScope::ENGINE> {
     OkayMeshBuffer& meshBuffer() {
         return _meshBuffer;
     }
+    OkayRenderTargetPool& renderTargetPool() {
+        return _renderTargetPool;
+    }
+    OkayMaterialRegistry& materialRegistry() {
+        return _materialRegistry;
+    }
 
    private:
     SurfaceConfig _surfaceConfig;
@@ -55,6 +61,7 @@ class OkayRenderer : public OkaySystem<OkaySystemScope::ENGINE> {
     OkayMeshBuffer _meshBuffer;
     OkayRenderPipeline _pipeline;
     OkayRenderTargetPool _renderTargetPool;
+    OkayMaterialRegistry _materialRegistry;
     std::unique_ptr<Surface> _surface;
 
     // dirty flags

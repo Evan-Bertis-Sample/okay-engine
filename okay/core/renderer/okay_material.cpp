@@ -68,4 +68,18 @@ Failable OkayShader::set() {
     return Failable::ok({});
 }
 
+OkayMaterial& OkayMaterialHandle::operator*() const {
+    return *owner->getMaterial(id);
+}
+
+OkayMaterial& OkayMaterialHandle::operator->() const {
+    return *owner->getMaterial(id);
+}
+
+OkayMaterial& OkayMaterialHandle::get() const {
+    return *owner->getMaterial(id);
+}
+
+std::uint32_t OkayMaterialRegistry::_idCounter = 0;
+
 };  // namespace okay

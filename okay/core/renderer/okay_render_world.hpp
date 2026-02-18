@@ -116,7 +116,7 @@ class OkayRenderWorld;
 using RenderItemHandle = ObjectPoolHandle;
 
 struct OkayRenderItem {
-    OkayMaterial material;
+    OkayMaterialHandle material;
     OkayMesh mesh;
     OkayTransform transform;
     std::uint64_t sortKey;
@@ -128,7 +128,7 @@ struct OkayRenderItem {
     RenderItemHandle nextSibling{RenderItemHandle::invalidHandle()};
 
     OkayRenderItem() = default;
-    OkayRenderItem(OkayMaterial mat, OkayMesh m);
+    OkayRenderItem(OkayMaterialHandle mat, OkayMesh m);
 
     // operator overloads for std::map
     bool operator<(const OkayRenderItem& other) const {
@@ -162,7 +162,7 @@ struct OkayRenderEntity {
         friend class OkayRenderEntity;
         friend class OkayRenderWorld;
 
-        OkayMaterial material;
+        OkayMaterialHandle material{};
         OkayTransform transform{};
         OkayMesh mesh{};
 
@@ -261,12 +261,12 @@ class OkayRenderWorld {
     const ChildRange children(OkayRenderEntity parent) const;
 
     OkayRenderEntity addRenderEntity(const OkayTransform& transform,
-                                     const OkayMaterial& material,
+                                     const OkayMaterialHandle& material,
                                      const OkayMesh& mesh,
                                      OkayRenderEntity parent);
 
     OkayRenderEntity addRenderEntity(const OkayTransform& transform,
-                                     const OkayMaterial& material,
+                                     const OkayMaterialHandle& material,
                                      const OkayMesh& mesh) {
         return addRenderEntity(
             transform, material, mesh, OkayRenderEntity(this, RenderItemHandle::invalidHandle()));
@@ -276,7 +276,7 @@ class OkayRenderWorld {
     const OkayRenderItem& getRenderItem(RenderItemHandle handle) const {
         return _renderItemPool.get(handle);
     }
-    
+
     OkayRenderItem& getRenderItem(RenderItemHandle handle) {
         return _renderItemPool.get(handle);
     }

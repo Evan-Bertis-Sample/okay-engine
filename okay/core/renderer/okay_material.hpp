@@ -1,9 +1,11 @@
 #ifndef __OKAY_MATERIAL_H__
 #define __OKAY_MATERIAL_H__
 
+#include <cstddef>
 #include <cstdint>
 #include <glm/glm.hpp>
 #include <glad/glad.h>
+#include <memory>
 #include <okay/core/renderer/okay_texture.hpp>
 #include <okay/core/renderer/okay_uniform.hpp>
 #include <okay/core/util/result.hpp>
@@ -101,6 +103,8 @@ class OkayShader {
     std::size_t _id;
 };
 
+class OkayMaterialRegistry;
+
 class OkayMaterial {
    public:
     static constexpr std::uint32_t invalidID() {
@@ -109,8 +113,11 @@ class OkayMaterial {
 
     OkayMaterial() : _id(invalidID()) {
     }
-    OkayMaterial(const OkayShader& shader, std::unique_ptr<IOkayMaterialUniformCollection> uniforms)
-        : _shader(shader), _uniforms(std::move(uniforms)), _id(nextID()) {
+
+    OkayMaterial(const OkayShader& shader,
+                 std::unique_ptr<IOkayMaterialUniformCollection> uniforms,
+                 std::uint32_t id)
+        : _shader(shader), _uniforms(std::move(uniforms)), _id(id) {
     }
 
     bool isNone() const {
@@ -150,22 +157,17 @@ class OkayMaterial {
     }
 
     // enable move semantics
-    OkayMaterial(OkayMaterial&& other) : _shader(std::move(other._shader)), _id(other._id) {
+    OkayMaterial(OkayMaterial&& other)
+        : _shader(std::move(other._shader)), _uniforms(std::move(other._uniforms)), _id(other._id) {
     }
     OkayMaterial& operator=(OkayMaterial&& other) {
         _shader = std::move(other._shader);
+        _uniforms = std::move(other._uniforms);
         _id = other._id;
         return *this;
     }
 
     OkayMaterial(const OkayMaterial& other) : _shader(other._shader), _id(other._id) {
-    }
-
-    // enable copy semantics
-    OkayMaterial& operator=(const OkayMaterial& other) {
-        _shader = other._shader;
-        _id = other._id;
-        return *this;
     }
 
     // equality operator
@@ -182,14 +184,55 @@ class OkayMaterial {
     std::size_t _id{invalidID()};
     std::unique_ptr<IOkayMaterialUniformCollection> _uniforms;
 
-    static std::uint32_t nextID() {
-        static std::uint32_t id = 0;
-        return id++;
-    }
-
     void setMaterial() {
         setShader();
         passUniforms();
+    }
+};
+
+struct OkayMaterialHandle {
+    OkayMaterialRegistry* owner;
+    std::uint32_t id;
+
+    // equality
+    bool operator==(const OkayMaterialHandle& other) const {
+        return owner == other.owner && id == other.id;
+    }
+
+    bool operator!=(const OkayMaterialHandle& other) const {
+        return !(*this == other);
+    }
+
+    OkayMaterial& operator*() const;
+    OkayMaterial& operator->() const;
+    OkayMaterial& get() const;
+    
+};
+
+class OkayMaterialRegistry {
+   public:
+    OkayMaterialHandle registerMaterial(const OkayShader& shader,
+                                   std::unique_ptr<IOkayMaterialUniformCollection> uniforms) {
+        std::uint32_t id = nextID();
+        _materials.emplace_back(std::make_unique<OkayMaterial>(shader, std::move(uniforms), id));
+        return { this, id };
+    }
+
+    const std::unique_ptr<OkayMaterial> &getMaterial(std::uint32_t id) const {
+        return _materials[id];
+    }
+
+    // equality
+    bool operator==(const OkayMaterialRegistry& other) const {
+        return _materials == other._materials;
+    }
+
+   private:
+    std::vector<std::unique_ptr<OkayMaterial>> _materials;
+
+    static std::uint32_t _idCounter;
+    static std::uint32_t nextID() {
+        return _idCounter++;
     }
 };
 

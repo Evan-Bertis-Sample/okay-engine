@@ -66,9 +66,7 @@ static void __gameInitialize() {
 
     okay::OkayShader shader = shaderLoadRes.value().asset;
     shader.compile();
-    okay::OkayMaterial mat =
-        okay::OkayMaterial(shader, std::make_unique<okay::BaseMaterialUniforms>());
-
+    okay::OkayMaterialHandle mat = renderer->materialRegistry().registerMaterial(shader, std::make_unique<okay::BaseMaterialUniforms>());
     g_renderEntity = renderer->world().addRenderEntity(okay::OkayTransform(), mat, mesh);
 }
 

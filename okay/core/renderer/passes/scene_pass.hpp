@@ -27,16 +27,16 @@ class ScenePass : public IOkayRenderPass {
         for (const RenderItemHandle &handle : context.world.getRenderItems()) {
             OkayRenderItem& item = context.world.getRenderItem(handle);
 
-            if (shaderIndex != item.material.shaderID()) {
-                shaderIndex = item.material.shaderID();
-                item.material.setShader();
-                Engine.logger.info("Shader: {}", item.material.shaderID());
+            if (shaderIndex != item.material.get().shaderID()) {
+                shaderIndex = item.material.get().shaderID();
+                item.material.get().setShader();
+                Engine.logger.info("Shader: {}", item.material.get().shaderID());
             }
 
-            if (materialIndex != item.material.id()) {
-                materialIndex = item.material.id();
-                item.material.passUniforms();
-                Engine.logger.info("Material: {}", item.material.id());
+            if (materialIndex != item.material.get().id()) {
+                materialIndex = item.material.get().id();
+                item.material.get().passUniforms();
+                Engine.logger.info("Material: {}", item.material.get().id());
             }
 
             context.renderer.meshBuffer().drawMesh(item.mesh);
