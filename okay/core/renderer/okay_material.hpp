@@ -62,7 +62,9 @@ class OkayShader {
     }
 
     // enable move semantics
-    OkayShader(OkayShader&& other) : _shaderProgram(other._shaderProgram), _state(other._state), _id(other._id) {}
+    OkayShader(OkayShader&& other)
+        : _shaderProgram(other._shaderProgram), _state(other._state), _id(other._id) {
+    }
 
     OkayShader& operator=(OkayShader&& other) {
         _shaderProgram = other._shaderProgram;
@@ -72,7 +74,9 @@ class OkayShader {
     }
 
     // enable copy semantics
-    OkayShader(const OkayShader& other) : _shaderProgram(other._shaderProgram), _state(other._state), _id(other._id) {}
+    OkayShader(const OkayShader& other)
+        : _shaderProgram(other._shaderProgram), _state(other._state), _id(other._id) {
+    }
 
     OkayShader& operator=(const OkayShader& other) {
         _shaderProgram = other._shaderProgram;
@@ -103,13 +107,12 @@ class OkayMaterial {
         return 0xFFFFFFFFu;
     }
 
-    
-    OkayMaterial() : _id(invalidID()) {}
-    
-    OkayMaterial(const OkayShader& shader, std::unique_ptr<IOkayMaterialUniformCollection> uniforms)
-    : _shader(shader), _uniforms(std::move(uniforms)) {
+    OkayMaterial() : _id(invalidID()) {
     }
-    
+    OkayMaterial(const OkayShader& shader, std::unique_ptr<IOkayMaterialUniformCollection> uniforms)
+        : _shader(shader), _uniforms(std::move(uniforms)), _id(nextID()) {
+    }
+
     bool isNone() const {
         return _id == invalidID();
     }
@@ -117,7 +120,7 @@ class OkayMaterial {
     std::uint32_t id() const {
         return _id;
     }
-    
+
     std::uint32_t shaderID() const {
         return _shader.id();
     }
@@ -129,18 +132,34 @@ class OkayMaterial {
     }
 
     void passUniforms() {
+        if (!_uniforms) {
+            Engine.logger.error("Material {} has no uniforms.", _id);
+            return;
+        }
+
+        if (_shader.isNone()) {
+            Engine.logger.error("Material {} has no shader.", _id);
+            return;
+        }
+
+        setShader();
+        if (_uniforms->foundLocations()) {
+            _uniforms->findLocations(_shader.programID());
+        }
         _uniforms->setUniforms(_shader.programID());
     }
 
     // enable move semantics
-    OkayMaterial(OkayMaterial&& other) : _shader(std::move(other._shader)), _id(other._id) {}
+    OkayMaterial(OkayMaterial&& other) : _shader(std::move(other._shader)), _id(other._id) {
+    }
     OkayMaterial& operator=(OkayMaterial&& other) {
         _shader = std::move(other._shader);
         _id = other._id;
         return *this;
     }
 
-    OkayMaterial(const OkayMaterial& other) : _shader(other._shader), _id(other._id) {}
+    OkayMaterial(const OkayMaterial& other) : _shader(other._shader), _id(other._id) {
+    }
 
     // enable copy semantics
     OkayMaterial& operator=(const OkayMaterial& other) {
@@ -158,10 +177,15 @@ class OkayMaterial {
         return !(*this == other);
     }
 
-    private:
+   private:
     OkayShader _shader;
     std::size_t _id{invalidID()};
     std::unique_ptr<IOkayMaterialUniformCollection> _uniforms;
+
+    static std::uint32_t nextID() {
+        static std::uint32_t id = 0;
+        return id++;
+    }
 
     void setMaterial() {
         setShader();

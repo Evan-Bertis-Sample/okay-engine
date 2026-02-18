@@ -3,6 +3,7 @@
 
 #include <okay/core/okay.hpp>
 #include <okay/core/renderer/okay_render_pipeline.hpp>
+#include <okay/core/renderer/okay_renderer.hpp>
 
 namespace okay {
 
@@ -29,11 +30,13 @@ class ScenePass : public IOkayRenderPass {
             if (shaderIndex != item.material.shaderID()) {
                 shaderIndex = item.material.shaderID();
                 item.material.setShader();
+                Engine.logger.info("Shader: {}", item.material.shaderID());
             }
 
             if (materialIndex != item.material.id()) {
                 materialIndex = item.material.id();
                 item.material.passUniforms();
+                Engine.logger.info("Material: {}", item.material.id());
             }
 
             context.renderer.meshBuffer().drawMesh(item.mesh);

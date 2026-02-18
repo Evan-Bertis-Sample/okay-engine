@@ -162,6 +162,7 @@ class IOkayMaterialUniformCollection {
    public:
     virtual Failable setUniforms(GLuint shaderProgram) = 0;
     virtual Failable findLocations(GLuint shaderProgram) = 0;
+    virtual bool foundLocations() const = 0;
     virtual bool markAllDirty() = 0;
 };
 
@@ -193,6 +194,11 @@ class OkayMaterialUniformCollection : public IOkayMaterialUniformCollection {
             if (r.isError())
                 out = r;
         });
+
+        if (!out.isError()) {
+            _locationsFound = true;
+        }
+
         return out;
     }
 
@@ -206,6 +212,13 @@ class OkayMaterialUniformCollection : public IOkayMaterialUniformCollection {
         });
         return any;
     }
+
+    bool foundLocations() const override {
+        return _locationsFound;
+    };
+
+   private:
+    bool _locationsFound{false};
 };
 
 struct BaseMaterialUniforms : public OkayMaterialUniformCollection<BaseMaterialUniforms> {
