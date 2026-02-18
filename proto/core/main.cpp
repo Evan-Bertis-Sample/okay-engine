@@ -7,8 +7,10 @@
 #include <okay/core/okay_renderer.hpp>
 
 #include <utility>
-#include "okay/core/renderer/okay_material.hpp"
-#include "okay/core/renderer/okay_uniform.hpp"
+#include <okay/core/renderer/okay_material.hpp>
+#include <okay/core/renderer/okay_render_pipeline.hpp>
+#include <okay/core/renderer/okay_uniform.hpp>
+#include <okay/core/renderer/passes/scene_pass.hpp>
 
 static void __gameInitialize();
 static void __gameUpdate();
@@ -20,8 +22,14 @@ int main() {
     okay::SurfaceConfig surfaceConfig;
     okay::Surface surface(surfaceConfig);
 
-    okay::OkayRendererSettings rendererSettings{surfaceConfig};
-    auto renderer = okay::OkayRenderer::create(rendererSettings);
+    okay::OkayRendererSettings rendererSettings{
+        .surfaceConfig = surfaceConfig,
+        .pipeline = okay::OkayRenderPipeline::create(
+            std::make_unique<okay::ScenePass>()
+        )
+    };
+     
+    auto renderer = okay::OkayRenderer::create(std::move(rendererSettings));
 
     okay::OkayLevelManagerSettings levelManagerSettings;
     auto levelManager = okay::OkayLevelManager::create(levelManagerSettings);
