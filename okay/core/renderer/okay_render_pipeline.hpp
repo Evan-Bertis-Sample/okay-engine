@@ -9,7 +9,10 @@
 
 namespace okay {
 
+class OkayRenderer;
+
 struct OkayRenderContext {
+    OkayRenderer& renderer;
     OkayRenderWorld& world;
     OkayRenderTargetPool& renderTargetPool;
 };
@@ -18,16 +21,31 @@ class IOkayRenderPass {
    public:
     virtual ~IOkayRenderPass() = default;
 
-    virtual const std::string& name() const = 0;
+    virtual const std::string_view name() const = 0;
     virtual void initialize() = 0;
     virtual void resize(int newWidth, int newHeight) = 0;
     virtual void render(const OkayRenderContext& context) = 0;
 };
-
+  
 class OkayRenderPipeline {
    public:
+    template <typename... Ts>
+    static OkayRenderPipeline create(std::unique_ptr<Ts>... passes) {
+        OkayRenderPipeline pipeline;
+        (pipeline.addPass(std::move(passes)), ...);
+        return pipeline;
+    }
+
+    // enable move semantics
+    OkayRenderPipeline() {}
+    OkayRenderPipeline(OkayRenderPipeline&& other) : _passes(std::move(other._passes)) {}
+    OkayRenderPipeline& operator=(OkayRenderPipeline&& other) {
+        _passes = std::move(other._passes);
+        return *this;
+    }
+
     void addPass(std::unique_ptr<IOkayRenderPass> pass) {
-        _passes.push_back(std::move(pass));
+        _passes.emplace_back(std::move(pass));
     }
 
     void initialize() {

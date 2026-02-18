@@ -18,18 +18,20 @@ namespace okay {
 
 struct OkayRendererSettings {
     SurfaceConfig surfaceConfig;
+    OkayRenderPipeline pipeline;
 };
 
 class OkayRenderer : public OkaySystem<OkaySystemScope::ENGINE> {
    public:
-    static std::unique_ptr<OkayRenderer> create(const OkayRendererSettings& settings) {
-        return std::make_unique<OkayRenderer>(settings);
+    static std::unique_ptr<OkayRenderer> create(OkayRendererSettings settings) {
+        return std::make_unique<OkayRenderer>(std::move(settings));
     }
 
-    OkayRenderer(const OkayRendererSettings& settings)
-        : _settings(settings),
+    explicit OkayRenderer(OkayRendererSettings settings)
+        : _surfaceConfig(settings.surfaceConfig),
           _surface(std::make_unique<Surface>(settings.surfaceConfig)),
-          _renderTargetPool(settings.surfaceConfig.width, settings.surfaceConfig.height) {
+          _renderTargetPool(settings.surfaceConfig.width, settings.surfaceConfig.height),
+          _pipeline(std::move(settings.pipeline)) {
     }
 
     OkayShader shader;
@@ -48,7 +50,7 @@ class OkayRenderer : public OkaySystem<OkaySystemScope::ENGINE> {
     }
 
    private:
-    OkayRendererSettings _settings;
+    SurfaceConfig _surfaceConfig;
     OkayRenderWorld _world;
     OkayMeshBuffer _meshBuffer;
     OkayRenderPipeline _pipeline;

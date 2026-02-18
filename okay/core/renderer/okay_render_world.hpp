@@ -276,6 +276,10 @@ class OkayRenderWorld {
     const OkayRenderItem& getRenderItem(RenderItemHandle handle) const {
         return _renderItemPool.get(handle);
     }
+    
+    OkayRenderItem& getRenderItem(RenderItemHandle handle) {
+        return _renderItemPool.get(handle);
+    }
 
     OkayRenderEntity getRenderEntity(RenderItemHandle handle) {
         return OkayRenderEntity(this, handle);

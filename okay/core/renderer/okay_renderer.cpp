@@ -20,7 +20,7 @@ void OkayRenderer::initialize() {
 
     _renderTargetPool.initializeBuiltins();
     _pipeline.initialize();
-    _pipeline.resize(_settings.surfaceConfig.width, _settings.surfaceConfig.height);
+    _pipeline.resize(_surfaceConfig.width, _surfaceConfig.height);
 }
 
 void OkayRenderer::postInitialize() {
@@ -42,7 +42,7 @@ void OkayRenderer::tick() {
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    OkayRenderContext context{_world, _renderTargetPool};
+    OkayRenderContext context{*this, _world, _renderTargetPool};
     _pipeline.render(context);
     _surface->swapBuffers();
 }
