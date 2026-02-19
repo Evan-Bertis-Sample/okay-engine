@@ -320,7 +320,7 @@ class OkayBuildUtil:
             OkayLogger.log(f"CMake configure failed: {e}", OkayLogType.ERROR)
             return
 
-        OkayLogger.log(f"Building   → {options.cmake_build_cmd}", OkayLogType.INFO)
+        OkayLogger.log(f"Building   -> {options.cmake_build_cmd}", OkayLogType.INFO)
         try:
             subprocess.run(
                 options.cmake_build_cmd,
@@ -354,7 +354,7 @@ class OkayBuildUtil:
             OkayLogger.log("…continuing anyway…\n", OkayLogType.WARNING)
 
         cmd = ["gdb", str(options.executable)] if use_gdb else [str(options.executable)]
-        OkayLogger.log(f"Running → {' '.join(cmd)}", OkayLogType.INFO)
+        OkayLogger.log(f"Running -> {' '.join(cmd)}", OkayLogType.INFO)
         try:
             # give the executable permission to run and read/write because
             # future build steps may need to modify the executable
@@ -376,5 +376,5 @@ class OkayBuildUtil:
             str(options.project_dir),
             OkayToolUtil.get_okay_dir(),
         ]
-        OkayLogger.log(f"Compiling shaders → {' '.join(cmd)}", OkayLogType.INFO)
+        OkayLogger.log(f"Compiling shaders -> {' '.join(cmd)}", OkayLogType.INFO)
         os.execvp(cmd[0], cmd)
