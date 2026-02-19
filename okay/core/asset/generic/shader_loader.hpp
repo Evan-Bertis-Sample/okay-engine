@@ -17,6 +17,7 @@ struct OkayAssetLoader<OkayShader> {
                                         const OkayAssetIO& assetIO) {
         // by standard, the fragment shader will be path + .frag
         // and the vertex shader will be path + .vert
+        Engine.logger.info("Loading shader: {}", path.string());
 
         // load vertex shader
         Result<std::unique_ptr<std::istream>> vertexStreamRes =

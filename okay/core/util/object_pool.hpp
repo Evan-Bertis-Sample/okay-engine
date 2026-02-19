@@ -1,7 +1,8 @@
 #ifndef __OBJECT_POOL_H__
 #define __OBJECT_POOL_H__
 
-#include <cassert>
+#include <okay/core/okay.hpp>
+#include <okay/core/logging//okay_logger.hpp>
 #include <cstdint>
 #include <type_traits>
 #include <utility>
@@ -83,7 +84,10 @@ class ObjectPool final {
         if (!valid(h)) return;
 
         Slot& s = _slots[h.index];
-        assert(s.alive);
+        if (!s.alive) {
+            Engine.logger.error("invalid handle");
+            return;
+        }
 
         s.ref().~T();
         s.alive = false;
@@ -92,7 +96,11 @@ class ObjectPool final {
         s.freeNext = _freeHead;
         _freeHead = h.index;
 
-        assert(_aliveCount > 0);
+        if (_aliveCount <= 0) {
+            Engine.logger.error("aliveCount <= 0");
+            return;
+        }
+
         --_aliveCount;
     }
 
@@ -127,22 +135,33 @@ class ObjectPool final {
     std::size_t capacity() const { return _slots.size(); }
 
     T& get(ObjectPoolHandle h) {
-        assert(valid(h));
         return _slots[h.index].ref();
     }
 
     const T& get(ObjectPoolHandle h) const {
-        assert(valid(h));
+        if (!valid(h)) {
+            Engine.logger.error("invalid handle");
+            return _slots[0].ref();
+        }
+
         return _slots[h.index].ref();
     }
 
     T* tryGet(ObjectPoolHandle h) {
-        if (!valid(h)) return nullptr;
+        if (!valid(h)) {
+            Engine.logger.error("invalid handle");
+            return nullptr;
+        }
+
         return &_slots[h.index].ref();
     }
 
     const T* tryGet(ObjectPoolHandle h) const {
-        if (!valid(h)) return nullptr;
+        if (!valid(h)) {
+            Engine.logger.error("invalid handle");
+            return nullptr;
+        }
+
         return &_slots[h.index].ref();
     }
 
@@ -152,19 +171,40 @@ class ObjectPool final {
     }
 
     T& atIndex(std::uint32_t index) {
-        assert(index < _slots.size());
-        assert(_slots[index].alive);
+        if (index >= _slots.size()) { 
+            Engine.logger.error("invalid index");
+            return _slots[0].ref();
+        }
+
+        if (!aliveAt(index)) {
+            Engine.logger.error("invalid index");
+            return _slots[0].ref();
+        }
+
         return _slots[index].ref();
     }
 
     const T& atIndex(std::uint32_t index) const {
-        assert(index < _slots.size());
-        assert(_slots[index].alive);
+        if (index >= _slots.size()) { 
+            Engine.logger.error("invalid index");
+            return _slots[0].ref();
+        }
+
+        if (!aliveAt(index)) {
+            Engine.logger.error("invalid index");
+            return _slots[0].ref();
+        }
+
         return _slots[index].ref();
     }
 
     std::uint32_t generationAt(std::uint32_t index) const {
-        assert(index < _slots.size());
+    
+        if (index >= _slots.size()) {
+            Engine.logger.error("invalid index");
+            return 0;
+        }
+
         return _slots[index].generation;
     }
 

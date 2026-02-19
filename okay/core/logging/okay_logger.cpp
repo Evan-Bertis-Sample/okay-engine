@@ -13,15 +13,17 @@ std::string OkayLogger::makeStartFilename(const std::string& prefix) {
     auto tm = *std::localtime(&time);
     std::stringstream ss;
     // prepend cwd / logs
-    ss << std::filesystem::current_path() / "logs" / prefix
+    ss << "logs" << std::string(1, std::filesystem::path::preferred_separator) << prefix
        << std::put_time(&tm, "%Y-%m-%d_%H-%M-%S") << ".log";
     return ss.str();
 }
 
 void OkayLogger::openFileIfNeeded() {
     if (!_options.ToFile) return;
-    if (_logFileName.empty()) _logFileName = makeStartFilename(_options.FilePrefix);
+    if (_logFileName.empty()) _logFileName = makeStartFilename(_options.filePrefix);
     // make the file if it doesn't exist
+    // create the directories if they don't exist
+    std::filesystem::create_directories(std::filesystem::path{_logFileName}.parent_path());
     _file.open(_logFileName, std::ios::out | std::ios::app);
     if (!_file.is_open()) {
         auto log = OkayLog("Failed to open log file: {}");

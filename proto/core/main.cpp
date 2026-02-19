@@ -48,7 +48,7 @@ int main() {
 
 static void __gameInitialize() {
     // Additional game initialization logic
-    okay::Engine.logger.info("Game initialized.");
+    okay::Engine.logger.info("Initializing game...");
 
     okay::OkayRenderer* renderer = okay::Engine.systems.getSystemChecked<okay::OkayRenderer>();
 
@@ -59,13 +59,16 @@ static void __gameInitialize() {
         okay::Engine.systems.getSystemChecked<okay::OkayAssetManager>();
     auto shaderLoadRes = assetManager->loadEngineAssetSync<okay::OkayShader>("shaders/test");
 
-    if (!shaderLoadRes) {
+    if (shaderLoadRes.isError()) {
         okay::Engine.logger.error("Failed to load shader: {}", shaderLoadRes.error());
         return;
     }
 
     okay::OkayShader shader = shaderLoadRes.value().asset;
-    shader.compile();
+
+    okay::Engine.logger.info("Fragment Shader: {}", shader.fragmentShader);
+    okay::Engine.logger.info("Vertex Shader: {}", shader.vertexShader);
+
     okay::OkayMaterialHandle mat = renderer->materialRegistry().registerMaterial(shader, std::make_unique<okay::BaseMaterialUniforms>());
     g_renderEntity = renderer->world().addRenderEntity(okay::OkayTransform(), mat, mesh);
 }

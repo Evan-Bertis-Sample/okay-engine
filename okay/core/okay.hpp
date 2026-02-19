@@ -105,6 +105,7 @@ class OkayGame {
             system->initialize();
         }
 
+        Engine.logger.info("Initializing game...");
         _onInitialize();
 
         Engine.time->reset();

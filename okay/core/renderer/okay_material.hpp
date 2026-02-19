@@ -132,28 +132,43 @@ class OkayMaterial {
         return _shader.id();
     }
 
-    void setShader() {
-        if (_shader.state() != ShaderState::IN_USE) {
-            _shader.set();
+    Failable setShader() {
+        if (_shader.isNone()) {
+            return Failable::errorResult("Material has no shader.");
         }
+
+        if (_shader.state() == ShaderState::NOT_COMPILED) {
+            Failable compile = _shader.compile();
+            if (compile.isError()) {
+                return compile;
+            }
+        }
+        
+        if (_shader.state() != ShaderState::IN_USE) {
+            return _shader.set();
+        }
+        return Failable::ok({});
     }
 
-    void passUniforms() {
+    Failable passUniforms() {
         if (!_uniforms) {
-            Engine.logger.error("Material {} has no uniforms.", _id);
-            return;
+            return Failable::errorResult("Material has no uniforms.");
         }
 
         if (_shader.isNone()) {
-            Engine.logger.error("Material {} has no shader.", _id);
-            return;
+            return Failable::errorResult("Material has no shader.");
         }
 
         setShader();
-        if (_uniforms->foundLocations()) {
-            _uniforms->findLocations(_shader.programID());
+        if (!_uniforms->foundLocations()) {
+            Engine.logger.debug("Finding uniform locations for material {}.", _id);
+            Failable find = _uniforms->findLocations(_shader.programID());
+            if (find.isError()) {
+                return find;
+            }
         }
-        _uniforms->setUniforms(_shader.programID());
+        Engine.logger.debug("Passing uniforms for material {}.", _id);
+        return _uniforms->setUniforms(_shader.programID());
     }
 
     // enable move semantics
