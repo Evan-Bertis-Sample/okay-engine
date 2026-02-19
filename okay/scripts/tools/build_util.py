@@ -208,12 +208,14 @@ class OkayBuildOptions:
         if self.target.lower() in ("rpi", "raspberrypi") and toolchain:
             args += [f"-DCMAKE_TOOLCHAIN_FILE={toolchain}"]
 
-        return shlex.join(args)
+        cmd = subprocess.list2cmdline(args)  # uses "..." quoting
 
+        return cmd 
+    
     @property
     def cmake_build_cmd(self) -> str:
         cmd = ["cmake", "--build", str(self.build_dir), "--target", self.project_name]
-        return shlex.join(cmd)
+        return subprocess.list2cmdline(cmd)
 
     @property
     def executable(self) -> Path:
