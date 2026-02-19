@@ -208,12 +208,14 @@ class OkayBuildOptions:
         if self.target.lower() in ("rpi", "raspberrypi") and toolchain:
             args += [f"-DCMAKE_TOOLCHAIN_FILE={toolchain}"]
 
-        return shlex.join(args)
+        cmd = subprocess.list2cmdline(args)  # uses "..." quoting
 
+        return cmd 
+    
     @property
     def cmake_build_cmd(self) -> str:
         cmd = ["cmake", "--build", str(self.build_dir), "--target", self.project_name]
-        return shlex.join(cmd)
+        return subprocess.list2cmdline(cmd)
 
     @property
     def executable(self) -> Path:
@@ -318,7 +320,7 @@ class OkayBuildUtil:
             OkayLogger.log(f"CMake configure failed: {e}", OkayLogType.ERROR)
             return
 
-        OkayLogger.log(f"Building   → {options.cmake_build_cmd}", OkayLogType.INFO)
+        OkayLogger.log(f"Building   -> {options.cmake_build_cmd}", OkayLogType.INFO)
         try:
             subprocess.run(
                 options.cmake_build_cmd,
@@ -352,7 +354,7 @@ class OkayBuildUtil:
             OkayLogger.log("…continuing anyway…\n", OkayLogType.WARNING)
 
         cmd = ["gdb", str(options.executable)] if use_gdb else [str(options.executable)]
-        OkayLogger.log(f"Running → {' '.join(cmd)}", OkayLogType.INFO)
+        OkayLogger.log(f"Running -> {' '.join(cmd)}", OkayLogType.INFO)
         try:
             # give the executable permission to run and read/write because
             # future build steps may need to modify the executable
@@ -374,5 +376,5 @@ class OkayBuildUtil:
             str(options.project_dir),
             OkayToolUtil.get_okay_dir(),
         ]
-        OkayLogger.log(f"Compiling shaders → {' '.join(cmd)}", OkayLogType.INFO)
+        OkayLogger.log(f"Compiling shaders -> {' '.join(cmd)}", OkayLogType.INFO)
         os.execvp(cmd[0], cmd)
