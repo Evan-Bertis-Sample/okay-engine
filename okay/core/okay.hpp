@@ -121,6 +121,18 @@ class OkayGame {
             _onUpdate();
         }
 
+        for (IOkaySystem* system : enginePool) {
+            system->shutdown();
+        }
+
+        for (IOkaySystem* system : gamePool) {
+            system->shutdown();
+        }
+
+        for (IOkaySystem* system : Engine.systems.getPool(OkaySystemScope::LEVEL)) {
+            system->shutdown();
+        }
+
         _onShutdown();
     }
 
