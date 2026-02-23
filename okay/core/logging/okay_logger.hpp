@@ -109,7 +109,7 @@ class OkayLogger {
         emit<Severity::WARNING, V, Ts...>(std::cerr, log, std::forward<Ts>(ts)...);
     }
 
-    template <Verbosity V = Verbosity::NORMAL, typename... Ts>
+    template <Verbosity V = Verbosity::QUIET, typename... Ts>
     void error(OkayLog log, Ts&&... ts) {
         emit<Severity::ERROR, V, Ts...>(std::cerr, log, std::forward<Ts>(ts)...);
     }
