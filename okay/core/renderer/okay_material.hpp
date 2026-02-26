@@ -65,19 +65,24 @@ class OkayShader {
 
     // enable move semantics
     OkayShader(OkayShader&& other)
-        : _shaderProgram(other._shaderProgram), _state(other._state), _id(other._id) {
+        : vertexShader(std::move(other.vertexShader)),
+          fragmentShader(std::move(other.fragmentShader)),
+        _shaderProgram(other._shaderProgram), _state(other._state), _id(other._id) {
     }
 
     OkayShader& operator=(OkayShader&& other) {
         _shaderProgram = other._shaderProgram;
         _state = other._state;
         _id = other._id;
+        vertexShader = std::move(other.vertexShader);
+        fragmentShader = std::move(other.fragmentShader);
         return *this;
     }
 
     // enable copy semantics
     OkayShader(const OkayShader& other)
-        : _shaderProgram(other._shaderProgram), _state(other._state), _id(other._id) {
+        : vertexShader(other.vertexShader), fragmentShader(other.fragmentShader), 
+        _shaderProgram(other._shaderProgram), _state(other._state), _id(other._id) {
     }
 
     OkayShader& operator=(const OkayShader& other) {
@@ -145,6 +150,7 @@ class OkayMaterial {
         }
         
         if (_shader.state() != ShaderState::IN_USE) {
+            Engine.logger.debug("Setting shader for material {}.", _id);
             return _shader.set();
         }
         return Failable::ok({});
@@ -194,6 +200,10 @@ class OkayMaterial {
         return !(*this == other);
     }
 
+    std::unique_ptr<IOkayMaterialUniformCollection> &uniforms() {
+        return _uniforms;
+    }
+
    private:
     OkayShader _shader;
     std::size_t _id{invalidID()};
@@ -231,6 +241,10 @@ class OkayMaterialRegistry {
         std::uint32_t id = nextID();
         _materials.emplace_back(std::make_unique<OkayMaterial>(shader, std::move(uniforms), id));
         return { this, id };
+    }
+
+    const std::unique_ptr<OkayMaterial> &getMaterial(const OkayMaterialHandle& handle) const {
+        return _materials[handle.id];
     }
 
     const std::unique_ptr<OkayMaterial> &getMaterial(std::uint32_t id) const {

@@ -20,7 +20,7 @@
 #endif
 
 #ifndef OKAY_GAME_ASSET_ROOT
-#define OKAY_GAME_ASSET_ROOT SEP "game" SEP "assets"
+#define OKAY_GAME_ASSET_ROOT "game" SEP "assets"
 #endif
 
 namespace okay {

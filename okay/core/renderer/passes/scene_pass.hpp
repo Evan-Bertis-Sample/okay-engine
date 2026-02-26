@@ -1,9 +1,12 @@
 #ifndef __SCENE_PASS_H__
 #define __SCENE_PASS_H__
 
+#include <memory>
 #include <okay/core/okay.hpp>
 #include <okay/core/renderer/okay_render_pipeline.hpp>
 #include <okay/core/renderer/okay_renderer.hpp>
+#include "glm/ext/matrix_clip_space.hpp"
+#include "okay/core/renderer/okay_uniform.hpp"
 
 namespace okay {
 
@@ -18,6 +21,7 @@ class ScenePass : public IOkayRenderPass {
 
     virtual void initialize() override {
     }
+
     virtual void resize(int newWidth, int newHeight) override {
     }
 
@@ -36,6 +40,20 @@ class ScenePass : public IOkayRenderPass {
 
             if (_materialIndex != item.material.get().id()) {
                 _materialIndex = item.material.get().id();
+
+                std::unique_ptr<IOkayMaterialUniformCollection> &uniforms = item.material.get().uniforms();
+
+                // cast to BaseMaterialUniforms
+                okay::BaseMaterialUniforms *baseUniforms =
+                    dynamic_cast<okay::BaseMaterialUniforms *>(uniforms.get());
+
+                if (baseUniforms) {
+                    Engine.logger.info("Passing base uniforms for material {}.", item.material.get().id());
+                    baseUniforms->modelMatrix.set(item.worldMatrix);
+                    baseUniforms->projectionMatrix.set(context.world.camera().transform.toMatrix());
+                    baseUniforms->projectionMatrix.set(glm::perspective(45.0f, 1.0f, 0.1f, 1000.0f));
+                }
+
                 Failable f = item.material.get().passUniforms();
                 Engine.logger.info("Material: {}", item.material.get().id());
                 if (f.isError()) {

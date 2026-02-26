@@ -38,6 +38,7 @@ Failable OkayShader::compile() {
 
     // Link shaders into a program
     _shaderProgram = glCreateProgram();
+    Engine.logger.info("Shader program: {}", _shaderProgram);
     glAttachShader(_shaderProgram, vertex);
     glAttachShader(_shaderProgram, fragment);
     glLinkProgram(_shaderProgram);

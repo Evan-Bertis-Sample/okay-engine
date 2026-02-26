@@ -66,8 +66,8 @@ static void __gameInitialize() {
 
     okay::OkayShader shader = shaderLoadRes.value().asset;
 
-    okay::Engine.logger.info("Fragment Shader: {}", shader.fragmentShader);
-    okay::Engine.logger.info("Vertex Shader: {}", shader.vertexShader);
+    okay::Engine.logger.info("Vertex shader: {}", shader.vertexShader);
+    okay::Engine.logger.info("Fragment shader: {}", shader.fragmentShader);
 
     okay::OkayMaterialHandle mat = renderer->materialRegistry().registerMaterial(shader, std::make_unique<okay::BaseMaterialUniforms>());
     g_renderEntity = renderer->world().addRenderEntity(okay::OkayTransform(), mat, mesh);
