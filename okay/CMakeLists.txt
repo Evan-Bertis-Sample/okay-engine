@@ -110,6 +110,13 @@ target_include_directories(okay
   PUBLIC ${OKAY_VENDOR_DIR}/glad/include
 )
 
+# define verbosity settings for Release Builds
+if(OKAY_BUILD_TYPE STREQUAL "Release")
+  target_compile_definitions(okay PUBLIC -DOKAY_RELEASE)
+  target_compile_definitions(okay PUBLIC -DOKAY_COMPILED_MIN_SEVERITY=2)
+  target_compile_definitions(okay PUBLIC -DOKAY_COMPILED_MIN_VERBOSITY=3)
+endif()
+
 # link common libs and platform bundle into the engine
 target_link_libraries(okay
   PUBLIC
