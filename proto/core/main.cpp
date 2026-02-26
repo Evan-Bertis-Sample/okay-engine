@@ -11,6 +11,9 @@
 #include <okay/core/renderer/okay_render_pipeline.hpp>
 #include <okay/core/renderer/okay_uniform.hpp>
 #include <okay/core/renderer/passes/scene_pass.hpp>
+#include "glm/ext/quaternion_trigonometric.hpp"
+#include "glm/ext/vector_float3.hpp"
+#include "okay/core/util/result.hpp"
 
 static void __gameInitialize();
 static void __gameUpdate();
@@ -53,7 +56,18 @@ static void __gameInitialize() {
     okay::OkayRenderer* renderer = okay::Engine.systems.getSystemChecked<okay::OkayRenderer>();
 
     okay::OkayMesh mesh =
-        renderer->meshBuffer().addMesh(okay::primitives::box().sizeSet({0.1f, 0.1f, 0.1f}).build());
+        renderer->meshBuffer().addMesh(
+            okay::primitives::box()
+            .sizeSet({1.0f, 1.0f, 1.0f})
+            .withCenter({0.0f, 0.0f, -2.0f})
+            .withRotation(glm::angleAxis(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)))
+            .build());
+
+    okay::Failable res = renderer->meshBuffer().bindMeshData();
+    if (res.isError()) {
+        okay::Engine.logger.error("Failed to bind mesh data: {}", res.error());
+        return;
+    }
 
     okay::OkayAssetManager* assetManager =
         okay::Engine.systems.getSystemChecked<okay::OkayAssetManager>();
@@ -70,13 +84,20 @@ static void __gameInitialize() {
     okay::Engine.logger.info("Fragment shader: {}", shader.fragmentShader);
 
     okay::OkayMaterialHandle mat = renderer->materialRegistry().registerMaterial(shader, std::make_unique<okay::BaseMaterialUniforms>());
-    g_renderEntity = renderer->world().addRenderEntity(okay::OkayTransform(), mat, mesh);
+    
+    glm::vec3 startingPos = { 0.0f, 0.0f, 1.0f };
+    glm::vec3 startingRot = { 0.0f, 0.0f, 0.0f };
+    glm::vec3 startingScale = { 1.0f, 1.0f, 1.0f };
+
+    g_renderEntity = renderer->world().addRenderEntity(
+        okay::OkayTransform(startingPos, startingScale, glm::quat(startingRot)),
+        mat, mesh
+    );
 }
 
 static void __gameUpdate() {
-    // std::cout << "Game updated." << std::endl;
     // Game update logic
-    g_renderEntity->transform.position.x += 0.01f;
+    g_renderEntity->transform.position.z += 0.01f;
 }
 
 static void __gameShutdown() {

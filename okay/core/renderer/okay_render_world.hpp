@@ -58,7 +58,7 @@ class OkayCamera {
    public:
     enum class ProjectionType { PERPSECTIVE, ORTHOGRAPHIC };
 
-    struct PerpsectiveConfig {
+    struct Perspective {
         float fov{45.0f};
         float near{0.1f};
         float far{1000.0f};
@@ -78,9 +78,9 @@ class OkayCamera {
     OkayCamera() = default;
 
     template <typename T>
-        requires(std::is_same_v<T, PerpsectiveConfig> || std::is_same_v<T, OrthographicConfig>)
+        requires(std::is_same_v<T, Perspective> || std::is_same_v<T, OrthographicConfig>)
     void setConfig(const T& config) {
-        if constexpr (std::is_same_v<T, PerpsectiveConfig>) {
+        if constexpr (std::is_same_v<T, Perspective>) {
             _projectionType = ProjectionType::PERPSECTIVE;
         } else {
             _projectionType = ProjectionType::ORTHOGRAPHIC;
@@ -89,7 +89,7 @@ class OkayCamera {
     }
 
     template <typename T>
-        requires(std::is_same_v<T, PerpsectiveConfig> || std::is_same_v<T, OrthographicConfig>)
+        requires(std::is_same_v<T, Perspective> || std::is_same_v<T, OrthographicConfig>)
     Option<T&> getConfig() {
         if (auto* p = std::get_if<T>(&_config)) {
             return *p;
@@ -98,7 +98,7 @@ class OkayCamera {
     }
 
     template <typename T>
-        requires(std::is_same_v<T, PerpsectiveConfig> || std::is_same_v<T, OrthographicConfig>)
+        requires(std::is_same_v<T, Perspective> || std::is_same_v<T, OrthographicConfig>)
     Option<const T&> getConfig() const {
         if (auto* p = std::get_if<T>(&_config)) {
             return *p;
@@ -106,9 +106,21 @@ class OkayCamera {
         return Option<const T&>::none();
     }
 
+    glm::mat4 projectionMatrix() const {
+        if (_projectionType == ProjectionType::PERPSECTIVE) {
+            Perspective config = std::get<Perspective>(_config);
+            return glm::perspective(glm::radians(config.fov), 1.0f, config.near, config.far);
+        } else {
+            OrthographicConfig config = std::get<OrthographicConfig>(_config);
+            return glm::ortho(config.left, config.right, config.bottom, config.top, config.near, config.far);
+        }
+    }
+
+    glm::mat4 viewMatrix() const { return glm::inverse(transform.toMatrix()); }
+
    private:
     ProjectionType _projectionType{ProjectionType::PERPSECTIVE};
-    std::variant<PerpsectiveConfig, OrthographicConfig> _config{PerpsectiveConfig{}};
+    std::variant<Perspective, OrthographicConfig> _config{Perspective{}};
 };
 
 class OkayRenderWorld;

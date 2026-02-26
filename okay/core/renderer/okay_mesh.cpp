@@ -5,6 +5,8 @@
 
 using namespace okay;
 
+bool OkayMeshBuffer::_hasInitVertexAttributes = false;
+
 OkayMesh OkayMeshBuffer::addMesh(const OkayMeshData& mesh) {
     OkayMesh m{};
 
@@ -85,11 +87,17 @@ Failable OkayMeshBuffer::initVertexAttributes() {
     glVertexAttribPointer(
         3, 2, GL_FLOAT, GL_FALSE, sizeof(OkayVertex), (void*)offsetof(OkayVertex, uv));
 
+    _hasInitVertexAttributes = true;
     return Failable::ok({});
 }
 
 Failable OkayMeshBuffer::bindMeshData() {
     Engine.logger.info("Binding mesh data");
+
+    if (!_hasInitVertexAttributes) {
+        return Failable::errorResult("Vertex attributes not initialized");
+    }
+
     // init the vao
     glGenVertexArrays(1, &_vao);
     glGenBuffers(1, &_vbo);

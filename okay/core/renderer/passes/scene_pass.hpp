@@ -6,6 +6,7 @@
 #include <okay/core/renderer/okay_render_pipeline.hpp>
 #include <okay/core/renderer/okay_renderer.hpp>
 #include "glm/ext/matrix_clip_space.hpp"
+#include "glm/ext/matrix_transform.hpp"
 #include "okay/core/renderer/okay_uniform.hpp"
 
 namespace okay {
@@ -49,9 +50,13 @@ class ScenePass : public IOkayRenderPass {
 
                 if (baseUniforms) {
                     Engine.logger.info("Passing base uniforms for material {}.", item.material.get().id());
-                    baseUniforms->modelMatrix.set(item.worldMatrix);
-                    baseUniforms->projectionMatrix.set(context.world.camera().transform.toMatrix());
-                    baseUniforms->projectionMatrix.set(glm::perspective(45.0f, 1.0f, 0.1f, 1000.0f));
+                    // baseUniforms->modelMatrix.set(item.worldMatrix);
+                    baseUniforms->projectionMatrix.set(context.world.camera().projectionMatrix());
+                    baseUniforms->modelMatrix.set(glm::identity<glm::mat4>());
+                    baseUniforms->viewMatrix.set(context.world.camera().viewMatrix());
+                    // set evertything to the identity
+                    // baseUniforms->viewMatrix.set(glm::identity<glm::mat4>());
+                    // baseUniforms->projectionMatrix.set(glm::identity<glm::mat4>());
                 }
 
                 Failable f = item.material.get().passUniforms();

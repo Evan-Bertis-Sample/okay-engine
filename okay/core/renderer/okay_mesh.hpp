@@ -90,7 +90,8 @@ class OkayMeshBuffer {
     GLuint _vao{0};
     GLuint _vbo{0};
     GLuint _ebo{0};
-
+    
+    static bool _hasInitVertexAttributes;
     bool _hasBound{false};
 
    public:

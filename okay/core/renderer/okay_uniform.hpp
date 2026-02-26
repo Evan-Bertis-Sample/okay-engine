@@ -3,6 +3,7 @@
 
 #include <glad/glad.h>
 #include <glm/glm.hpp>
+#include <okay/core/okay.hpp>
 #include <okay/core/logging/okay_logger.hpp>
 #include <okay/core/util/result.hpp>
 #include <okay/core/util/type.hpp>
@@ -118,6 +119,8 @@ struct TemplatedMaterialUniform {
     Failable passUniform(GLuint shaderProgram) {
         if (!isDirty())
             return Failable::ok({});
+
+        okay::Engine.logger.debug("Setting uniform {} to location {}.", name.sv(), location());
 
         if (location() == invalidLocation()) {
             Failable result = findLocation(shaderProgram);
