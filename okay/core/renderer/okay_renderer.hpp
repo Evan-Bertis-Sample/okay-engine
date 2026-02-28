@@ -71,9 +71,6 @@ class OkayRenderer : public OkaySystem<OkaySystemScope::ENGINE> {
     OkayRenderTargetPool _renderTargetPool;
     OkayMaterialRegistry _materialRegistry;
     std::unique_ptr<Surface> _surface;
-
-    // dirty flags
-    bool _meshBufferDirty{false};
 };
 
 }  // namespace okay

@@ -10,7 +10,7 @@ void OkayRenderer::initialize() {
     _surface->initialize();
 
     Failable meshBufferSetup =
-        runAll(DEFER(_meshBuffer.initVertexAttributes()), DEFER(_meshBuffer.bindMeshData()));
+        runAll(DEFER(_meshBuffer.bindMeshData()), DEFER(_meshBuffer.initVertexAttributes()));
 
     if (!meshBufferSetup) {
         Engine.logger.error("Mesh Buffer Setup Error: {}", meshBufferSetup.error());
@@ -28,16 +28,6 @@ void OkayRenderer::postInitialize() {
 
 void OkayRenderer::tick() {
     _surface->pollEvents();
-
-    if (_meshBufferDirty) {
-        Failable meshBufferSetup = _meshBuffer.bindMeshData();
-        if (!meshBufferSetup) {
-            Engine.logger.error("Mesh Buffer Setup Error: {}", meshBufferSetup.error());
-            Engine.shutdown();
-            return;
-        }
-        _meshBufferDirty = false;
-    }
 
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
