@@ -56,7 +56,6 @@ Failable OkayShader::compile() {
 
     _state = ShaderState::STANDBY;
 
-    Engine.logger.info("Shader compiled.");
     return Failable::ok({});
 }
 

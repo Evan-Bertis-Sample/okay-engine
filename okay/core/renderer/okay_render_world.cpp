@@ -97,14 +97,6 @@ void OkayRenderWorld::rebuildTransforms() {
                                       : _renderItemPool.get(item.parent).worldMatrix;
 
             item.worldMatrix = parentMat * item.transform.toMatrix();
-            // print the world matrix
-            for (int i = 0; i < 4; i++) {
-                for (int j = 0; j < 4; j++) {
-                    std::cout << item.worldMatrix[i][j] << " ";
-                }
-                std::cout << std::endl;
-            }
-
             workList.push(current);
         }
     }
@@ -151,10 +143,9 @@ void OkayRenderWorld::handleDirtyMaterial(RenderItemHandle dirtyEntity) {
 void OkayRenderWorld::handleDirtyTransform(RenderItemHandle dirtyEntity) {
     // is the entity already in the dirty set?
     if (_dirtyTransforms.find(dirtyEntity) != _dirtyTransforms.end()) {
-        Engine.logger.debug("Skipping already dirty transform {}", dirtyEntity.index);
         return;
     }
-    Engine.logger.debug("Adding dirty transform {}", dirtyEntity.index);
+    // Engine.logger.debug("Adding dirty transform {}", dirtyEntity.index);
     _dirtyTransforms.insert(dirtyEntity);
 }
 

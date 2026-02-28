@@ -42,6 +42,8 @@ OkayMesh OkayMeshBuffer::addMesh(const OkayMeshData& mesh) {
         _indices.push_back(i + m.vertexOffset);
     }
 
+    _dirty = true;
+
     return m;
 }
 
@@ -61,10 +63,16 @@ void OkayMeshBuffer::removeMesh(const OkayMesh& mesh) {
     _bufferData.erase(_bufferData.begin() + mesh.vertexOffset * OkayVertex::numFloats(),
                       _bufferData.begin() + mesh.vertexOffset * OkayVertex::numFloats() +
                           mesh.vertexCount * OkayVertex::numFloats());
+
+    _dirty = true;
 }
 
 Failable OkayMeshBuffer::initVertexAttributes() {
-    Engine.logger.info("Initializing vertex attributes");
+    if (_hasInitVertexAttributes) {
+        return Failable::ok({});
+    }
+
+    Engine.logger.debug("Initializing vertex attributes");
     // describe vertex attributes
     // in memory the layout of vertices will be
     // position, normal, color, uv
@@ -88,11 +96,16 @@ Failable OkayMeshBuffer::initVertexAttributes() {
         3, 2, GL_FLOAT, GL_FALSE, sizeof(OkayVertex), (void*)offsetof(OkayVertex, uv));
 
     _hasInitVertexAttributes = true;
+    Engine.logger.debug("Vertex attributes initialized");
     return Failable::ok({});
 }
 
 Failable OkayMeshBuffer::bindMeshData() {
-    Engine.logger.info("Binding mesh data");
+    if (!_dirty) {
+        return Failable::ok({}); // nothing to do
+    }
+
+    Engine.logger.debug("Binding mesh data");
 
     if (!_hasInitVertexAttributes) {
         return Failable::errorResult("Vertex attributes not initialized");
@@ -107,9 +120,6 @@ Failable OkayMeshBuffer::bindMeshData() {
     glBufferData(GL_ARRAY_BUFFER, _bufferData.size() * sizeof(GLfloat), _bufferData.data(),
                  GL_STATIC_DRAW);
 
-    // setup the vertex attributes
-    initVertexAttributes();
-
     // init the ebo
     glGenBuffers(1, &_ebo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ebo);
@@ -121,10 +131,22 @@ Failable OkayMeshBuffer::bindMeshData() {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
+    Engine.logger.debug("Mesh data bound");
+    _dirty = false;
     return Failable::ok({});
 }
 
 void OkayMeshBuffer::drawMesh(const OkayMesh& mesh) {
+    if (!_hasInitVertexAttributes) {
+        Engine.logger.error("Vertex attributes not initialized");
+        return;
+    }
+
+    if (_dirty) {
+        Engine.logger.error("Mesh data not bound");
+        return;
+    }
+
     // bind the vao, draw, unbind
     glBindVertexArray(_vao);
     // draw from mesh.indexOffset to mesh.indexOffset + mesh.indexCount

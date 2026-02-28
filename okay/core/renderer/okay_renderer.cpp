@@ -14,8 +14,8 @@ void OkayRenderer::initialize() {
 
     if (!meshBufferSetup) {
         Engine.logger.error("Mesh Buffer Setup Error: {}", meshBufferSetup.error());
-        while (true) {
-        }
+        Engine.shutdown();
+        return;
     }
 
     _renderTargetPool.initializeBuiltins();
@@ -33,8 +33,8 @@ void OkayRenderer::tick() {
         Failable meshBufferSetup = _meshBuffer.bindMeshData();
         if (!meshBufferSetup) {
             Engine.logger.error("Mesh Buffer Setup Error: {}", meshBufferSetup.error());
-            while (true) {
-            }
+            Engine.shutdown();
+            return;
         }
         _meshBufferDirty = false;
     }
@@ -51,5 +51,4 @@ void OkayRenderer::postTick() {
 }
 
 void OkayRenderer::shutdown() {
-    std::cout << "Okay Renderer shutdown." << std::endl;
 }

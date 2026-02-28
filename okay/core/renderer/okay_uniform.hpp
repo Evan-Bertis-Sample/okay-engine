@@ -86,8 +86,9 @@ struct TemplatedMaterialUniform {
     }
 
     void set(const T& v) {
-        if (_value != v)
+        if (_value != v) {
             _dirty = true;
+        }
         _value = v;
     }
 
@@ -119,8 +120,6 @@ struct TemplatedMaterialUniform {
     Failable passUniform(GLuint shaderProgram) {
         if (!isDirty())
             return Failable::ok({});
-
-        okay::Engine.logger.debug("Setting uniform {} to location {}.", name.sv(), location());
 
         if (location() == invalidLocation()) {
             Failable result = findLocation(shaderProgram);

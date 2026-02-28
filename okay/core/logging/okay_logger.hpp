@@ -45,8 +45,13 @@ struct OkayLoggerOptions {
 struct LogPhrases {
     static constexpr std::string_view SEVERITY_TAG[4] = {"[DEBUG]", "[INFO]", "[WARN]", "[ERROR]"};
 
-    static constexpr std::string_view SEVERITY_COLOR[4] = {"\03[37m", "\033[32m", "\033[33m",
-                                                           "\033[31m"};
+    static constexpr std::string_view SEVERITY_COLOR[4] = {
+        "\033[32m",  // DEBUG
+        "\033[37m",  // INFO
+        "\033[33m",  // WARNING
+        "\033[31m"   // ERROR
+    };
+
 
     static constexpr std::string_view COLOR_RESET = "\033[0m";
 

@@ -13,13 +13,15 @@
 #include <okay/core/renderer/passes/scene_pass.hpp>
 #include "glm/ext/quaternion_trigonometric.hpp"
 #include "glm/ext/vector_float3.hpp"
+#include "okay/core/renderer/okay_mesh.hpp"
 #include "okay/core/util/result.hpp"
 
 static void __gameInitialize();
 static void __gameUpdate();
 static void __gameShutdown();
 
-static okay::OkayRenderEntity g_renderEntity;
+static okay::OkayRenderEntity g_renderEntityA;
+static okay::OkayRenderEntity g_renderEntityB;
 
 int main() {
     okay::SurfaceConfig surfaceConfig;
@@ -53,13 +55,19 @@ static void __gameInitialize() {
     // Additional game initialization logic
     okay::OkayRenderer* renderer = okay::Engine.systems.getSystemChecked<okay::OkayRenderer>();
 
-    okay::OkayMesh mesh =
+    okay::OkayMesh icoSphere =
         renderer->meshBuffer().addMesh(
             okay::primitives::icoSphere()
             .radiusSet(0.1f)
-            .withCenter({0.0f, 0.0f, -2.0f})
             .subdivisionsSet(4)
             .build());
+
+    okay::OkayMesh cube = 
+        renderer->meshBuffer().addMesh(
+            okay::primitives::box()
+            .sizeSet({0.1f, 0.1f, 0.1f})
+            .build()
+        );
 
     okay::Failable res = renderer->meshBuffer().bindMeshData();
     if (res.isError()) {
@@ -77,25 +85,30 @@ static void __gameInitialize() {
     }
 
     okay::OkayShader shader = shaderLoadRes.value().asset;
-
-    okay::Engine.logger.info("Vertex shader: {}", shader.vertexShader);
-    okay::Engine.logger.info("Fragment shader: {}", shader.fragmentShader);
-
     okay::OkayMaterialHandle mat = renderer->materialRegistry().registerMaterial(shader, std::make_unique<okay::BaseMaterialUniforms>());
     
-    glm::vec3 startingPos = { 0.0f, 0.0f, 1.0f };
+    glm::vec3 startingPos = { 0.0f, 0.0f, 4.0f };
     glm::vec3 startingRot = { 0.0f, 0.0f, 0.0f };
     glm::vec3 startingScale = { 1.0f, 1.0f, 1.0f };
 
-    g_renderEntity = renderer->world().addRenderEntity(
+    g_renderEntityA = renderer->world().addRenderEntity(
         okay::OkayTransform(startingPos, startingScale, glm::quat(startingRot)),
-        mat, mesh
+        mat, icoSphere
     );
+
+    g_renderEntityB = renderer->world().addRenderEntity(
+        okay::OkayTransform({ -2.0f, 0.0f, 0.0f }, startingScale, glm::quat(startingRot)),
+        mat, cube
+    );
+
+    renderer->world().addChild(g_renderEntityA, g_renderEntityB);
 }
 
 static void __gameUpdate() {
     // Game update logic
-    g_renderEntity->transform.position.x += 0.1f;
+    g_renderEntityA->transform.position.x += 0.1f * okay::Engine.time->deltaTimeSec();
+    g_renderEntityA->transform.rotation = glm::angleAxis(
+        glm::radians(45.0f) * okay::Engine.time->timeSinceStartSec(), glm::vec3(0.0f, 1.0f, 0.0f));
 }
 
 static void __gameShutdown() {

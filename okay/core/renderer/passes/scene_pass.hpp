@@ -30,7 +30,7 @@ class ScenePass : public IOkayRenderPass {
         // enable culling and depth test
         glCullFace(GL_BACK);
         glEnable(GL_CULL_FACE);
-        // glEnable(GL_DEPTH_TEST);
+        glEnable(GL_DEPTH_TEST);
 
         for (const RenderItemHandle& handle : context.world.getRenderItems()) {
             OkayRenderItem& item = context.world.getRenderItem(handle);
@@ -38,7 +38,7 @@ class ScenePass : public IOkayRenderPass {
             if (_shaderIndex != item.material.get().shaderID()) {
                 _shaderIndex = item.material.get().shaderID();
                 Failable f = item.material.get().setShader();
-                Engine.logger.info("Shader: {}", item.material.get().shaderID());
+                // Engine.logger.info("Shader: {}", item.material.get().shaderID());
                 if (f.isError()) {
                     Engine.logger.error("Failed to set shader : {}", f.error());
                 }
@@ -47,18 +47,21 @@ class ScenePass : public IOkayRenderPass {
             if (_materialIndex != item.material.get().id()) {
                 _materialIndex = item.material.get().id();
 
-                std::unique_ptr<IOkayMaterialUniformCollection> &uniforms = item.material.get().uniforms();
+                std::unique_ptr<IOkayMaterialUniformCollection>& uniforms =
+                    item.material.get().uniforms();
 
                 // cast to BaseMaterialUniforms
-                okay::BaseMaterialUniforms *baseUniforms =
-                    dynamic_cast<okay::BaseMaterialUniforms *>(uniforms.get());
+                okay::BaseMaterialUniforms* baseUniforms =
+                    dynamic_cast<okay::BaseMaterialUniforms*>(uniforms.get());
 
                 if (baseUniforms) {
-                    Engine.logger.info("Passing base uniforms for material {}.", item.material.get().id());
+                    // Engine.logger.info("Passing base uniforms for material {}.",
+                    //                    item.material.get().id());
                     baseUniforms->modelMatrix.set(item.worldMatrix);
-                    float aspect = static_cast<float>(context.renderer.width()) / static_cast<float>(context.renderer.height());
-                    baseUniforms->projectionMatrix.set(context.world.camera().projectionMatrix(aspect));
-                    baseUniforms->modelMatrix.set(glm::identity<glm::mat4>());
+                    float aspect = static_cast<float>(context.renderer.width()) /
+                                   static_cast<float>(context.renderer.height());
+                    baseUniforms->projectionMatrix.set(
+                        context.world.camera().projectionMatrix(aspect));
                     baseUniforms->viewMatrix.set(context.world.camera().viewMatrix());
                     // set evertything to the identity
                     // baseUniforms->viewMatrix.set(glm::identity<glm::mat4>());
@@ -66,14 +69,17 @@ class ScenePass : public IOkayRenderPass {
                 }
 
                 Failable f = item.material.get().passUniforms();
-                Engine.logger.info("Material: {}", item.material.get().id());
+                // Engine.logger.info("Material: {}", item.material.get().id());
                 if (f.isError()) {
                     Engine.logger.error("Failed to pass uniforms : {}", f.error());
                 }
-
             }
 
             context.renderer.meshBuffer().drawMesh(item.mesh);
+
+            // restart for the next round of rendering
+            _shaderIndex = OkayShader::invalidID();
+            _materialIndex = OkayMaterial::invalidID();
         }
     }
 

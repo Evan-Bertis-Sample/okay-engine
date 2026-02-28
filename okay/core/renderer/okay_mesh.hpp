@@ -92,7 +92,7 @@ class OkayMeshBuffer {
     GLuint _ebo{0};
     
     static bool _hasInitVertexAttributes;
-    bool _hasBound{false};
+    bool _dirty{false};
 
    public:
     static Failable initVertexAttributes();

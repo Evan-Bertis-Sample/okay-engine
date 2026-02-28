@@ -2,6 +2,7 @@
 #define __OKAY_H__
 
 #include <glad/glad.h>
+#include <iostream>
 #include <okay/core/system/okay_system.hpp>
 #include <okay/core/logging/okay_logger.hpp>
 
@@ -20,10 +21,17 @@ class OkayTime {
         _lastTime(HighResClock::now())
         {}
 
-    void reset() { _lastTime = HighResClock::now(); }
+    void reset() {
+         _lastTime = HighResClock::now();
+         _deltaTime = 0; 
+    }
 
-    std::uint32_t deltaTime() const { return _deltaTime; }
-    
+    std::uint32_t deltaTimeMs() const { return _deltaTime; }
+    float deltaTimeSec() const { return static_cast<float>(_deltaTime) / 1000.0f; }
+
+    std::uint32_t timeSinceStartMs() const { return std::chrono::duration_cast<std::chrono::milliseconds>(HighResClock::now() - _lastTime).count(); }
+    float timeSinceStartSec() const { return static_cast<float>(timeSinceStartMs()) / 1000.0f; }
+
     void updateDeltaTime() {
         TimePoint prevTime = _lastTime;
         _lastTime = HighResClock::now();
@@ -108,7 +116,6 @@ class OkayGame {
         _onInitialize();
 
         Engine.time->reset();
-
         while (Engine.shouldRun()) {
             for (IOkaySystem* system : enginePool) {
                 system->tick();
@@ -119,6 +126,8 @@ class OkayGame {
             }
 
             _onUpdate();
+
+            Engine.time->updateDeltaTime();
         }
 
         for (IOkaySystem* system : enginePool) {

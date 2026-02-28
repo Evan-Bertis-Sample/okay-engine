@@ -173,7 +173,6 @@ class OkayMaterial {
                 return find;
             }
         }
-        Engine.logger.debug("Passing uniforms for material {}.", _id);
         return _uniforms->setUniforms(_shader.programID());
     }
 
