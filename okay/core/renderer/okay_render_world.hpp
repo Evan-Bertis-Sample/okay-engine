@@ -106,10 +106,10 @@ class OkayCamera {
         return Option<const T&>::none();
     }
 
-    glm::mat4 projectionMatrix() const {
+    glm::mat4 projectionMatrix(float ratio) const {
         if (_projectionType == ProjectionType::PERPSECTIVE) {
             Perspective config = std::get<Perspective>(_config);
-            return glm::perspective(glm::radians(config.fov), 1.0f, config.near, config.far);
+            return glm::perspective(glm::radians(config.fov), ratio, config.near, config.far);
         } else {
             OrthographicConfig config = std::get<OrthographicConfig>(_config);
             return glm::ortho(config.left, config.right, config.bottom, config.top, config.near, config.far);

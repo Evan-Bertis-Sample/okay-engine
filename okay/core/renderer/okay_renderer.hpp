@@ -1,6 +1,7 @@
 #ifndef __OKAY_RENDERER_H__
 #define __OKAY_RENDERER_H__
 
+#include <cstdint>
 #include <okay/core/okay.hpp>
 #include <okay/core/asset/generic/shader_loader.hpp>
 #include <okay/core/asset/okay_asset.hpp>
@@ -53,6 +54,13 @@ class OkayRenderer : public OkaySystem<OkaySystemScope::ENGINE> {
     }
     OkayMaterialRegistry& materialRegistry() {
         return _materialRegistry;
+    }
+
+    uint32_t width() const {
+        return _surfaceConfig.width;
+    }
+    uint32_t height() const {
+        return _surfaceConfig.height;
     }
 
    private:

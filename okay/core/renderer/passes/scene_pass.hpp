@@ -27,6 +27,11 @@ class ScenePass : public IOkayRenderPass {
     }
 
     virtual void render(const OkayRenderContext& context) override {
+        // enable culling and depth test
+        glCullFace(GL_BACK);
+        glEnable(GL_CULL_FACE);
+        // glEnable(GL_DEPTH_TEST);
+
         for (const RenderItemHandle& handle : context.world.getRenderItems()) {
             OkayRenderItem& item = context.world.getRenderItem(handle);
 
@@ -50,8 +55,9 @@ class ScenePass : public IOkayRenderPass {
 
                 if (baseUniforms) {
                     Engine.logger.info("Passing base uniforms for material {}.", item.material.get().id());
-                    // baseUniforms->modelMatrix.set(item.worldMatrix);
-                    baseUniforms->projectionMatrix.set(context.world.camera().projectionMatrix());
+                    baseUniforms->modelMatrix.set(item.worldMatrix);
+                    float aspect = static_cast<float>(context.renderer.width()) / static_cast<float>(context.renderer.height());
+                    baseUniforms->projectionMatrix.set(context.world.camera().projectionMatrix(aspect));
                     baseUniforms->modelMatrix.set(glm::identity<glm::mat4>());
                     baseUniforms->viewMatrix.set(context.world.camera().viewMatrix());
                     // set evertything to the identity

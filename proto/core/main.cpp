@@ -51,16 +51,14 @@ int main() {
 
 static void __gameInitialize() {
     // Additional game initialization logic
-    okay::Engine.logger.info("Initializing game...");
-
     okay::OkayRenderer* renderer = okay::Engine.systems.getSystemChecked<okay::OkayRenderer>();
 
     okay::OkayMesh mesh =
         renderer->meshBuffer().addMesh(
-            okay::primitives::box()
-            .sizeSet({1.0f, 1.0f, 1.0f})
+            okay::primitives::icoSphere()
+            .radiusSet(0.1f)
             .withCenter({0.0f, 0.0f, -2.0f})
-            .withRotation(glm::angleAxis(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)))
+            .subdivisionsSet(4)
             .build());
 
     okay::Failable res = renderer->meshBuffer().bindMeshData();
@@ -97,7 +95,7 @@ static void __gameInitialize() {
 
 static void __gameUpdate() {
     // Game update logic
-    g_renderEntity->transform.position.z += 0.01f;
+    g_renderEntity->transform.position.x += 0.1f;
 }
 
 static void __gameShutdown() {
