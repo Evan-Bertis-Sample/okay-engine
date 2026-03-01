@@ -89,6 +89,8 @@ class OkayShader {
         _shaderProgram = other._shaderProgram;
         _state = other._state;
         _id = other._id;
+        vertexShader = other.vertexShader;
+        fragmentShader = other.fragmentShader;
         return *this;
     }
 
@@ -116,10 +118,7 @@ class OkayMaterial {
         return 0xFFFFFFFFu;
     }
 
-    OkayMaterial() : _id(invalidID()) {
-    }
-
-    OkayMaterial(const OkayShader& shader,
+    OkayMaterial(std::shared_ptr<OkayShader> shader,
                  std::unique_ptr<IOkayMaterialPropertyCollection> uniforms,
                  std::uint32_t id)
         : _shader(shader), _uniforms(std::move(uniforms)), _id(id) {
@@ -134,24 +133,24 @@ class OkayMaterial {
     }
 
     std::uint32_t shaderID() const {
-        return _shader.id();
+        return _shader->id();
     }
 
     Failable setShader() {
-        if (_shader.isNone()) {
+        if (_shader->isNone()) {
             return Failable::errorResult("Material has no shader.");
         }
 
-        if (_shader.state() == ShaderState::NOT_COMPILED) {
-            Failable compile = _shader.compile();
+        if (_shader->state() == ShaderState::NOT_COMPILED) {
+            Failable compile = _shader->compile();
             if (compile.isError()) {
                 return compile;
             }
         }
         
-        if (_shader.state() != ShaderState::IN_USE) {
+        if (_shader->state() != ShaderState::IN_USE) {
             Engine.logger.debug("Setting shader for material {}.", _id);
-            return _shader.set();
+            return _shader->set();
         }
         return Failable::ok({});
     }
@@ -161,24 +160,24 @@ class OkayMaterial {
             return Failable::errorResult("Material has no uniforms.");
         }
 
-        if (_shader.isNone()) {
+        if (_shader->isNone()) {
             return Failable::errorResult("Material has no shader.");
         }
 
         setShader();
         if (!_uniforms->foundLocations()) {
             Engine.logger.debug("Finding uniform locations for material {}.", _id);
-            Failable find = _uniforms->init(_shader.programID());
+            Failable find = _uniforms->init(_shader->programID());
             if (find.isError()) {
                 return find;
             }
         }
-        return _uniforms->pass(_shader.programID());
+        return _uniforms->pass(_shader->programID());
     }
 
     // enable move semantics
     OkayMaterial(OkayMaterial&& other)
-        : _shader(std::move(other._shader)), _uniforms(std::move(other._uniforms)), _id(other._id) {
+        : _shader(other._shader), _uniforms(std::move(other._uniforms)), _id(other._id) {
     }
     OkayMaterial& operator=(OkayMaterial&& other) {
         _shader = std::move(other._shader);
@@ -204,7 +203,7 @@ class OkayMaterial {
     }
 
    private:
-    OkayShader _shader;
+    std::shared_ptr<OkayShader> _shader;
     std::size_t _id{invalidID()};
     std::unique_ptr<IOkayMaterialPropertyCollection> _uniforms;
 
@@ -235,7 +234,7 @@ struct OkayMaterialHandle {
 
 class OkayMaterialRegistry {
    public:
-    OkayMaterialHandle registerMaterial(const OkayShader& shader,
+    OkayMaterialHandle registerMaterial(std::shared_ptr<OkayShader> shader,
                                    std::unique_ptr<IOkayMaterialPropertyCollection> uniforms) {
         std::uint32_t id = nextID();
         _materials.emplace_back(std::make_unique<OkayMaterial>(shader, std::move(uniforms), id));

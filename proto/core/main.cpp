@@ -93,23 +93,32 @@ static void __gameInitialize() {
         return;
     }
 
-    okay::OkayShader shader = shaderLoadRes.value().asset;
+    std::shared_ptr<okay::OkayShader> shader = std::make_shared<okay::OkayShader>(shaderLoadRes.value().asset);
+
     auto materialProprties = std::make_unique<okay::UnlitMaterial>();
-    materialProprties->color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-    okay::OkayMaterialHandle mat = renderer->materialRegistry().registerMaterial(shader, std::move(materialProprties));
+    materialProprties->color = glm::vec4(1.0f, 1.0f, 0.0f, 1.0f); 
+    okay::OkayMaterialHandle sunMat = renderer->materialRegistry().registerMaterial(shader, std::move(materialProprties));
     g_sun = renderer->world().addRenderEntity(
         okay::OkayTransform(),
-        mat, icoSphere
+        sunMat, icoSphere
     );
 
+    // planet material
+    materialProprties = std::make_unique<okay::UnlitMaterial>();
+    materialProprties->color = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
+    okay::OkayMaterialHandle planetMat = renderer->materialRegistry().registerMaterial(shader, std::move(materialProprties));
     g_planet = renderer->world().addRenderEntity(
         okay::OkayTransform({ -2.0f, 0.0f, 0.0f }, { 0.3f, 0.3f, 0.3f }),
-        mat, icoSphere
+        planetMat, icoSphere
     );
 
+    // moon material
+    materialProprties = std::make_unique<okay::UnlitMaterial>();
+    materialProprties->color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+    okay::OkayMaterialHandle moonMat = renderer->materialRegistry().registerMaterial(shader, std::move(materialProprties));
     g_moon = renderer->world().addRenderEntity(
         okay::OkayTransform({ 1.0f, 0.0f, 0.0f } , { 0.2f, 0.2f, 0.2f }),
-        mat, icoSphere
+        moonMat, icoSphere
     );
 
     renderer->world().addChild(g_sun, g_planet);
@@ -128,7 +137,7 @@ static void __gameInitialize() {
         // add to world
         renderer->world().addRenderEntity(
             okay::OkayTransform(pos, scale, glm::quat()),
-            mat, cube
+            sunMat, cube
         );  
     }
 }

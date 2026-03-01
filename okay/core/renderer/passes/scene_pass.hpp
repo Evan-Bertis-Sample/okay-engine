@@ -44,7 +44,6 @@ class ScenePass : public IOkayRenderPass {
             if (_shaderIndex != item.material.get().shaderID()) {
                 _shaderIndex = item.material.get().shaderID();
                 Failable f = item.material.get().setShader();
-                // Engine.logger.info("Shader: {}", item.material.get().shaderID());
                 if (f.isError()) {
                     Engine.logger.error("Failed to set shader : {}", f.error());
                 }
