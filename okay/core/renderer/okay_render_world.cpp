@@ -67,56 +67,49 @@ const OkayRenderWorld::ChildRange OkayRenderWorld::children(OkayRenderEntity par
 }
 
 void OkayRenderWorld::rebuildTransforms() {
-    // iterate through the dirty entities, and update their transforms
+    if (_dirtyTransforms.empty())
+        return;
 
-    // first, filter through the transforms
-    // if any transform is in the same subtree as another dirty transform,
-    // take the one higher in the tree
-    std::queue<RenderItemHandle> workList;
-
-    for (RenderItemHandle current : _dirtyTransforms) {
-        RenderItemHandle parent = _renderItemPool.get(current).parent;
-        bool foundParent = false;
-
-        while (parent != RenderItemHandle::invalidHandle()) {
-            if (_dirtyTransforms.find(parent) != _dirtyTransforms.end()) {
-                current = parent;
-                parent = _renderItemPool.get(current).parent;
-            } else {
-                foundParent = true;
+    std::queue<RenderItemHandle> q;
+    std::set<RenderItemHandle> dirtyRoots;
+    // Find highest dirty ancestor for each dirty node, de-dup
+    for (RenderItemHandle h : _dirtyTransforms) {
+        RenderItemHandle r = h;
+        while (true) {
+            RenderItemHandle p = _renderItemPool.get(r).parent;
+            if (p == RenderItemHandle::invalidHandle())
                 break;
-            }
+            if (_dirtyTransforms.find(p) == _dirtyTransforms.end())
+                break;
+            r = p;
         }
-
-        if (!foundParent) {
-            // this is a top-level transform
-            // update it's worldMatrix and add it to the worklist
-            OkayRenderItem& item = _renderItemPool.get(current);
-            glm::mat4 parentMat = item.parent == RenderItemHandle::invalidHandle()
-                                      ? glm::identity<glm::mat4>()
-                                      : _renderItemPool.get(item.parent).worldMatrix;
-
-            item.worldMatrix = parentMat * item.transform.toMatrix();
-            workList.push(current);
-        }
+        dirtyRoots.insert(r);
     }
 
-    // now recalculate the model matrix for each transform
-    while (!workList.empty()) {
-        RenderItemHandle root = workList.front();
-        workList.pop();
+    // Seed queue with dirty roots, recompute their world from parent
+    for (RenderItemHandle r : dirtyRoots) {
+        OkayRenderItem& item = _renderItemPool.get(r);
+        glm::mat4 parentWorld = (item.parent == RenderItemHandle::invalidHandle())
+                                    ? glm::identity<glm::mat4>()
+                                    : _renderItemPool.get(item.parent).worldMatrix;
 
-        OkayRenderItem& rootItem = _renderItemPool.get(root);
-        glm::mat4 rootMat = rootItem.transform.toMatrix();
+        item.worldMatrix = parentWorld * item.transform.toMatrix();
+        q.push(r);
+    }
 
-        // update the children
-        RenderItemHandle current = rootItem.firstChild;
-        while (current != RenderItemHandle::invalidHandle()) {
-            OkayRenderItem& child = _renderItemPool.get(current);
-            glm::mat4 childMat = child.transform.toMatrix();
-            child.worldMatrix = rootMat * childMat;
-            workList.push(current);
-            current = child.nextSibling;
+    // BFS down each root, recompute children from parent.worldMatrix
+    while (!q.empty()) {
+        RenderItemHandle pHandle = q.front();
+        q.pop();
+
+        const OkayRenderItem& parent = _renderItemPool.get(pHandle);
+        RenderItemHandle c = parent.firstChild;
+
+        while (c != RenderItemHandle::invalidHandle()) {
+            OkayRenderItem& child = _renderItemPool.get(c);
+            child.worldMatrix = parent.worldMatrix * child.transform.toMatrix();
+            q.push(c);
+            c = child.nextSibling;
         }
     }
 
@@ -210,16 +203,8 @@ Failable OkayRenderWorld::addChild(OkayRenderEntity parent, OkayRenderEntity chi
     // link the child to the parent
     childItem.parent = parent._renderItem;
 
-    // insert child at the start of the parent's child list
-    if (parentItem.firstChild == RenderItemHandle::invalidHandle()) {
-        // parent has no children yet
-        parentItem.firstChild = children._renderItem;
-    } else {
-        // parent has existing children, insert at start
-        RenderItemHandle oldFirstChild = parentItem.firstChild;
-        parentItem.firstChild = children._renderItem;
-        childItem.nextSibling = oldFirstChild;
-    }
+    childItem.nextSibling = parentItem.firstChild; // invalid if none
+    parentItem.firstChild = children._renderItem;
 
     // mark the transforms dirty
     handleDirtyTransform(parent._renderItem);
