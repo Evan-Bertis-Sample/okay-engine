@@ -53,12 +53,12 @@ class ScenePass : public IOkayRenderPass {
             if (_materialIndex != item.material.get().id()) {
                 _materialIndex = item.material.get().id();
 
-                std::unique_ptr<IOkayMaterialUniformCollection>& uniforms =
+                std::unique_ptr<IOkayMaterialPropertyCollection>& uniforms =
                     item.material.get().uniforms();
 
                 // cast to BaseMaterialUniforms
-                okay::BaseMaterialUniforms* baseUniforms =
-                    dynamic_cast<okay::BaseMaterialUniforms*>(uniforms.get());
+                okay::UnlitMaterial* baseUniforms =
+                    dynamic_cast<okay::UnlitMaterial*>(uniforms.get());
 
                 if (baseUniforms) {
                     // Engine.logger.info("Passing base uniforms for material {}.",

@@ -120,7 +120,7 @@ class OkayMaterial {
     }
 
     OkayMaterial(const OkayShader& shader,
-                 std::unique_ptr<IOkayMaterialUniformCollection> uniforms,
+                 std::unique_ptr<IOkayMaterialPropertyCollection> uniforms,
                  std::uint32_t id)
         : _shader(shader), _uniforms(std::move(uniforms)), _id(id) {
     }
@@ -168,12 +168,12 @@ class OkayMaterial {
         setShader();
         if (!_uniforms->foundLocations()) {
             Engine.logger.debug("Finding uniform locations for material {}.", _id);
-            Failable find = _uniforms->findLocations(_shader.programID());
+            Failable find = _uniforms->init(_shader.programID());
             if (find.isError()) {
                 return find;
             }
         }
-        return _uniforms->setUniforms(_shader.programID());
+        return _uniforms->pass(_shader.programID());
     }
 
     // enable move semantics
@@ -199,14 +199,14 @@ class OkayMaterial {
         return !(*this == other);
     }
 
-    std::unique_ptr<IOkayMaterialUniformCollection> &uniforms() {
+    std::unique_ptr<IOkayMaterialPropertyCollection> &uniforms() {
         return _uniforms;
     }
 
    private:
     OkayShader _shader;
     std::size_t _id{invalidID()};
-    std::unique_ptr<IOkayMaterialUniformCollection> _uniforms;
+    std::unique_ptr<IOkayMaterialPropertyCollection> _uniforms;
 
     void setMaterial() {
         setShader();
@@ -236,7 +236,7 @@ struct OkayMaterialHandle {
 class OkayMaterialRegistry {
    public:
     OkayMaterialHandle registerMaterial(const OkayShader& shader,
-                                   std::unique_ptr<IOkayMaterialUniformCollection> uniforms) {
+                                   std::unique_ptr<IOkayMaterialPropertyCollection> uniforms) {
         std::uint32_t id = nextID();
         _materials.emplace_back(std::make_unique<OkayMaterial>(shader, std::move(uniforms), id));
         return { this, id };

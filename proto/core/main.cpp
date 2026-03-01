@@ -91,7 +91,7 @@ static void __gameInitialize() {
     }
 
     okay::OkayShader shader = shaderLoadRes.value().asset;
-    okay::OkayMaterialHandle mat = renderer->materialRegistry().registerMaterial(shader, std::make_unique<okay::BaseMaterialUniforms>());
+    okay::OkayMaterialHandle mat = renderer->materialRegistry().registerMaterial(shader, std::make_unique<okay::UnlitMaterial>());
     g_sun = renderer->world().addRenderEntity(
         okay::OkayTransform(),
         mat, icoSphere

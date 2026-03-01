@@ -68,7 +68,8 @@ Failable set(GLuint uniformLoc, const T& value) {
     }
 
     if (glGetError() != GL_NO_ERROR) {
-        return Failable::errorResult("Failed to set uniform. Error code: " + std::to_string(glGetError()));
+        return Failable::errorResult("Failed to set uniform. Error code: " +
+                                     std::to_string(glGetError()));
     }
 
     return Failable::ok({});
@@ -113,10 +114,15 @@ struct TemplatedMaterialUniform {
         return _location;
     }
 
+    bool foundLocation() const {
+        return location() != invalidLocation();
+    }
+
     Failable findLocation(GLuint shaderProgram) {
         int location = glGetUniformLocation(shaderProgram, std::string(name.sv()).c_str());
         if (location == -1) {
-            return Failable::errorResult("Uniform not found: " + std::string(name.sv()) + " error code: " + std::to_string(glGetError()));
+            return Failable::errorResult("Uniform not found: " + std::string(name.sv()) +
+                                         " error code: " + std::to_string(glGetError()));
         }
         _location = static_cast<GLuint>(location);
         return Failable::ok({});
@@ -165,35 +171,139 @@ struct TemplatedMaterialUniform {
     GLuint _location{invalidLocation()};
 };
 
-class IOkayMaterialUniformCollection {
+class OkayUniformBuffer {
    public:
-    virtual Failable setUniforms(GLuint shaderProgram) = 0;
-    virtual Failable findLocations(GLuint shaderProgram) = 0;
+    ~OkayUniformBuffer() {
+        destroy();
+    }
+
+    Failable init(std::size_t byteSize, GLenum usage = GL_DYNAMIC_DRAW) {
+        if (_id != 0)
+            return Failable::ok({});
+        GL_CHECK_FAILABLE(glGenBuffers(1, &_id));
+        GL_CHECK_FAILABLE(glBindBuffer(GL_UNIFORM_BUFFER, _id));
+        GL_CHECK_FAILABLE(glBufferData(GL_UNIFORM_BUFFER, (GLsizeiptr)byteSize, nullptr, usage));
+        GL_CHECK_FAILABLE(glBindBuffer(GL_UNIFORM_BUFFER, 0));
+        _size = byteSize;
+        return Failable::ok({});
+    }
+
+    void destroy() {
+        if (_id)
+            glDeleteBuffers(1, &_id);
+        _id = 0;
+        _size = 0;
+    }
+
+    Failable upload(const void* data, std::size_t byteSize, std::size_t offset = 0) {
+        if (_id == 0)
+            return Failable::errorResult("UBO not initialized");
+        if (offset + byteSize > _size)
+            return Failable::errorResult("UBO upload out of bounds");
+        GL_CHECK_FAILABLE(glBindBuffer(GL_UNIFORM_BUFFER, _id));
+        GL_CHECK_FAILABLE(
+            glBufferSubData(GL_UNIFORM_BUFFER, (GLintptr)offset, (GLsizeiptr)byteSize, data));
+        GL_CHECK_FAILABLE(glBindBuffer(GL_UNIFORM_BUFFER, 0));
+        return Failable::ok({});
+    }
+
+    void bindBase(GLuint bindingPoint) const {
+        glBindBufferBase(GL_UNIFORM_BUFFER, bindingPoint, _id);
+    }
+
+    GLuint id() const {
+        return _id;
+    }
+    std::size_t size() const {
+        return _size;
+    }
+
+   private:
+    GLuint _id{0};
+    std::size_t _size{0};
+};
+
+template <class TBlock, GLuint BindingPoint, auto BlockName>
+class TemplatedUniformBlock {
+   public:
+    static constexpr auto name = BlockName;
+
+    void set(const TBlock& v) {
+        _value = v;
+        _dirty = true;
+    }
+    TBlock& edit() {
+        _dirty = true;
+        return _value;
+    }
+    const TBlock& get() const {
+        return _value;
+    }
+
+    void markDirty() {
+        _dirty = true;
+    }
+    bool isDirty() const {
+        return _dirty;
+    }
+
+    Failable init(GLuint program) {
+        auto r = ensureInit();
+        if (r.isError())
+            return r;
+
+        // Bind the program’s block index to our binding point once.
+        GLuint idx = glGetUniformBlockIndex(program, std::string(name.sv()).c_str());
+        if (idx == GL_INVALID_INDEX) {
+            return Failable::errorResult("Uniform block not found: " + std::string(name.sv()));
+        }
+        glUniformBlockBinding(program, idx, BindingPoint);
+        return Failable::ok({});
+    }
+
+    Failable pass(GLuint program) {
+        auto r = ensureInit();
+        if (r.isError())
+            return r;
+
+        _ubo.bindBase(BindingPoint);
+
+        if (!_dirty)
+            return Failable::ok({});
+        r = _ubo.upload(&_value, sizeof(TBlock));
+        if (r.isError())
+            return r;
+        _dirty = false;
+        return Failable::ok({});
+    }
+
+   private:
+    Failable ensureInit() {
+        if (_ubo.id() != 0)
+            return Failable::ok({});
+        return _ubo.init(sizeof(TBlock), GL_DYNAMIC_DRAW);
+    }
+
+    TBlock _value{};
+    bool _dirty{true};
+    OkayUniformBuffer _ubo{};
+};
+
+class IOkayMaterialPropertyCollection {
+   public:
+    virtual Failable init(GLuint shaderProgram) = 0;
+    virtual Failable pass(GLuint shaderProgram) = 0;
+    virtual bool markDirty() = 0;
     virtual bool foundLocations() const = 0;
-    virtual bool markAllDirty() = 0;
 };
 
 template <class Derived>
-class OkayMaterialUniformCollection : public IOkayMaterialUniformCollection {
+class OkayMaterialProperties : public IOkayMaterialPropertyCollection {
    public:
-    Failable setUniforms(GLuint shaderProgram) override {
+    Failable init(GLuint shaderProgram) override {
         auto& d = static_cast<Derived&>(*this);
-
         Failable out = Failable::ok({});
-        tupleForEach(d.uniformRefs(), [&](auto& u) {
-            if (out.isError())
-                return;  // stop on first error
-            auto r = u.passUniform(shaderProgram);
-            if (r.isError())
-                out = r;
-        });
-        return out;
-    }
-
-    Failable findLocations(GLuint shaderProgram) override {
-        auto& d = static_cast<Derived&>(*this);
-
-        Failable out = Failable::ok({});
+        // init plain uniforms (cache locations)
         tupleForEach(d.uniformRefs(), [&](auto& u) {
             if (out.isError())
                 return;
@@ -201,40 +311,110 @@ class OkayMaterialUniformCollection : public IOkayMaterialUniformCollection {
             if (r.isError())
                 out = r;
         });
-
-        if (!out.isError()) {
-            _locationsFound = true;
-        }
-
+        // init uniform blocks (bind block->binding point)
+        tupleForEach(d.uniformBlockRefs(), [&](auto& b) {
+            if (out.isError())
+                return;
+            auto r = b.init(shaderProgram);
+            if (r.isError())
+                out = r;
+        });
         return out;
     }
 
-    bool markAllDirty() override {
+    Failable pass(GLuint shaderProgram) override {
         auto& d = static_cast<Derived&>(*this);
+        Failable out = Failable::ok({});
+        tupleForEach(d.uniformRefs(), [&](auto& u) {
+            if (out.isError())
+                return;
+            auto r = u.passUniform(shaderProgram);
+            if (r.isError())
+                out = r;
+        });
+        tupleForEach(d.uniformBlockRefs(), [&](auto& b) {
+            if (out.isError())
+                return;
+            auto r = b.pass(shaderProgram);
+            if (r.isError())
+                out = r;
+        });
+        return out;
+    }
 
+    bool markDirty() override {
+        auto& d = static_cast<Derived&>(*this);
         bool any = false;
         tupleForEach(d.uniformRefs(), [&](auto& u) {
             u.markDirty();
             any = true;
         });
+
         return any;
     }
 
     bool foundLocations() const override {
-        return _locationsFound;
-    };
-
-   private:
-    bool _locationsFound{false};
+        auto& d = static_cast<const Derived&>(*this);
+        bool any = true;
+        tupleForEach(d.uniformRefs(), [&](auto& u) {
+            any &= u.foundLocation();
+        });
+        return any;
+    }
+};
+// for now we will keep the lights here
+struct Light {
+    glm::vec4 posRadius;  // (x, y, z, radius)
+    glm::vec4 color;      // (r, g, b, intensity)
 };
 
-struct BaseMaterialUniforms : public OkayMaterialUniformCollection<BaseMaterialUniforms> {
+template <std::size_t MaxLights>
+struct LightBlock {
+    glm::vec4 meta;
+    std::array<Light, MaxLights> lights;
+};
+
+using DefaultLightBlock = LightBlock<16>;
+
+struct UnlitMaterial : public OkayMaterialProperties<UnlitMaterial> {
     TemplatedMaterialUniform<glm::mat4, FixedString("u_modelMatrix")> modelMatrix{};
     TemplatedMaterialUniform<glm::mat4, FixedString("u_viewMatrix")> viewMatrix{};
     TemplatedMaterialUniform<glm::mat4, FixedString("u_projectionMatrix")> projectionMatrix{};
 
     auto uniformRefs() {
         return std::tie(modelMatrix, viewMatrix, projectionMatrix);
+    }
+
+    auto uniformRefs() const {
+        return std::tie(modelMatrix, viewMatrix, projectionMatrix);
+    }
+
+    auto uniformBlockRefs() {
+        return std::tie();
+    }
+
+    auto uniformBlockRefs() const {
+        return std::tie();
+    }
+};
+
+struct LitMaterial : UnlitMaterial {
+    TemplatedUniformBlock<DefaultLightBlock, 2, FixedString("LightsBlock")> lights;
+
+    auto uniformRefs() {
+        return std::tie(modelMatrix, viewMatrix, projectionMatrix);
+    }
+
+    auto uniformRefs() const {
+        return std::tie(modelMatrix, viewMatrix, projectionMatrix);
+    }
+
+    auto uniformBlockRefs() {
+        return std::tie(lights);
+    }
+
+    auto uniformBlockRefs() const {
+        return std::tie(lights);
     }
 };
 
