@@ -15,6 +15,9 @@
 #include <glm/ext/vector_float3.hpp>
 #include <glm/gtc/random.hpp>
 #include "glm/ext/matrix_transform.hpp"
+#include "glm/ext/vector_float4.hpp"
+#include "okay/core/renderer/materials/lit.hpp"
+#include "okay/core/renderer/materials/unlit.hpp"
 #include "okay/core/renderer/okay_mesh.hpp"
 #include "okay/core/util/result.hpp"
 
@@ -66,13 +69,13 @@ static void __gameInitialize() {
             .radiusSet(0.5f)
             .segmentsSet(20)
             .ringsSet(20)
-            .build());
+            .build(okay::primitives::colorTransform<okay::primitives::UVSphereBuilder>(glm::vec4(1.0f))));
 
     okay::OkayMesh cube = 
         renderer->meshBuffer().addMesh(
             okay::primitives::box()
             .sizeSet({0.3f, 0.3f, 0.3f})
-            .build()
+            .build(okay::primitives::colorTransform<okay::primitives::BoxBuilder>(glm::vec4(1.0f)))
         );
 
     okay::Failable res = renderer->meshBuffer().bindMeshData();
@@ -83,7 +86,7 @@ static void __gameInitialize() {
 
     okay::OkayAssetManager* assetManager =
         okay::Engine.systems.getSystemChecked<okay::OkayAssetManager>();
-    auto shaderLoadRes = assetManager->loadEngineAssetSync<okay::OkayShader>("shaders/test");
+    auto shaderLoadRes = assetManager->loadEngineAssetSync<okay::OkayShader>("shaders/unlit");
 
     if (shaderLoadRes.isError()) {
         okay::Engine.logger.error("Failed to load shader: {}", shaderLoadRes.error());
@@ -91,7 +94,9 @@ static void __gameInitialize() {
     }
 
     okay::OkayShader shader = shaderLoadRes.value().asset;
-    okay::OkayMaterialHandle mat = renderer->materialRegistry().registerMaterial(shader, std::make_unique<okay::UnlitMaterial>());
+    auto materialProprties = std::make_unique<okay::UnlitMaterial>();
+    materialProprties->color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+    okay::OkayMaterialHandle mat = renderer->materialRegistry().registerMaterial(shader, std::move(materialProprties));
     g_sun = renderer->world().addRenderEntity(
         okay::OkayTransform(),
         mat, icoSphere

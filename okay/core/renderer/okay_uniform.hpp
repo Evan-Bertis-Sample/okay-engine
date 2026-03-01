@@ -319,27 +319,40 @@ class OkayMaterialProperties : public IOkayMaterialPropertyCollection {
             if (r.isError())
                 out = r;
         });
+
+        _foundLocations = true;
         return out;
     }
 
     Failable pass(GLuint shaderProgram) override {
         auto& d = static_cast<Derived&>(*this);
-        Failable out = Failable::ok({});
+        std::stringstream errorMessages;
+        bool anyErrors = false;
+
         tupleForEach(d.uniformRefs(), [&](auto& u) {
-            if (out.isError())
-                return;
             auto r = u.passUniform(shaderProgram);
-            if (r.isError())
-                out = r;
+            if (r.isError() && !_hasPassed) {
+                errorMessages << r.error() << std::endl;
+                anyErrors = true;
+            }
         });
         tupleForEach(d.uniformBlockRefs(), [&](auto& b) {
-            if (out.isError())
-                return;
             auto r = b.pass(shaderProgram);
-            if (r.isError())
-                out = r;
+            if (r.isError() && !_hasPassed) {
+                errorMessages << r.error() << std::endl;
+                anyErrors = true;
+            }
         });
-        return out;
+
+        Failable out = anyErrors ? Failable::errorResult(errorMessages.str()) : Failable::ok({});
+
+        // only return an error if you have not passed before
+        if (!_hasPassed) {
+            _hasPassed = true;
+            return out;
+        }
+
+        return Failable::ok({});
     }
 
     bool markDirty() override {
@@ -354,69 +367,14 @@ class OkayMaterialProperties : public IOkayMaterialPropertyCollection {
     }
 
     bool foundLocations() const override {
-        auto& d = static_cast<const Derived&>(*this);
-        bool any = true;
-        tupleForEach(d.uniformRefs(), [&](auto& u) {
-            any &= u.foundLocation();
-        });
-        return any;
+        return _foundLocations;
     }
-};
-// for now we will keep the lights here
-struct Light {
-    glm::vec4 posRadius;  // (x, y, z, radius)
-    glm::vec4 color;      // (r, g, b, intensity)
+
+    private:
+    bool _foundLocations{false};
+    bool _hasPassed{false};
 };
 
-template <std::size_t MaxLights>
-struct LightBlock {
-    glm::vec4 meta;
-    std::array<Light, MaxLights> lights;
-};
-
-using DefaultLightBlock = LightBlock<16>;
-
-struct UnlitMaterial : public OkayMaterialProperties<UnlitMaterial> {
-    TemplatedMaterialUniform<glm::mat4, FixedString("u_modelMatrix")> modelMatrix{};
-    TemplatedMaterialUniform<glm::mat4, FixedString("u_viewMatrix")> viewMatrix{};
-    TemplatedMaterialUniform<glm::mat4, FixedString("u_projectionMatrix")> projectionMatrix{};
-
-    auto uniformRefs() {
-        return std::tie(modelMatrix, viewMatrix, projectionMatrix);
-    }
-
-    auto uniformRefs() const {
-        return std::tie(modelMatrix, viewMatrix, projectionMatrix);
-    }
-
-    auto uniformBlockRefs() {
-        return std::tie();
-    }
-
-    auto uniformBlockRefs() const {
-        return std::tie();
-    }
-};
-
-struct LitMaterial : UnlitMaterial {
-    TemplatedUniformBlock<DefaultLightBlock, 2, FixedString("LightsBlock")> lights;
-
-    auto uniformRefs() {
-        return std::tie(modelMatrix, viewMatrix, projectionMatrix);
-    }
-
-    auto uniformRefs() const {
-        return std::tie(modelMatrix, viewMatrix, projectionMatrix);
-    }
-
-    auto uniformBlockRefs() {
-        return std::tie(lights);
-    }
-
-    auto uniformBlockRefs() const {
-        return std::tie(lights);
-    }
-};
 
 };  // namespace okay
 

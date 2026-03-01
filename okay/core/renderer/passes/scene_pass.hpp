@@ -6,9 +6,9 @@
 #include <okay/core/okay.hpp>
 #include <okay/core/renderer/okay_render_pipeline.hpp>
 #include <okay/core/renderer/okay_renderer.hpp>
-#include "glm/ext/matrix_clip_space.hpp"
-#include "glm/ext/matrix_transform.hpp"
-#include "okay/core/renderer/okay_uniform.hpp"
+#include <okay/core/renderer/okay_uniform.hpp>
+#include <okay/core/renderer/materials/unlit.hpp>
+#include <okay/core/renderer/materials/lit.hpp>
 
 namespace okay {
 
@@ -61,14 +61,32 @@ class ScenePass : public IOkayRenderPass {
                     dynamic_cast<okay::UnlitMaterial*>(uniforms.get());
 
                 if (baseUniforms) {
-                    // Engine.logger.info("Passing base uniforms for material {}.",
-                    //                    item.material.get().id());
                     baseUniforms->modelMatrix.set(item.worldMatrix);
                     float aspect = static_cast<float>(context.renderer.width()) /
                                    static_cast<float>(context.renderer.height());
                     baseUniforms->projectionMatrix.set(
                         context.world.camera().projectionMatrix(aspect));
                     baseUniforms->viewMatrix.set(context.world.camera().viewMatrix());
+
+                    baseUniforms->cameraPosition.set(
+                        context.world.camera().position());
+                    
+                    baseUniforms->cameraDirection.set(
+                        context.world.camera().direction());
+                }
+
+                // pass lit material uniforms
+                okay::LitMaterial *litUniforms =
+                    dynamic_cast<okay::LitMaterial*>(uniforms.get());
+
+                if (litUniforms) {
+                    // pass some lights
+                    OkayLight light = OkayLight::directional(
+                        glm::vec3(0, 0, 1), glm::vec3(1, 1, 1), 1.0f);
+
+                    DefaultLightBlock &block = litUniforms->lights.edit();
+                    block.lights[0] = light;
+                    block.meta.x = 1.0f;
                 }
 
                 Failable f = item.material.get().passUniforms();
