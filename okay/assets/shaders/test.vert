@@ -17,15 +17,7 @@ out vec3 f_color;
 
 void main() {
    mat4 mvp = u_projectionMatrix * u_viewMatrix * u_modelMatrix;
-
    vec4 pos = mvp * vec4(a_pos, 1.0f);
-   
-   if (pos.z < 0.0f) {
-      pos = vec4(0.0f, 0.0f, 0.0f, 1.0f);
-   }
-
-   pos = pos / pos.w;
-
    gl_Position = pos;
 
    // set the color to a_uv

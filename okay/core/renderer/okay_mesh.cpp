@@ -72,6 +72,11 @@ Failable OkayMeshBuffer::initVertexAttributes() {
 
     Engine.logger.debug("Initializing vertex attributes");
 
+    // create buffers
+    GL_CHECK(glGenVertexArrays(1, &_vao));
+    GL_CHECK(glGenBuffers(1, &_vbo));
+    GL_CHECK(glGenBuffers(1, &_ebo));
+
     // MUST have a current context here.
     GL_CHECK(glBindVertexArray(_vao));
 
@@ -79,20 +84,20 @@ Failable OkayMeshBuffer::initVertexAttributes() {
     GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, _vbo));
 
     GL_CHECK(glEnableVertexAttribArray(0));
-    GL_CHECK(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(OkayVertex),
-                                   reinterpret_cast<void*>(offsetof(OkayVertex, position))));
+    GL_CHECK(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, OkayVertex::stride(),
+                                   reinterpret_cast<void*>(0 * sizeof(float))));
 
     GL_CHECK(glEnableVertexAttribArray(1));
-    GL_CHECK(glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(OkayVertex),
-                                   reinterpret_cast<void*>(offsetof(OkayVertex, normal))));
+    GL_CHECK(glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, OkayVertex::stride(),
+                                   reinterpret_cast<void*>(3 * sizeof(float))));
 
     GL_CHECK(glEnableVertexAttribArray(2));
-    GL_CHECK(glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(OkayVertex),
-                                   reinterpret_cast<void*>(offsetof(OkayVertex, color))));
+    GL_CHECK(glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, OkayVertex::stride(),
+                                   reinterpret_cast<void*>(6 * sizeof(float))));
 
     GL_CHECK(glEnableVertexAttribArray(3));
-    GL_CHECK(glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(OkayVertex),
-                                   reinterpret_cast<void*>(offsetof(OkayVertex, uv))));
+    GL_CHECK(glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, OkayVertex::stride(),
+                                   reinterpret_cast<void*>(9 * sizeof(float))));
 
     GL_CHECK(glBindVertexArray(0));
     GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, 0));
@@ -115,31 +120,16 @@ Failable OkayMeshBuffer::bindMeshData() {
 
     Engine.logger.debug("Binding mesh data");
 
-    if (_vao == 0) {
-        glGenVertexArrays(1, &_vao);
-
-        if (glGetError() != GL_NO_ERROR) {
-            Engine.logger.error("Failed to create VAO : {}", glGetError());
-            return Failable::errorResult("Failed to create VAO");
-        }
-    }
-    
-    if (_vbo == 0) {
-        glGenBuffers(1, &_vbo);
-
-        if (glGetError() != GL_NO_ERROR) {
-            Engine.logger.error("Failed to create VBO : {}", glGetError());
-            return Failable::errorResult("Failed to create VBO");
+    if (!_hasInitVertexAttributes) {
+        Failable r = initVertexAttributes();
+        if (r.isError()) {
+            return r;
         }
     }
 
-    if (_ebo == 0) {
-        glGenBuffers(1, &_ebo);
-
-        if (glGetError() != GL_NO_ERROR) {
-            Engine.logger.error("Failed to create EBO : {}", glGetError());
-            return Failable::errorResult("Failed to create EBO");
-        }
+    if (_vao == 0 || _vbo == 0 || _ebo == 0) {
+        Engine.logger.error("Mesh data not initialized");
+        return Failable::errorResult("Mesh data not initialized");
     }
 
     GL_CHECK(glBindVertexArray(_vao));
@@ -152,13 +142,7 @@ Failable OkayMeshBuffer::bindMeshData() {
     GL_CHECK(glBufferData(
         GL_ELEMENT_ARRAY_BUFFER, _indices.size() * sizeof(GLuint), _indices.data(), GL_STATIC_DRAW));
 
-    auto r = initVertexAttributes();
-    if (r.isError()) {
-        GL_CHECK(glBindVertexArray(0));
-        return r;
-    }
-
-    GL_CHECK(glBindVertexArray(0));
+    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
     Engine.logger.debug("Mesh data bound");
     _dataOutofDate = false;
@@ -177,6 +161,5 @@ void OkayMeshBuffer::drawMesh(const OkayMesh& mesh) {
     GLsizei count = static_cast<GLsizei>(mesh.indexCount);
 
     glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, start);
-
     glBindVertexArray(0);
 }

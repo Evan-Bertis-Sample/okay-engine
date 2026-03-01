@@ -19,6 +19,10 @@ struct OkayVertex {
         return 3 + 3 + 3 + 2;
     }
 
+    static std::size_t stride() {
+        return numFloats() * sizeof(float);
+    }
+
     OkayVertex& operator=(const OkayVertex& other) {
         position = other.position;
         normal = other.normal;

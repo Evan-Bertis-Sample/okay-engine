@@ -25,6 +25,8 @@ static okay::OkayRenderEntity g_renderEntityB;
 
 int main() {
     okay::SurfaceConfig surfaceConfig;
+    surfaceConfig.width = 800;
+    surfaceConfig.height = 480;
     okay::Surface surface(surfaceConfig);
 
     okay::OkayRendererSettings rendererSettings{
@@ -87,7 +89,7 @@ static void __gameInitialize() {
     okay::OkayShader shader = shaderLoadRes.value().asset;
     okay::OkayMaterialHandle mat = renderer->materialRegistry().registerMaterial(shader, std::make_unique<okay::BaseMaterialUniforms>());
     
-    glm::vec3 startingPos = { 0.0f, 0.0f, 4.0f };
+    glm::vec3 startingPos = { 0.0f, 0.0f, -2.0f };
     glm::vec3 startingRot = { 0.0f, 0.0f, 0.0f };
     glm::vec3 startingScale = { 1.0f, 1.0f, 1.0f };
 
@@ -97,11 +99,31 @@ static void __gameInitialize() {
     );
 
     g_renderEntityB = renderer->world().addRenderEntity(
-        okay::OkayTransform({ -2.0f, 0.0f, 0.0f }, startingScale, glm::quat(startingRot)),
+        okay::OkayTransform({ -1.0f, 0.0f, 0.0f }, startingScale, glm::quat(startingRot)),
         mat, cube
     );
 
     renderer->world().addChild(g_renderEntityA, g_renderEntityB);
+
+    // add a bunch of cubes in a circle around the origin
+    const int numCubes = 1000;
+    for (int i = 0; i < numCubes; ++i) {
+        // random unit vector
+        glm::vec3 pos = glm::normalize(glm::vec3(
+            (float)rand() / (float)RAND_MAX - 0.5f,
+            (float)rand() / (float)RAND_MAX - 0.5f,
+            (float)rand() / (float)RAND_MAX - 0.5f
+        ));
+
+        // displace by random
+        pos *= ((float)rand() / (float)RAND_MAX) * 100.0f;
+
+        // add to world
+        renderer->world().addRenderEntity(
+            okay::OkayTransform(pos, startingScale, glm::quat(startingRot)),
+            mat, cube
+        );  
+    }
 }
 
 static void __gameUpdate() {

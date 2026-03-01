@@ -29,6 +29,8 @@ class ScenePass : public IOkayRenderPass {
 
     virtual void render(const OkayRenderContext& context) override {
         // enable culling and depth test
+        GL_CHECK(glClearColor(0.2f, 0.3f, 0.3f, 1.0f));
+        GL_CHECK(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
         GL_CHECK(glCullFace(GL_BACK));
         GL_CHECK(glEnable(GL_CULL_FACE));
         GL_CHECK(glEnable(GL_DEPTH_TEST));

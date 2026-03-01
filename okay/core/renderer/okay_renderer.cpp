@@ -41,10 +41,6 @@ void OkayRenderer::postInitialize() {
 
 void OkayRenderer::tick() {
     _surface->pollEvents();
-
-    GL_CHECK(glClearColor(0.2f, 0.3f, 0.3f, 1.0f));
-    GL_CHECK(glClear(GL_COLOR_BUFFER_BIT));
-
     OkayRenderContext context{*this, _world, _renderTargetPool};
     _pipeline.render(context);
     _surface->swapBuffers();
