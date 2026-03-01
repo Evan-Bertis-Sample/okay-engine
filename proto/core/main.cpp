@@ -11,8 +11,10 @@
 #include <okay/core/renderer/okay_render_pipeline.hpp>
 #include <okay/core/renderer/okay_uniform.hpp>
 #include <okay/core/renderer/passes/scene_pass.hpp>
-#include "glm/ext/quaternion_trigonometric.hpp"
-#include "glm/ext/vector_float3.hpp"
+#include <glm/ext/quaternion_trigonometric.hpp>
+#include <glm/ext/vector_float3.hpp>
+#include <glm/gtc/random.hpp>
+#include "glm/ext/matrix_transform.hpp"
 #include "okay/core/renderer/okay_mesh.hpp"
 #include "okay/core/util/result.hpp"
 
@@ -20,8 +22,9 @@ static void __gameInitialize();
 static void __gameUpdate();
 static void __gameShutdown();
 
-static okay::OkayRenderEntity g_renderEntityA;
-static okay::OkayRenderEntity g_renderEntityB;
+static okay::OkayRenderEntity g_sun;
+static okay::OkayRenderEntity g_planet;
+static okay::OkayRenderEntity g_moon;
 
 int main() {
     okay::SurfaceConfig surfaceConfig;
@@ -59,15 +62,16 @@ static void __gameInitialize() {
 
     okay::OkayMesh icoSphere =
         renderer->meshBuffer().addMesh(
-            okay::primitives::icoSphere()
-            .radiusSet(0.1f)
-            .subdivisionsSet(4)
+            okay::primitives::uvSphere()
+            .radiusSet(0.5f)
+            .segmentsSet(20)
+            .ringsSet(20)
             .build());
 
     okay::OkayMesh cube = 
         renderer->meshBuffer().addMesh(
             okay::primitives::box()
-            .sizeSet({0.1f, 0.1f, 0.1f})
+            .sizeSet({0.3f, 0.3f, 0.3f})
             .build()
         );
 
@@ -88,49 +92,65 @@ static void __gameInitialize() {
 
     okay::OkayShader shader = shaderLoadRes.value().asset;
     okay::OkayMaterialHandle mat = renderer->materialRegistry().registerMaterial(shader, std::make_unique<okay::BaseMaterialUniforms>());
-    
-    glm::vec3 startingPos = { 0.0f, 0.0f, -2.0f };
-    glm::vec3 startingRot = { 0.0f, 0.0f, 0.0f };
-    glm::vec3 startingScale = { 1.0f, 1.0f, 1.0f };
-
-    g_renderEntityA = renderer->world().addRenderEntity(
-        okay::OkayTransform(startingPos, startingScale, glm::quat(startingRot)),
+    g_sun = renderer->world().addRenderEntity(
+        okay::OkayTransform(),
         mat, icoSphere
     );
 
-    g_renderEntityB = renderer->world().addRenderEntity(
-        okay::OkayTransform({ -1.0f, 0.0f, 0.0f }, startingScale, glm::quat(startingRot)),
-        mat, cube
+    g_planet = renderer->world().addRenderEntity(
+        okay::OkayTransform({ -2.0f, 0.0f, 0.0f }, { 0.5f, 0.5f, 0.5f }),
+        mat, icoSphere
     );
 
-    renderer->world().addChild(g_renderEntityA, g_renderEntityB);
+    g_moon = renderer->world().addRenderEntity(
+        okay::OkayTransform({ 0.25f, 0.0f, 0.0f } , { 0.5f, 0.5f, 0.5f }),
+        mat, icoSphere
+    );
+
+    renderer->world().addChild(g_sun, g_planet);
+    renderer->world().addChild(g_planet, g_moon);
 
     // add a bunch of cubes in a circle around the origin
     const int numCubes = 1000;
     for (int i = 0; i < numCubes; ++i) {
         // random unit vector
-        glm::vec3 pos = glm::normalize(glm::vec3(
-            (float)rand() / (float)RAND_MAX - 0.5f,
-            (float)rand() / (float)RAND_MAX - 0.5f,
-            (float)rand() / (float)RAND_MAX - 0.5f
-        ));
+        glm::vec3 pos = glm::gaussRand(glm::vec3(0.0f), glm::vec3(1.0f));
+        pos = glm::normalize(pos);
 
-        // displace by random
-        pos *= ((float)rand() / (float)RAND_MAX) * 100.0f;
+        pos *= glm::linearRand(10.0f, 20.0f);
 
+        glm::vec3 scale = glm::gaussRand(glm::vec3(0.0f), glm::vec3(0.5f));
         // add to world
         renderer->world().addRenderEntity(
-            okay::OkayTransform(pos, startingScale, glm::quat(startingRot)),
+            okay::OkayTransform(pos, scale, glm::quat()),
             mat, cube
         );  
     }
 }
 
 static void __gameUpdate() {
-    // Game update logic
-    g_renderEntityA->transform.position.x += 0.1f * okay::Engine.time->deltaTimeSec();
-    g_renderEntityA->transform.rotation = glm::angleAxis(
-        glm::radians(45.0f) * okay::Engine.time->timeSinceStartSec(), glm::vec3(0.0f, 1.0f, 0.0f));
+    // Move the whole solar system
+    g_sun->transform.position.y = sin(okay::Engine.time->timeSinceStartSec()) * 0.5f;
+    
+    // Rotate the sun
+    g_sun->transform.rotation = glm::angleAxis(
+        glm::radians(45.0f) * okay::Engine.time->timeSinceStartSec() * 0.5f, glm::vec3(0.0f, 1.0f, 0.0f));
+
+    // Rotate the planet
+    g_planet->transform.rotation = glm::angleAxis(
+        glm::radians(45.0f) * okay::Engine.time->timeSinceStartSec() * 1.5f, glm::vec3(1.0f, 0.0f, 0.0f));
+
+    // move the camera in a circle, always looking at the origin
+    okay::OkayRenderer* renderer = okay::Engine.systems.getSystemChecked<okay::OkayRenderer>();
+    float theta = okay::Engine.time->timeSinceStartSec() * 0.1f * glm::pi<float>();
+    glm::vec3 pos = glm::vec3(
+        sin(theta) * 5.0f,
+        0.0f,
+        cos(theta) * 5.0f
+    );
+    // rotation much look at origin
+    renderer->world().camera().transform.position = pos;
+    renderer->world().camera().lookAt(glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 }
 
 static void __gameShutdown() {
