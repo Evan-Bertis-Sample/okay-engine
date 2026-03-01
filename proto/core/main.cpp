@@ -98,12 +98,12 @@ static void __gameInitialize() {
     );
 
     g_planet = renderer->world().addRenderEntity(
-        okay::OkayTransform({ -2.0f, 0.0f, 0.0f }, { 0.5f, 0.5f, 0.5f }),
+        okay::OkayTransform({ -2.0f, 0.0f, 0.0f }, { 0.3f, 0.3f, 0.3f }),
         mat, icoSphere
     );
 
     g_moon = renderer->world().addRenderEntity(
-        okay::OkayTransform({ 0.25f, 0.0f, 0.0f } , { 0.5f, 0.5f, 0.5f }),
+        okay::OkayTransform({ 1.0f, 0.0f, 0.0f } , { 0.2f, 0.2f, 0.2f }),
         mat, icoSphere
     );
 
@@ -134,15 +134,19 @@ static void __gameUpdate() {
     
     // Rotate the sun
     g_sun->transform.rotation = glm::angleAxis(
-        glm::radians(45.0f) * okay::Engine.time->timeSinceStartSec() * 0.5f, glm::vec3(0.0f, 1.0f, 0.0f));
+        glm::radians(45.0f) * okay::Engine.time->timeSinceStartSec() * 1.0f, glm::vec3(0.0f, 1.0f, 0.0f));
 
     // Rotate the planet
     g_planet->transform.rotation = glm::angleAxis(
-        glm::radians(45.0f) * okay::Engine.time->timeSinceStartSec() * 1.5f, glm::vec3(1.0f, 0.0f, 0.0f));
+        glm::radians(45.0f) * okay::Engine.time->timeSinceStartSec() * 1.5f, glm::vec3(0.0f, 1.0f, 0.0f));
+
+    // Rotate the moon
+    g_moon->transform.rotation = glm::angleAxis(
+        glm::radians(45.0f) * okay::Engine.time->timeSinceStartSec() * 2.0f, glm::vec3(0.0f, 1.0f, 0.0f));
 
     // move the camera in a circle, always looking at the origin
     okay::OkayRenderer* renderer = okay::Engine.systems.getSystemChecked<okay::OkayRenderer>();
-    float theta = okay::Engine.time->timeSinceStartSec() * 0.1f * glm::pi<float>();
+    float theta = okay::Engine.time->timeSinceStartSec() * 0.05f * glm::pi<float>();
     glm::vec3 pos = glm::vec3(
         sin(theta) * 5.0f,
         0.0f,
