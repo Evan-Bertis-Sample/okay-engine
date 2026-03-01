@@ -175,19 +175,11 @@ class OkayMaterial {
         return _uniforms->pass(_shader->programID());
     }
 
-    // enable move semantics
-    OkayMaterial(OkayMaterial&& other)
-        : _shader(other._shader), _uniforms(std::move(other._uniforms)), _id(other._id) {
-    }
-    OkayMaterial& operator=(OkayMaterial&& other) {
-        _shader = std::move(other._shader);
-        _uniforms = std::move(other._uniforms);
-        _id = other._id;
-        return *this;
-    }
-
-    OkayMaterial(const OkayMaterial& other) : _shader(other._shader), _id(other._id) {
-    }
+    // disable copy
+    OkayMaterial(const OkayMaterial&) = delete;
+    OkayMaterial& operator=(const OkayMaterial&) = delete;
+    OkayMaterial(OkayMaterial&&) = default;
+    OkayMaterial& operator=(OkayMaterial&&) = default;
 
     // equality operator
     bool operator==(const OkayMaterial& other) const {
@@ -214,10 +206,11 @@ class OkayMaterial {
 };
 
 struct OkayMaterialHandle {
-    OkayMaterialRegistry* owner;
-    std::uint32_t id;
+    OkayMaterialRegistry* owner = nullptr;
+    std::uint32_t id = OkayMaterial::invalidID();
 
-    // equality
+    bool isValid() const { return owner != nullptr && id != OkayMaterial::invalidID(); }
+
     bool operator==(const OkayMaterialHandle& other) const {
         return owner == other.owner && id == other.id;
     }
@@ -229,7 +222,6 @@ struct OkayMaterialHandle {
     OkayMaterial& operator*() const;
     OkayMaterial& operator->() const;
     OkayMaterial& get() const;
-    
 };
 
 class OkayMaterialRegistry {
@@ -238,6 +230,7 @@ class OkayMaterialRegistry {
                                    std::unique_ptr<IOkayMaterialPropertyCollection> uniforms) {
         std::uint32_t id = nextID();
         _materials.emplace_back(std::make_unique<OkayMaterial>(shader, std::move(uniforms), id));
+        okay::Engine.logger.debug("Registered material {}. Now {} materials.", id, _materials.size());
         return { this, id };
     }
 
@@ -259,6 +252,7 @@ class OkayMaterialRegistry {
 
     static std::uint32_t _idCounter;
     static std::uint32_t nextID() {
+        std::cout << "Material ID: " << _idCounter << std::endl;
         return _idCounter++;
     }
 };

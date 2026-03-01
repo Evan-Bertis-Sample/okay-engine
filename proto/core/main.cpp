@@ -96,7 +96,7 @@ static void __gameInitialize() {
     std::shared_ptr<okay::OkayShader> shader = std::make_shared<okay::OkayShader>(shaderLoadRes.value().asset);
 
     auto materialProprties = std::make_unique<okay::UnlitMaterial>();
-    materialProprties->color = glm::vec4(1.0f, 1.0f, 0.0f, 1.0f); 
+    materialProprties->color.set(glm::vec4(1.0f, 1.0f, 0.0f, 1.0f)); 
     okay::OkayMaterialHandle sunMat = renderer->materialRegistry().registerMaterial(shader, std::move(materialProprties));
     g_sun = renderer->world().addRenderEntity(
         okay::OkayTransform(),
@@ -105,7 +105,7 @@ static void __gameInitialize() {
 
     // planet material
     materialProprties = std::make_unique<okay::UnlitMaterial>();
-    materialProprties->color = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
+    materialProprties->color.set(glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
     okay::OkayMaterialHandle planetMat = renderer->materialRegistry().registerMaterial(shader, std::move(materialProprties));
     g_planet = renderer->world().addRenderEntity(
         okay::OkayTransform({ -2.0f, 0.0f, 0.0f }, { 0.3f, 0.3f, 0.3f }),
@@ -114,7 +114,7 @@ static void __gameInitialize() {
 
     // moon material
     materialProprties = std::make_unique<okay::UnlitMaterial>();
-    materialProprties->color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+    materialProprties->color.set(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
     okay::OkayMaterialHandle moonMat = renderer->materialRegistry().registerMaterial(shader, std::move(materialProprties));
     g_moon = renderer->world().addRenderEntity(
         okay::OkayTransform({ 1.0f, 0.0f, 0.0f } , { 0.2f, 0.2f, 0.2f }),
