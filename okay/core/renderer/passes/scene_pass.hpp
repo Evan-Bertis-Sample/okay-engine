@@ -2,6 +2,7 @@
 #define __SCENE_PASS_H__
 
 #include <memory>
+#include <okay/core/renderer/okay_gl.hpp>
 #include <okay/core/okay.hpp>
 #include <okay/core/renderer/okay_render_pipeline.hpp>
 #include <okay/core/renderer/okay_renderer.hpp>
@@ -28,9 +29,9 @@ class ScenePass : public IOkayRenderPass {
 
     virtual void render(const OkayRenderContext& context) override {
         // enable culling and depth test
-        glCullFace(GL_BACK);
-        glEnable(GL_CULL_FACE);
-        glEnable(GL_DEPTH_TEST);
+        GL_CHECK(glCullFace(GL_BACK));
+        GL_CHECK(glEnable(GL_CULL_FACE));
+        GL_CHECK(glEnable(GL_DEPTH_TEST));
 
         for (const RenderItemHandle& handle : context.world.getRenderItems()) {
             OkayRenderItem& item = context.world.getRenderItem(handle);

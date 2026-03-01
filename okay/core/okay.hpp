@@ -105,12 +105,14 @@ class OkayGame {
 
         for (IOkaySystem* system : enginePool) {
             system->initialize();
+            if (!Engine.shouldRun()) break;
         }
 
         OkaySystemPool& gamePool = Engine.systems.getPool(OkaySystemScope::GAME);
 
         for (IOkaySystem* system : gamePool) {
             system->initialize();
+            if (!Engine.shouldRun()) break;
         }
 
         _onInitialize();
@@ -119,10 +121,12 @@ class OkayGame {
         while (Engine.shouldRun()) {
             for (IOkaySystem* system : enginePool) {
                 system->tick();
+                if (!Engine.shouldRun()) break;
             }
 
             for (IOkaySystem* system : gamePool) {
                 system->tick();
+                if (!Engine.shouldRun()) break;
             }
 
             _onUpdate();

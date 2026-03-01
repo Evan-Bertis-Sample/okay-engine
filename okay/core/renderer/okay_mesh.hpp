@@ -91,11 +91,11 @@ class OkayMeshBuffer {
     GLuint _vbo{0};
     GLuint _ebo{0};
     
-    static bool _hasInitVertexAttributes;
-    bool _dirty{false};
+    bool _hasInitVertexAttributes{false};
+    bool _dataOutofDate{true};
 
    public:
-    static Failable initVertexAttributes();
+    Failable initVertexAttributes();
 
     std::size_t size() const { return _indices.size(); }
     OkayMesh addMesh(const OkayMeshData& model);

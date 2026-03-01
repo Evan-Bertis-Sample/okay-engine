@@ -3,6 +3,7 @@
 
 #include <glad/glad.h>
 #include <glm/glm.hpp>
+#include <okay/core/renderer/okay_gl.hpp>
 #include <okay/core/okay.hpp>
 #include <okay/core/logging/okay_logger.hpp>
 #include <okay/core/util/result.hpp>
@@ -66,6 +67,10 @@ Failable set(GLuint uniformLoc, const T& value) {
         return Failable::errorResult("Unsupported uniform type");
     }
 
+    if (glGetError() != GL_NO_ERROR) {
+        return Failable::errorResult("Failed to set uniform. Error code: " + std::to_string(glGetError()));
+    }
+
     return Failable::ok({});
 }
 
@@ -111,7 +116,7 @@ struct TemplatedMaterialUniform {
     Failable findLocation(GLuint shaderProgram) {
         int location = glGetUniformLocation(shaderProgram, std::string(name.sv()).c_str());
         if (location == -1) {
-            return Failable::errorResult("Uniform not found: " + std::string(name.sv()));
+            return Failable::errorResult("Uniform not found: " + std::string(name.sv()) + " error code: " + std::to_string(glGetError()));
         }
         _location = static_cast<GLuint>(location);
         return Failable::ok({});

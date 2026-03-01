@@ -1,12 +1,11 @@
 #include "okay_mesh.hpp"
 
 #include <okay/core/okay.hpp>
+#include <okay/core/renderer/okay_gl.hpp>
 #include <okay/core/logging/okay_logger.hpp>
 #include "okay/core/util/result.hpp"
 
 using namespace okay;
-
-bool OkayMeshBuffer::_hasInitVertexAttributes = false;
 
 OkayMesh OkayMeshBuffer::addMesh(const OkayMeshData& mesh) {
     OkayMesh m{};
@@ -43,7 +42,7 @@ OkayMesh OkayMeshBuffer::addMesh(const OkayMeshData& mesh) {
         _indices.push_back(i + m.vertexOffset);
     }
 
-    _dirty = true;
+    _dataOutofDate = true;
 
     return m;
 }
@@ -65,33 +64,43 @@ void OkayMeshBuffer::removeMesh(const OkayMesh& mesh) {
                       _bufferData.begin() + mesh.vertexOffset * OkayVertex::numFloats() +
                           mesh.vertexCount * OkayVertex::numFloats());
 
-    _dirty = true;
+    _dataOutofDate = true;
 }
 
 Failable OkayMeshBuffer::initVertexAttributes() {
-    if (_hasInitVertexAttributes)
-        return Failable::ok({});
+    if (_hasInitVertexAttributes) return Failable::ok({});
 
     Engine.logger.debug("Initializing vertex attributes");
 
-    // REQUIREMENTS for ES 3.0:
-    // - VAO bound
-    // - GL_ARRAY_BUFFER bound to the VBO you want
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(
-        0, 3, GL_FLOAT, GL_FALSE, sizeof(OkayVertex), (void*)offsetof(OkayVertex, position));
+    // MUST have a current context here.
+    GL_CHECK(glBindVertexArray(_vao));
 
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(
-        1, 3, GL_FLOAT, GL_FALSE, sizeof(OkayVertex), (void*)offsetof(OkayVertex, normal));
+    // This must be the VBO that contains OkayVertex data
+    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, _vbo));
 
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(
-        2, 3, GL_FLOAT, GL_FALSE, sizeof(OkayVertex), (void*)offsetof(OkayVertex, color));
+    GL_CHECK(glEnableVertexAttribArray(0));
+    GL_CHECK(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(OkayVertex),
+                                   reinterpret_cast<void*>(offsetof(OkayVertex, position))));
 
-    glEnableVertexAttribArray(3);
-    glVertexAttribPointer(
-        3, 2, GL_FLOAT, GL_FALSE, sizeof(OkayVertex), (void*)offsetof(OkayVertex, uv));
+    GL_CHECK(glEnableVertexAttribArray(1));
+    GL_CHECK(glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(OkayVertex),
+                                   reinterpret_cast<void*>(offsetof(OkayVertex, normal))));
+
+    GL_CHECK(glEnableVertexAttribArray(2));
+    GL_CHECK(glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(OkayVertex),
+                                   reinterpret_cast<void*>(offsetof(OkayVertex, color))));
+
+    GL_CHECK(glEnableVertexAttribArray(3));
+    GL_CHECK(glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(OkayVertex),
+                                   reinterpret_cast<void*>(offsetof(OkayVertex, uv))));
+
+    GL_CHECK(glBindVertexArray(0));
+    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+    GLint vao=0, vbo=0;
+    glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &vao);
+    glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &vbo);
+    Engine.logger.debug("attrib setup bindings: VAO={}, ARRAY_BUFFER={}", _vao, _vbo);
 
     _hasInitVertexAttributes = true;
     Engine.logger.debug("Vertex attributes initialized");
@@ -99,8 +108,10 @@ Failable OkayMeshBuffer::initVertexAttributes() {
 }
 
 Failable OkayMeshBuffer::bindMeshData() {
-    if (!_dirty)
+    if (!_dataOutofDate) {
+        Engine.logger.debug("Mesh data already bound");
         return Failable::ok({});
+    }
 
     Engine.logger.debug("Binding mesh data");
 
@@ -131,31 +142,31 @@ Failable OkayMeshBuffer::bindMeshData() {
         }
     }
 
-    glBindVertexArray(_vao);
+    GL_CHECK(glBindVertexArray(_vao));
 
-    glBindBuffer(GL_ARRAY_BUFFER, _vbo);
-    glBufferData(
-        GL_ARRAY_BUFFER, _bufferData.size() * sizeof(GLfloat), _bufferData.data(), GL_STATIC_DRAW);
+    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, _vbo));
+    GL_CHECK(glBufferData(
+        GL_ARRAY_BUFFER, _bufferData.size() * sizeof(GLfloat), _bufferData.data(), GL_STATIC_DRAW));
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ebo);
-    glBufferData(
-        GL_ELEMENT_ARRAY_BUFFER, _indices.size() * sizeof(GLuint), _indices.data(), GL_STATIC_DRAW);
+    GL_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ebo));
+    GL_CHECK(glBufferData(
+        GL_ELEMENT_ARRAY_BUFFER, _indices.size() * sizeof(GLuint), _indices.data(), GL_STATIC_DRAW));
 
     auto r = initVertexAttributes();
     if (r.isError()) {
-        glBindVertexArray(0);
+        GL_CHECK(glBindVertexArray(0));
         return r;
     }
 
-    glBindVertexArray(0);
+    GL_CHECK(glBindVertexArray(0));
 
     Engine.logger.debug("Mesh data bound");
-    _dirty = false;
+    _dataOutofDate = false;
     return Failable::ok({});
 }
 
 void OkayMeshBuffer::drawMesh(const OkayMesh& mesh) {
-    if (_dirty) {
+    if (_dataOutofDate) {
         Engine.logger.error("Mesh data not bound");
         return;
     }
