@@ -18,7 +18,9 @@ class OkayTime {
 
    public:
     OkayTime() : 
-        _lastTime(HighResClock::now())
+        _lastTime(HighResClock::now()),
+        _startOfProgram(HighResClock::now()),
+        _deltaTime(0)
         {}
 
     void reset() {
@@ -29,7 +31,7 @@ class OkayTime {
     std::uint32_t deltaTimeMs() const { return _deltaTime; }
     float deltaTimeSec() const { return static_cast<float>(_deltaTime) / 1000.0f; }
 
-    std::uint32_t timeSinceStartMs() const { return std::chrono::duration_cast<std::chrono::milliseconds>(HighResClock::now() - _lastTime).count(); }
+    std::uint32_t timeSinceStartMs() const { return std::chrono::duration_cast<std::chrono::milliseconds>(HighResClock::now() - _startOfProgram).count(); }
     float timeSinceStartSec() const { return static_cast<float>(timeSinceStartMs()) / 1000.0f; }
 
     void updateDeltaTime() {
@@ -40,6 +42,7 @@ class OkayTime {
 
    private:
     TimePoint _lastTime;
+    TimePoint _startOfProgram;
     std::uint32_t _deltaTime;
 };
 

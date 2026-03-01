@@ -29,11 +29,14 @@ class ScenePass : public IOkayRenderPass {
 
     virtual void render(const OkayRenderContext& context) override {
         // enable culling and depth test
-        GL_CHECK(glClearColor(0.2f, 0.3f, 0.3f, 1.0f));
+        GL_CHECK(glClearColor(0.113f, 0.008, 0.208, 1.0f));
         GL_CHECK(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
-        GL_CHECK(glCullFace(GL_BACK));
         GL_CHECK(glEnable(GL_CULL_FACE));
+        GL_CHECK(glCullFace(GL_BACK));
         GL_CHECK(glEnable(GL_DEPTH_TEST));
+
+        // enable anti-aliasing
+        GL_CHECK(glEnable(GL_MULTISAMPLE));
 
         for (const RenderItemHandle& handle : context.world.getRenderItems()) {
             OkayRenderItem& item = context.world.getRenderItem(handle);
@@ -66,9 +69,6 @@ class ScenePass : public IOkayRenderPass {
                     baseUniforms->projectionMatrix.set(
                         context.world.camera().projectionMatrix(aspect));
                     baseUniforms->viewMatrix.set(context.world.camera().viewMatrix());
-                    // set evertything to the identity
-                    // baseUniforms->viewMatrix.set(glm::identity<glm::mat4>());
-                    // baseUniforms->projectionMatrix.set(glm::identity<glm::mat4>());
                 }
 
                 Failable f = item.material.get().passUniforms();

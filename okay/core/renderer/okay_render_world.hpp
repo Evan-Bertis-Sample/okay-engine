@@ -23,9 +23,7 @@ struct OkayTransform {
     glm::vec3 scale{1.0f, 1.0f, 1.0f};
     glm::quat rotation{1.0f, 0.0f, 0.0f, 0.0f};
 
-    OkayTransform() = default;
-
-    OkayTransform(const glm::vec3& pos, const glm::vec3& scl, const glm::quat& rot)
+    OkayTransform(const glm::vec3& pos = glm::vec3(0.0f), const glm::vec3& scl = glm::vec3(1.0f), const glm::quat& rot = glm::quat())
         : position(pos), scale(scl), rotation(rot) {
     }
 
@@ -112,11 +110,27 @@ class OkayCamera {
             return glm::perspective(glm::radians(config.fov), ratio, config.near, config.far);
         } else {
             OrthographicConfig config = std::get<OrthographicConfig>(_config);
-            return glm::ortho(config.left, config.right, config.bottom, config.top, config.near, config.far);
+            return glm::ortho(
+                config.left, config.right, config.bottom, config.top, config.near, config.far);
         }
     }
 
-    glm::mat4 viewMatrix() const { return glm::inverse(transform.toMatrix()); }
+    glm::mat4 viewMatrix() const {
+        return glm::inverse(transform.toMatrix());
+    }
+
+    void lookAt(glm::vec3 center, glm::vec3 up = glm::vec3(0, 1, 0)) {
+        glm::vec3 eye = transform.position;
+        glm::vec3 f = glm::normalize(center - eye);       // desired forward (toward target)
+        glm::vec3 r = glm::normalize(glm::cross(f, up));  // right
+        glm::vec3 u = glm::cross(r, f);                   // corrected up
+
+        // Camera local axes in world space:
+        // +X = r, +Y = u, -Z = f  => +Z = -f
+        glm::mat3 worldRot(r, u, -f);  // columns
+
+        transform.rotation = glm::quat_cast(worldRot);
+    }
 
    private:
     ProjectionType _projectionType{ProjectionType::PERPSECTIVE};
