@@ -1,5 +1,6 @@
 #version 300 es
 precision highp float;
+precision highp int;
 
 in vec3 v_color;
 in vec3 v_worldPos;
@@ -16,13 +17,14 @@ uniform float u_shininess;   // e.g. 32.0
 uniform float u_ambient;     // e.g. 0.05
 
 struct Light {
-    vec4 posRadius;   // xyz position (world), w radius
-    vec4 color;       // rgb color, w intensity
-    vec4 dirPacked;   // xyz direction (world), w packed type/angle
+    vec4 posType;    // xyz = position (POINT/SPOT), w = type (0 dir, 1 point, 2 spot)
+    vec4 color;      // rgb = color, w = intensity
+    vec4 direction;  // xyz = direction (DIR/SPOT), w unused
+    vec4 extra;      // point: x = radius, spot: x = radius, y = angleRad
 };
 
 layout(std140) uniform u_lights {
-    vec4 meta;        // meta.x = lightCount
+    vec4 meta;       // meta.x = lightCount
     Light lights[16];
 };
 
@@ -32,14 +34,27 @@ vec3 safeNormalize(vec3 v) {
     return v * inversesqrt(len2);
 }
 
-int lightType(float packedW) {
-    return int(floor(packedW + 0.5)); // 0=directional, 1=point, 2=spot
-}
-
-float attenuation(float dist, float radius) {
+// Smooth radius falloff: 1 at dist=0, 0 at dist>=radius
+float radiusAttenuation(float dist, float radius) {
     if (radius <= 0.0) return 1.0;
     float x = clamp(1.0 - dist / radius, 0.0, 1.0);
     return x * x;
+}
+
+// Returns [0..1] spotlight cone factor (smooth edge)
+// L = direction from fragment -> light
+// spotDir = direction the light shines (light forward), world-space
+float spotConeFactor(vec3 L, vec3 spotDir, float angleRad) {
+    // Incoming light direction at fragment is from light -> fragment, which is -L.
+    vec3 fromLightToFrag = safeNormalize(-L);
+    vec3 d = safeNormalize(spotDir);
+
+    float cosTheta = dot(fromLightToFrag, d);
+    float cosCutoff = cos(angleRad);
+
+    // Soft edge band. If you want a fixed softness, change this constant.
+    float softBand = max(0.001, (1.0 - cosCutoff) * 0.10);
+    return smoothstep(cosCutoff, cosCutoff + softBand, cosTheta);
 }
 
 void main() {
@@ -47,45 +62,70 @@ void main() {
     vec3 V = safeNormalize(u_cameraPosition - v_worldPos);
 
     vec3 albedo = clamp(v_color, 0.0, 1.0);
-
     vec3 colorOut = u_ambient * albedo;
 
     int count = int(meta.x + 0.5);
-    for (int i = 0; i < 1; ++i) {
-        if (i >= count) break;
+    int maxLights = min(count, 16);
+
+    float shininess = max(u_shininess, 1.0);
+
+    for (int i = 0; i < 16; ++i) {
+        if (i >= maxLights) break;
 
         vec3 Lrgb = lights[i].color.rgb;
         float intensity = lights[i].color.w;
 
-        int type = lightType(lights[i].dirPacked.w);
+        int type = int(floor(lights[i].posType.w + 0.5)); // 0=dir, 1=point, 2=spot
 
-        vec3 L = vec3(0.0);
+        vec3 L = vec3(0.0); // fragment -> light
         float att = 1.0;
 
         if (type == 0) {
-            vec3 dir = safeNormalize(vec3(0.0, 1.0, 0.0));
+            // Directional: direction.xyz is the direction light shines (world)
+            vec3 dir = safeNormalize(lights[i].direction.xyz);
+            // Fragment -> light is opposite incoming direction
             L = safeNormalize(-dir);
         } else if (type == 1) {
-            vec3 toL = lights[i].posRadius.xyz - v_worldPos;
+            // Point
+            vec3 toL = lights[i].posType.xyz - v_worldPos;
             float dist2 = dot(toL, toL);
             float dist = sqrt(max(dist2, 1e-8));
             L = toL / dist;
-            att = attenuation(dist, lights[i].posRadius.w);
+
+            float radius = lights[i].extra.x;
+            att = radiusAttenuation(dist, radius);
+        } else if (type == 2) {
+            // Spot
+            vec3 toL = lights[i].posType.xyz - v_worldPos;
+            float dist2 = dot(toL, toL);
+            float dist = sqrt(max(dist2, 1e-8));
+            L = toL / dist;
+
+            float radius = lights[i].extra.x;
+            float angleRad = lights[i].extra.y;
+
+            float cone = spotConeFactor(L, lights[i].direction.xyz, angleRad);
+            att = radiusAttenuation(dist, radius) * cone;
+
+            // If cone factor is 0, skip work
+            if (att <= 0.0) continue;
         } else {
-            // spot not implemented yet
             continue;
         }
 
-        float NdotL = max(dot(v_worldNormal, L), 0.0);
+        float NdotL = max(dot(N, L), 0.0);
+        if (NdotL <= 0.0) continue;
+
+        // Diffuse
         vec3 diffuse = NdotL * albedo * Lrgb;
 
+        // Specular (Blinn-Phong)
         vec3 H = safeNormalize(L + V);
-        float spec = pow(max(dot(N, H), 0.0), max(u_shininess, 1.0));
+        float spec = pow(max(dot(N, H), 0.0), shininess);
         vec3 specular = spec * Lrgb;
 
         colorOut += att * intensity * (diffuse + specular);
     }
 
-    // FragColor = vec4(lights[0].color.rgb, 1.0);
     FragColor = vec4(colorOut, 1.0);
 }

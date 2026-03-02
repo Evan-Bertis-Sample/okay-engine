@@ -5,6 +5,7 @@
 #include <okay/core/renderer/okay_uniform.hpp>
 #include <okay/core/renderer/materials/unlit.hpp>
 #include <okay/core/renderer/okay_render_world.hpp>
+#include "okay/core/util/type.hpp"
 
 namespace okay {
 
@@ -18,6 +19,8 @@ using DefaultLightBlock = LightBlock<16>;
 
 struct LitMaterial : public BaseMatricesProps, public OkayMaterialProperties<LitMaterial> {
     TemplatedUniformBlock<DefaultLightBlock, FixedString("u_lights")> lights{};
+    TemplatedMaterialUniform<float, FixedString("u_shininess")> shininess{32.0f};
+    TemplatedMaterialUniform<float, FixedString("u_ambient")> ambient{0.05f};
 
     auto uniformRefs() {
         return BaseMatricesProps::uniformRefs();

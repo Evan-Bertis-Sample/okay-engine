@@ -97,8 +97,8 @@ class ScenePass : public IOkayRenderPass {
 
         if (auto* lit = dynamic_cast<okay::LitMaterial*>(uniforms.get())) {
             // per-frame lighting setup
-            OkayLight directional = OkayLight::directional(glm::vec3(0, 0, -1), glm::vec3(1, 1, 1), 1.0f);
-            OkayLight point = OkayLight::point(camPos, 1.0f, glm::vec3(1, 1, 1), 1.0f);
+            OkayLight directional = OkayLight::directional(glm::vec3(1, -1, 1), glm::vec3(1, 1, 0.8), 1.0f);
+            OkayLight point = OkayLight::point(glm::vec3(), 200.0f, glm::vec3(0, 1, 0), 1.0f);
             DefaultLightBlock& block = lit->lights.edit();
             block.lights[0] = directional;
             block.lights[1] = point;

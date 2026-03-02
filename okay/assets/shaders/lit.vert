@@ -22,10 +22,6 @@ out vec3 v_worldPos;
 out vec3 v_worldNormal;
 out vec2 v_uv;
 
-mat3 normalMatrix(mat4 m) {
-    return mat3(transpose(inverse(m)));
-}
-
 void main() {
     vec4 worldPos4 = u_modelMatrix * vec4(a_pos, 1.0f);
     v_worldPos = worldPos4.xyz;

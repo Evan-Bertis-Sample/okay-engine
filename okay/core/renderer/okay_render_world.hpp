@@ -15,6 +15,7 @@
 #include <okay/core/util/dirty_set.hpp>
 #include <okay/core/util/object_pool.hpp>
 #include <okay/core/util/property.hpp>
+#include "glm/ext/vector_float4.hpp"
 
 namespace okay {
 
@@ -147,50 +148,32 @@ class OkayCamera {
 };
 
 struct alignas(16) OkayLight {
-    // xyz = position (world), w = radius
-    glm::vec4 posRadius;
+    // xyz = position (world), w = type
+    glm::vec4 posType;
     // rgb = color, w = intensity
     glm::vec4 color;
-    // xyz = direction (world), w = packed (type or angle or both)
-    glm::vec4 dirPacked;
+    // xyz = direction
+    glm::vec4 direction;
+    // directional : unused
+    // point: radius, radius, radius, radius
+    // spot : radius, angle, unused unused
+    glm::vec4 extra;
 
     enum class Type : int { DIRECTIONAL = 0, POINT = 1, SPOT = 2 };
-    static constexpr float SPOT_ANGLE_SCALE = 10.0f;
-
-    static float packTypeAngle(Type t, float angleRad = 0.0f) {
-        float tf = float(int(t));
-        float frac = 0.0f;
-        if (t == Type::SPOT)
-            frac = glm::clamp(angleRad, 0.0f, 3.13f) / SPOT_ANGLE_SCALE;
-        return tf + frac;
-    }
-
-    static Type unpackType(float w) {
-        int ti = int(glm::floor(w + 0.5f));
-        ti = glm::clamp(ti, 0, 2);
-        return Type(ti);
-    }
-
-    static float unpackAngle(float w) {
-        Type t = unpackType(w);
-        if (t != Type::SPOT)
-            return 0.0f;
-        return (w - float(int(t))) * SPOT_ANGLE_SCALE;
-    }
 
     static OkayLight directional(glm::vec3 dir, glm::vec3 rgb, float intensity = 1.0f) {
         OkayLight l{};
-        l.posRadius = glm::vec4(0, 0, 0, -1.0f);
+        l.posType = glm::vec4(dir, Type::DIRECTIONAL);
         l.color = glm::vec4(rgb, intensity);
-        l.dirPacked = glm::vec4(glm::normalize(dir), packTypeAngle(Type::DIRECTIONAL));
+        l.direction = glm::vec4(dir, 0.0f);
         return l;
     }
 
     static OkayLight point(glm::vec3 pos, float radius, glm::vec3 rgb, float intensity = 1.0f) {
         OkayLight l{};
-        l.posRadius = glm::vec4(pos, radius);
+        l.posType = glm::vec4(pos, Type::POINT);
         l.color = glm::vec4(rgb, intensity);
-        l.dirPacked = glm::vec4(0, 0, 0, packTypeAngle(Type::POINT));
+        l.extra = glm::vec4(radius);
         return l;
     }
 
@@ -200,18 +183,16 @@ struct alignas(16) OkayLight {
                           float angleRad,
                           glm::vec3 rgb,
                           float intensity = 1.0f) {
-        OkayLight L{};
-        L.posRadius = glm::vec4(pos, radius);
-        L.color = glm::vec4(rgb, intensity);
-        L.dirPacked = glm::vec4(glm::normalize(dir), packTypeAngle(Type::SPOT, angleRad));
-        return L;
+        OkayLight l{};
+        l.posType = glm::vec4(pos, Type::SPOT);
+        l.color = glm::vec4(rgb, intensity);
+        l.direction = glm::vec4(dir, 0.0f);
+        l.extra = glm::vec4(radius, angleRad, 0.0f, 0.0f);
+        return l;
     }
 
     Type type() const {
-        return unpackType(dirPacked.w);
-    }
-    float spotAngle() const {
-        return unpackAngle(dirPacked.w);
+        return static_cast<Type>((int)posType.w);
     }
 };
 

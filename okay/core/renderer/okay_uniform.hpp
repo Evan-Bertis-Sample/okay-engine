@@ -164,6 +164,9 @@ struct TemplatedMaterialUniform {
     static constexpr auto nameV = Name;
     static constexpr uni::UniformKind kind = uni::kindFromType<T>();
 
+    TemplatedMaterialUniform() {}
+    TemplatedMaterialUniform(const T& value) : _value(value) {}
+
     constexpr std::string_view nameView() const {
         return nameV.sv();
     }
