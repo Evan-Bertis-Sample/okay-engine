@@ -88,7 +88,7 @@ Surface::Surface(Surface&&) noexcept = default;
 Surface& Surface::operator=(Surface&&) noexcept = default;
 
 GLFWwindow* Surface::getWindow() {
-    return *_impl.dpy.GLFWwindow;
+    return nullptr;
 }
 
 void Surface::initialize() {

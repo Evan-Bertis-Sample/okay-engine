@@ -18,7 +18,7 @@ class OkayIMGUI : public OkaySystem<OkaySystemScope::GAME> {
     void shutdown();
     
    private:
-    
+    bool _initialized { false };
 };
 
 } // namespace okay
