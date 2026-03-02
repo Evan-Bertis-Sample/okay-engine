@@ -26,10 +26,11 @@ void main() {
     vec4 worldPos4 = u_modelMatrix * vec4(a_pos, 1.0f);
     v_worldPos = worldPos4.xyz;
 
-    v_worldNormal = vec3(u_modelMatrix * vec4(a_normal, 0.0f));
+    mat3 normalMatrix = transpose(inverse(mat3(u_modelMatrix)));
+    v_worldNormal = normalize(normalMatrix * a_normal);
 
     v_uv = a_uv;
     v_color = u_color * a_color.rgb;
 
-    gl_Position = u_projectionMatrix * u_viewMatrix * u_modelMatrix * vec4(a_pos, 1.0f);
+    gl_Position = u_projectionMatrix * u_viewMatrix * worldPos4;
 }

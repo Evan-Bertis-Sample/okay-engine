@@ -10,7 +10,7 @@
 namespace okay {
 
 template <std::size_t MaxLights>
-struct LightBlock {
+struct alignas(16) LightBlock {
     glm::vec4 meta;
     std::array<OkayLight, MaxLights> lights;
 };
@@ -19,7 +19,7 @@ using DefaultLightBlock = LightBlock<16>;
 
 struct LitMaterial : public BaseMatricesProps, public OkayMaterialProperties<LitMaterial> {
     TemplatedUniformBlock<DefaultLightBlock, FixedString("u_lights")> lights{};
-    TemplatedMaterialUniform<float, FixedString("u_shininess")> shininess{32.0f};
+    TemplatedMaterialUniform<float, FixedString("u_shininess")> shininess{8.0f};
     TemplatedMaterialUniform<float, FixedString("u_ambient")> ambient{0.05f};
 
     auto uniformRefs() {
@@ -36,6 +36,13 @@ struct LitMaterial : public BaseMatricesProps, public OkayMaterialProperties<Lit
         return std::tie(lights);
     }
 };
+
+static_assert(sizeof(okay::OkayLight) == 64, "OkayLight must be 64 bytes (4 vec4s)");
+static_assert(alignof(okay::OkayLight) == 16, "OkayLight must be 16-byte aligned");
+
+static_assert(sizeof(okay::DefaultLightBlock) == 16 + 16 * 64,
+              "DefaultLightBlock must be 1040 bytes (vec4 + 16 Lights)");
+static_assert(alignof(okay::DefaultLightBlock) == 16, "DefaultLightBlock must be 16-byte aligned");
 
 }  // namespace okay
 

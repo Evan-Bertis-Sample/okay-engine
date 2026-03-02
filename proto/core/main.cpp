@@ -28,6 +28,8 @@ static void __gameShutdown();
 static okay::OkayRenderEntity g_sun;
 static okay::OkayRenderEntity g_planet;
 static okay::OkayRenderEntity g_moon;
+static okay::OkayRenderEntity g_debugSphere;
+static std::size_t g_pointLight;
 
 int main() {
     okay::SurfaceConfig surfaceConfig;
@@ -121,6 +123,11 @@ static void __gameInitialize() {
         moonMat, icoSphere
     );
 
+    g_debugSphere = renderer->world().addRenderEntity(
+        okay::OkayTransform({ 0.0f, 0.0f, 0.0f }, { 0.1f, 0.1f, 0.1f }),
+        moonMat, icoSphere
+    );
+
     renderer->world().addChild(g_sun, g_planet);
     renderer->world().addChild(g_planet, g_moon);
 
@@ -140,6 +147,25 @@ static void __gameInitialize() {
             sunMat, cube
         );  
     }
+
+    // add a directional light
+    renderer->world().addLight(
+        okay::OkayLight::directional(
+            glm::vec3(-0.5f, -1, 0.5f), 
+            glm::vec3(1.0, 0.8745f, 0.1333f),
+            0.6f
+        )
+    );
+
+    // add a blue point light
+    g_pointLight =renderer->world().addLight(
+        okay::OkayLight::point(
+            glm::vec3(0, 0, 0), 
+            3.0f,
+            glm::vec3(0.0f, 0.0f, 1.0f),
+            20.0f
+        )
+    );
 }
 
 static void __gameUpdate() {
@@ -169,6 +195,21 @@ static void __gameUpdate() {
     // rotation much look at origin
     renderer->world().camera().transform.position = pos;
     renderer->world().camera().lookAt(glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    
+    float t = okay::Engine.time->timeSinceStartSec();
+    float angle = t * 2.0f;      // radians/sec, tweak
+    float r = 0.6f;
+
+    glm::vec3 center = g_sun->transform.position;
+    glm::vec3 lightPos = glm::vec3(
+        std::sin(angle) * r,
+        0.0f,
+        std::cos(angle) * r
+    );
+
+    renderer->world().getLight(g_pointLight).setPosition(lightPos);
+    renderer->world().getLight(g_pointLight).color = glm::vec4(abs(sin(angle * 3.0f)), 0.0f, 1.0f, 1.0f);
+    g_debugSphere->transform.position = lightPos;
 }
 
 static void __gameShutdown() {

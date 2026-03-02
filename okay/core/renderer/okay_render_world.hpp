@@ -15,6 +15,7 @@
 #include <okay/core/util/dirty_set.hpp>
 #include <okay/core/util/object_pool.hpp>
 #include <okay/core/util/property.hpp>
+#include "glm/ext/vector_float3.hpp"
 #include "glm/ext/vector_float4.hpp"
 
 namespace okay {
@@ -194,6 +195,12 @@ struct alignas(16) OkayLight {
     Type type() const {
         return static_cast<Type>((int)posType.w);
     }
+
+    void setPosition(glm::vec3 pos) {
+        posType = glm::vec4(pos, posType.w);
+    }
+
+    static constexpr std::size_t MAX_LIGHTS = 16;
 };
 
 class OkayRenderWorld;
@@ -375,10 +382,32 @@ class OkayRenderWorld {
     Failable addChild(OkayRenderEntity parent, OkayRenderEntity children);
     bool isChildOf(OkayRenderEntity parent, OkayRenderEntity child) const;
 
+    std::span<const OkayLight> lights() const {
+        return std::span<const OkayLight>(_lights.data(), _activeLights);
+    }
+
+    std::size_t addLight(const OkayLight& light) { 
+        _lights[_activeLights++] = light;
+        return _activeLights - 1;
+    }
+
+    void removeLight(std::size_t index) {
+        // swap the light with the last one
+        _lights[index] = _lights[--_activeLights];
+    }
+
+    OkayLight& getLight(std::size_t index) {
+        return _lights[index];
+    }
+
    private:
     ObjectPool<OkayRenderItem> _renderItemPool;
     std::vector<RenderItemHandle> _memoizedRenderItems;
     std::set<RenderItemHandle> _dirtyTransforms;
+    
+    std::array<OkayLight, OkayLight::MAX_LIGHTS> _lights{};
+    std::size_t _activeLights{0};
+
     bool _needsMaterialRebuild{true};
     OkayCamera _camera;
 

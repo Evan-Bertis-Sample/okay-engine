@@ -119,13 +119,17 @@ void main() {
         // Diffuse
         vec3 diffuse = NdotL * albedo * Lrgb;
 
-        // Specular (Blinn-Phong)
-        vec3 H = safeNormalize(L + V);
-        float spec = pow(max(dot(N, H), 0.0), shininess);
-        vec3 specular = spec * Lrgb;
+        // specular, phong model
+        vec3 R = reflect(-L, N);
+        float RdotV = max(dot(R, V), 0.0);
+        vec3 specular = pow(RdotV, shininess) * Lrgb;
+        specular *= att;
 
         colorOut += att * intensity * (diffuse + specular);
     }
+
+    float viewDep = pow(1.0 - max(dot(N, V), 0.0), 5.0);
+    colorOut += viewDep * 0.25;
 
     FragColor = vec4(colorOut, 1.0);
 }

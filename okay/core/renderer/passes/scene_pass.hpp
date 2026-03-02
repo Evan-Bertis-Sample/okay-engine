@@ -34,6 +34,7 @@ class ScenePass : public IOkayRenderPass {
         GL_CHECK(glCullFace(GL_BACK));
         GL_CHECK(glEnable(GL_DEPTH_TEST));
         GL_CHECK(glEnable(GL_MULTISAMPLE));
+        glFrontFace(GL_CW);
 
         _shaderIndex = OkayShader::invalidID();
         _materialIndex = OkayMaterial::invalidID();
@@ -97,12 +98,12 @@ class ScenePass : public IOkayRenderPass {
 
         if (auto* lit = dynamic_cast<okay::LitMaterial*>(uniforms.get())) {
             // per-frame lighting setup
-            OkayLight directional = OkayLight::directional(glm::vec3(1, -1, 1), glm::vec3(1, 1, 0.8), 1.0f);
-            OkayLight point = OkayLight::point(camPos, 20.0f, glm::vec3(0, 1, 0), 10.0f);
             DefaultLightBlock& block = lit->lights.edit();
-            block.lights[0] = directional;
-            block.lights[1] = point;
-            block.meta.x = 2.0f;
+            block.meta.x = static_cast<float>(context.world.lights().size());
+            std::size_t i = 0;
+            for (auto l : context.world.lights()) {
+                block.lights[i++] = l;
+            }
         }
     }
 
