@@ -47,12 +47,15 @@ class ScenePass : public IOkayRenderPass {
         for (const RenderItemHandle& handle : context.world.getRenderItems()) {
             OkayRenderItem& item = context.world.getRenderItem(handle);
 
-            if (item.mesh.isEmpty()) continue;
-            if (item.material->isNone()) continue;
+            if (item.mesh.isEmpty())
+                continue;
+            if (item.material->isNone())
+                continue;
 
             // Shader switch: bind program + per-frame stuff
-            if (_shaderIndex != item.material->shaderID()) {
-                bindShaderAndPerFrame(context, item, projection, view, camPos, camDir);
+            if (_materialIndex != item.material->id()) {
+                handleMaterialSwitch(context, item, projection, view, camPos, camDir);
+                _materialIndex = item.material->id();
             }
 
             _materialIndex = item.material->id();
@@ -69,17 +72,18 @@ class ScenePass : public IOkayRenderPass {
         }
     }
 
-    void bindShaderAndPerFrame(const OkayRenderContext& context,
+    void handleMaterialSwitch(const OkayRenderContext& context,
                                OkayRenderItem& item,
                                const glm::mat4& projection,
                                const glm::mat4& view,
                                const glm::vec3& camPos,
                                const glm::vec3& camDir) {
-        _shaderIndex = item.material->shaderID();
-
-        if (auto f = item.material->setShader(); f.isError()) {
-            Engine.logger.error("Failed to set shader : {}", f.error());
-            return;
+        if (_shaderIndex != item.material->shaderID()) {
+            if (auto f = item.material->setShader(); f.isError()) {
+                Engine.logger.error("Failed to set shader : {}", f.error());
+                return;
+            }
+            _shaderIndex = item.material->shaderID();
         }
 
         auto& uniforms = item.material->uniforms();
