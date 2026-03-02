@@ -93,7 +93,7 @@ static void __gameInitialize() {
         return;
     }
 
-    std::shared_ptr<okay::OkayShader> shader = std::make_shared<okay::OkayShader>(shaderLoadRes.value().asset);
+    okay::OkayShaderHandle shader = renderer->materialRegistry().registerShader(shaderLoadRes.value().asset.vertexShader, shaderLoadRes.value().asset.fragmentShader);
 
     auto materialProprties = std::make_unique<okay::UnlitMaterial>();
     materialProprties->color.set(glm::vec4(1.0f, 1.0f, 0.0f, 1.0f)); 

@@ -13,9 +13,9 @@
 
 namespace okay {
 
-enum class UniformKind { FLOAT, INT, VEC2, VEC3, VEC4, MAT3, MAT4, TEXTURE, VOID };
-
 namespace uni {
+
+enum class UniformKind { FLOAT, INT, VEC2, VEC3, VEC4, MAT3, MAT4, TEXTURE, VOID };
 
 template <class T>
 constexpr UniformKind kindFromType() {
@@ -71,8 +71,15 @@ Failable set(GLuint uniformLoc, const T& value) {
     if (err != GL_NO_ERROR) {
         return Failable::errorResult("Failed to set uniform. Error code: " + std::to_string(err));
     }
-    
+
     return Failable::ok({});
+}
+
+static constexpr GLuint invalidLocation() {
+    return 0xFFFFFFFFu;
+}
+static constexpr GLuint inactiveLocation() {
+    return 0xFFFFFFFEu;
 }
 
 };  // namespace uni
@@ -80,18 +87,15 @@ Failable set(GLuint uniformLoc, const T& value) {
 template <class T, auto Name>
 struct TemplatedMaterialUniform {
     using ValueType = T;
-
-    static constexpr auto name = Name;
-    static constexpr UniformKind kind = uni::kindFromType<T>();
-    static constexpr GLuint invalidLocation() {
-        return 0xFFFFFFFFu;
-    }
-    static constexpr GLuint inactiveLocation() {
-        return 0xFFFFFFFEu;
-    }
+    static constexpr auto nameV = Name;
+    static constexpr uni::UniformKind kind = uni::kindFromType<T>();
 
     constexpr std::string_view nameView() const {
-        return name.sv();
+        return nameV.sv();
+    }
+
+    constexpr std::string name() const {
+        return std::string(nameV.sv());
     }
 
     void set(const T& v) {
@@ -113,48 +117,6 @@ struct TemplatedMaterialUniform {
         _dirty = true;
     }
 
-    GLuint location() const {
-        return _location;
-    }
-
-    bool foundLocation() const {
-        return location() != invalidLocation();
-    }
-
-    Failable findLocation(GLuint shaderProgram) {
-        int location = glGetUniformLocation(shaderProgram, std::string(name.sv()).c_str());
-        if (location == -1) {
-            Engine.logger.error("Failed to find uniform location for '{}'", std::string(name.sv()));
-            _location = inactiveLocation();
-            return Failable::errorResult("Failed to find uniform location : " +
-                                         std::string(name.sv()));
-        }
-        _location = static_cast<GLuint>(location);
-        return Failable::ok({});
-    };
-
-    Failable passUniform(GLuint program) {
-        // if (!isDirty())
-        //     return Failable::ok({});
-
-        if (_location == invalidLocation()) {
-            auto r = findLocation(program);
-            if (r.isError())
-                return r;
-        }
-
-        if (_location == inactiveLocation()) {  
-            _dirty = false;
-            return Failable::ok({});
-        }
-
-        auto r = uni::set(_location, _value);
-        if (r.isError())
-            return r;
-        _dirty = false;
-        return Failable::ok({});
-    }
-
     bool operator==(const TemplatedMaterialUniform& other) const {
         return _value == other._value && nameView() == other.nameView();
     }
@@ -173,7 +135,6 @@ struct TemplatedMaterialUniform {
    private:
     T _value{};
     bool _dirty{true};
-    GLuint _location{invalidLocation()};
 };
 
 class OkayUniformBuffer {
@@ -292,92 +253,6 @@ class TemplatedUniformBlock {
     TBlock _value{};
     bool _dirty{true};
     OkayUniformBuffer _ubo{};
-};
-
-class IOkayMaterialPropertyCollection {
-   public:
-    virtual Failable init(GLuint shaderProgram) = 0;
-    virtual Failable pass(GLuint shaderProgram) = 0;
-    virtual bool markDirty() = 0;
-    virtual bool foundLocations() const = 0;
-};
-
-template <class Derived>
-class OkayMaterialProperties : public IOkayMaterialPropertyCollection {
-   public:
-    Failable init(GLuint shaderProgram) override {
-        auto& d = static_cast<Derived&>(*this);
-        Failable out = Failable::ok({});
-        // init plain uniforms (cache locations)
-        tupleForEach(d.uniformRefs(), [&](auto& u) {
-            if (out.isError())
-                return;
-            auto r = u.findLocation(shaderProgram);
-            if (r.isError())
-                out = r;
-        });
-        // init uniform blocks (bind block->binding point)
-        tupleForEach(d.uniformBlockRefs(), [&](auto& b) {
-            if (out.isError())
-                return;
-            auto r = b.init(shaderProgram);
-            if (r.isError())
-                out = r;
-        });
-
-        _initialized = true;
-        return out;
-    }
-
-    Failable pass(GLuint shaderProgram) override {
-        auto& d = static_cast<Derived&>(*this);
-        std::stringstream errorMessages;
-        bool anyErrors = false;
-
-        tupleForEach(d.uniformRefs(), [&](auto& u) {
-            auto r = u.passUniform(shaderProgram);
-            if (r.isError() && !_hasPassed) {
-                errorMessages << r.error() << std::endl;
-                anyErrors = true;
-            }
-        });
-        tupleForEach(d.uniformBlockRefs(), [&](auto& b) {
-            auto r = b.pass(shaderProgram);
-            if (r.isError() && !_hasPassed) {
-                errorMessages << r.error() << std::endl;
-                anyErrors = true;
-            }
-        });
-
-        Failable out = anyErrors ? Failable::errorResult(errorMessages.str()) : Failable::ok({});
-
-        // only return an error if you have not passed before
-        if (!_hasPassed) {
-            _hasPassed = true;
-            return out;
-        }
-
-        return Failable::ok({});
-    }
-
-    bool markDirty() override {
-        auto& d = static_cast<Derived&>(*this);
-        bool any = false;
-        tupleForEach(d.uniformRefs(), [&](auto& u) {
-            u.markDirty();
-            any = true;
-        });
-
-        return any;
-    }
-
-    bool foundLocations() const override {
-        return _initialized;
-    }
-
-   private:
-    bool _initialized{false};
-    bool _hasPassed{false};
 };
 
 };  // namespace okay

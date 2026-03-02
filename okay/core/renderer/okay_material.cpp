@@ -3,7 +3,7 @@
 namespace okay {
 
 Failable OkayShader::compile() {
-    if (_state != ShaderState::NOT_COMPILED) {
+    if (_state != State::NOT_COMPILED) {
         Engine.logger.warn("Shader is already compiled.");
         return Failable::ok({});
     }
@@ -53,18 +53,43 @@ Failable OkayShader::compile() {
     glDeleteShader(vertex);
     glDeleteShader(fragment);
 
-    _state = ShaderState::STANDBY;
+    _state = State::STANDBY;
 
     return Failable::ok({});
 }
 
 Failable OkayShader::set() {
-    if (_state != ShaderState::STANDBY) {
+    if (_state != State::STANDBY) {
         return Failable::errorResult("Shader must be compiled before setting it for use.");
     }
     glUseProgram(_shaderProgram);
     return Failable::ok({});
 }
+
+const OkayShader* OkayShaderHandle::operator*() const {
+    return owner->getShader(id);
+}
+
+const OkayShader* OkayShaderHandle::operator->() const {
+    return owner->getShader(id);
+}
+
+const OkayShader* OkayShaderHandle::get() const {
+    return owner->getShader(id);
+}
+
+OkayShader* OkayShaderHandle::operator*() {
+    return owner->getShader(id);
+}
+
+OkayShader* OkayShaderHandle::operator->() {
+    return owner->getShader(id);
+}
+
+OkayShader* OkayShaderHandle::get() {
+    return owner->getShader(id);
+}
+
 
 const std::unique_ptr<OkayMaterial>& OkayMaterialHandle::operator*() const {
     return owner->getMaterial(id);
@@ -78,6 +103,6 @@ const std::unique_ptr<OkayMaterial>& OkayMaterialHandle::get() const {
     return owner->getMaterial(id);
 }
 
-std::uint32_t OkayMaterialRegistry::_idCounter = 0;
+std::uint32_t OkayMaterialRegistry::_materialID = 0;
 
 };  // namespace okay
