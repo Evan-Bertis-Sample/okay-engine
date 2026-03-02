@@ -13,7 +13,7 @@
 
 namespace okay {
 
-enum class ShaderState { NOT_COMPILED, STANDBY, IN_USE };
+enum class ShaderState { NOT_COMPILED, STANDBY };
 
 class OkayShader;
 class OkayMaterial;
@@ -63,37 +63,6 @@ class OkayShader {
         return _shaderProgram;
     }
 
-    // enable move semantics
-    OkayShader(OkayShader&& other)
-        : vertexShader(std::move(other.vertexShader)),
-          fragmentShader(std::move(other.fragmentShader)),
-        _shaderProgram(other._shaderProgram), _state(other._state), _id(other._id) {
-    }
-
-    OkayShader& operator=(OkayShader&& other) {
-        _shaderProgram = other._shaderProgram;
-        _state = other._state;
-        _id = other._id;
-        vertexShader = std::move(other.vertexShader);
-        fragmentShader = std::move(other.fragmentShader);
-        return *this;
-    }
-
-    // enable copy semantics
-    OkayShader(const OkayShader& other)
-        : vertexShader(other.vertexShader), fragmentShader(other.fragmentShader), 
-        _shaderProgram(other._shaderProgram), _state(other._state), _id(other._id) {
-    }
-
-    OkayShader& operator=(const OkayShader& other) {
-        _shaderProgram = other._shaderProgram;
-        _state = other._state;
-        _id = other._id;
-        vertexShader = other.vertexShader;
-        fragmentShader = other.fragmentShader;
-        return *this;
-    }
-
     // enable equality operator
     bool operator==(const OkayShader& other) const {
         return _shaderProgram == other._shaderProgram && _state == other._state && _id == other._id;
@@ -136,6 +105,10 @@ class OkayMaterial {
         return _shader->id();
     }
 
+    GLuint programID() const {
+        return _shader->programID();
+    }
+
     Failable setShader() {
         if (_shader->isNone()) {
             return Failable::errorResult("Material has no shader.");
@@ -148,11 +121,7 @@ class OkayMaterial {
             }
         }
         
-        if (_shader->state() != ShaderState::IN_USE) {
-            Engine.logger.debug("Setting shader for material {}.", _id);
-            return _shader->set();
-        }
-        return Failable::ok({});
+        return _shader->set();
     }
 
     Failable passUniforms() {
@@ -164,7 +133,11 @@ class OkayMaterial {
             return Failable::errorResult("Material has no shader.");
         }
 
-        setShader();
+        Failable set = setShader();
+        if (set.isError()) {
+            return set;
+        }
+
         if (!_uniforms->foundLocations()) {
             Engine.logger.debug("Finding uniform locations for material {}.", _id);
             Failable find = _uniforms->init(_shader->programID());
@@ -219,9 +192,9 @@ struct OkayMaterialHandle {
         return !(*this == other);
     }
 
-    OkayMaterial& operator*() const;
-    OkayMaterial& operator->() const;
-    OkayMaterial& get() const;
+    const std::unique_ptr<OkayMaterial>& operator*() const;
+    const std::unique_ptr<OkayMaterial>& operator->() const;
+    const std::unique_ptr<OkayMaterial>& get() const;
 };
 
 class OkayMaterialRegistry {
@@ -230,7 +203,6 @@ class OkayMaterialRegistry {
                                    std::unique_ptr<IOkayMaterialPropertyCollection> uniforms) {
         std::uint32_t id = nextID();
         _materials.emplace_back(std::make_unique<OkayMaterial>(shader, std::move(uniforms), id));
-        okay::Engine.logger.debug("Registered material {}. Now {} materials.", id, _materials.size());
         return { this, id };
     }
 

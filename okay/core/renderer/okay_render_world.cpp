@@ -258,7 +258,7 @@ void OkayRenderWorld::updateEntity(RenderItemHandle renderItem,
 // OkayRenderItem
 
 OkayRenderItem::OkayRenderItem(OkayMaterialHandle mat, OkayMesh m) : material(mat), mesh(m) {
-    if (mat.get().isNone() || mesh.isEmpty()) {
+    if (mat->isNone() || mesh.isEmpty()) {
         sortKey = std::numeric_limits<std::uint64_t>::max();
     } else {
         // 64 bit sort key
@@ -266,7 +266,7 @@ OkayRenderItem::OkayRenderItem(OkayMaterialHandle mat, OkayMesh m) : material(ma
         // lower bits are material id
         // this has the effect such that when you sort by sort key, materials are sorted into shader
         // buckets
-        sortKey = (static_cast<std::uint64_t>(mat.get().shaderID()) << 32) |
-                  static_cast<std::uint64_t>(mat.get().id());
+        sortKey = (static_cast<std::uint64_t>(mat->shaderID()) << 32) |
+                  static_cast<std::uint64_t>(mat->id());
     }
 }

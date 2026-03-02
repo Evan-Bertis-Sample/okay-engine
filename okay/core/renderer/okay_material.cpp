@@ -59,24 +59,23 @@ Failable OkayShader::compile() {
 }
 
 Failable OkayShader::set() {
-    if (_state != ShaderState::STANDBY && _state != ShaderState::IN_USE) {
+    if (_state != ShaderState::STANDBY) {
         return Failable::errorResult("Shader must be compiled before setting it for use.");
     }
     glUseProgram(_shaderProgram);
-    _state = ShaderState::IN_USE;
     return Failable::ok({});
 }
 
-OkayMaterial& OkayMaterialHandle::operator*() const {
-    return *owner->getMaterial(id);
+const std::unique_ptr<OkayMaterial>& OkayMaterialHandle::operator*() const {
+    return owner->getMaterial(id);
 }
 
-OkayMaterial& OkayMaterialHandle::operator->() const {
-    return *owner->getMaterial(id);
+const std::unique_ptr<OkayMaterial>& OkayMaterialHandle::operator->() const {
+    return owner->getMaterial(id);
 }
 
-OkayMaterial& OkayMaterialHandle::get() const {
-    return *owner->getMaterial(id);
+const std::unique_ptr<OkayMaterial>& OkayMaterialHandle::get() const {
+    return owner->getMaterial(id);
 }
 
 std::uint32_t OkayMaterialRegistry::_idCounter = 0;

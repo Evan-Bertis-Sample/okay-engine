@@ -17,27 +17,36 @@ class OkayTime {
     using TimePoint = std::chrono::time_point<HighResClock>;
 
    public:
-    OkayTime() : 
-        _lastTime(HighResClock::now()),
-        _startOfProgram(HighResClock::now()),
-        _deltaTime(0)
-        {}
-
-    void reset() {
-         _lastTime = HighResClock::now();
-         _deltaTime = 0; 
+    OkayTime()
+        : _lastTime(HighResClock::now()), _startOfProgram(HighResClock::now()), _deltaTime(0) {
     }
 
-    std::uint32_t deltaTimeMs() const { return _deltaTime; }
-    float deltaTimeSec() const { return static_cast<float>(_deltaTime) / 1000.0f; }
+    void reset() {
+        _lastTime = HighResClock::now();
+        _deltaTime = 0;
+    }
 
-    std::uint32_t timeSinceStartMs() const { return std::chrono::duration_cast<std::chrono::milliseconds>(HighResClock::now() - _startOfProgram).count(); }
-    float timeSinceStartSec() const { return static_cast<float>(timeSinceStartMs()) / 1000.0f; }
+    std::uint32_t deltaTimeMs() const {
+        return _deltaTime;
+    }
+    float deltaTimeSec() const {
+        return static_cast<float>(_deltaTime) / 1000.0f;
+    }
+
+    std::uint32_t timeSinceStartMs() const {
+        return std::chrono::duration_cast<std::chrono::milliseconds>(HighResClock::now() -
+                                                                     _startOfProgram)
+            .count();
+    }
+    float timeSinceStartSec() const {
+        return static_cast<float>(timeSinceStartMs()) / 1000.0f;
+    }
 
     void updateDeltaTime() {
         TimePoint prevTime = _lastTime;
         _lastTime = HighResClock::now();
-        _deltaTime =  std::chrono::duration_cast<std::chrono::milliseconds>(_lastTime - prevTime).count();
+        _deltaTime =
+            std::chrono::duration_cast<std::chrono::milliseconds>(_lastTime - prevTime).count();
     }
 
    private:
@@ -46,27 +55,44 @@ class OkayTime {
     std::uint32_t _deltaTime;
 };
 
+class OkayGame;
+
 class OkayEngine {
    public:
     OkaySystemManager systems;
     OkayLogger logger;
-    std::unique_ptr<OkayTime> time { std::make_unique<OkayTime>() };
+    std::unique_ptr<OkayTime> time{std::make_unique<OkayTime>()};
 
-    OkayEngine() {}
-    ~OkayEngine() {}
+    OkayEngine() {
+    }
+    ~OkayEngine() {
+    }
 
-    void shutdown() { _shouldRun = false; }
-    bool shouldRun() { return _shouldRun; }
+    void shutdown() {
+        _shouldRun = false;
+    }
+    bool shouldRun() {
+        return _shouldRun;
+    }
 
-    private:
+    std::size_t frameCount() const {
+        return _frameCount;
+    }
+
+   private:
     bool _shouldRun{true};
+    std::size_t _frameCount{0};
+
+    friend class OkayGame;
 };
 
 extern OkayEngine Engine;
 
 class OkayGame {
    public:
-    static OkayGame create() { return OkayGame(); }
+    static OkayGame create() {
+        return OkayGame();
+    }
 
     // ...variadic function that takes in std::unique_ptr<OkaySystem<T>> for each system type
     template <typename... Systems>
@@ -108,14 +134,16 @@ class OkayGame {
 
         for (IOkaySystem* system : enginePool) {
             system->initialize();
-            if (!Engine.shouldRun()) break;
+            if (!Engine.shouldRun())
+                break;
         }
 
         OkaySystemPool& gamePool = Engine.systems.getPool(OkaySystemScope::GAME);
 
         for (IOkaySystem* system : gamePool) {
             system->initialize();
-            if (!Engine.shouldRun()) break;
+            if (!Engine.shouldRun())
+                break;
         }
 
         _onInitialize();
@@ -124,17 +152,22 @@ class OkayGame {
         while (Engine.shouldRun()) {
             for (IOkaySystem* system : enginePool) {
                 system->tick();
-                if (!Engine.shouldRun()) break;
+                if (!Engine.shouldRun())
+                    break;
             }
 
             for (IOkaySystem* system : gamePool) {
                 system->tick();
-                if (!Engine.shouldRun()) break;
+                if (!Engine.shouldRun())
+                    break;
             }
 
             _onUpdate();
 
             Engine.time->updateDeltaTime();
+
+            Engine._frameCount++;
+            // Engine.logger.info("Frame {} completed.", Engine.frameCount());
         }
 
         for (IOkaySystem* system : enginePool) {
@@ -151,7 +184,6 @@ class OkayGame {
 
         _onShutdown();
     }
-
 
    private:
     std::function<void()> _onInitialize;

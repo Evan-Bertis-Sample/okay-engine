@@ -67,11 +67,11 @@ Failable set(GLuint uniformLoc, const T& value) {
         return Failable::errorResult("Unsupported uniform type");
     }
 
-    if (glGetError() != GL_NO_ERROR) {
-        return Failable::errorResult("Failed to set uniform. Error code: " +
-                                     std::to_string(glGetError()));
+    GLenum err = glGetError();
+    if (err != GL_NO_ERROR) {
+        return Failable::errorResult("Failed to set uniform. Error code: " + std::to_string(err));
     }
-
+    
     return Failable::ok({});
 }
 
@@ -85,6 +85,9 @@ struct TemplatedMaterialUniform {
     static constexpr UniformKind kind = uni::kindFromType<T>();
     static constexpr GLuint invalidLocation() {
         return 0xFFFFFFFFu;
+    }
+    static constexpr GLuint inactiveLocation() {
+        return 0xFFFFFFFEu;
     }
 
     constexpr std::string_view nameView() const {
@@ -121,31 +124,33 @@ struct TemplatedMaterialUniform {
     Failable findLocation(GLuint shaderProgram) {
         int location = glGetUniformLocation(shaderProgram, std::string(name.sv()).c_str());
         if (location == -1) {
-            return Failable::errorResult("Uniform not found: " + std::string(name.sv()) +
-                                         " error code: " + std::to_string(glGetError()));
+            Engine.logger.error("Failed to find uniform location for '{}'", std::string(name.sv()));
+            _location = inactiveLocation();
+            return Failable::errorResult("Failed to find uniform location : " +
+                                         std::string(name.sv()));
         }
         _location = static_cast<GLuint>(location);
         return Failable::ok({});
     };
 
-    Failable passUniform(GLuint shaderProgram) {
-        if (!isDirty())
+    Failable passUniform(GLuint program) {
+        // if (!isDirty())
+        //     return Failable::ok({});
+
+        if (_location == invalidLocation()) {
+            auto r = findLocation(program);
+            if (r.isError())
+                return r;
+        }
+
+        if (_location == inactiveLocation()) {  
+            _dirty = false;
             return Failable::ok({});
-
-        if (location() == invalidLocation()) {
-            Failable result = findLocation(shaderProgram);
-            if (result.isError()) {
-                return Failable::errorResult("Failed to find uniform location for '" +
-                                             std::string(name.sv()) + "': " + result.error());
-            }
         }
 
-        Failable result = uni::set(location(), _value);
-        if (result.isError()) {
-            return Failable::errorResult("Failed to set uniform '" + std::string(name.sv()) +
-                                         "': " + result.error());
-        }
-
+        auto r = uni::set(_location, _value);
+        if (r.isError())
+            return r;
         _dirty = false;
         return Failable::ok({});
     }
@@ -320,7 +325,7 @@ class OkayMaterialProperties : public IOkayMaterialPropertyCollection {
                 out = r;
         });
 
-        _foundLocations = true;
+        _initialized = true;
         return out;
     }
 
@@ -367,14 +372,13 @@ class OkayMaterialProperties : public IOkayMaterialPropertyCollection {
     }
 
     bool foundLocations() const override {
-        return _foundLocations;
+        return _initialized;
     }
 
-    private:
-    bool _foundLocations{false};
+   private:
+    bool _initialized{false};
     bool _hasPassed{false};
 };
-
 
 };  // namespace okay
 
