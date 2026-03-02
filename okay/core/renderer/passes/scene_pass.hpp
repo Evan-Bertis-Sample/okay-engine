@@ -88,7 +88,7 @@ class ScenePass : public IOkayRenderPass {
 
         auto& uniforms = item.material->uniforms();
 
-        if (auto* unlit = dynamic_cast<okay::UnlitMaterial*>(uniforms.get())) {
+        if (auto* unlit = dynamic_cast<okay::BaseMatricesProps*>(uniforms.get())) {
             unlit->projectionMatrix.set(projection);
             unlit->viewMatrix.set(view);
             unlit->cameraPosition.set(camPos);
@@ -97,16 +97,18 @@ class ScenePass : public IOkayRenderPass {
 
         if (auto* lit = dynamic_cast<okay::LitMaterial*>(uniforms.get())) {
             // per-frame lighting setup
-            OkayLight light = OkayLight::directional(glm::vec3(0, 0, 1), glm::vec3(1, 1, 1), 1.0f);
+            OkayLight directional = OkayLight::directional(glm::vec3(0, 0, -1), glm::vec3(1, 1, 1), 1.0f);
+            OkayLight point = OkayLight::point(camPos, 1.0f, glm::vec3(1, 1, 1), 1.0f);
             DefaultLightBlock& block = lit->lights.edit();
-            block.lights[0] = light;
-            block.meta.x = 1.0f;
+            block.lights[0] = directional;
+            block.lights[1] = point;
+            block.meta.x = 2.0f;
         }
     }
 
     void setPerObjectUniforms(OkayRenderItem& item) {
         auto& uniforms = item.material->uniforms();
-        if (auto* unlit = dynamic_cast<okay::UnlitMaterial*>(uniforms.get())) {
+        if (auto* unlit = dynamic_cast<okay::BaseMatricesProps*>(uniforms.get())) {
             unlit->modelMatrix.set(item.worldMatrix);
         }
     }

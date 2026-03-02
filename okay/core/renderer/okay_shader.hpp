@@ -69,6 +69,8 @@ class OkayShader {
         if (location == -1) {
             Engine.logger.warn("Failed to find uniform location for '{}'", uniform);
             location = uni::inactiveLocation();
+        } else {
+            Engine.logger.debug("Found uniform location for '{}': {}", uniform, location);
         }
 
         // add to map
@@ -76,9 +78,8 @@ class OkayShader {
             .location = location,
             .value = uni::UniformValue::none(),
         };
-
         _uniforms[uniform] = info;
-
+        
         return location;
     }
 

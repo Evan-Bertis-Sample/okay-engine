@@ -17,7 +17,7 @@ struct LightBlock {
 using DefaultLightBlock = LightBlock<16>;
 
 struct LitMaterial : public BaseMatricesProps, public OkayMaterialProperties<LitMaterial> {
-    TemplatedUniformBlock<DefaultLightBlock, 2, FixedString("u_lights")> lights{};
+    TemplatedUniformBlock<DefaultLightBlock, FixedString("u_lights")> lights{};
 
     auto uniformRefs() {
         return BaseMatricesProps::uniformRefs();

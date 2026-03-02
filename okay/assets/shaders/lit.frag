@@ -51,7 +51,7 @@ void main() {
     vec3 colorOut = u_ambient * albedo;
 
     int count = int(meta.x + 0.5);
-    for (int i = 0; i < 16; ++i) {
+    for (int i = 0; i < 1; ++i) {
         if (i >= count) break;
 
         vec3 Lrgb = lights[i].color.rgb;
@@ -63,7 +63,7 @@ void main() {
         float att = 1.0;
 
         if (type == 0) {
-            vec3 dir = safeNormalize(lights[i].dirPacked.xyz);
+            vec3 dir = safeNormalize(vec3(0.0, 1.0, 0.0));
             L = safeNormalize(-dir);
         } else if (type == 1) {
             vec3 toL = lights[i].posRadius.xyz - v_worldPos;
@@ -76,7 +76,7 @@ void main() {
             continue;
         }
 
-        float NdotL = max(dot(N, L), 0.0);
+        float NdotL = max(dot(v_worldNormal, L), 0.0);
         vec3 diffuse = NdotL * albedo * Lrgb;
 
         vec3 H = safeNormalize(L + V);
@@ -86,5 +86,6 @@ void main() {
         colorOut += att * intensity * (diffuse + specular);
     }
 
+    // FragColor = vec4(lights[0].color.rgb, 1.0);
     FragColor = vec4(colorOut, 1.0);
 }

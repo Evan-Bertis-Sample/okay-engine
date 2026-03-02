@@ -10,6 +10,8 @@
 #include <okay/core/util/type.hpp>
 #include <okay/core/renderer/okay_texture.hpp>
 #include <type_traits>
+#include <set>
+#include <atomic>
 
 namespace okay {
 
@@ -197,20 +199,23 @@ struct TemplatedMaterialUniform {
     T _value{};
 };
 
-class OkayUniformBuffer {
+template <class T>
+class TemplatedUniformBuffer {
    public:
-    ~OkayUniformBuffer() {
+    ~TemplatedUniformBuffer() {
         destroy();
     }
 
-    Failable init(std::size_t byteSize, GLenum usage = GL_DYNAMIC_DRAW) {
+    Failable init(GLenum usage = GL_DYNAMIC_DRAW) {
         if (_id != 0)
             return Failable::ok({});
+
         GL_CHECK_FAILABLE(glGenBuffers(1, &_id));
         GL_CHECK_FAILABLE(glBindBuffer(GL_UNIFORM_BUFFER, _id));
-        GL_CHECK_FAILABLE(glBufferData(GL_UNIFORM_BUFFER, (GLsizeiptr)byteSize, nullptr, usage));
+        GL_CHECK_FAILABLE(glBufferData(GL_UNIFORM_BUFFER, (GLsizeiptr)sizeof(T), nullptr, usage));
         GL_CHECK_FAILABLE(glBindBuffer(GL_UNIFORM_BUFFER, 0));
-        _size = byteSize;
+
+        Engine.logger.debug("UBO {} initialized with size {}", _id, sizeof(T));
         return Failable::ok({});
     }
 
@@ -218,18 +223,19 @@ class OkayUniformBuffer {
         if (_id)
             glDeleteBuffers(1, &_id);
         _id = 0;
-        _size = 0;
     }
 
-    Failable upload(const void* data, std::size_t byteSize, std::size_t offset = 0) {
+    Failable upload(const T& data, std::size_t offset = 0) {
         if (_id == 0)
             return Failable::errorResult("UBO not initialized");
-        if (offset + byteSize > _size)
+        if (offset + sizeof(T) > sizeof(T))
             return Failable::errorResult("UBO upload out of bounds");
+
         GL_CHECK_FAILABLE(glBindBuffer(GL_UNIFORM_BUFFER, _id));
         GL_CHECK_FAILABLE(
-            glBufferSubData(GL_UNIFORM_BUFFER, (GLintptr)offset, (GLsizeiptr)byteSize, data));
+            glBufferSubData(GL_UNIFORM_BUFFER, (GLintptr)offset, (GLsizeiptr)sizeof(T), &data));
         GL_CHECK_FAILABLE(glBindBuffer(GL_UNIFORM_BUFFER, 0));
+
         return Failable::ok({});
     }
 
@@ -240,16 +246,12 @@ class OkayUniformBuffer {
     GLuint id() const {
         return _id;
     }
-    std::size_t size() const {
-        return _size;
-    }
 
    private:
     GLuint _id{0};
-    std::size_t _size{0};
 };
 
-template <class TBlock, GLuint BindingPoint, auto BlockName>
+template <class TBlock, auto BlockName>
 class TemplatedUniformBlock {
    public:
     static constexpr auto name = BlockName;
@@ -273,46 +275,113 @@ class TemplatedUniformBlock {
         return _dirty;
     }
 
+    // Optional: if YOU want to set a specific binding point manually.
+    // If you never call this, it'll auto-allocate.
+    void setBindingPoint(GLuint bindingPoint) {
+        _bindingPoint = bindingPoint;
+    }
+
+    // Keep: init(program)
     Failable init(GLuint program) {
         auto r = ensureInit();
         if (r.isError())
             return r;
 
-        // Bind the program’s block index to our binding point once.
+        r = ensureBindingPointAllocated();
+        if (r.isError())
+            return r;
+
+        // Bind this program's uniform block index -> our binding point
         GLuint idx = glGetUniformBlockIndex(program, std::string(name.sv()).c_str());
         if (idx == GL_INVALID_INDEX) {
             return Failable::errorResult("Uniform block not found: " + std::string(name.sv()));
         }
-        glUniformBlockBinding(program, idx, BindingPoint);
+
+        glUniformBlockBinding(program, idx, _bindingPoint);
+
+        // Cache so we don't redo it for the same program
+        _boundPrograms.insert(program);
+
+        Engine.logger.debug("UBO {} initialized for program {}", _bindingPoint, program);
+
         return Failable::ok({});
     }
 
+    // Keep: pass(program)
     Failable pass(GLuint program) {
         auto r = ensureInit();
         if (r.isError())
             return r;
 
-        _ubo.bindBase(BindingPoint);
+        r = ensureBindingPointAllocated();
+        if (r.isError())
+            return r;
+
+        // If init() wasn't called for this program, do the binding now (safe + cheap)
+        if (_boundPrograms.find(program) == _boundPrograms.end()) {
+            r = init(program);
+            if (r.isError())
+                return r;
+        }
+
+        _ubo.bindBase(_bindingPoint);
 
         if (!_dirty)
             return Failable::ok({});
-        r = _ubo.upload(&_value, sizeof(TBlock));
+
+        r = _ubo.upload(_value);
         if (r.isError())
             return r;
+
         _dirty = false;
         return Failable::ok({});
+    }
+
+    GLuint bindingPoint() const {
+        return _bindingPoint;
     }
 
    private:
     Failable ensureInit() {
         if (_ubo.id() != 0)
             return Failable::ok({});
-        return _ubo.init(sizeof(TBlock), GL_DYNAMIC_DRAW);
+        return _ubo.init(GL_DYNAMIC_DRAW);
     }
 
+    Failable ensureBindingPointAllocated() {
+        if (_bindingPoint != invalidBinding())
+            return Failable::ok({});
+
+        // Allocate a binding point globally (per process) for this instance.
+        GLint maxBindings = 0;
+        glGetIntegerv(GL_MAX_UNIFORM_BUFFER_BINDINGS, &maxBindings);
+
+        GLuint next = 
+            s_nextBindingPoint.fetch_add(1, std::memory_order_relaxed);
+        if ((GLint)next >= maxBindings) {
+            return Failable::errorResult(
+                "Out of UBO binding points. GL_MAX_UNIFORM_BUFFER_BINDINGS=" +
+                std::to_string(maxBindings));
+        }
+
+        _bindingPoint = next;
+        return Failable::ok({});
+    }
+
+    static constexpr GLuint invalidBinding() {
+        return 0xFFFFFFFFu;
+    }
+
+   private:
     TBlock _value{};
     bool _dirty{true};
-    OkayUniformBuffer _ubo{};
+
+    TemplatedUniformBuffer<TBlock> _ubo{};
+
+    GLuint _bindingPoint{invalidBinding()};
+    std::set<GLuint> _boundPrograms;
+
+    inline static std::atomic<GLuint> s_nextBindingPoint{0};
 };
 
 };  // namespace okay

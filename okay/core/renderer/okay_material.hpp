@@ -192,7 +192,6 @@ class OkayMaterialRegistry {
 
     static std::uint32_t _materialID;
     static std::uint32_t nextID() {
-        std::cout << "Material ID: " << _materialID << std::endl;
         return _materialID++;
     }
 };

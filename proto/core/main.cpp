@@ -86,7 +86,7 @@ static void __gameInitialize() {
 
     okay::OkayAssetManager* assetManager =
         okay::Engine.systems.getSystemChecked<okay::OkayAssetManager>();
-    auto shaderLoadRes = assetManager->loadEngineAssetSync<okay::OkayShader>("shaders/unlit");
+    auto shaderLoadRes = assetManager->loadEngineAssetSync<okay::OkayShader>("shaders/lit");
 
     if (shaderLoadRes.isError()) {
         okay::Engine.logger.error("Failed to load shader: {}", shaderLoadRes.error());
@@ -95,7 +95,7 @@ static void __gameInitialize() {
 
     okay::OkayShaderHandle shader = renderer->materialRegistry().registerShader(shaderLoadRes.value().asset.vertexShader, shaderLoadRes.value().asset.fragmentShader);
 
-    auto materialProprties = std::make_unique<okay::UnlitMaterial>();
+    auto materialProprties = std::make_unique<okay::LitMaterial>();
     materialProprties->color.set(glm::vec4(1.0f, 1.0f, 0.0f, 1.0f)); 
     okay::OkayMaterialHandle sunMat = renderer->materialRegistry().registerMaterial(shader, std::move(materialProprties));
     g_sun = renderer->world().addRenderEntity(
@@ -104,7 +104,7 @@ static void __gameInitialize() {
     );
 
     // planet material
-    materialProprties = std::make_unique<okay::UnlitMaterial>();
+    materialProprties = std::make_unique<okay::LitMaterial>();
     materialProprties->color.set(glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
     okay::OkayMaterialHandle planetMat = renderer->materialRegistry().registerMaterial(shader, std::move(materialProprties));
     g_planet = renderer->world().addRenderEntity(
@@ -113,7 +113,7 @@ static void __gameInitialize() {
     );
 
     // moon material
-    materialProprties = std::make_unique<okay::UnlitMaterial>();
+    materialProprties = std::make_unique<okay::LitMaterial>();
     materialProprties->color.set(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
     okay::OkayMaterialHandle moonMat = renderer->materialRegistry().registerMaterial(shader, std::move(materialProprties));
     g_moon = renderer->world().addRenderEntity(

@@ -3,6 +3,7 @@
 
 #include <glm/glm.hpp>
 #include <okay/core/renderer/okay_uniform.hpp>
+#include <okay/core/renderer/okay_material.hpp>
 
 namespace okay {
 
