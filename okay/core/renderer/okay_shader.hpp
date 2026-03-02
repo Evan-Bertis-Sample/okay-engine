@@ -74,33 +74,47 @@ class OkayShader {
         // add to map
         UniformInfo info {
             .location = location,
-            .isDirty = true
+            .value = uni::UniformValue::none(),
         };
+
+        _uniforms[uniform] = info;
 
         return location;
     }
 
-    bool isUniformDirty(const std::string& dirty) const {
-        auto it = _uniforms.find(dirty);
-        if (it != _uniforms.end()) {
-            return it->second.isDirty;
-        }
-        return false;
-    }
-
     template <class T>
     Failable setUniform(const std::string& uniform, const T& value) {
+        auto it = _uniforms.find(uniform);
+
+        // If we have this uniform already, then we only need to 
+        // grab the info once
+        if (it != _uniforms.end()) {
+            UniformInfo& info = it->second;
+            if (info.location == uni::inactiveLocation()) {
+                return Failable::ok({});
+            }
+
+            if (info.value == value) {
+                return Failable::ok({});
+            }
+
+            uni::set(info.location, value);
+            info.value = value;
+            return Failable::ok({});
+        }
+
+        // We don't have this uniform yet, so we need to find it
         auto location = findUniformLocation(uniform);
         if (location == uni::inactiveLocation()) {
+            Engine.logger.error("Failed to find uniform location for '{}'", uniform);
             return Failable::ok({});
         };
-
-        if (isUniformDirty(uniform)) {
-            auto r = uni::set(location, value);
-            if (r.isError())
-                return r;
-            _uniforms[uniform].isDirty = false;
-        }
+        
+        // add to map
+        UniformInfo &info = _uniforms[uniform];
+        info.location = location;
+        info.value = value;
+        uni::set(location, value);
 
         return Failable::ok({});
     }
@@ -119,7 +133,7 @@ class OkayShader {
    private:
    struct UniformInfo {
        GLuint location;
-       bool isDirty;
+       uni::UniformValue value;
     };
 
     GLuint _shaderProgram;

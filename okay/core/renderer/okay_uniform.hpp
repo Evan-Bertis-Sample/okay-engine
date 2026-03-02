@@ -82,6 +82,78 @@ static constexpr GLuint inactiveLocation() {
     return 0xFFFFFFFEu;
 }
 
+struct UniformValue {
+    UniformKind kind;
+    union {
+        float f;
+        int i;
+        glm::vec2 v2;
+        glm::vec3 v3;
+        glm::vec4 v4;
+        glm::mat3 m3;
+        glm::mat4 m4;
+    };
+
+    static UniformValue none() {
+        UniformValue v{};
+        v.kind = UniformKind::VOID;
+        return v;
+    }
+
+    // comparison operator
+    template <class T>
+    bool operator==(const T& other) const {
+        // check that the kinds match
+        if (kind != kindFromType<T>()) {
+            return false;
+        }
+        // check that the values match
+        if constexpr (std::is_same_v<T, float>) {
+            return f == other;
+        } else if constexpr (std::is_same_v<T, int>) {
+            return i == other;
+        } else if constexpr (std::is_same_v<T, glm::vec2>) {
+            return v2 == other;
+        } else if constexpr (std::is_same_v<T, glm::vec3>) {
+            return v3 == other;
+        } else if constexpr (std::is_same_v<T, glm::vec4>) {
+            return v4 == other;
+        } else if constexpr (std::is_same_v<T, glm::mat3>) {
+            return m3 == other;
+        } else if constexpr (std::is_same_v<T, glm::mat4>) {
+            return m4 == other;
+        } else {
+            static_assert(dependent_false_v<T>, "Unsupported uniform type");
+        }
+
+        return false;
+    }
+
+    // asignment
+    template <class T>
+    void operator=(const T& other) {
+        if constexpr (std::is_same_v<T, float>) {
+            f = other;
+        } else if constexpr (std::is_same_v<T, int>) {
+            i = other;
+        } else if constexpr (std::is_same_v<T, glm::vec2>) {
+            v2 = other;
+        } else if constexpr (std::is_same_v<T, glm::vec3>) {
+            v3 = other;
+        } else if constexpr (std::is_same_v<T, glm::vec4>) {
+            v4 = other;
+        } else if constexpr (std::is_same_v<T, glm::mat3>) {
+            m3 = other;
+        } else if constexpr (std::is_same_v<T, glm::mat4>) {
+            m4 = other;
+        } else {
+            static_assert(dependent_false_v<T>, "Unsupported uniform type");
+        }
+
+        kind = kindFromType<T>();
+    }
+};
+
 };  // namespace uni
 
 template <class T, auto Name>
