@@ -67,7 +67,7 @@ class OkayShader {
 
         GLuint location = glGetUniformLocation(_shaderProgram, uniform.c_str());
         if (location == -1) {
-            Engine.logger.error("Failed to find uniform location for '{}'", uniform);
+            Engine.logger.warn("Failed to find uniform location for '{}'", uniform);
             location = uni::inactiveLocation();
         }
 
@@ -106,7 +106,6 @@ class OkayShader {
         // We don't have this uniform yet, so we need to find it
         auto location = findUniformLocation(uniform);
         if (location == uni::inactiveLocation()) {
-            Engine.logger.error("Failed to find uniform location for '{}'", uniform);
             return Failable::ok({});
         };
         

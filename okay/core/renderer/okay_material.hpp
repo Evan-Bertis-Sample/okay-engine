@@ -18,8 +18,6 @@ class IOkayMaterialPropertyCollection {
    public:
     virtual Failable init(OkayShaderHandle shader) = 0;
     virtual Failable pass(OkayShaderHandle shader) = 0;
-    virtual bool markDirty() = 0;
-    virtual bool foundLocations() const = 0;
 };
 
 class OkayMaterial {
@@ -79,13 +77,6 @@ class OkayMaterial {
             return set;
         }
 
-        if (!_uniforms->foundLocations()) {
-            Engine.logger.debug("Finding uniform locations for material {}.", _id);
-            Failable find = _uniforms->init(_shader);
-            if (find.isError()) {
-                return find;
-            }
-        }
         return _uniforms->pass(_shader);
     }
 
@@ -238,48 +229,25 @@ class OkayMaterialProperties : public IOkayMaterialPropertyCollection {
 
         tupleForEach(d.uniformRefs(), [&](auto& u) {
             auto r = shader->setUniform(u.name(), u.get());
-            if (r.isError() && !_hasPassed) {
+            if (r.isError()) {
                 errorMessages << r.error() << std::endl;
                 anyErrors = true;
             }
         });
         tupleForEach(d.uniformBlockRefs(), [&](auto& b) {
             auto r = b.pass(shader->programID());
-            if (r.isError() && !_hasPassed) {
+            if (r.isError()) {
                 errorMessages << r.error() << std::endl;
                 anyErrors = true;
             }
         });
 
         Failable out = anyErrors ? Failable::errorResult(errorMessages.str()) : Failable::ok({});
-
-        // only return an error if you have not passed before
-        if (!_hasPassed) {
-            _hasPassed = true;
-            return out;
-        }
-
         return Failable::ok({});
-    }
-
-    bool markDirty() override {
-        auto& d = static_cast<Derived&>(*this);
-        bool any = false;
-        tupleForEach(d.uniformRefs(), [&](auto& u) {
-            u.markDirty();
-            any = true;
-        });
-
-        return any;
-    }
-
-    bool foundLocations() const override {
-        return _initialized;
     }
 
    private:
     bool _initialized{false};
-    bool _hasPassed{false};
 };
 
 };  // namespace okay

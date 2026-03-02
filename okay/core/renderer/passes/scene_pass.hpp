@@ -51,9 +51,9 @@ class ScenePass : public IOkayRenderPass {
             if (item.material->isNone()) continue;
 
             // Shader switch: bind program + per-frame stuff
-            // if (_shaderIndex != item.material->shaderID()) {
+            if (_shaderIndex != item.material->shaderID()) {
                 bindShaderAndPerFrame(context, item, projection, view, camPos, camDir);
-            // }
+            }
 
             _materialIndex = item.material->id();
 

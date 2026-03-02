@@ -171,22 +171,11 @@ struct TemplatedMaterialUniform {
     }
 
     void set(const T& v) {
-        if (_value != v) {
-            _dirty = true;
-        }
         _value = v;
     }
 
     const T& get() const {
         return _value;
-    }
-
-    bool isDirty() const {
-        return _dirty;
-    }
-
-    void markDirty() {
-        _dirty = true;
     }
 
     bool operator==(const TemplatedMaterialUniform& other) const {
@@ -206,7 +195,6 @@ struct TemplatedMaterialUniform {
 
    private:
     T _value{};
-    bool _dirty{true};
 };
 
 class OkayUniformBuffer {
