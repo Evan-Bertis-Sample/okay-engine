@@ -23,10 +23,10 @@ struct LitMaterial : public BaseMatricesProps, public OkayMaterialProperties<Lit
     TemplatedMaterialUniform<float, FixedString("u_ambient")> ambient{0.05f};
 
     auto uniformRefs() {
-        return BaseMatricesProps::uniformRefs();
+        return std::tuple_cat(BaseMatricesProps::uniformRefs(), std::tie(shininess, ambient));
     }
     auto uniformRefs() const {
-        return BaseMatricesProps::uniformRefs();
+        return std::tuple_cat(BaseMatricesProps::uniformRefs(), std::tie(shininess, ambient));
     }
 
     auto uniformBlockRefs() {
