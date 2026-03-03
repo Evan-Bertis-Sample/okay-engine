@@ -89,7 +89,7 @@ class ScenePass : public IOkayRenderPass {
 
         auto& uniforms = item.material->uniforms();
 
-        if (auto* unlit = dynamic_cast<okay::BaseMatricesProps*>(uniforms.get())) {
+        if (auto* unlit = dynamic_cast<okay::SceneMaterialProperties*>(uniforms.get())) {
             unlit->projectionMatrix.set(projection);
             unlit->viewMatrix.set(view);
             unlit->cameraPosition.set(camPos);
@@ -109,7 +109,7 @@ class ScenePass : public IOkayRenderPass {
 
     void setPerObjectUniforms(OkayRenderItem& item) {
         auto& uniforms = item.material->uniforms();
-        if (auto* unlit = dynamic_cast<okay::BaseMatricesProps*>(uniforms.get())) {
+        if (auto* unlit = dynamic_cast<okay::SceneMaterialProperties*>(uniforms.get())) {
             unlit->modelMatrix.set(item.worldMatrix);
         }
     }

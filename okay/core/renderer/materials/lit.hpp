@@ -5,7 +5,7 @@
 #include <okay/core/renderer/okay_uniform.hpp>
 #include <okay/core/renderer/materials/unlit.hpp>
 #include <okay/core/renderer/okay_render_world.hpp>
-#include "okay/core/util/type.hpp"
+#include <okay/core/util/type.hpp>
 
 namespace okay {
 
@@ -17,17 +17,18 @@ struct alignas(16) LightBlock {
 
 using DefaultLightBlock = LightBlock<16>;
 
-struct LitMaterial : public BaseMatricesProps, public OkayMaterialProperties<LitMaterial> {
+struct LitMaterial : public SceneMaterialProperties, public OkayMaterialProperties<LitMaterial> {
     BlockProperty<DefaultLightBlock, FixedString("u_lights")> lights{};
     UniformProperty<float, FixedString("u_shininess")> shininess{8.0f};
     UniformProperty<float, FixedString("u_ambient")> ambient{0.05f};
     TextureProperty<FixedString("u_albedo")> albedo;
+    UniformProperty<glm::vec3, FixedString("u_color")> color{};
 
     auto uniformRefs() {
-        return std::tuple_cat(BaseMatricesProps::uniformRefs(), std::tie(shininess, ambient));
+        return std::tuple_cat(SceneMaterialProperties::uniformRefs(), std::tie(shininess, ambient, color));
     }
     auto uniformRefs() const {
-        return std::tuple_cat(BaseMatricesProps::uniformRefs(), std::tie(shininess, ambient));
+        return std::tuple_cat(SceneMaterialProperties::uniformRefs(), std::tie(shininess, ambient, color));
     }
 
     auto uniformBlockRefs() {
