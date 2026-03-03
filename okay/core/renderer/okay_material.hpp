@@ -202,12 +202,14 @@ class OkayMaterialProperties : public IOkayMaterialPropertyCollection {
     Failable init(OkayShaderHandle shader) override {
         auto& d = static_cast<Derived&>(*this);
         Failable out = Failable::ok({});
+
         // init plain uniforms (cache locations)
         tupleForEach(d.uniformRefs(), [&](auto& u) {
             if (out.isError())
                 return;
             shader->findUniformLocation(u.name());
         });
+
         // init uniform blocks (bind block->binding point)
         tupleForEach(d.uniformBlockRefs(), [&](auto& b) {
             if (out.isError())
@@ -217,32 +219,54 @@ class OkayMaterialProperties : public IOkayMaterialPropertyCollection {
                 out = r;
         });
 
+        // init texture uniforms (cache sampler location, allocate unit if needed)
+        tupleForEach(d.textureRefs(), [&](auto& t) {
+            if (out.isError())
+                return;
+            auto r = t.init(shader->programID());
+            if (r.isError())
+                out = r;
+        });
+        
+
         _initialized = true;
         return out;
     }
 
     Failable pass(OkayShaderHandle shader) override {
         auto& d = static_cast<Derived&>(*this);
+
         std::stringstream errorMessages;
         bool anyErrors = false;
 
+        // plain uniforms (shader caches value+location)
         tupleForEach(d.uniformRefs(), [&](auto& u) {
             auto r = shader->setUniform(u.name(), u.get());
             if (r.isError()) {
-                errorMessages << r.error() << std::endl;
-                anyErrors = true;
-            }
-        });
-        tupleForEach(d.uniformBlockRefs(), [&](auto& b) {
-            auto r = b.pass(shader->programID());
-            if (r.isError()) {
-                errorMessages << r.error() << std::endl;
+                errorMessages << r.error() << '\n';
                 anyErrors = true;
             }
         });
 
-        Failable out = anyErrors ? Failable::errorResult(errorMessages.str()) : Failable::ok({});
-        return Failable::ok({});
+        // uniform blocks
+        tupleForEach(d.uniformBlockRefs(), [&](auto& b) {
+            auto r = b.pass(shader->programID());
+            if (r.isError()) {
+                errorMessages << r.error() << '\n';
+                anyErrors = true;
+            }
+        });
+
+        // textures
+        tupleForEach(d.textureRefs(), [&](auto& t) {
+            auto r = t.pass(shader->programID());
+            if (r.isError()) {
+                errorMessages << r.error() << '\n';
+                anyErrors = true;
+            }
+        });
+
+        return anyErrors ? Failable::errorResult(errorMessages.str()) : Failable::ok({});
     }
 
    private:

@@ -62,7 +62,7 @@ Failable set(GLuint uniformLoc, const T& value) {
     } else if constexpr (kind == UniformKind::MAT4) {
         glUniformMatrix4fv(uniformLoc, 1, GL_FALSE, &value[0][0]);
     } else if constexpr (kind == UniformKind::TEXTURE) {
-        return Failable::errorResult("Texture uniforms are bound via samplers/units elsewhere");
+        return Failable::errorResult("Texture setting must be done through TextureProperty::pass()");
     } else if constexpr (kind == UniformKind::VOID) {
         // no-op
     } else {
@@ -159,13 +159,15 @@ struct UniformValue {
 };  // namespace uni
 
 template <class T, auto Name>
-struct TemplatedMaterialUniform {
+struct UniformProperty {
     using ValueType = T;
     static constexpr auto nameV = Name;
     static constexpr uni::UniformKind kind = uni::kindFromType<T>();
 
-    TemplatedMaterialUniform() {}
-    TemplatedMaterialUniform(const T& value) : _value(value) {}
+    UniformProperty() {
+    }
+    UniformProperty(const T& value) : _value(value) {
+    }
 
     constexpr std::string_view nameView() const {
         return nameV.sv();
@@ -183,17 +185,17 @@ struct TemplatedMaterialUniform {
         return _value;
     }
 
-    bool operator==(const TemplatedMaterialUniform& other) const {
+    bool operator==(const UniformProperty& other) const {
         return _value == other._value && nameView() == other.nameView();
     }
 
     // set operators
-    TemplatedMaterialUniform& operator=(const T& value) {
+    UniformProperty& operator=(const T& value) {
         set(value);
         return *this;
     }
 
-    TemplatedMaterialUniform& operator=(const TemplatedMaterialUniform& other) {
+    UniformProperty& operator=(const UniformProperty& other) {
         set(other._value);
         return *this;
     }
@@ -255,7 +257,7 @@ class TemplatedUniformBuffer {
 };
 
 template <class TBlock, auto BlockName>
-class TemplatedUniformBlock {
+class BlockProperty {
    public:
     static constexpr auto name = BlockName;
 
@@ -359,8 +361,7 @@ class TemplatedUniformBlock {
         GLint maxBindings = 0;
         glGetIntegerv(GL_MAX_UNIFORM_BUFFER_BINDINGS, &maxBindings);
 
-        GLuint next = 
-            s_nextBindingPoint.fetch_add(1, std::memory_order_relaxed);
+        GLuint next = s_nextBindingPoint.fetch_add(1, std::memory_order_relaxed);
         if ((GLint)next >= maxBindings) {
             return Failable::errorResult(
                 "Out of UBO binding points. GL_MAX_UNIFORM_BUFFER_BINDINGS=" +
@@ -385,6 +386,177 @@ class TemplatedUniformBlock {
     std::set<GLuint> _boundPrograms;
 
     inline static std::atomic<GLuint> s_nextBindingPoint{0};
+};
+
+template <auto SamplerName>
+class TextureProperty {
+   public:
+    using ValueType = OkayTexture;
+    static constexpr auto nameV = SamplerName;
+    static constexpr uni::UniformKind kind = uni::UniformKind::TEXTURE;
+
+    TextureProperty() = default;
+
+    TextureProperty(const OkayTexture& tex,
+                            const OkayTexture::TextureParameters& params = {})
+        : _value(tex), _params(params) {
+    }
+
+    constexpr std::string_view nameView() const {
+        return nameV.sv();
+    }
+    constexpr std::string name() const {
+        return std::string(nameV.sv());
+    }
+
+    void set(const OkayTexture& tex) {
+        _value = tex;
+        _dirty = true;
+    }
+    OkayTexture& edit() {
+        _dirty = true;
+        return _value;
+    }
+    const OkayTexture& get() const {
+        return _value;
+    }
+
+    void setParams(const OkayTexture::TextureParameters& p) {
+        _params = p;
+        _dirty = true;
+    }
+    const OkayTexture::TextureParameters& params() const {
+        return _params;
+    }
+
+    void markDirty() {
+        _dirty = true;
+    }
+    bool isDirty() const {
+        return _dirty;
+    }
+
+    // "block location" == texture unit
+    void setUnit(GLuint unit) {
+        _unit = unit;
+    }
+    GLuint unit() const {
+        return _unit;
+    }
+
+    // Cache location for this program (optional, pass() will lazy-init too)
+    Failable init(GLuint program) {
+        auto r = ensureUnitAllocated();
+        if (r.isError())
+            return r;
+
+        auto loc = glGetUniformLocation(program, std::string(nameV.sv()).c_str());
+        // If not found, treat as inactive (shader optimized it out)
+        if (loc < 0) {
+            _locations[program] = inactiveLocation();
+            return Failable::ok({});
+        }
+        _locations[program] = (GLuint)loc;
+        return Failable::ok({});
+    }
+
+    Failable pass(GLuint program) {
+        auto r = ensureUnitAllocated();
+        if (r.isError())
+            return r;
+
+        GLuint loc = cachedLocation(program);
+        if (loc == invalidLocation()) {
+            r = init(program);
+            if (r.isError())
+                return r;
+            loc = cachedLocation(program);
+        }
+
+        // Inactive sampler -> nothing to do
+        if (loc == inactiveLocation()) {
+            _dirty = false;
+            return Failable::ok({});
+        }
+
+        if (OkayTextureDataStore::TextureHandle::isNone(_value.handle) || !_value.store) {
+            return Failable::errorResult("Texture uniform '" + std::string(nameV.sv()) +
+                                         "' has no texture value/store");
+        }
+
+        // Ensure uploaded (you can choose to only do this when dirty)
+        if (!_value.hasBeenUploadedToGPU()) {
+            auto up = _value.uploadToGPU(_params);
+            if (up.isError())
+                return up;
+        } else if (_dirty) {
+            // Optional: if you want param changes to apply even after upload
+            // (this is cheap; it just sets tex parameters on the already-created texture)
+            GL_CHECK_FAILABLE(glBindTexture(GL_TEXTURE_2D, _value.getGLTextureID()));
+            GL_CHECK_FAILABLE(
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, _params.minFilter));
+            GL_CHECK_FAILABLE(
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, _params.magFilter));
+            GL_CHECK_FAILABLE(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, _params.wrapS));
+            GL_CHECK_FAILABLE(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, _params.wrapT));
+        }
+
+        // Bind to unit + assign sampler = unit
+        GL_CHECK_FAILABLE(glUseProgram(program));
+        GL_CHECK_FAILABLE(glActiveTexture(GL_TEXTURE0 + _unit));
+        GL_CHECK_FAILABLE(glBindTexture(GL_TEXTURE_2D, _value.getGLTextureID()));
+        GL_CHECK_FAILABLE(glUniform1i((GLint)loc, (GLint)_unit));
+
+        _dirty = false;
+        return Failable::ok({});
+    }
+
+   private:
+    static constexpr GLuint invalidLocation() {
+        return 0xFFFFFFFFu;
+    }
+    static constexpr GLuint inactiveLocation() {
+        return 0xFFFFFFFEu;
+    }
+    static constexpr GLuint invalidUnit() {
+        return 0xFFFFFFFFu;
+    }
+
+    GLuint cachedLocation(GLuint program) const {
+        auto it = _locations.find(program);
+        if (it == _locations.end())
+            return invalidLocation();
+        return it->second;
+    }
+
+    Failable ensureUnitAllocated() {
+        if (_unit != invalidUnit())
+            return Failable::ok({});
+
+        GLint maxUnits = 0;
+        glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &maxUnits);
+
+        GLuint next = s_nextUnit.fetch_add(1, std::memory_order_relaxed);
+        if ((GLint)next >= maxUnits) {
+            return Failable::errorResult(
+                "Out of texture units. GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS=" +
+                std::to_string(maxUnits));
+        }
+
+        _unit = next;
+        return Failable::ok({});
+    }
+
+   private:
+    OkayTexture _value{};
+    OkayTexture::TextureParameters _params{};
+
+    bool _dirty{true};
+
+    GLuint _unit{invalidUnit()};
+    std::unordered_map<GLuint, GLuint> _locations;
+
+    inline static std::atomic<GLuint> s_nextUnit{0};
 };
 
 };  // namespace okay

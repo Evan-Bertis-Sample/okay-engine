@@ -184,9 +184,19 @@ class OkayTexture {
         return store->getTextureMeta(handle);
     }
 
+    bool hasBeenUploadedToGPU() const {
+        return false;
+    }
+
+    GLuint getGLTextureID() const {
+        return _glTextureID;
+    }
+
     Failable uploadToGPU(const TextureParameters& params) {
         const auto meta = getMeta();
         const auto data = getData();
+
+        Engine.logger.info("Uploading texture to GPU: width={}, height={}, format={}", meta.width, meta.height, static_cast<int>(meta.format));
 
         if (meta.format == OkayTextureMeta::Format::DEPTH24_STENCIL8) {
             GL_CHECK_FAILABLE(glGenTextures(1, &_glTextureID));

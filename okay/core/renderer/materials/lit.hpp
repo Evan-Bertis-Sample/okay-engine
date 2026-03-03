@@ -18,9 +18,10 @@ struct alignas(16) LightBlock {
 using DefaultLightBlock = LightBlock<16>;
 
 struct LitMaterial : public BaseMatricesProps, public OkayMaterialProperties<LitMaterial> {
-    TemplatedUniformBlock<DefaultLightBlock, FixedString("u_lights")> lights{};
-    TemplatedMaterialUniform<float, FixedString("u_shininess")> shininess{8.0f};
-    TemplatedMaterialUniform<float, FixedString("u_ambient")> ambient{0.05f};
+    BlockProperty<DefaultLightBlock, FixedString("u_lights")> lights{};
+    UniformProperty<float, FixedString("u_shininess")> shininess{8.0f};
+    UniformProperty<float, FixedString("u_ambient")> ambient{0.05f};
+    TextureProperty<FixedString("u_albedo")> albedo;
 
     auto uniformRefs() {
         return std::tuple_cat(BaseMatricesProps::uniformRefs(), std::tie(shininess, ambient));
@@ -34,6 +35,13 @@ struct LitMaterial : public BaseMatricesProps, public OkayMaterialProperties<Lit
     }
     auto uniformBlockRefs() const {
         return std::tie(lights);
+    }
+
+    auto textureRefs() {
+        return std::tie(albedo);
+    }
+    auto textureRefs() const {
+        return std::tie(albedo);
     }
 };
 

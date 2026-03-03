@@ -15,6 +15,7 @@ uniform vec3 u_cameraPosition;
 /* Material */
 uniform float u_shininess;   // e.g. 32.0
 uniform float u_ambient;     // e.g. 0.05
+uniform sampler2D u_albedo;  // optional, can be ignored if not used
 
 struct Light {
     vec4 posType;    // xyz = position (POINT/SPOT), w = type (0 dir, 1 point, 2 spot)
@@ -61,7 +62,8 @@ void main() {
     vec3 N = safeNormalize(v_worldNormal);
     vec3 V = safeNormalize(u_cameraPosition - v_worldPos);
 
-    vec3 albedo = clamp(v_color, 0.0, 1.0);
+    vec3 texAlbedo = texture(u_albedo, v_uv).rgb;
+    vec3 albedo = clamp(texAlbedo * v_color, vec3(0.0), vec3(1.0));
     vec3 colorOut = u_ambient * albedo;
 
     int count = int(meta.x + 0.5);

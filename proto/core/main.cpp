@@ -111,7 +111,8 @@ static void __gameInitialize() {
     okay::OkayShaderHandle shader = renderer->materialRegistry().registerShader(shaderLoadRes.value().asset.vertexShader, shaderLoadRes.value().asset.fragmentShader);
 
     auto materialProprties = std::make_unique<okay::LitMaterial>();
-    materialProprties->color.set(glm::vec4(1.0f, 1.0f, 0.0f, 1.0f)); 
+    materialProprties->color.set(glm::vec4(1.0f, 1.0f, 0.0f, 1.0f));
+    materialProprties->albedo = texture; 
     okay::OkayMaterialHandle sunMat = renderer->materialRegistry().registerMaterial(shader, std::move(materialProprties));
     g_sun = renderer->world().addRenderEntity(
         okay::OkayTransform({0.0f, 0.0f, 0.0f}, {0.05f, 0.05f, 0.05f}),
@@ -121,6 +122,8 @@ static void __gameInitialize() {
     // planet material
     materialProprties = std::make_unique<okay::LitMaterial>();
     materialProprties->color.set(glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
+    okay::OkayTexture albedo = materialProprties->albedo.edit();
+    albedo = texture;
     okay::OkayMaterialHandle planetMat = renderer->materialRegistry().registerMaterial(shader, std::move(materialProprties));
     g_planet = renderer->world().addRenderEntity(
         okay::OkayTransform({ -1.0f, 0.0f, 0.0f }, { 0.3f, 0.3f, 0.3f }),
@@ -130,6 +133,7 @@ static void __gameInitialize() {
     // moon material
     materialProprties = std::make_unique<okay::LitMaterial>();
     materialProprties->color.set(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+    materialProprties->albedo = texture;
     okay::OkayMaterialHandle moonMat = renderer->materialRegistry().registerMaterial(shader, std::move(materialProprties));
     g_moon = renderer->world().addRenderEntity(
         okay::OkayTransform({ 1.0f, 0.0f, 0.0f } , { 0.2f, 0.2f, 0.2f }),
