@@ -480,8 +480,7 @@ class TextureProperty {
         }
 
         if (OkayTextureDataStore::TextureHandle::isNone(_value.handle) || !_value.store) {
-            return Failable::errorResult("Texture uniform '" + std::string(nameV.sv()) +
-                                         "' has no texture value/store");
+            return Failable::ok({}); // leave inactive
         }
 
         // Ensure uploaded (you can choose to only do this when dirty)

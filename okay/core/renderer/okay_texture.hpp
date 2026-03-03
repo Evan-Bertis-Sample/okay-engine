@@ -82,7 +82,7 @@ class OkayTextureDataStore {
     }
 
     std::span<const std::byte> getTextureData(TextureHandle handle) const {
-        return std::span<const std::byte>(_blob.data() + handle.start, handle.size);
+        return std::span<const std::byte>(_blob.begin() + handle.start, handle.size);
     }
 
     std::byte* getTextureDataStart(TextureHandle handle) {
@@ -185,7 +185,7 @@ class OkayTexture {
     }
 
     bool hasBeenUploadedToGPU() const {
-        return false;
+        return _glTextureID != 0;
     }
 
     GLuint getGLTextureID() const {
@@ -234,11 +234,13 @@ class OkayTexture {
                     return Failable::errorResult("Unsupported texture format");
             }
 
+            Engine.logger.debug("Texture format: glFormat={}, glInternalFormat={}", glFormat, glInternalFormat);
+
             GL_CHECK_FAILABLE(glGenTextures(1, &_glTextureID));
             GL_CHECK_FAILABLE(glBindTexture(GL_TEXTURE_2D, _glTextureID));
             GL_CHECK_FAILABLE(glTexImage2D(GL_TEXTURE_2D,
                                            0,
-                                           glInternalFormat,
+                                           glFormat,
                                            meta.width,
                                            meta.height,
                                            0,
@@ -246,6 +248,8 @@ class OkayTexture {
                                            GL_UNSIGNED_BYTE,
                                            data.data()));
         }
+
+        Engine.logger.debug("Texture uploaded to GPU with ID {}", _glTextureID);
 
         // set parameters
         GL_CHECK_FAILABLE(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, params.minFilter));

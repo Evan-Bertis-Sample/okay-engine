@@ -49,8 +49,9 @@ struct OkayAssetLoader<OkayTexture, OkayTextureLoadSettings> {
         OkayTextureMeta meta;
         meta.width = width;
         meta.height = height;
-        meta.format = OkayTextureMeta::Format::RGBA8;
+        meta.format = OkayTextureMeta::Format::RGB8;
         std::size_t size = static_cast<size_t>(width * height * channels);
+        Engine.logger.debug("Image size: {}", size);
         std::span<const std::byte> data = std::span<const std::byte>(reinterpret_cast<const std::byte*>(result), size);
         OkayTextureDataStore::TextureHandle handle = store->addTexture(meta, data);
         return Result<OkayTexture>::ok(OkayTexture(store, handle));
