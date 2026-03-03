@@ -3,12 +3,14 @@
 #include <okay/core/renderer/okay_surface.hpp>
 #include <okay/core/level/okay_level_manager.hpp>
 #include <okay/core/asset/mesh/mesh_loader.hpp>
+#include <okay/core/asset/generic/texture_loader.hpp>
 #include <okay/core/asset/okay_asset.hpp>
 #include <okay/core/logging/okay_logger.hpp>
 #include <okay/core/okay_renderer.hpp>
 
 #include <utility>
 #include <okay/core/renderer/okay_material.hpp>
+#include <okay/core/renderer/okay_texture.hpp>
 #include <okay/core/renderer/okay_render_pipeline.hpp>
 #include <okay/core/renderer/okay_uniform.hpp>
 #include <okay/core/renderer/passes/scene_pass.hpp>
@@ -73,7 +75,14 @@ static void __gameInitialize() {
         return;
     }
 
-    okay::OkayMesh icoSphere =
+    okay::OkayTextureLoadSettings textureLoadSettings{
+        .store = okay::OkayTextureDataStore::mainStore()
+    };
+
+    okay::OkayTexture texture = 
+        assetManager->loadEngineAssetSync<okay::OkayTexture>("textures/uv_test.jpg", textureLoadSettings).value().asset;
+
+    okay::OkayMesh teapot =
         renderer->meshBuffer().addMesh(
             teapotRes.value().asset
         );
@@ -106,7 +115,7 @@ static void __gameInitialize() {
     okay::OkayMaterialHandle sunMat = renderer->materialRegistry().registerMaterial(shader, std::move(materialProprties));
     g_sun = renderer->world().addRenderEntity(
         okay::OkayTransform({0.0f, 0.0f, 0.0f}, {0.05f, 0.05f, 0.05f}),
-        sunMat, icoSphere
+        sunMat, teapot
     );
 
     // planet material
@@ -115,7 +124,7 @@ static void __gameInitialize() {
     okay::OkayMaterialHandle planetMat = renderer->materialRegistry().registerMaterial(shader, std::move(materialProprties));
     g_planet = renderer->world().addRenderEntity(
         okay::OkayTransform({ -1.0f, 0.0f, 0.0f }, { 0.3f, 0.3f, 0.3f }),
-        planetMat, icoSphere
+        planetMat, teapot
     );
 
     // moon material
@@ -124,12 +133,12 @@ static void __gameInitialize() {
     okay::OkayMaterialHandle moonMat = renderer->materialRegistry().registerMaterial(shader, std::move(materialProprties));
     g_moon = renderer->world().addRenderEntity(
         okay::OkayTransform({ 1.0f, 0.0f, 0.0f } , { 0.2f, 0.2f, 0.2f }),
-        moonMat, icoSphere
+        moonMat, teapot
     );
 
     g_debugSphere = renderer->world().addRenderEntity(
         okay::OkayTransform({ 0.0f, 0.0f, 0.0f }, { 0.005f, 0.005f, 0.005f }),
-        moonMat, icoSphere
+        moonMat, teapot
     );
 
     renderer->world().addChild(g_sun, g_planet);

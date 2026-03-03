@@ -43,7 +43,17 @@ class OkayTextureDataStore {
         bool operator!=(TextureHandle other) const {
             return !(*this == other);
         }
+
+        // comparison operator for using TextureHandle as a key in std::map
+        bool operator<(const TextureHandle& other) const {
+            return start < other.start || (start == other.start && size < other.size);
+        }
     };
+
+    static std::shared_ptr<OkayTextureDataStore> mainStore() {
+        static std::shared_ptr<OkayTextureDataStore> store = std::make_shared<OkayTextureDataStore>();
+        return store;
+    }
 
     TextureHandle addTexture(OkayTextureMeta meta, void* data, size_t dataSize) {
         return addTexture(
@@ -53,6 +63,12 @@ class OkayTextureDataStore {
     TextureHandle addTexture(OkayTextureMeta meta, std::span<const std::byte> data) {
         TextureHandle handle = storeTextureData(data);
         _metaMap[handle] = meta;
+        return handle;
+    }
+
+    TextureHandle addTexture(std::size_t size) {
+        TextureHandle handle = getBlock(size);
+        _metaMap[handle] = OkayTextureMeta{};
         return handle;
     }
 
@@ -69,6 +85,10 @@ class OkayTextureDataStore {
         return std::span<const std::byte>(_blob.data() + handle.start, handle.size);
     }
 
+    std::byte* getTextureDataStart(TextureHandle handle) {
+        return _blob.data() + handle.start;
+    }
+
    private:
     struct BlockMeta {
         size_t start;
@@ -78,30 +98,41 @@ class OkayTextureDataStore {
     std::vector<std::byte> _blob;
     std::vector<BlockMeta> _openBlocks;  // start, size
 
-    std::unordered_map<TextureHandle, OkayTextureMeta> _metaMap;
+    std::map<TextureHandle, OkayTextureMeta> _metaMap;
 
     TextureHandle storeTextureData(const std::span<const std::byte> data) {
+        // there are no open blocks that can fit the data, so we append it to the end of the blob
+        TextureHandle handle = getBlock(data.size());
+        std::copy(data.begin(), data.end(), _blob.begin() + handle.start);
+        return handle;
+    }
+
+    TextureHandle getBlock(size_t size) {
         // see if there is a free block that can fit the data
         for (size_t i = 0; i < _openBlocks.size(); ++i) {
             size_t blockStart = _openBlocks[i].start;
             size_t blockSize = _openBlocks[i].size;
 
-            if (blockSize <= data.size()) {
+            if (blockSize < size) {
                 continue;  // we can't fit the data in this block
             }
 
             // we can fit the data into the block, so we use it
             TextureHandle handle;
             handle.start = blockStart;
-            handle.size = data.size();
-            _blob.insert(_blob.begin() + blockStart, data.begin(), data.end());
+            handle.size = size;
+
+            Engine.logger.info("Reusing texture block: start={}, size={}", handle.start, handle.size);
 
             // now update open blocks with the remaining free space, if any
-            size_t remainingSize = blockSize - data.size();
+            size_t remainingSize = blockSize - size;
             if (remainingSize > 0) {
                 _openBlocks[i].start = handle.start + handle.size;
                 _openBlocks[i].size = remainingSize;
+                Engine.logger.info("Updated open block: start={}, size={}", _openBlocks[i].start, _openBlocks[i].size);
             } else {
+                Engine.logger.info("Removing open block: start={}, size={}", _openBlocks[i].start, _openBlocks[i].size);
+
                 _openBlocks.erase(_openBlocks.begin() + i);
             }
 
@@ -109,10 +140,16 @@ class OkayTextureDataStore {
         }
 
         // there are no open blocks that can fit the data, so we append it to the end of the blob
+        size_t end = _blob.size();
+        if (end + size > _blob.capacity()) {
+            // we need to grow the blob to fit the new data
+            _blob.reserve(std::max(_blob.capacity() * 2, end + size));
+        }
+        Engine.logger.info("Creating new texture block: start={}, size={}", end, size);
         TextureHandle handle;
-        handle.start = _blob.size();
-        handle.size = data.size();
-        _blob.insert(_blob.end(), data.begin(), data.end());
+        handle.start = end;
+        handle.size = size;
+        _blob.resize(end + size);
         return handle;
     }
 
@@ -130,22 +167,24 @@ class OkayTexture {
         GLenum wrapT{GL_REPEAT};
     };
 
-    OkayTextureDataStore& store;
+    std::shared_ptr<OkayTextureDataStore> store;
     OkayTextureDataStore::TextureHandle handle;
 
-    OkayTexture(OkayTextureDataStore& store, OkayTextureDataStore::TextureHandle handle)
+    OkayTexture() = default;
+
+    OkayTexture(std::shared_ptr<OkayTextureDataStore> store, OkayTextureDataStore::TextureHandle handle)
         : store(store), handle(handle) {
     }
 
     std::span<const std::byte> getData() const {
-        return store.getTextureData(handle);
+        return store->getTextureData(handle);
     }
 
     OkayTextureMeta getMeta() const {
-        return store.getTextureMeta(handle);
+        return store->getTextureMeta(handle);
     }
 
-    Failable uploadToGPU(const TextureParameters& params = {}) {
+    Failable uploadToGPU(const TextureParameters& params) {
         const auto meta = getMeta();
         const auto data = getData();
 
@@ -153,14 +192,14 @@ class OkayTexture {
             GL_CHECK_FAILABLE(glGenTextures(1, &_glTextureID));
             GL_CHECK_FAILABLE(glBindTexture(GL_TEXTURE_2D, _glTextureID));
             GL_CHECK_FAILABLE(glTexImage2D(GL_TEXTURE_2D,
-                                          0,
-                                          GL_DEPTH24_STENCIL8,
-                                          meta.width,
-                                          meta.height,
-                                          0,
-                                          GL_DEPTH_STENCIL,
-                                          GL_UNSIGNED_INT_24_8,
-                                          nullptr));
+                                           0,
+                                           GL_DEPTH24_STENCIL8,
+                                           meta.width,
+                                           meta.height,
+                                           0,
+                                           GL_DEPTH_STENCIL,
+                                           GL_UNSIGNED_INT_24_8,
+                                           nullptr));
         } else {
             GLenum glFormat;
             GLenum glInternalFormat;
@@ -188,14 +227,14 @@ class OkayTexture {
             GL_CHECK_FAILABLE(glGenTextures(1, &_glTextureID));
             GL_CHECK_FAILABLE(glBindTexture(GL_TEXTURE_2D, _glTextureID));
             GL_CHECK_FAILABLE(glTexImage2D(GL_TEXTURE_2D,
-                                          0,
-                                          glInternalFormat,
-                                          meta.width,
-                                          meta.height,
-                                          0,
-                                          glFormat,
-                                          GL_UNSIGNED_BYTE,
-                                          data.data()));
+                                           0,
+                                           glInternalFormat,
+                                           meta.width,
+                                           meta.height,
+                                           0,
+                                           glFormat,
+                                           GL_UNSIGNED_BYTE,
+                                           data.data()));
         }
 
         // set parameters
