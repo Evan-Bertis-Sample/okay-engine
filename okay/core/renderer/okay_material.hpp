@@ -9,6 +9,7 @@
 #include <okay/core/renderer/okay_texture.hpp>
 #include <okay/core/renderer/okay_shader.hpp>
 #include <okay/core/renderer/okay_uniform.hpp>
+#include <okay/core/renderer/okay_gpu.hpp>
 #include <okay/core/util/result.hpp>
 #include <okay/core/okay.hpp>
 
@@ -198,36 +199,26 @@ class OkayMaterialRegistry {
 
 template <class Derived>
 class OkayMaterialProperties : public IOkayMaterialPropertyCollection {
-   public:
+public:
     Failable init(OkayShaderHandle shader) override {
         auto& d = static_cast<Derived&>(*this);
         Failable out = Failable::ok({});
 
         // init plain uniforms (cache locations)
         tupleForEach(d.uniformRefs(), [&](auto& u) {
-            if (out.isError())
-                return;
+            if (out.isError()) return;
             shader->findUniformLocation(u.name());
         });
 
-        // init uniform blocks (bind block->binding point)
-        tupleForEach(d.uniformBlockRefs(), [&](auto& b) {
-            if (out.isError())
-                return;
-            auto r = b.init(shader->programID());
-            if (r.isError())
-                out = r;
-        });
+        // init blocks: no longer needed (GPU manager is lazy),
+        // but you may optionally "touch" the block name per program here if you want.
+        // (We do nothing.)
 
-        // init texture uniforms (cache sampler location, allocate unit if needed)
+        // init textures: cache sampler locations (program-specific, belongs to shader)
         tupleForEach(d.textureRefs(), [&](auto& t) {
-            if (out.isError())
-                return;
-            auto r = t.init(shader->programID());
-            if (r.isError())
-                out = r;
+            if (out.isError()) return;
+            shader->findUniformLocation(t.name());
         });
-        
 
         _initialized = true;
         return out;
@@ -248,18 +239,29 @@ class OkayMaterialProperties : public IOkayMaterialPropertyCollection {
             }
         });
 
-        // uniform blocks
+        auto& gpu = OkayGpuState::instance();
+
+        // uniform blocks (GPU manager owns UBO objects + binding points)
         tupleForEach(d.uniformBlockRefs(), [&](auto& b) {
-            auto r = b.pass(shader->programID());
+            auto r = gpu.blocks.pass(shader->programID(), b);
             if (r.isError()) {
                 errorMessages << r.error() << '\n';
                 anyErrors = true;
             }
         });
 
-        // textures
+        // textures (GPU manager owns GL textures + param cache)
         tupleForEach(d.textureRefs(), [&](auto& t) {
-            auto r = t.pass(shader->programID());
+            GLuint loc = shader->findUniformLocation(t.name());
+            if (loc == uni::inactiveLocation()) {
+                return; // optimized out / not present
+            }
+
+            auto r = gpu.textures.bindSampler2D(shader->programID(),
+                                                loc,
+                                                t.get(),
+                                                t.params(),
+                                                t.unit());
             if (r.isError()) {
                 errorMessages << r.error() << '\n';
                 anyErrors = true;
@@ -269,7 +271,7 @@ class OkayMaterialProperties : public IOkayMaterialPropertyCollection {
         return anyErrors ? Failable::errorResult(errorMessages.str()) : Failable::ok({});
     }
 
-   private:
+private:
     bool _initialized{false};
 };
 
