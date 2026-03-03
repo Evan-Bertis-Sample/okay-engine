@@ -2,6 +2,7 @@
 #include <okay/core/renderer/okay_renderer.hpp>
 #include <okay/core/renderer/okay_surface.hpp>
 #include <okay/core/level/okay_level_manager.hpp>
+#include <okay/core/asset/mesh/mesh_loader.hpp>
 #include <okay/core/asset/okay_asset.hpp>
 #include <okay/core/logging/okay_logger.hpp>
 #include <okay/core/okay_renderer.hpp>
@@ -65,13 +66,17 @@ static void __gameInitialize() {
     // Additional game initialization logic
     okay::OkayRenderer* renderer = okay::Engine.systems.getSystemChecked<okay::OkayRenderer>();
 
+    okay::OkayAssetManager* assetManager = okay::Engine.systems.getSystemChecked<okay::OkayAssetManager>();
+    auto teapotRes = assetManager->loadEngineAssetSync<okay::OkayMeshData>("models/teapot.obj");
+    if (teapotRes.isError()) {
+        okay::Engine.logger.error("Failed to load mesh: {}", teapotRes.error());
+        return;
+    }
+
     okay::OkayMesh icoSphere =
         renderer->meshBuffer().addMesh(
-            okay::primitives::uvSphere()
-            .radiusSet(0.5f)
-            .segmentsSet(20)
-            .ringsSet(20)
-            .build(okay::primitives::colorTransform<okay::primitives::UVSphereBuilder>(glm::vec4(1.0f))));
+            teapotRes.value().asset
+        );
 
     okay::OkayMesh cube = 
         renderer->meshBuffer().addMesh(
@@ -86,8 +91,7 @@ static void __gameInitialize() {
         return;
     }
 
-    okay::OkayAssetManager* assetManager =
-        okay::Engine.systems.getSystemChecked<okay::OkayAssetManager>();
+
     auto shaderLoadRes = assetManager->loadEngineAssetSync<okay::OkayShader>("shaders/lit");
 
     if (shaderLoadRes.isError()) {
@@ -101,7 +105,7 @@ static void __gameInitialize() {
     materialProprties->color.set(glm::vec4(1.0f, 1.0f, 0.0f, 1.0f)); 
     okay::OkayMaterialHandle sunMat = renderer->materialRegistry().registerMaterial(shader, std::move(materialProprties));
     g_sun = renderer->world().addRenderEntity(
-        okay::OkayTransform(),
+        okay::OkayTransform({0.0f, 0.0f, 0.0f}, {0.05f, 0.05f, 0.05f}),
         sunMat, icoSphere
     );
 
@@ -110,7 +114,7 @@ static void __gameInitialize() {
     materialProprties->color.set(glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
     okay::OkayMaterialHandle planetMat = renderer->materialRegistry().registerMaterial(shader, std::move(materialProprties));
     g_planet = renderer->world().addRenderEntity(
-        okay::OkayTransform({ -2.0f, 0.0f, 0.0f }, { 0.3f, 0.3f, 0.3f }),
+        okay::OkayTransform({ -1.0f, 0.0f, 0.0f }, { 0.3f, 0.3f, 0.3f }),
         planetMat, icoSphere
     );
 
@@ -124,7 +128,7 @@ static void __gameInitialize() {
     );
 
     g_debugSphere = renderer->world().addRenderEntity(
-        okay::OkayTransform({ 0.0f, 0.0f, 0.0f }, { 0.1f, 0.1f, 0.1f }),
+        okay::OkayTransform({ 0.0f, 0.0f, 0.0f }, { 0.005f, 0.005f, 0.005f }),
         moonMat, icoSphere
     );
 
