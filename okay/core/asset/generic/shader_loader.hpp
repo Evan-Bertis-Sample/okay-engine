@@ -7,6 +7,7 @@
 #include <okay/core/renderer/okay_material.hpp>
 #include <okay/core/renderer/okay_uniform.hpp>
 #include <okay/core/util/result.hpp>
+#include <regex>
 #include <string>
 
 namespace okay {
@@ -23,7 +24,6 @@ struct OkayAssetLoader<OkayShader> {
         Result<std::unique_ptr<std::istream>> vertexStreamRes =
             assetIO.open(path.string() + ".vert");
 
-
         if (vertexStreamRes.isError()) {
             Engine.logger.error("Failed to open vertex shader: {}", path.string());
             return Result<OkayShader>::errorResult("Failed to open vertex shader: " +
@@ -31,7 +31,7 @@ struct OkayAssetLoader<OkayShader> {
         }
 
         // read vertex shader code
-        std::unique_ptr<std::istream> &vertexStream = vertexStreamRes.valueRef();
+        std::unique_ptr<std::istream>& vertexStream = vertexStreamRes.valueRef();
         std::string vertexShaderCode((std::istreambuf_iterator<char>(*vertexStream)),
                                      std::istreambuf_iterator<char>());
 
@@ -42,13 +42,31 @@ struct OkayAssetLoader<OkayShader> {
         if (fragmentStreamRes.isError()) {
             Engine.logger.error("Failed to open fragment shader: {}", path.string());
             return Result<OkayShader>::errorResult("Failed to open fragment shader: " +
-                                                                path.string());
+                                                   path.string());
         }
 
         // read fragment shader code
-        std::unique_ptr<std::istream> &fragmentStream = fragmentStreamRes.valueRef();
+        std::unique_ptr<std::istream>& fragmentStream = fragmentStreamRes.valueRef();
         std::string fragmentShaderCode((std::istreambuf_iterator<char>(*fragmentStream)),
                                        std::istreambuf_iterator<char>());
+
+        // if this mac, we need to replace the version and remove precision qualifiers since mac's
+        // OpenGL doesn't support them
+#ifdef __APPLE__
+        // replace #version 300 es with #version 330 core and remove precision qualifier statements
+        auto replaceVersionAndPrecision = [](std::string& shaderCode) {
+            shaderCode =
+                std::regex_replace(shaderCode, std::regex("#version 300 es"), "#version 330 core");
+            shaderCode = std::regex_replace(
+                shaderCode,
+                std::regex(
+                    R"((?:^|\n)[ \t]*precision\s+(lowp|mediump|highp)\s+(float|int|sampler2D|samplerCube)\s*;\s*)"),
+                "\n");
+        };
+
+        replaceVersionAndPrecision(vertexShaderCode);
+        replaceVersionAndPrecision(fragmentShaderCode);
+#endif
 
         return Result<OkayShader>::ok(OkayShader(vertexShaderCode, fragmentShaderCode));
     }

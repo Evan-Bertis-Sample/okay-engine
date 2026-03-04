@@ -10,3 +10,6 @@
 [submodule "okay/vendor/freetype"]
 	path = okay/vendor/freetype
 	url = https://github.com/freetype/freetype.git
+[submodule "okay/vendor/angle"]
+	path = okay/vendor/angle
+	url = https://github.com/google/angle.git

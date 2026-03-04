@@ -20,10 +20,13 @@ Surface& Surface::operator=(Surface&&) noexcept = default;
 
 void Surface::initialize() {
     if (!glfwInit()) throw std::runtime_error("glfwInit failed");
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_SAMPLES, 4);
-    glfwWindowHint(GLFW_RESIZABLE, _impl->cfg.resizable ? GLFW_TRUE : GLFW_FALSE);
+glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
+
+glfwWindowHint(GLFW_SAMPLES, 4);
+glfwWindowHint(GLFW_RESIZABLE, _impl->cfg.resizable ? GLFW_TRUE : GLFW_FALSE);
 
     _impl->window =
         glfwCreateWindow(_impl->cfg.width, _impl->cfg.height, _impl->cfg.title, nullptr, nullptr);
