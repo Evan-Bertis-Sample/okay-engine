@@ -12,6 +12,7 @@
 #include <okay/core/system/okay_system.hpp>
 #include <okay/core/util/singleton.hpp>
 #include <okay/core/renderer/okay_render_world.hpp>
+#include <GLFW/glfw3.h>
 #include "okay_render_pipeline.hpp"
 #include "okay_render_target.hpp"
 
@@ -61,6 +62,10 @@ class OkayRenderer : public OkaySystem<OkaySystemScope::ENGINE> {
     }
     uint32_t height() const {
         return _surfaceConfig.height;
+    }
+
+    GLFWwindow* getSurfaceWindow() {
+        return reinterpret_cast<GLFWwindow*>(_surface->getWindow());
     }
 
    private:

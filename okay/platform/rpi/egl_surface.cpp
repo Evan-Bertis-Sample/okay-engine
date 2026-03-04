@@ -68,6 +68,7 @@ struct Surface::SurfaceImpl {
     gbm_surface* gbmSurf = nullptr;
 
     EGLDisplay dpy = EGL_NO_DISPLAY;
+    
     EGLConfig cfgEGL = nullptr;
     EGLContext ctx = EGL_NO_CONTEXT;
     EGLSurface surf = EGL_NO_SURFACE;
@@ -85,6 +86,10 @@ Surface::~Surface() {
 }
 Surface::Surface(Surface&&) noexcept = default;
 Surface& Surface::operator=(Surface&&) noexcept = default;
+
+void* Surface::getWindow() {
+    return nullptr;
+}
 
 void Surface::initialize() {
     // ctrl+c to exit loop

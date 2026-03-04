@@ -164,6 +164,13 @@ class OkayGame {
 
             _onUpdate();
 
+            for (IOkaySystem* system : enginePool) {
+                system->postTick();
+            }
+
+            for (IOkaySystem* system : gamePool) {
+                system->postTick();
+            }
             Engine.time->updateDeltaTime();
 
             Engine._frameCount++;
