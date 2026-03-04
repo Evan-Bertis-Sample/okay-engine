@@ -95,6 +95,8 @@ static void __gameInitialize() {
     okay::OkayTextOptions textOpt {
         .font = assetManager->loadEngineAssetSync<okay::OkayFontManager::FontHandle>("fonts/ARIAL.TTF", fontLoadOptions).value().asset,
         .meshBuffer = renderer->meshBuffer(),
+        .fontSize = 16.0f,
+        .verticalSpacing = 4.0f,
         .horizontalAlignment = okay::OkayTextOptions::HoriztonalAlignment::CENTER,
         .verticalAlignment = okay::OkayTextOptions::VerticalAlignment::MIDDLE,
         .doubleSided = true
@@ -141,7 +143,7 @@ static void __gameInitialize() {
     albedo = texture;
     okay::OkayMaterialHandle planetMat = renderer->materialRegistry().registerMaterial(shader, std::move(materialProprties));
     g_planet = renderer->world().addRenderEntity(
-        okay::OkayTransform({ -1.0f, 1.0f, 0.0f }, { 0.3f, 0.3f, 0.3f }),
+        okay::OkayTransform({ -40.0f, 0.0f, 0.0f }, { 0.3f, 0.3f, 0.3f }),
         planetMat, teapot
     );
 
@@ -151,7 +153,7 @@ static void __gameInitialize() {
     materialProprties->albedo = texture;
     okay::OkayMaterialHandle moonMat = renderer->materialRegistry().registerMaterial(shader, std::move(materialProprties));
     g_moon = renderer->world().addRenderEntity(
-        okay::OkayTransform({ 1.0f, 0.0f, 0.0f } , { 0.2f, 0.2f, 0.2f }),
+        okay::OkayTransform({ 30.0f, 0.0f, 0.0f } , { 0.2f, 0.2f, 0.2f }),
         moonMat, teapot
     );
 

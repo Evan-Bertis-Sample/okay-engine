@@ -119,6 +119,9 @@ class OkayFontManager {
         int bearingX;
         int bearingY;
         int advance;
+
+        int ascent;
+        int descent;
     };
 
     static OkayFontManager& instance() {
@@ -222,6 +225,8 @@ class OkayFontManager {
             glyph.bearingX = slot->bitmap_left;
             glyph.bearingY = slot->bitmap_top;
             glyph.advance = slot->advance.x >> 6;
+            glyph.ascent = glyph.bearingY;
+            glyph.descent = glyph.h - glyph.bearingY;
             glyph.u0 = (float)x / ATLAS_W;
             glyph.v0 = (float)y / ATLAS_H;
             glyph.u1 = (float)(x + glyph.w) / ATLAS_W;
