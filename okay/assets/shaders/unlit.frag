@@ -10,7 +10,11 @@ in vec2 v_uv;
 in vec3 v_cameraPosition;
 in vec3 v_cameraDirection;
 
+uniform sampler2D u_albedo;  // optional, can be ignored if not used
+
 void main()
 {
-   FragColor = vec4(v_color, 1.0);
+   vec3 texture = texture(u_albedo, v_uv).rgb;
+   vec3 baseColor = v_color * texture;
+   FragColor = vec4(baseColor, 1.0);
 }
