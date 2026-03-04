@@ -26,6 +26,7 @@ class Surface {
     void pollEvents();
     void swapBuffers();
     void destroy();
+    void* getWindow();
 
    private:
     struct SurfaceImpl;                  // defined in the backend .cpp

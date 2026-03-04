@@ -43,10 +43,10 @@ void OkayRenderer::tick() {
     _surface->pollEvents();
     OkayRenderContext context{*this, _world, _renderTargetPool};
     _pipeline.render(context);
-    _surface->swapBuffers();
 }
 
 void OkayRenderer::postTick() {
+    _surface->swapBuffers();
 }
 
 void OkayRenderer::shutdown() {

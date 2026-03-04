@@ -115,6 +115,32 @@ target_include_directories(okay
   PUBLIC ${OKAY_VENDOR_DIR}
 )
 
+
+set(IMGUI_DIR ${OKAY_VENDOR_DIR}/imgui)
+
+set(IMGUI_SOURCES
+  ${IMGUI_DIR}/imgui.cpp
+  ${IMGUI_DIR}/imgui_demo.cpp
+  ${IMGUI_DIR}/imgui_draw.cpp
+  ${IMGUI_DIR}/imgui_tables.cpp
+  ${IMGUI_DIR}/imgui_widgets.cpp
+  ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp
+  ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp
+)
+
+add_library(imgui STATIC ${IMGUI_SOURCES})
+
+# allow imgui to be included in the game
+target_include_directories(imgui PUBLIC ${IMGUI_DIR} ${IMGUI_DIR}/backends)
+
+list(APPEND OKAY_ENGINE_LIBRARIES imgui)
+
+# link glfw and OpenGL to imgui
+target_link_libraries(imgui
+  PUBLIC
+  glfw
+  OpenGL::GL
+)
 # define verbosity settings for Release Builds
 if(OKAY_BUILD_TYPE STREQUAL "Release")
   target_compile_definitions(okay PUBLIC -DOKAY_RELEASE)
@@ -127,7 +153,6 @@ target_link_libraries(okay
   PUBLIC
   okay_platform
   ${OKAY_ENGINE_LIBRARIES}
-  OpenGL::GL
 )
 
 # compile the game
