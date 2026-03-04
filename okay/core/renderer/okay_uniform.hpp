@@ -3,17 +3,26 @@
 
 #include <glad/glad.h>
 #include <glm/glm.hpp>
+#include <okay/core/renderer/okay_gl.hpp>
+#include <okay/core/okay.hpp>
 #include <okay/core/logging/okay_logger.hpp>
 #include <okay/core/util/result.hpp>
 #include <okay/core/util/type.hpp>
 #include <okay/core/renderer/okay_texture.hpp>
+
 #include <type_traits>
+#include <set>
+#include <atomic>
+#include <cstdint>
+#include <string>
+#include <string_view>
+#include <unordered_map>
 
 namespace okay {
 
-enum class UniformKind { FLOAT, INT, VEC2, VEC3, VEC4, MAT3, MAT4, TEXTURE, VOID };
-
 namespace uni {
+
+enum class UniformKind { FLOAT, INT, VEC2, VEC3, VEC4, MAT3, MAT4, TEXTURE, VOID };
 
 template <class T>
 constexpr UniformKind kindFromType() {
@@ -58,164 +67,239 @@ Failable set(GLuint uniformLoc, const T& value) {
     } else if constexpr (kind == UniformKind::MAT4) {
         glUniformMatrix4fv(uniformLoc, 1, GL_FALSE, &value[0][0]);
     } else if constexpr (kind == UniformKind::TEXTURE) {
-        return Failable::errorResult("Texture uniforms are bound via samplers/units elsewhere");
+        return Failable::errorResult(
+            "Texture setting must be done through OkayTextureManager::bindSampler2D()");
     } else if constexpr (kind == UniformKind::VOID) {
         // no-op
     } else {
         return Failable::errorResult("Unsupported uniform type");
     }
 
+    GLenum err = glGetError();
+    if (err != GL_NO_ERROR) {
+        return Failable::errorResult("Failed to set uniform. Error code: " + std::to_string(err));
+    }
+
     return Failable::ok({});
 }
+
+static constexpr GLuint invalidLocation() {
+    return 0xFFFFFFFFu;
+}
+static constexpr GLuint inactiveLocation() {
+    return 0xFFFFFFFEu;
+}
+
+struct UniformValue {
+    UniformKind kind;
+    union {
+        float f;
+        int i;
+        glm::vec2 v2;
+        glm::vec3 v3;
+        glm::vec4 v4;
+        glm::mat3 m3;
+        glm::mat4 m4;
+    };
+
+    static UniformValue none() {
+        UniformValue v{};
+        v.kind = UniformKind::VOID;
+        return v;
+    }
+
+    template <class T>
+    bool operator==(const T& other) const {
+        if (kind != kindFromType<T>()) {
+            return false;
+        }
+        if constexpr (std::is_same_v<T, float>) {
+            return f == other;
+        } else if constexpr (std::is_same_v<T, int>) {
+            return i == other;
+        } else if constexpr (std::is_same_v<T, glm::vec2>) {
+            return v2 == other;
+        } else if constexpr (std::is_same_v<T, glm::vec3>) {
+            return v3 == other;
+        } else if constexpr (std::is_same_v<T, glm::vec4>) {
+            return v4 == other;
+        } else if constexpr (std::is_same_v<T, glm::mat3>) {
+            return m3 == other;
+        } else if constexpr (std::is_same_v<T, glm::mat4>) {
+            return m4 == other;
+        } else {
+            static_assert(dependent_false_v<T>, "Unsupported uniform type");
+        }
+        return false;
+    }
+
+    template <class T>
+    void operator=(const T& other) {
+        if constexpr (std::is_same_v<T, float>) {
+            f = other;
+        } else if constexpr (std::is_same_v<T, int>) {
+            i = other;
+        } else if constexpr (std::is_same_v<T, glm::vec2>) {
+            v2 = other;
+        } else if constexpr (std::is_same_v<T, glm::vec3>) {
+            v3 = other;
+        } else if constexpr (std::is_same_v<T, glm::vec4>) {
+            v4 = other;
+        } else if constexpr (std::is_same_v<T, glm::mat3>) {
+            m3 = other;
+        } else if constexpr (std::is_same_v<T, glm::mat4>) {
+            m4 = other;
+        } else {
+            static_assert(dependent_false_v<T>, "Unsupported uniform type");
+        }
+        kind = kindFromType<T>();
+    }
+};
 
 };  // namespace uni
 
 template <class T, auto Name>
-struct TemplatedMaterialUniform {
+struct UniformProperty {
     using ValueType = T;
+    static constexpr auto nameV = Name;
+    static constexpr uni::UniformKind kind = uni::kindFromType<T>();
 
-    static constexpr auto name = Name;
-    static constexpr UniformKind kind = uni::kindFromType<T>();
-    static constexpr GLuint invalidLocation() {
-        return 0xFFFFFFFFu;
+    UniformProperty() {
+    }
+    UniformProperty(const T& value) : _value(value) {
     }
 
     constexpr std::string_view nameView() const {
-        return name.sv();
+        return nameV.sv();
+    }
+    constexpr std::string name() const {
+        return std::string(nameV.sv());
     }
 
     void set(const T& v) {
-        if (_value != v)
-            _dirty = true;
         _value = v;
     }
-
     const T& get() const {
         return _value;
     }
 
-    bool isDirty() const {
-        return _dirty;
-    }
-
-    void markDirty() {
-        _dirty = true;
-    }
-
-    GLuint location() const {
-        return _location;
-    }
-
-    Failable findLocation(GLuint shaderProgram) {
-        int location = glGetUniformLocation(shaderProgram, std::string(name.sv()).c_str());
-        if (location == -1) {
-            return Failable::errorResult("Uniform not found: " + std::string(name.sv()));
-        }
-        _location = static_cast<GLuint>(location);
-        return Failable::ok({});
-    };
-
-    Failable passUniform(GLuint shaderProgram) {
-        if (!isDirty())
-            return Failable::ok({});
-
-        if (location() == invalidLocation()) {
-            Failable result = findLocation(shaderProgram);
-            if (result.isError()) {
-                return Failable::errorResult("Failed to find uniform location for '" +
-                                             std::string(name.sv()) + "': " + result.error());
-            }
-        }
-
-        Failable result = uni::set(location(), _value);
-        if (result.isError()) {
-            return Failable::errorResult("Failed to set uniform '" + std::string(name.sv()) +
-                                         "': " + result.error());
-        }
-
-        _dirty = false;
-        return Failable::ok({});
-    }
-
-    bool operator==(const TemplatedMaterialUniform& other) const {
+    bool operator==(const UniformProperty& other) const {
         return _value == other._value && nameView() == other.nameView();
     }
 
-    // set operators
-    TemplatedMaterialUniform& operator=(const T& value) {
+    UniformProperty& operator=(const T& value) {
         set(value);
         return *this;
     }
-
-    TemplatedMaterialUniform& operator=(const TemplatedMaterialUniform& other) {
+    UniformProperty& operator=(const UniformProperty& other) {
         set(other._value);
         return *this;
     }
 
    private:
     T _value{};
-    bool _dirty{true};
-    GLuint _location{invalidLocation()};
 };
 
-class IOkayMaterialUniformCollection {
+template <class TBlock, auto BlockName>
+class BlockProperty {
    public:
-    virtual Failable setUniforms(GLuint shaderProgram) = 0;
-    virtual Failable findLocations(GLuint shaderProgram) = 0;
-    virtual bool markAllDirty() = 0;
+    using ValueType = TBlock;
+    static constexpr auto name = BlockName;
+
+    void set(const TBlock& v) {
+        _value = v;
+        ++_version;
+    }
+    TBlock& edit() {
+        ++_version;
+        return _value;
+    }
+    const TBlock& get() const {
+        return _value;
+    }
+
+    std::uint32_t version() const {
+        return _version;
+    }
+
+    // Stable identity for manager caching
+    const void* identity() const {
+        return this;
+    }
+
+    // Optional binding point hint for the manager (defaults to invalid)
+    void setBindingPoint(GLuint bindingPoint) {
+        _bindingHint = bindingPoint;
+    }
+    GLuint bindingPointHint() const {
+        return _bindingHint;
+    }
+
+   private:
+    static constexpr GLuint invalidBinding() {
+        return 0xFFFFFFFFu;
+    }
+
+    TBlock _value{};
+    std::uint32_t _version{1};
+    GLuint _bindingHint{invalidBinding()};
 };
 
-template <class Derived>
-class OkayMaterialUniformCollection : public IOkayMaterialUniformCollection {
+template <auto SamplerName>
+class TextureProperty {
    public:
-    Failable setUniforms(GLuint shaderProgram) override {
-        auto& d = static_cast<Derived&>(*this);
+    using ValueType = OkayTexture;
+    static constexpr auto nameV = SamplerName;
+    static constexpr uni::UniformKind kind = uni::UniformKind::TEXTURE;
 
-        Failable out = Failable::ok({});
-        tupleForEach(d.uniformRefs(), [&](auto& u) {
-            if (out.isError())
-                return;  // stop on first error
-            auto r = u.passUniform(shaderProgram);
-            if (r.isError())
-                out = r;
-        });
-        return out;
+    TextureProperty() = default;
+    TextureProperty(const OkayTexture& tex, const OkayTexture::TextureParameters& params = {})
+        : _value(tex), _params(params) {
     }
 
-    Failable findLocations(GLuint shaderProgram) override {
-        auto& d = static_cast<Derived&>(*this);
-
-        Failable out = Failable::ok({});
-        tupleForEach(d.uniformRefs(), [&](auto& u) {
-            if (out.isError())
-                return;
-            auto r = u.findLocation(shaderProgram);
-            if (r.isError())
-                out = r;
-        });
-        return out;
+    constexpr std::string_view nameView() const {
+        return nameV.sv();
+    }
+    constexpr std::string name() const {
+        return std::string(nameV.sv());
     }
 
-    bool markAllDirty() override {
-        auto& d = static_cast<Derived&>(*this);
-
-        bool any = false;
-        tupleForEach(d.uniformRefs(), [&](auto& u) {
-            u.markDirty();
-            any = true;
-        });
-        return any;
+    void set(const OkayTexture& tex) {
+        _value = tex;
+        ++_version;
     }
-};
-
-struct BaseMaterialUniforms : public OkayMaterialUniformCollection<BaseMaterialUniforms> {
-    TemplatedMaterialUniform<glm::mat4, FixedString("u_modelMatrix")> modelMatrix{};
-    TemplatedMaterialUniform<glm::mat4, FixedString("u_viewMatrix")> viewMatrix{};
-    TemplatedMaterialUniform<glm::mat4, FixedString("u_projectionMatrix")> projectionMatrix{};
-
-    auto uniformRefs() {
-        return std::tie(modelMatrix, viewMatrix, projectionMatrix);
+    OkayTexture& edit() {
+        ++_version;
+        return _value;
     }
+    const OkayTexture& get() const {
+        return _value;
+    }
+
+    void setParams(const OkayTexture::TextureParameters& p) {
+        _params = p;
+        ++_version;
+    }
+    const OkayTexture::TextureParameters& params() const {
+        return _params;
+    }
+
+    void setUnit(GLuint unit) {
+        _unit = unit;
+    }
+    GLuint unit() const {
+        return _unit;
+    }
+
+    std::uint32_t version() const {
+        return _version;
+    }
+
+   private:
+    OkayTexture _value{};
+    OkayTexture::TextureParameters _params{};
+    GLuint _unit{0};
+    std::uint32_t _version{1};
 };
 
 };  // namespace okay

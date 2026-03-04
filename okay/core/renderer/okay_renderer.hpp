@@ -1,6 +1,7 @@
 #ifndef __OKAY_RENDERER_H__
 #define __OKAY_RENDERER_H__
 
+#include <cstdint>
 #include <okay/core/okay.hpp>
 #include <okay/core/asset/generic/shader_loader.hpp>
 #include <okay/core/asset/okay_asset.hpp>
@@ -18,18 +19,20 @@ namespace okay {
 
 struct OkayRendererSettings {
     SurfaceConfig surfaceConfig;
+    OkayRenderPipeline pipeline;
 };
 
 class OkayRenderer : public OkaySystem<OkaySystemScope::ENGINE> {
    public:
-    static std::unique_ptr<OkayRenderer> create(const OkayRendererSettings& settings) {
-        return std::make_unique<OkayRenderer>(settings);
+    static std::unique_ptr<OkayRenderer> create(OkayRendererSettings settings) {
+        return std::make_unique<OkayRenderer>(std::move(settings));
     }
 
-    OkayRenderer(const OkayRendererSettings& settings)
-        : _settings(settings),
+    explicit OkayRenderer(OkayRendererSettings settings)
+        : _surfaceConfig(settings.surfaceConfig),
           _surface(std::make_unique<Surface>(settings.surfaceConfig)),
-          _renderTargetPool(settings.surfaceConfig.width, settings.surfaceConfig.height) {
+          _renderTargetPool(settings.surfaceConfig.width, settings.surfaceConfig.height),
+          _pipeline(std::move(settings.pipeline)) {
     }
 
     OkayShader shader;
@@ -46,17 +49,28 @@ class OkayRenderer : public OkaySystem<OkaySystemScope::ENGINE> {
     OkayMeshBuffer& meshBuffer() {
         return _meshBuffer;
     }
+    OkayRenderTargetPool& renderTargetPool() {
+        return _renderTargetPool;
+    }
+    OkayMaterialRegistry& materialRegistry() {
+        return _materialRegistry;
+    }
+
+    uint32_t width() const {
+        return _surfaceConfig.width;
+    }
+    uint32_t height() const {
+        return _surfaceConfig.height;
+    }
 
    private:
-    OkayRendererSettings _settings;
+    SurfaceConfig _surfaceConfig;
     OkayRenderWorld _world;
     OkayMeshBuffer _meshBuffer;
     OkayRenderPipeline _pipeline;
     OkayRenderTargetPool _renderTargetPool;
+    OkayMaterialRegistry _materialRegistry;
     std::unique_ptr<Surface> _surface;
-
-    // dirty flags
-    bool _meshBufferDirty{false};
 };
 
 }  // namespace okay

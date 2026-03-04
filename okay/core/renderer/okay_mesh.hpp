@@ -19,6 +19,10 @@ struct OkayVertex {
         return 3 + 3 + 3 + 2;
     }
 
+    static std::size_t stride() {
+        return numFloats() * sizeof(float);
+    }
+
     OkayVertex& operator=(const OkayVertex& other) {
         position = other.position;
         normal = other.normal;
@@ -90,11 +94,12 @@ class OkayMeshBuffer {
     GLuint _vao{0};
     GLuint _vbo{0};
     GLuint _ebo{0};
-
-    bool _hasBound{false};
+    
+    bool _hasInitVertexAttributes{false};
+    bool _dataOutofDate{true};
 
    public:
-    static Failable initVertexAttributes();
+    Failable initVertexAttributes();
 
     std::size_t size() const { return _indices.size(); }
     OkayMesh addMesh(const OkayMeshData& model);

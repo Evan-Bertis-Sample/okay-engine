@@ -104,10 +104,11 @@ add_subdirectory(${OKAY_VENDOR_DIR}/glm)
 # set OKAY_PLATFORM to override autodetect (e.g., -DOKAY_PLATFORM=windows)
 add_subdirectory(${OKAY_ENGINE_DIR}/platform)
 
-# allow glm & glad to be included in the game
+# allow glm & glad, and stb to be included in the game
 target_include_directories(okay
   PUBLIC ${OKAY_VENDOR_DIR}/glm
   PUBLIC ${OKAY_VENDOR_DIR}/glad/include
+  PUBLIC ${OKAY_VENDOR_DIR}
 )
 
 # define verbosity settings for Release Builds

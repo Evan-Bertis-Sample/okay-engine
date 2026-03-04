@@ -9,9 +9,8 @@
 #include <source_location>
 #include <string>
 #include <string_view>
-
+#include <cstring>
 #include <utility>
-
 #include <ctime>
 
 #ifndef OKAY_COMPILED_MIN_SEVERITY
@@ -39,14 +38,19 @@ enum class Verbosity : std::uint8_t {
 
 struct OkayLoggerOptions {
     bool ToFile{true};
-    std::string FilePrefix{"okay_log_"};
+    std::string filePrefix{"okay_log_"};
 };
 
 struct LogPhrases {
     static constexpr std::string_view SEVERITY_TAG[4] = {"[DEBUG]", "[INFO]", "[WARN]", "[ERROR]"};
 
-    static constexpr std::string_view SEVERITY_COLOR[4] = {"\03[37m", "\033[32m", "\033[33m",
-                                                           "\033[31m"};
+    static constexpr std::string_view SEVERITY_COLOR[4] = {
+        "\033[32m",  // DEBUG
+        "\033[37m",  // INFO
+        "\033[33m",  // WARNING
+        "\033[31m"   // ERROR
+    };
+
 
     static constexpr std::string_view COLOR_RESET = "\033[0m";
 
@@ -75,10 +79,16 @@ struct OkayLog final {
                (static_cast<int>(V) >= OKAY_COMPILED_MIN_VERBOSITY);
     }
 
+    const char* shortFileName() const {
+        // return the last path component of the file name
+        const char *p = strrchr(loc.file_name(), '/');
+        return p ? p + 1 : loc.file_name();
+    }
+
     template <Severity S, Verbosity V, typename... Ts>
     void invoke(std::ostream& os, bool enableColor, Ts&&... ts) const {
         os << LogPhrases::severityColor<S>(enableColor);
-        os << LogPhrases::severityTag<S>() << '[' << loc.file_name() << ':' << loc.line()
+        os << LogPhrases::severityTag<S>() << '[' << shortFileName() << ':' << loc.line()
            << "] ";
         os << std::vformat(fmt, std::make_format_args(ts...));
         if (enableColor) os << LogPhrases::COLOR_RESET;
