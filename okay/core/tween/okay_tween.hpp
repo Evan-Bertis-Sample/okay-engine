@@ -148,9 +148,9 @@ class OkayTween : public IOkayTween, public std::enable_shared_from_this<OkayTwe
         if (!_isTweening) return;
 
         if (_remainingPrefixMs > 0) {
-            _remainingPrefixMs -= okay::Engine.time->deltaTime();
+            _remainingPrefixMs -= okay::Engine.time->deltaTimeMs();
         } else {
-            _timeElapsed += okay::Engine.time->deltaTime();
+            _timeElapsed += okay::Engine.time->deltaTimeMs();
         
             if (_timeElapsed > _durationMs) {
                 _timeElapsed = _durationMs;
