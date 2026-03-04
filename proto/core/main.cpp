@@ -96,7 +96,7 @@ static void __gameInitialize() {
         .meshBuffer = renderer->meshBuffer()
     };
 
-    okay::OkayMesh textMesh = okay::OkayText::generateTextMesh("MEOW", textOpt);
+    okay::OkayMesh textMesh = okay::OkayText::generateTextMesh("MEOW!", textOpt);
     okay::OkayTexture textTexture = okay::OkayFontManager::instance().getGlyphAtlas(textOpt.font);
 
     okay::OkayMesh cube = 

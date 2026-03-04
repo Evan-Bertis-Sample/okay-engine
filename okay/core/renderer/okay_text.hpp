@@ -8,8 +8,12 @@
 namespace okay {
 
 struct OkayTextOptions {
+    enum class Alignment { LEFT, CENTER, RIGHT };
+
     OkayFontManager::FontHandle font;
     OkayMeshBuffer& meshBuffer;
+    Alignment alignment{Alignment::LEFT};
+    bool doubleSided{false};
 };
 
 class OkayText {
@@ -41,13 +45,13 @@ class OkayText {
             // add indices
             std::uint32_t base = quadIndex * 4;
 
-            meshData.indices.push_back(base + 0);
+            meshData.indices.push_back(base + 2);
             meshData.indices.push_back(base + 1);
-            meshData.indices.push_back(base + 2);
-
-            meshData.indices.push_back(base + 2);
-            meshData.indices.push_back(base + 3);
             meshData.indices.push_back(base + 0);
+
+            meshData.indices.push_back(base + 0);
+            meshData.indices.push_back(base + 3);
+            meshData.indices.push_back(base + 2);
 
             quadIndex++;
 

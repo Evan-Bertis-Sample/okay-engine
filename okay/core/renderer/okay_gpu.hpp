@@ -189,10 +189,10 @@ class OkayTextureManager {
             auto meta = tex.getMeta();
             auto data = tex.getData();
 
-            Engine.logger.info("Uploading texture to GPU: width={}, height={}, format={}", meta.width, meta.height, static_cast<int>(meta.format));
-
+            
             GL_CHECK_FAILABLE(glGenTextures(1, &gt.id));
             GL_CHECK_FAILABLE(glBindTexture(GL_TEXTURE_2D, gt.id));
+            Engine.logger.info("Uploading texture to GPU: textureId={}, width={}, height={}, format={}", gt.id, meta.width, meta.height, static_cast<int>(meta.format));
 
             if (meta.format == OkayTextureMeta::Format::DEPTH24_STENCIL8) {
                 GL_CHECK_FAILABLE(glTexImage2D(GL_TEXTURE_2D,
