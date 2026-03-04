@@ -38,7 +38,7 @@ void Surface::initialize() {
     }
 }
 
-GLFWwindow* Surface::getWindow() {
+void* Surface::getWindow() {
     return _impl->window;
 }
 

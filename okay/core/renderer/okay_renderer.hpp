@@ -12,6 +12,7 @@
 #include <okay/core/system/okay_system.hpp>
 #include <okay/core/util/singleton.hpp>
 #include <okay/core/renderer/okay_render_world.hpp>
+#include <GLFW/glfw3.h>
 #include "okay_render_pipeline.hpp"
 #include "okay_render_target.hpp"
 
@@ -64,7 +65,7 @@ class OkayRenderer : public OkaySystem<OkaySystemScope::ENGINE> {
     }
 
     GLFWwindow* getSurfaceWindow() {
-        return _surface->getWindow();
+        return reinterpret_cast<GLFWwindow*>(_surface->getWindow());
     }
 
    private:

@@ -87,7 +87,7 @@ Surface::~Surface() {
 Surface::Surface(Surface&&) noexcept = default;
 Surface& Surface::operator=(Surface&&) noexcept = default;
 
-GLFWwindow* Surface::getWindow() {
+void* Surface::getWindow() {
     return nullptr;
 }
 
