@@ -20,7 +20,7 @@
 #endif
 
 #ifndef OKAY_GAME_ASSET_ROOT
-#define OKAY_GAME_ASSET_ROOT SEP "game" SEP "assets"
+#define OKAY_GAME_ASSET_ROOT "game" SEP "assets"
 #endif
 
 namespace okay {
@@ -61,9 +61,9 @@ class FilesystemAssetIO final : public OkayAssetIO {
     }
 };
 
-template <typename T>
+template <typename T, typename LoadOptions = void>
 struct OkayAssetLoader {
-    static Result<T> loadAsset(const std::filesystem::path& path, const OkayAssetIO& assetIO) {
+    static Result<T> loadAsset(const std::filesystem::path& path, const OkayAssetIO& assetIO, LoadOptions options) {
         static_assert(sizeof(T) != 0,
                       "No OkayAssetLoader<T> specialization found for this asset type.");
         return Result<T>::errorResult("No loader");
@@ -118,9 +118,9 @@ class OkayAssetManager : public OkaySystem<OkaySystemScope::ENGINE> {
         Result<OkayAsset<T>> asset;
     };
 
-    template <typename T, typename AssetIO = DefaultAssetIO>
-    LoadHandle<T> loadAssetAsync(const Load<T, AssetIO>& load) {
-        Result<T> res = OkayAssetLoader<T>::loadAsset(load.assetPath, load.assetIO);
+    template <typename T, typename AssetIO = DefaultAssetIO, typename... LoadOptions>
+    LoadHandle<T> loadAssetAsync(const Load<T, AssetIO>& load, LoadOptions... options) {
+        Result<T> res = OkayAssetLoader<T, LoadOptions...>::loadAsset(load.assetPath, load.assetIO, options...);
 
         if (res.isError()) {
             auto handleAsset = Result<OkayAsset<T>>::errorResult(res.error());
@@ -136,9 +136,9 @@ class OkayAssetManager : public OkaySystem<OkaySystemScope::ENGINE> {
         };
     };
 
-    template <typename T, typename AssetIO = DefaultAssetIO>
-    Result<OkayAsset<T>> loadAssetSync(const Load<T, AssetIO>& load) {
-        Result<T> res = OkayAssetLoader<T>::loadAsset(load.assetPath, load.assetIO);
+    template <typename T, typename AssetIO = DefaultAssetIO, typename... LoadOptions>
+    Result<OkayAsset<T>> loadAssetSync(const Load<T, AssetIO>& load, LoadOptions... options) {
+        Result<T> res = OkayAssetLoader<T, LoadOptions...>::loadAsset(load.assetPath, load.assetIO, options...);
 
         if (res.isError()) {
             return Result<OkayAsset<T>>::errorResult(res.error());
@@ -148,14 +148,14 @@ class OkayAssetManager : public OkaySystem<OkaySystemScope::ENGINE> {
         };
     };
 
-    template <typename T, typename AssetIO = DefaultAssetIO>
-    Result<OkayAsset<T>> loadEngineAssetSync(const std::filesystem::path& path) {
-        return loadAssetSync(Load<T, AssetIO>::EngineAsset(path));
+    template <typename T, typename AssetIO = DefaultAssetIO, typename... LoadOptions>
+    Result<OkayAsset<T>> loadEngineAssetSync(const std::filesystem::path& path, LoadOptions... options) {
+        return loadAssetSync(Load<T, AssetIO>::EngineAsset(path), options...);
     }
 
-    template <typename T, typename AssetIO = DefaultAssetIO>
-    Result<OkayAsset<T>> loadGameAssetSync(const std::filesystem::path& path) {
-        return loadAssetSync(Load<T, AssetIO>::GameAsset(path));
+    template <typename T, typename AssetIO = DefaultAssetIO, typename... LoadOptions>
+    Result<OkayAsset<T>> loadGameAssetSync(const std::filesystem::path& path, LoadOptions... options) {
+        return loadAssetSync(Load<T, AssetIO>::GameAsset(path), options...);
     }
 
    private:

@@ -23,7 +23,7 @@ class Result {
     using ValueType = T;
 
     template <typename U = T>
-    static Result<T> ok(U&& value) {
+    static Result<T> ok(U&& value = U{}) {
         return Result<T>(std::in_place, std::forward<U>(value));
     }
 

@@ -180,9 +180,7 @@ class OkaySystemManager {
     template <typename T>
     T* getSystemChecked() {
         Option<T*> opt = getSystem<T>();
-        if (!opt) {
-            // Engine.logger.error("Unable to get system: {}\n", IOkaySystem::sysName<T>());
-            // for now, we just stall the program until a proper exit mechanismm is implemented
+        if (!opt) {            // for now, we just stall the program until a proper exit mechanismm is implemented
             while (true) {
             }
         }

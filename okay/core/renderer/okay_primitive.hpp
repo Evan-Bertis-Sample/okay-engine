@@ -15,6 +15,14 @@ template <typename BuilderT>
 using VertexTransformation =
     std::function<okay::OkayVertex(const okay::OkayVertex&, const BuilderT&)>;
 
+template<typename BuilderT>
+static VertexTransformation<BuilderT> colorTransform(const glm::vec4& color) {
+    return [color](const okay::OkayVertex& v, const BuilderT&) -> okay::OkayVertex {
+        return {v.position, v.normal, color, v.uv};
+    };
+}
+
+
 #define OKAY_PRIM_FIELD(FieldName)                    \
     auto& FieldName##Set(decltype(FieldName) value) { \
         this->FieldName = std::move(value);           \

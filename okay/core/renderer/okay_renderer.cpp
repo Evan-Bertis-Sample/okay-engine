@@ -1,3 +1,5 @@
+
+#include "okay_gl.hpp"
 #include "okay_renderer.hpp"
 #include "okay/core/util/result.hpp"
 #include "okay_primitive.hpp"
@@ -9,18 +11,29 @@ using namespace okay;
 void OkayRenderer::initialize() {
     _surface->initialize();
 
+    Engine.logger.info("GL_VERSION: {}", (const char*)glGetString(GL_VERSION));
+    Engine.logger.info("GLSL_VERSION: {}", (const char*)glGetString(GL_SHADING_LANGUAGE_VERSION));
+
     Failable meshBufferSetup =
-        runAll(DEFER(_meshBuffer.initVertexAttributes()), DEFER(_meshBuffer.bindMeshData()));
+        runAll(DEFER(_meshBuffer.bindMeshData()), DEFER(_meshBuffer.initVertexAttributes()));
 
     if (!meshBufferSetup) {
         Engine.logger.error("Mesh Buffer Setup Error: {}", meshBufferSetup.error());
-        while (true) {
-        }
+        Engine.shutdown();
+        return;
     }
+    Engine.logger.debug("Mesh Buffer Setup Success");
 
+    Engine.logger.debug("Initializing render target pool");
     _renderTargetPool.initializeBuiltins();
+
+    Engine.logger.debug("Initializing pipeline");
     _pipeline.initialize();
-    _pipeline.resize(_settings.surfaceConfig.width, _settings.surfaceConfig.height);
+
+    Engine.logger.debug("Resizing pipeline");
+    _pipeline.resize(_surfaceConfig.width, _surfaceConfig.height);
+
+    Engine.logger.debug("Renderer initialized");
 }
 
 void OkayRenderer::postInitialize() {
@@ -28,21 +41,7 @@ void OkayRenderer::postInitialize() {
 
 void OkayRenderer::tick() {
     _surface->pollEvents();
-
-    if (_meshBufferDirty) {
-        Failable meshBufferSetup = _meshBuffer.bindMeshData();
-        if (!meshBufferSetup) {
-            Engine.logger.error("Mesh Buffer Setup Error: {}", meshBufferSetup.error());
-            while (true) {
-            }
-        }
-        _meshBufferDirty = false;
-    }
-
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    OkayRenderContext context{_world, _renderTargetPool};
+    OkayRenderContext context{*this, _world, _renderTargetPool};
     _pipeline.render(context);
 }
 
@@ -51,5 +50,4 @@ void OkayRenderer::postTick() {
 }
 
 void OkayRenderer::shutdown() {
-    std::cout << "Okay Renderer shutdown." << std::endl;
 }

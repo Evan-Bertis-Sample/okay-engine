@@ -104,10 +104,11 @@ add_subdirectory(${OKAY_VENDOR_DIR}/glm)
 # set OKAY_PLATFORM to override autodetect (e.g., -DOKAY_PLATFORM=windows)
 add_subdirectory(${OKAY_ENGINE_DIR}/platform)
 
-# allow glm & glad to be included in the game
+# allow glm & glad, and stb to be included in the game
 target_include_directories(okay
   PUBLIC ${OKAY_VENDOR_DIR}/glm
   PUBLIC ${OKAY_VENDOR_DIR}/glad/include
+  PUBLIC ${OKAY_VENDOR_DIR}
 )
 
 
@@ -136,6 +137,12 @@ target_link_libraries(imgui
   glfw
   OpenGL::GL
 )
+# define verbosity settings for Release Builds
+if(OKAY_BUILD_TYPE STREQUAL "Release")
+  target_compile_definitions(okay PUBLIC -DOKAY_RELEASE)
+  target_compile_definitions(okay PUBLIC -DOKAY_COMPILED_MIN_SEVERITY=2)
+  target_compile_definitions(okay PUBLIC -DOKAY_COMPILED_MIN_VERBOSITY=3)
+endif()
 
 # link common libs and platform bundle into the engine
 target_link_libraries(okay

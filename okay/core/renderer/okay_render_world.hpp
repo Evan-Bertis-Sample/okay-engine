@@ -15,6 +15,8 @@
 #include <okay/core/util/dirty_set.hpp>
 #include <okay/core/util/object_pool.hpp>
 #include <okay/core/util/property.hpp>
+#include "glm/ext/vector_float3.hpp"
+#include "glm/ext/vector_float4.hpp"
 
 namespace okay {
 
@@ -23,9 +25,9 @@ struct OkayTransform {
     glm::vec3 scale{1.0f, 1.0f, 1.0f};
     glm::quat rotation{1.0f, 0.0f, 0.0f, 0.0f};
 
-    OkayTransform() = default;
-
-    OkayTransform(const glm::vec3& pos, const glm::vec3& scl, const glm::quat& rot)
+    OkayTransform(const glm::vec3& pos = glm::vec3(0.0f),
+                  const glm::vec3& scl = glm::vec3(1.0f),
+                  const glm::quat& rot = glm::quat())
         : position(pos), scale(scl), rotation(rot) {
     }
 
@@ -58,7 +60,7 @@ class OkayCamera {
    public:
     enum class ProjectionType { PERPSECTIVE, ORTHOGRAPHIC };
 
-    struct PerpsectiveConfig {
+    struct Perspective {
         float fov{45.0f};
         float near{0.1f};
         float far{1000.0f};
@@ -78,9 +80,9 @@ class OkayCamera {
     OkayCamera() = default;
 
     template <typename T>
-        requires(std::is_same_v<T, PerpsectiveConfig> || std::is_same_v<T, OrthographicConfig>)
+        requires(std::is_same_v<T, Perspective> || std::is_same_v<T, OrthographicConfig>)
     void setConfig(const T& config) {
-        if constexpr (std::is_same_v<T, PerpsectiveConfig>) {
+        if constexpr (std::is_same_v<T, Perspective>) {
             _projectionType = ProjectionType::PERPSECTIVE;
         } else {
             _projectionType = ProjectionType::ORTHOGRAPHIC;
@@ -89,7 +91,7 @@ class OkayCamera {
     }
 
     template <typename T>
-        requires(std::is_same_v<T, PerpsectiveConfig> || std::is_same_v<T, OrthographicConfig>)
+        requires(std::is_same_v<T, Perspective> || std::is_same_v<T, OrthographicConfig>)
     Option<T&> getConfig() {
         if (auto* p = std::get_if<T>(&_config)) {
             return *p;
@@ -98,7 +100,7 @@ class OkayCamera {
     }
 
     template <typename T>
-        requires(std::is_same_v<T, PerpsectiveConfig> || std::is_same_v<T, OrthographicConfig>)
+        requires(std::is_same_v<T, Perspective> || std::is_same_v<T, OrthographicConfig>)
     Option<const T&> getConfig() const {
         if (auto* p = std::get_if<T>(&_config)) {
             return *p;
@@ -106,9 +108,99 @@ class OkayCamera {
         return Option<const T&>::none();
     }
 
+    glm::mat4 projectionMatrix(float ratio) const {
+        if (_projectionType == ProjectionType::PERPSECTIVE) {
+            Perspective config = std::get<Perspective>(_config);
+            return glm::perspective(glm::radians(config.fov), ratio, config.near, config.far);
+        } else {
+            OrthographicConfig config = std::get<OrthographicConfig>(_config);
+            return glm::ortho(
+                config.left, config.right, config.bottom, config.top, config.near, config.far);
+        }
+    }
+
+    glm::mat4 viewMatrix() const {
+        return glm::inverse(transform.toMatrix());
+    }
+
+    void lookAt(glm::vec3 center, glm::vec3 up = glm::vec3(0, 1, 0)) {
+        glm::vec3 eye = transform.position;
+        glm::vec3 f = glm::normalize(center - eye);       // desired forward (toward target)
+        glm::vec3 r = glm::normalize(glm::cross(f, up));  // right
+        glm::vec3 u = glm::cross(r, f);                   // corrected up
+
+        // Camera local axes in world space:
+        // +X = r, +Y = u, -Z = f  => +Z = -f
+        glm::mat3 worldRot(r, u, -f);  // columns
+
+        transform.rotation = glm::quat_cast(worldRot);
+    }
+
+    glm::vec3 position() const {
+        return transform.position;
+    }
+    glm::vec3 direction() const {
+        return transform.rotation * glm::vec3(0, 0, -1);
+    }
+
    private:
     ProjectionType _projectionType{ProjectionType::PERPSECTIVE};
-    std::variant<PerpsectiveConfig, OrthographicConfig> _config{PerpsectiveConfig{}};
+    std::variant<Perspective, OrthographicConfig> _config{Perspective{}};
+};
+
+struct alignas(16) OkayLight {
+    // xyz = position (world), w = type
+    glm::vec4 posType;
+    // rgb = color, w = intensity
+    glm::vec4 color;
+    // xyz = direction
+    glm::vec4 direction;
+    // directional : unused
+    // point: radius, radius, radius, radius
+    // spot : radius, angle, unused unused
+    glm::vec4 extra;
+
+    enum class Type : int { DIRECTIONAL = 0, POINT = 1, SPOT = 2 };
+
+    static OkayLight directional(glm::vec3 dir, glm::vec3 rgb, float intensity = 1.0f) {
+        OkayLight l{};
+        l.posType = glm::vec4(dir, Type::DIRECTIONAL);
+        l.color = glm::vec4(rgb, intensity);
+        l.direction = glm::vec4(dir, 0.0f);
+        return l;
+    }
+
+    static OkayLight point(glm::vec3 pos, float radius, glm::vec3 rgb, float intensity = 1.0f) {
+        OkayLight l{};
+        l.posType = glm::vec4(pos, Type::POINT);
+        l.color = glm::vec4(rgb, intensity);
+        l.extra = glm::vec4(radius);
+        return l;
+    }
+
+    static OkayLight spot(glm::vec3 pos,
+                          glm::vec3 dir,
+                          float radius,
+                          float angleRad,
+                          glm::vec3 rgb,
+                          float intensity = 1.0f) {
+        OkayLight l{};
+        l.posType = glm::vec4(pos, Type::SPOT);
+        l.color = glm::vec4(rgb, intensity);
+        l.direction = glm::vec4(dir, 0.0f);
+        l.extra = glm::vec4(radius, angleRad, 0.0f, 0.0f);
+        return l;
+    }
+
+    Type type() const {
+        return static_cast<Type>((int)posType.w);
+    }
+
+    void setPosition(glm::vec3 pos) {
+        posType = glm::vec4(pos, posType.w);
+    }
+
+    static constexpr std::size_t MAX_LIGHTS = 16;
 };
 
 class OkayRenderWorld;
@@ -116,7 +208,7 @@ class OkayRenderWorld;
 using RenderItemHandle = ObjectPoolHandle;
 
 struct OkayRenderItem {
-    OkayMaterial material;
+    OkayMaterialHandle material;
     OkayMesh mesh;
     OkayTransform transform;
     std::uint64_t sortKey;
@@ -128,7 +220,7 @@ struct OkayRenderItem {
     RenderItemHandle nextSibling{RenderItemHandle::invalidHandle()};
 
     OkayRenderItem() = default;
-    OkayRenderItem(OkayMaterial mat, OkayMesh m);
+    OkayRenderItem(OkayMaterialHandle mat, OkayMesh m);
 
     // operator overloads for std::map
     bool operator<(const OkayRenderItem& other) const {
@@ -162,7 +254,7 @@ struct OkayRenderEntity {
         friend class OkayRenderEntity;
         friend class OkayRenderWorld;
 
-        OkayMaterial material;
+        OkayMaterialHandle material{};
         OkayTransform transform{};
         OkayMesh mesh{};
 
@@ -261,12 +353,12 @@ class OkayRenderWorld {
     const ChildRange children(OkayRenderEntity parent) const;
 
     OkayRenderEntity addRenderEntity(const OkayTransform& transform,
-                                     const OkayMaterial& material,
+                                     const OkayMaterialHandle& material,
                                      const OkayMesh& mesh,
                                      OkayRenderEntity parent);
 
     OkayRenderEntity addRenderEntity(const OkayTransform& transform,
-                                     const OkayMaterial& material,
+                                     const OkayMaterialHandle& material,
                                      const OkayMesh& mesh) {
         return addRenderEntity(
             transform, material, mesh, OkayRenderEntity(this, RenderItemHandle::invalidHandle()));
@@ -274,6 +366,10 @@ class OkayRenderWorld {
 
     const std::vector<RenderItemHandle>& getRenderItems();
     const OkayRenderItem& getRenderItem(RenderItemHandle handle) const {
+        return _renderItemPool.get(handle);
+    }
+
+    OkayRenderItem& getRenderItem(RenderItemHandle handle) {
         return _renderItemPool.get(handle);
     }
 
@@ -286,10 +382,32 @@ class OkayRenderWorld {
     Failable addChild(OkayRenderEntity parent, OkayRenderEntity children);
     bool isChildOf(OkayRenderEntity parent, OkayRenderEntity child) const;
 
+    std::span<const OkayLight> lights() const {
+        return std::span<const OkayLight>(_lights.data(), _activeLights);
+    }
+
+    std::size_t addLight(const OkayLight& light) { 
+        _lights[_activeLights++] = light;
+        return _activeLights - 1;
+    }
+
+    void removeLight(std::size_t index) {
+        // swap the light with the last one
+        _lights[index] = _lights[--_activeLights];
+    }
+
+    OkayLight& getLight(std::size_t index) {
+        return _lights[index];
+    }
+
    private:
     ObjectPool<OkayRenderItem> _renderItemPool;
     std::vector<RenderItemHandle> _memoizedRenderItems;
     std::set<RenderItemHandle> _dirtyTransforms;
+    
+    std::array<OkayLight, OkayLight::MAX_LIGHTS> _lights{};
+    std::size_t _activeLights{0};
+
     bool _needsMaterialRebuild{true};
     OkayCamera _camera;
 

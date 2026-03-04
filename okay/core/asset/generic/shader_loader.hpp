@@ -17,18 +17,21 @@ struct OkayAssetLoader<OkayShader> {
                                         const OkayAssetIO& assetIO) {
         // by standard, the fragment shader will be path + .frag
         // and the vertex shader will be path + .vert
+        Engine.logger.info("Loading shader: {}", path.string());
 
         // load vertex shader
         Result<std::unique_ptr<std::istream>> vertexStreamRes =
             assetIO.open(path.string() + ".vert");
 
+
         if (vertexStreamRes.isError()) {
+            Engine.logger.error("Failed to open vertex shader: {}", path.string());
             return Result<OkayShader>::errorResult("Failed to open vertex shader: " +
                                                    path.string());
         }
 
         // read vertex shader code
-        std::unique_ptr<std::istream> vertexStream = vertexStreamRes.take();
+        std::unique_ptr<std::istream> &vertexStream = vertexStreamRes.valueRef();
         std::string vertexShaderCode((std::istreambuf_iterator<char>(*vertexStream)),
                                      std::istreambuf_iterator<char>());
 
@@ -37,12 +40,13 @@ struct OkayAssetLoader<OkayShader> {
             assetIO.open(path.string() + ".frag");
 
         if (fragmentStreamRes.isError()) {
+            Engine.logger.error("Failed to open fragment shader: {}", path.string());
             return Result<OkayShader>::errorResult("Failed to open fragment shader: " +
                                                                 path.string());
         }
 
         // read fragment shader code
-        std::unique_ptr<std::istream> fragmentStream = fragmentStreamRes.take();
+        std::unique_ptr<std::istream> &fragmentStream = fragmentStreamRes.valueRef();
         std::string fragmentShaderCode((std::istreambuf_iterator<char>(*fragmentStream)),
                                        std::istreambuf_iterator<char>());
 
