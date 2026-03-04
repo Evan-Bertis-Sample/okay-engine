@@ -295,6 +295,11 @@ class TextureProperty {
         return _version;
     }
 
+    TextureProperty& operator=(const OkayTexture& tex) {
+        set(tex);
+        return *this;
+    }
+
    private:
     OkayTexture _value{};
     OkayTexture::TextureParameters _params{};

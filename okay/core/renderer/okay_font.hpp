@@ -155,6 +155,8 @@ class OkayFontManager {
         std::uint32_t id = static_cast<std::uint32_t>(_loadedFaces.size() - 1);
         _fontFaces[fontPath] = id;
         generateGlyphSetAndAtlasForFace(id, options.width, options.height);
+        // Free the face since we don't need it anymore
+        FT_Done_Face(face);
         return Option<FontHandle>::some(FontHandle{id});
     }
 
