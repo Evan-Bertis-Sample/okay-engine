@@ -4,3 +4,6 @@
 [submodule "okay/vendor/glfw"]
 	path = okay/vendor/glfw
 	url = https://github.com/glfw/glfw.git
+[submodule "okay/vendor/freetype"]
+	path = okay/vendor/freetype
+	url = https://github.com/freetype/freetype.git

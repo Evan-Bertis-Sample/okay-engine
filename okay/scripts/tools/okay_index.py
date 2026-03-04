@@ -45,6 +45,7 @@ def main(args):
         "okay/vendor/glad/include",  # <glad/...>
         "okay/vendor/glm",  # <glm/...>
         "okay/vendor/glfw/include",  # <GLFW/...>
+        "okay/vendor/freetype/include",  # <ft2build.h> and <freetype/...>
     ]
 
     lines = []

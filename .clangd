@@ -6,3 +6,4 @@ CompileFlags:
     - -ID:/Documents/Code/Personal-Projects/okay-engine/okay/vendor/glad/include
     - -ID:/Documents/Code/Personal-Projects/okay-engine/okay/vendor/glm
     - -ID:/Documents/Code/Personal-Projects/okay-engine/okay/vendor/glfw/include
+    - -ID:/Documents/Code/Personal-Projects/okay-engine/okay/vendor/freetype/include
