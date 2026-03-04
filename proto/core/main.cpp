@@ -1,8 +1,10 @@
 #include <okay/core/okay.hpp>
 #include <okay/core/renderer/okay_renderer.hpp>
 #include <okay/core/renderer/okay_surface.hpp>
+#include <okay/core/renderer/okay_text.hpp>
 #include <okay/core/level/okay_level_manager.hpp>
 #include <okay/core/asset/mesh/mesh_loader.hpp>
+#include <okay/core/asset/generic/font_loader.hpp>
 #include <okay/core/asset/generic/texture_loader.hpp>
 #include <okay/core/asset/okay_asset.hpp>
 #include <okay/core/logging/okay_logger.hpp>
@@ -21,6 +23,7 @@
 #include "glm/ext/vector_float4.hpp"
 #include "okay/core/renderer/materials/lit.hpp"
 #include "okay/core/renderer/materials/unlit.hpp"
+#include "okay/core/renderer/okay_font.hpp"
 #include "okay/core/renderer/okay_mesh.hpp"
 #include "okay/core/util/result.hpp"
 
@@ -87,6 +90,21 @@ static void __gameInitialize() {
             teapotRes.value().asset
         );
 
+    okay::OkayFontLoadOptions fontLoadOptions;
+    fontLoadOptions.height = 32;
+    okay::OkayTextOptions textOpt {
+        .font = assetManager->loadEngineAssetSync<okay::OkayFontManager::FontHandle>("fonts/ARIAL.TTF", fontLoadOptions).value().asset,
+        .meshBuffer = renderer->meshBuffer(),
+        .fontSize = 16.0f,
+        .verticalSpacing = 4.0f,
+        .horizontalAlignment = okay::OkayTextOptions::HoriztonalAlignment::CENTER,
+        .verticalAlignment = okay::OkayTextOptions::VerticalAlignment::MIDDLE,
+        .doubleSided = true
+    };
+
+    okay::OkayMesh textMesh = okay::OkayText::generateTextMesh("hello\nworlkd", textOpt);
+    okay::OkayTexture textTexture = okay::OkayFontManager::instance().getGlyphAtlas(textOpt.font);
+
     okay::OkayMesh cube = 
         renderer->meshBuffer().addMesh(
             okay::primitives::box()
@@ -100,7 +118,6 @@ static void __gameInitialize() {
         return;
     }
 
-
     auto shaderLoadRes = assetManager->loadEngineAssetSync<okay::OkayShader>("shaders/lit");
 
     if (shaderLoadRes.isError()) {
@@ -112,11 +129,11 @@ static void __gameInitialize() {
 
     auto materialProprties = std::make_unique<okay::LitMaterial>();
     materialProprties->color.set(glm::vec4(1.0f, 1.0f, 0.0f, 1.0f));
-    materialProprties->albedo = texture; 
+    materialProprties->albedo = textTexture; 
     okay::OkayMaterialHandle sunMat = renderer->materialRegistry().registerMaterial(shader, std::move(materialProprties));
     g_sun = renderer->world().addRenderEntity(
         okay::OkayTransform({0.0f, 0.0f, 0.0f}, {0.05f, 0.05f, 0.05f}),
-        sunMat, teapot
+        sunMat, textMesh
     );
 
     // planet material
@@ -126,7 +143,7 @@ static void __gameInitialize() {
     albedo = texture;
     okay::OkayMaterialHandle planetMat = renderer->materialRegistry().registerMaterial(shader, std::move(materialProprties));
     g_planet = renderer->world().addRenderEntity(
-        okay::OkayTransform({ -1.0f, 0.0f, 0.0f }, { 0.3f, 0.3f, 0.3f }),
+        okay::OkayTransform({ -40.0f, 0.0f, 0.0f }, { 0.3f, 0.3f, 0.3f }),
         planetMat, teapot
     );
 
@@ -136,7 +153,7 @@ static void __gameInitialize() {
     materialProprties->albedo = texture;
     okay::OkayMaterialHandle moonMat = renderer->materialRegistry().registerMaterial(shader, std::move(materialProprties));
     g_moon = renderer->world().addRenderEntity(
-        okay::OkayTransform({ 1.0f, 0.0f, 0.0f } , { 0.2f, 0.2f, 0.2f }),
+        okay::OkayTransform({ 30.0f, 0.0f, 0.0f } , { 0.2f, 0.2f, 0.2f }),
         moonMat, teapot
     );
 
