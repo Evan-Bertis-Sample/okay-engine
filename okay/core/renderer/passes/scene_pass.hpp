@@ -34,6 +34,8 @@ class ScenePass : public IOkayRenderPass {
         GL_CHECK(glCullFace(GL_BACK));
         GL_CHECK(glEnable(GL_DEPTH_TEST));
         GL_CHECK(glEnable(GL_MULTISAMPLE));
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  
         // glFrontFace(GL_CW);
 
         _shaderIndex = OkayShader::invalidID();

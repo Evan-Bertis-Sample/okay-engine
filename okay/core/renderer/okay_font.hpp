@@ -110,9 +110,11 @@ class OkayFontManager {
 
     struct Glyph {
         std::uint32_t codepoint;
+        // width and height
+        int w;
+        int h;
         // normalized Uvs
         float u0, v0, u1, v1;
-
         // layout metrics
         int bearingX;
         int bearingY;
@@ -159,7 +161,11 @@ class OkayFontManager {
             return glyphs[codepoint];
         }
         // Return an empty glyph if not found
-        return Glyph{codepoint, 0, 0, 0, 0, 0, 0};
+        return Glyph{codepoint, 0, 0, 0, 0, 0, 0, 0};
+    }
+
+    OkayTexture getGlyphAtlas(FontHandle font) {
+        return _glyphAtlases[font.id];
     }
 
    private:
@@ -210,6 +216,9 @@ class OkayFontManager {
             }
 
             Glyph glyph;
+            glyph.codepoint = charcode;
+            glyph.w = slot->bitmap.width;
+            glyph.h = slot->bitmap.rows;
             glyph.bearingX = slot->bitmap_left;
             glyph.bearingY = slot->bitmap_top;
             glyph.advance = slot->advance.x >> 6;
