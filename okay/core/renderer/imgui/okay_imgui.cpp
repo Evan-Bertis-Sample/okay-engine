@@ -1,10 +1,9 @@
 #include "okay_imgui.hpp"
-#include <stdexcept>
-#include "imgui.h"
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_opengl3.h"
-#include "okay/core/okay.hpp"
-#include "okay/core/renderer/okay_renderer.hpp"
+#include <imgui.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
+#include <okay/core/okay.hpp>
+#include <okay/core/renderer/okay_renderer.hpp>
 
 using namespace okay;
 
