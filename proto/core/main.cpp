@@ -91,12 +91,16 @@ static void __gameInitialize() {
         );
 
     okay::OkayFontLoadOptions fontLoadOptions;
+    fontLoadOptions.height = 32;
     okay::OkayTextOptions textOpt {
         .font = assetManager->loadEngineAssetSync<okay::OkayFontManager::FontHandle>("fonts/ARIAL.TTF", fontLoadOptions).value().asset,
-        .meshBuffer = renderer->meshBuffer()
+        .meshBuffer = renderer->meshBuffer(),
+        .horizontalAlignment = okay::OkayTextOptions::HoriztonalAlignment::CENTER,
+        .verticalAlignment = okay::OkayTextOptions::VerticalAlignment::MIDDLE,
+        .doubleSided = true
     };
 
-    okay::OkayMesh textMesh = okay::OkayText::generateTextMesh("MEOW!", textOpt);
+    okay::OkayMesh textMesh = okay::OkayText::generateTextMesh("hello\nworlkd", textOpt);
     okay::OkayTexture textTexture = okay::OkayFontManager::instance().getGlyphAtlas(textOpt.font);
 
     okay::OkayMesh cube = 
@@ -137,7 +141,7 @@ static void __gameInitialize() {
     albedo = texture;
     okay::OkayMaterialHandle planetMat = renderer->materialRegistry().registerMaterial(shader, std::move(materialProprties));
     g_planet = renderer->world().addRenderEntity(
-        okay::OkayTransform({ -1.0f, 0.0f, 0.0f }, { 0.3f, 0.3f, 0.3f }),
+        okay::OkayTransform({ -1.0f, 1.0f, 0.0f }, { 0.3f, 0.3f, 0.3f }),
         planetMat, teapot
     );
 
