@@ -14,7 +14,7 @@ void OkayIMGUI::initialize() {
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
-
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     okay::OkayRenderer *renderer = okay::Engine.systems.getSystemChecked<okay::OkayRenderer>();
     auto win = renderer->getSurfaceWindow();
     if (win == nullptr) {
