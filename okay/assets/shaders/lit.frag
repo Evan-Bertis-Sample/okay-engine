@@ -17,6 +17,7 @@ uniform float u_shininess;   // e.g. 32.0
 uniform float u_ambient;     // e.g. 0.05
 uniform sampler2D u_albedo;  // optional, can be ignored if not used
 
+
 struct Light {
     vec4 posType;    // xyz = position (POINT/SPOT), w = type (0 dir, 1 point, 2 spot)
     vec4 color;      // rgb = color, w = intensity
@@ -42,6 +43,8 @@ float radiusAttenuation(float dist, float radius) {
     return x * x;
 }
 
+
+
 // Returns [0..1] spotlight cone factor (smooth edge)
 // L = direction from fragment -> light
 // spotDir = direction the light shines (light forward), world-space
@@ -58,6 +61,33 @@ float spotConeFactor(vec3 L, vec3 spotDir, float angleRad) {
     return smoothstep(cosCutoff, cosCutoff + softBand, cosTheta);
 }
 
+vec3 celLighting(vec3 N, vec3 L, vec3 Lrgb, vec3 albedo, vec3 V, float shininess, float intensity, float att) {
+    float NdotL = max(dot(N, L), 0.0);
+    if (NdotL <= 0.0) return vec3(0.0);
+
+    // Diffuse
+    float antialiasing = 5.0;
+    float delta = fwidth(NdotL) * antialiasing;
+    float diffuseSmooth = smoothstep(0.0f, delta, NdotL);
+    vec3 diffuse = diffuseSmooth * albedo * Lrgb;
+
+    // specular, phong model
+    vec3 R = reflect(-L, N);
+    float RdotV = max(dot(R, V), 0.0);
+
+    float specularSmooth = pow(RdotV * diffuseSmooth, shininess);
+    specularSmooth = smoothstep(0.0, 0.01 * antialiasing, specularSmooth);
+    vec3 specular = specularSmooth * Lrgb * att;
+
+    float rim = 1.0 - dot(N, V);
+    rim = rim * NdotL;
+    float fresnel = 0.5;
+    float fresnelSize = 1.0 - fresnel;
+    float rimSmooth = smoothstep(fresnelSize, fresnelSize * 1.1, rim);
+
+    return att * intensity * (diffuse + specular + rimSmooth);
+}
+
 void main() {
     vec3 N = safeNormalize(v_worldNormal);
     vec3 V = safeNormalize(u_cameraPosition - v_worldPos);
@@ -65,6 +95,7 @@ void main() {
     vec4 texAlbedo = texture(u_albedo, v_uv);
     vec3 albedo = clamp(texAlbedo.rgb * v_color, vec3(0.0), vec3(1.0));
     vec3 colorOut = u_ambient * albedo;
+    
 
     int count = int(meta.x + 0.5);
     int maxLights = min(count, 16);
@@ -115,19 +146,8 @@ void main() {
             continue;
         }
 
-        float NdotL = max(dot(N, L), 0.0);
-        if (NdotL <= 0.0) continue;
-
-        // Diffuse
-        vec3 diffuse = NdotL * albedo * Lrgb;
-
-        // specular, phong model
-        vec3 R = reflect(-L, N);
-        float RdotV = max(dot(R, V), 0.0);
-        vec3 specular = pow(RdotV, shininess) * Lrgb;
-        specular *= att;
-
-        colorOut += att * intensity * (diffuse + specular);
+        // cel lighting
+        colorOut += celLighting(N, L, Lrgb, albedo, V, shininess, intensity, att);
     }
 
     float viewDep = pow(1.0 - max(dot(N, V), 0.0), 5.0);
