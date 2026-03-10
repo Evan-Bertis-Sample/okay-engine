@@ -61,6 +61,22 @@ float spotConeFactor(vec3 L, vec3 spotDir, float angleRad) {
     return smoothstep(cosCutoff, cosCutoff + softBand, cosTheta);
 }
 
+vec3 defaultLighting(vec3 N, vec3 L, vec3 Lrgb, vec3 albedo, vec3 V, float shininess, float intensity, float att) {
+    float NdotL = max(dot(N, L), 0.0);
+    if (NdotL <= 0.0) return vec3(0.0);
+
+    // Diffuse
+    vec3 diffuse = NdotL * albedo * Lrgb;
+
+    // specular, phong model
+    vec3 R = reflect(-L, N);
+    float RdotV = max(dot(R, V), 0.0);
+    vec3 specular = pow(RdotV, shininess) * Lrgb;
+    specular *= att;
+
+    return att * intensity * (diffuse + specular);
+}
+
 vec3 celLighting(vec3 N, vec3 L, vec3 Lrgb, vec3 albedo, vec3 V, float shininess, float intensity, float att) {
     float NdotL = max(dot(N, L), 0.0);
     if (NdotL <= 0.0) return vec3(0.0);
@@ -145,6 +161,8 @@ void main() {
         } else {
             continue;
         }
+        // default
+        // colorOut += defaultLighting(N, L, Lrgb, albedo, V, shininess, intensity, att);
 
         // cel lighting
         colorOut += celLighting(N, L, Lrgb, albedo, V, shininess, intensity, att);
