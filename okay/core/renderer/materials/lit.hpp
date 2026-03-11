@@ -6,6 +6,7 @@
 #include <okay/core/renderer/materials/unlit.hpp>
 #include <okay/core/renderer/okay_render_world.hpp>
 #include <okay/core/util/type.hpp>
+#include "glm/detail/qualifier.hpp"
 
 namespace okay {
 
@@ -23,12 +24,15 @@ struct LitMaterial : public SceneMaterialProperties, public OkayMaterialProperti
     UniformProperty<float, FixedString("u_ambient")> ambient{0.05f};
     TextureProperty<FixedString("u_albedo")> albedo;
     UniformProperty<glm::vec3, FixedString("u_color")> color{};
+    UniformProperty<float, FixedString("u_antialiasing")> antialiasing{0.5f};
+    UniformProperty<float, FixedString("u_sheenIntensity")> sheenIntensity{1.0};
+    UniformProperty<float, FixedString("u_sheenTint")> sheenTint{0.5f};
 
     auto uniformRefs() {
-        return std::tuple_cat(SceneMaterialProperties::uniformRefs(), std::tie(shininess, ambient, color));
+        return std::tuple_cat(SceneMaterialProperties::uniformRefs(), std::tie(shininess, ambient, color, sheenIntensity, sheenTint));
     }
     auto uniformRefs() const {
-        return std::tuple_cat(SceneMaterialProperties::uniformRefs(), std::tie(shininess, ambient, color));
+        return std::tuple_cat(SceneMaterialProperties::uniformRefs(), std::tie(shininess, ambient, color, sheenIntensity, sheenTint));
     }
 
     auto uniformBlockRefs() {

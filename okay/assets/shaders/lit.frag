@@ -16,6 +16,9 @@ uniform vec3 u_cameraPosition;
 uniform float u_shininess;   // e.g. 32.0
 uniform float u_ambient;     // e.g. 0.05
 uniform sampler2D u_albedo;  // optional, can be ignored if not used
+uniform float u_antialiasing;
+uniform float u_sheenIntensity;
+uniform float u_sheenTint;
 
 
 struct Light {
@@ -42,8 +45,6 @@ float radiusAttenuation(float dist, float radius) {
     float x = clamp(1.0 - dist / radius, 0.0, 1.0);
     return x * x;
 }
-
-
 
 // Returns [0..1] spotlight cone factor (smooth edge)
 // L = direction from fragment -> light
@@ -82,7 +83,7 @@ vec3 celLighting(vec3 N, vec3 L, vec3 Lrgb, vec3 albedo, vec3 V, float shininess
     if (NdotL <= 0.0) return vec3(0.0);
 
     // Diffuse
-    float antialiasing = 5.0;
+    float antialiasing = u_antialiasing;
     float delta = fwidth(NdotL) * antialiasing;
     float diffuseSmooth = smoothstep(0.0f, delta, NdotL);
     vec3 diffuse = diffuseSmooth * albedo * Lrgb;
@@ -102,6 +103,26 @@ vec3 celLighting(vec3 N, vec3 L, vec3 Lrgb, vec3 albedo, vec3 V, float shininess
     float rimSmooth = smoothstep(fresnelSize, fresnelSize * 1.1, rim);
 
     return att * intensity * (diffuse + specular + rimSmooth);
+}
+
+vec3 calcTint() {
+    vec3 baseColor = v_color;
+    float luminance = dot(vec3(0.2126, 0.7152, 0.0722), baseColor);
+    return (luminance > 0.0) ? baseColor * (1.0 / luminance) : vec3(-1.0);
+}
+
+vec3 calcSheen(vec3 N, vec3 V, vec3 L) {
+    float NdotL = max(dot(N, L), 0.0);
+    if (NdotL <= 0.0) return vec3(0.0);
+
+    vec3 halfVector = safeNormalize(L + V);
+    float cosTheta = max(dot(halfVector, V), 0.0);
+    float sheenIntensity = u_sheenIntensity;
+    float sheenTint = u_sheenTint;
+    vec3 tint = calcTint();
+    vec3 sheenColor = mix(vec3(1.0), tint, sheenTint);
+
+    return NdotL * sheenIntensity * sheenColor * pow(1.0 - cosTheta, 5.0);
 }
 
 void main() {
@@ -162,10 +183,11 @@ void main() {
             continue;
         }
         // default
-        // colorOut += defaultLighting(N, L, Lrgb, albedo, V, shininess, intensity, att);
-
+        colorOut += defaultLighting(N, L, Lrgb, albedo, V, shininess, intensity, att);
+        colorOut += calcSheen(N, V, L);
+        
         // cel lighting
-        colorOut += celLighting(N, L, Lrgb, albedo, V, shininess, intensity, att);
+        // colorOut += celLighting(N, L, Lrgb, albedo, V, shininess, intensity, att);
     }
 
     float viewDep = pow(1.0 - max(dot(N, V), 0.0), 5.0);
