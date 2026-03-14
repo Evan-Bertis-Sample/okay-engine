@@ -17,8 +17,11 @@ uniform float u_shininess;   // e.g. 32.0
 uniform float u_ambient;     // e.g. 0.05
 uniform sampler2D u_albedo;  // optional, can be ignored if not used
 uniform float u_antialiasing;
-uniform float u_sheenIntensity;
+uniform float u_roughness;
+uniform float u_sheen;
 uniform float u_sheenTint;
+uniform float u_clearcoat;
+uniform float u_clearcoatGloss;
 
 
 struct Light {
@@ -62,22 +65,6 @@ float spotConeFactor(vec3 L, vec3 spotDir, float angleRad) {
     return smoothstep(cosCutoff, cosCutoff + softBand, cosTheta);
 }
 
-vec3 defaultLighting(vec3 N, vec3 L, vec3 Lrgb, vec3 albedo, vec3 V, float shininess, float intensity, float att) {
-    float NdotL = max(dot(N, L), 0.0);
-    if (NdotL <= 0.0) return vec3(0.0);
-
-    // Diffuse
-    vec3 diffuse = NdotL * albedo * Lrgb;
-
-    // specular, phong model
-    vec3 R = reflect(-L, N);
-    float RdotV = max(dot(R, V), 0.0);
-    vec3 specular = pow(RdotV, shininess) * Lrgb;
-    specular *= att;
-
-    return att * intensity * (diffuse + specular);
-}
-
 vec3 celLighting(vec3 N, vec3 L, vec3 Lrgb, vec3 albedo, vec3 V, float shininess, float intensity, float att) {
     float NdotL = max(dot(N, L), 0.0);
     if (NdotL <= 0.0) return vec3(0.0);
@@ -105,29 +92,88 @@ vec3 celLighting(vec3 N, vec3 L, vec3 Lrgb, vec3 albedo, vec3 V, float shininess
     return att * intensity * (diffuse + specular + rimSmooth);
 }
 
+vec3 defaultLighting(vec3 N, vec3 L, vec3 Lrgb, vec3 albedo, vec3 V, float shininess, float intensity, float att) {
+    float NdotL = max(dot(N, L), 0.0);
+    if (NdotL <= 0.0) return vec3(0.0);
+
+    // Diffuse
+    vec3 diffuse = NdotL * albedo * Lrgb;
+
+    // specular, phong model
+    vec3 R = reflect(-L, N);
+    float RdotV = max(dot(R, V), 0.0);
+    vec3 specular = pow(RdotV, shininess) * Lrgb;
+    specular *= att;
+
+    return att * intensity * (diffuse + specular);
+}
+
+// sheen
 vec3 calcTint() {
     vec3 baseColor = v_color;
     float luminance = dot(vec3(0.2126, 0.7152, 0.0722), baseColor);
     return (luminance > 0.0) ? baseColor * (1.0 / luminance) : vec3(-1.0);
 }
 
-vec3 calcSheen(vec3 N, vec3 V, vec3 L) {
+vec3 calcSheen(vec3 N, vec3 V, vec3 L, vec3 H) {
     float NdotL = max(dot(N, L), 0.0);
     if (NdotL <= 0.0) return vec3(0.0);
 
-    vec3 halfVector = safeNormalize(L + V);
-    float cosTheta = max(dot(halfVector, V), 0.0);
-    float sheenIntensity = u_sheenIntensity;
+    float cosTheta = max(dot(H, V), 0.0);
+    float sheen = u_sheen;
     float sheenTint = u_sheenTint;
     vec3 tint = calcTint();
     vec3 sheenColor = mix(vec3(1.0), tint, sheenTint);
 
-    return NdotL * sheenIntensity * sheenColor * pow(1.0 - cosTheta, 5.0);
+    return NdotL * sheen * sheenColor * pow(1.0 - cosTheta, 5.0);
+}
+
+// clearcoat
+float GTR1(vec3 N, vec3 H, float a) {
+    const float PI = 3.1415926535897932384626433832795;
+    if (a >= 1.0) return 1.0/PI;
+
+    float a2 = a * a;
+    float absDotNH = abs(dot(N, H));
+    return (a2 - 1.0) / (PI * log2(a2) * (1.0 + (a2 - 1.0) * absDotNH * absDotNH));
+}
+
+float schlickFresnel(vec3 V, vec3 H) {
+    float F0 = 0.04f; // base reflectance
+    float F90 = 1.0 - F0; // max reflectance
+    float cosTheta = max(dot(H, V), 0.0); // cosine of angle between view and half vector
+
+    return mix(F0, F90, pow(1.0 - cosTheta, 5.0));
+}
+
+float G_GGX(vec3 V, vec3 N, float a) {
+    float a2 = a * a;
+    float absDotNV = abs(dot(N, V));
+
+    return 2.0f / (1.0f + sqrt(a2 + (1.0 - a2) * absDotNV * absDotNV));
+}
+
+float disneyClearcoat(vec3 N, vec3 V, vec3 H, vec3 L) {
+    float NdotL = max(dot(N, L), 0.0f);
+    if (NdotL <= 0.0) return 0.0f;
+
+    float clearcoat = u_clearcoat;
+    if (clearcoat <= 0.0f) return 0.0f;
+
+    float clearcoatGloss = u_clearcoatGloss;
+
+    float alpha = mix(0.1, 0.001, clearcoatGloss);
+    float d = GTR1(N, H, alpha);
+    float f = schlickFresnel(V, H);
+    float gl = G_GGX(L, N, 0.25f);
+    float gv = G_GGX(V, N, 0.25f);
+
+    return NdotL * 0.25f * clearcoat * d * f * gl * gv;
 }
 
 void main() {
-    vec3 N = safeNormalize(v_worldNormal);
-    vec3 V = safeNormalize(u_cameraPosition - v_worldPos);
+    vec3 N = safeNormalize(v_worldNormal); // normal vector
+    vec3 V = safeNormalize(u_cameraPosition - v_worldPos); // view vector
 
     vec4 texAlbedo = texture(u_albedo, v_uv);
     vec3 albedo = clamp(texAlbedo.rgb * v_color, vec3(0.0), vec3(1.0));
@@ -148,7 +194,7 @@ void main() {
         int type = int(floor(lights[i].posType.w + 0.5)); // 0=dir, 1=point, 2=spot
 
         vec3 L = vec3(0.0); // fragment -> light
-        float att = 1.0;
+        float att = 1.0; // attenuation
 
         if (type == 0) {
             // Directional: direction.xyz is the direction light shines (world)
@@ -182,9 +228,16 @@ void main() {
         } else {
             continue;
         }
+        vec3 H = safeNormalize(V + L); // half vector
         // default
+
+        // diffuse
+
+        // specular
+
         colorOut += defaultLighting(N, L, Lrgb, albedo, V, shininess, intensity, att);
-        colorOut += calcSheen(N, V, L);
+        colorOut += calcSheen(N, V, L, H);
+        colorOut += disneyClearcoat(N, V, H, L);
         
         // cel lighting
         // colorOut += celLighting(N, L, Lrgb, albedo, V, shininess, intensity, att);

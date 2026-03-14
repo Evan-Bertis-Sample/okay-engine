@@ -25,14 +25,17 @@ struct LitMaterial : public SceneMaterialProperties, public OkayMaterialProperti
     TextureProperty<FixedString("u_albedo")> albedo;
     UniformProperty<glm::vec3, FixedString("u_color")> color{};
     UniformProperty<float, FixedString("u_antialiasing")> antialiasing{0.5f};
-    UniformProperty<float, FixedString("u_sheenIntensity")> sheenIntensity{1.0};
+    UniformProperty<float, FixedString("u_roughness")> roughness{0.25f};
+    UniformProperty<float, FixedString("u_sheen")> sheen{1.0};
     UniformProperty<float, FixedString("u_sheenTint")> sheenTint{0.5f};
+    UniformProperty<float, FixedString("u_clearcoat")> clearcoat{1.0f};
+    UniformProperty<float, FixedString("u_clearcoatGloss")> clearcoatGloss{0.1225f};
 
     auto uniformRefs() {
-        return std::tuple_cat(SceneMaterialProperties::uniformRefs(), std::tie(shininess, ambient, color, sheenIntensity, sheenTint));
+        return std::tuple_cat(SceneMaterialProperties::uniformRefs(), std::tie(shininess, ambient, color, roughness, sheen, sheenTint, clearcoat, clearcoatGloss));
     }
     auto uniformRefs() const {
-        return std::tuple_cat(SceneMaterialProperties::uniformRefs(), std::tie(shininess, ambient, color, sheenIntensity, sheenTint));
+        return std::tuple_cat(SceneMaterialProperties::uniformRefs(), std::tie(shininess, ambient, color, roughness, sheen, sheenTint, clearcoat, clearcoatGloss));
     }
 
     auto uniformBlockRefs() {
