@@ -25,25 +25,19 @@ struct LitMaterial : public SceneMaterialProperties, public OkayMaterialProperti
     UniformProperty<glm::vec3, FixedString("u_color")> color{};
 
     auto uniformRefs() {
-        return std::tuple_cat(SceneMaterialProperties::uniformRefs(), std::tie(shininess, ambient, color));
+        return std::tuple_cat(SceneMaterialProperties::uniformRefs(),
+                              std::tie(shininess, ambient, color));
     }
     auto uniformRefs() const {
-        return std::tuple_cat(SceneMaterialProperties::uniformRefs(), std::tie(shininess, ambient, color));
+        return std::tuple_cat(SceneMaterialProperties::uniformRefs(),
+                              std::tie(shininess, ambient, color));
     }
 
-    auto uniformBlockRefs() {
-        return std::tie(lights);
-    }
-    auto uniformBlockRefs() const {
-        return std::tie(lights);
-    }
+    auto uniformBlockRefs() { return std::tie(lights); }
+    auto uniformBlockRefs() const { return std::tie(lights); }
 
-    auto textureRefs() {
-        return std::tie(albedo);
-    }
-    auto textureRefs() const {
-        return std::tie(albedo);
-    }
+    auto textureRefs() { return std::tie(albedo); }
+    auto textureRefs() const { return std::tie(albedo); }
 };
 
 static_assert(sizeof(okay::OkayLight) == 64, "OkayLight must be 64 bytes (4 vec4s)");

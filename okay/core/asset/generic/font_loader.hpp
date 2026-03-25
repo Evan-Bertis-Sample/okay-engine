@@ -14,26 +14,26 @@
 
 namespace okay {
 
-
 template <>
 struct OkayAssetLoader<OkayFontManager::FontHandle, OkayFontLoadOptions> {
     static Result<OkayFontManager::FontHandle> loadAsset(const std::filesystem::path& path,
-                                                        const OkayAssetIO& assetIO,
-                                                        const OkayFontLoadOptions& settings) {
+                                                         const OkayAssetIO& assetIO,
+                                                         const OkayFontLoadOptions& settings) {
         Engine.logger.info("Loading font: {}", path.string());
 
         OkayFontManager& fontManager = OkayFontManager::instance();
 
-        Option<OkayFontManager::FontHandle> handleOpt = fontManager.loadFont(path.string(), settings);
+        Option<OkayFontManager::FontHandle> handleOpt =
+            fontManager.loadFont(path.string(), settings);
         if (handleOpt.isSome()) {
             return Result<OkayFontManager::FontHandle>::ok(handleOpt.value());
         } else {
-            return Result<OkayFontManager::FontHandle>::errorResult("Failed to load font: " + path.string());
+            return Result<OkayFontManager::FontHandle>::errorResult("Failed to load font: " +
+                                                                    path.string());
         }
-
     }
 };
 
 }  // namespace okay
 
-#endif // __FONT_LOADER_H__
+#endif  // __FONT_LOADER_H__

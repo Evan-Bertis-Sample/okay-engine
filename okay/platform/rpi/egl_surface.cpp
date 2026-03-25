@@ -37,12 +37,26 @@ uint32_t bo_to_fb(gbm_bo* bo, int drmFd) {
     uint32_t fb = 0;
     int ret;
     if (modifiers[0]) {
-        ret = drmModeAddFB2WithModifiers(drmFd, gbm_bo_get_width(bo), gbm_bo_get_height(bo), fmt,
-                                         handles, strides, offsets, modifiers, &fb,
+        ret = drmModeAddFB2WithModifiers(drmFd,
+                                         gbm_bo_get_width(bo),
+                                         gbm_bo_get_height(bo),
+                                         fmt,
+                                         handles,
+                                         strides,
+                                         offsets,
+                                         modifiers,
+                                         &fb,
                                          DRM_MODE_FB_MODIFIERS);
     } else {
-        ret = drmModeAddFB2(drmFd, gbm_bo_get_width(bo), gbm_bo_get_height(bo), fmt, handles,
-                            strides, offsets, &fb, 0);
+        ret = drmModeAddFB2(drmFd,
+                            gbm_bo_get_width(bo),
+                            gbm_bo_get_height(bo),
+                            fmt,
+                            handles,
+                            strides,
+                            offsets,
+                            &fb,
+                            0);
     }
     return (ret == 0) ? fb : 0;
 }
@@ -68,7 +82,7 @@ struct Surface::SurfaceImpl {
     gbm_surface* gbmSurf = nullptr;
 
     EGLDisplay dpy = EGL_NO_DISPLAY;
-    
+
     EGLConfig cfgEGL = nullptr;
     EGLContext ctx = EGL_NO_CONTEXT;
     EGLSurface surf = EGL_NO_SURFACE;
@@ -80,7 +94,8 @@ struct Surface::SurfaceImpl {
     explicit SurfaceImpl(const SurfaceConfig& c) : cfg(c) {}
 };
 
-Surface::Surface(const SurfaceConfig& cfg) : _impl(std::make_unique<SurfaceImpl>(cfg)) {}
+Surface::Surface(const SurfaceConfig& cfg) : _impl(std::make_unique<SurfaceImpl>(cfg)) {
+}
 Surface::~Surface() {
     destroy();
 }
@@ -97,7 +112,8 @@ void Surface::initialize() {
 
     // open DRM
     _impl->drmFd = open(DRM_DEVICE_PATH, O_RDWR | O_CLOEXEC);
-    if (_impl->drmFd < 0) throw std::runtime_error("open DRM device failed");
+    if (_impl->drmFd < 0)
+        throw std::runtime_error("open DRM device failed");
 
     // Set master
     if (drmSetMaster(_impl->drmFd) != 0) {
@@ -106,7 +122,8 @@ void Surface::initialize() {
     }
 
     _impl->res = drmModeGetResources(_impl->drmFd);
-    if (!_impl->res) throw std::runtime_error("drmModeGetResources failed");
+    if (!_impl->res)
+        throw std::runtime_error("drmModeGetResources failed");
 
     // choose a connected connector
     for (int i = 0; i < _impl->res->count_connectors; ++i) {
@@ -117,7 +134,8 @@ void Surface::initialize() {
         }
         drmModeFreeConnector(c);
     }
-    if (!_impl->conn) throw std::runtime_error("no connected DRM connector");
+    if (!_impl->conn)
+        throw std::runtime_error("no connected DRM connector");
     _impl->connectorId = _impl->conn->connector_id;
 
     // mode: prefer preferred
@@ -130,7 +148,8 @@ void Surface::initialize() {
             break;
         }
     }
-    if (!preferred) _impl->mode = _impl->conn->modes[0];
+    if (!preferred)
+        _impl->mode = _impl->conn->modes[0];
 
     // encoder + crtc
     _impl->enc = _impl->conn->encoder_id ? drmModeGetEncoder(_impl->drmFd, _impl->conn->encoder_id)
@@ -139,19 +158,22 @@ void Surface::initialize() {
         for (int i = 0; i < _impl->res->count_encoders && !_impl->enc; ++i)
             _impl->enc = drmModeGetEncoder(_impl->drmFd, _impl->res->encoders[i]);
     }
-    if (!_impl->enc) throw std::runtime_error("no DRM encoder");
+    if (!_impl->enc)
+        throw std::runtime_error("no DRM encoder");
     _impl->crtcId = _impl->enc->crtc_id ? _impl->enc->crtc_id : _impl->res->crtcs[0];
     _impl->origCrtc = drmModeGetCrtc(_impl->drmFd, _impl->crtcId);
 
     // gbm
     _impl->gbmDev = gbm_create_device(_impl->drmFd);
-    if (!_impl->gbmDev) throw std::runtime_error("gbm_create_device failed");
+    if (!_impl->gbmDev)
+        throw std::runtime_error("gbm_create_device failed");
 
     const uint32_t w = _impl->mode.hdisplay;
     const uint32_t h = _impl->mode.vdisplay;
-    _impl->gbmSurf = gbm_surface_create(_impl->gbmDev, w, h, GBM_FORMAT_ARGB8888,
-                                        GBM_BO_USE_SCANOUT | GBM_BO_USE_RENDERING);
-    if (!_impl->gbmSurf) throw std::runtime_error("gbm_surface_create failed");
+    _impl->gbmSurf = gbm_surface_create(
+        _impl->gbmDev, w, h, GBM_FORMAT_ARGB8888, GBM_BO_USE_SCANOUT | GBM_BO_USE_RENDERING);
+    if (!_impl->gbmSurf)
+        throw std::runtime_error("gbm_surface_create failed");
 
     // egl (desktop GL via EGL)
     auto getPlatformDisplay = reinterpret_cast<PFNEGLGETPLATFORMDISPLAYEXTPROC>(
@@ -159,11 +181,13 @@ void Surface::initialize() {
     _impl->dpy = getPlatformDisplay
                      ? getPlatformDisplay(EGL_PLATFORM_GBM_KHR, _impl->gbmDev, nullptr)
                      : eglGetDisplay((EGLNativeDisplayType)_impl->gbmDev);
-    if (_impl->dpy == EGL_NO_DISPLAY) throw std::runtime_error("eglGetDisplay failed");
+    if (_impl->dpy == EGL_NO_DISPLAY)
+        throw std::runtime_error("eglGetDisplay failed");
 
     if (!eglInitialize(_impl->dpy, nullptr, nullptr))
         throw std::runtime_error("eglInitialize failed");
-    if (!eglBindAPI(EGL_OPENGL_API)) throw std::runtime_error("eglBindAPI(EGL_OPENGL_API) failed");
+    if (!eglBindAPI(EGL_OPENGL_API))
+        throw std::runtime_error("eglBindAPI(EGL_OPENGL_API) failed");
 
     const EGLint cfgAttribs[] = {EGL_SURFACE_TYPE,
                                  EGL_WINDOW_BIT,
@@ -182,12 +206,14 @@ void Surface::initialize() {
     if (!eglChooseConfig(_impl->dpy, cfgAttribs, &_impl->cfgEGL, 1, &n) || n == 0)
         throw std::runtime_error("eglChooseConfig failed");
 
-    _impl->surf = eglCreateWindowSurface(_impl->dpy, _impl->cfgEGL,
-                                         (EGLNativeWindowType)_impl->gbmSurf, nullptr);
-    if (_impl->surf == EGL_NO_SURFACE) throw std::runtime_error("eglCreateWindowSurface failed");
+    _impl->surf = eglCreateWindowSurface(
+        _impl->dpy, _impl->cfgEGL, (EGLNativeWindowType)_impl->gbmSurf, nullptr);
+    if (_impl->surf == EGL_NO_SURFACE)
+        throw std::runtime_error("eglCreateWindowSurface failed");
 
     _impl->ctx = eglCreateContext(_impl->dpy, _impl->cfgEGL, EGL_NO_CONTEXT, nullptr);
-    if (_impl->ctx == EGL_NO_CONTEXT) throw std::runtime_error("eglCreateContext failed");
+    if (_impl->ctx == EGL_NO_CONTEXT)
+        throw std::runtime_error("eglCreateContext failed");
 
     if (!eglMakeCurrent(_impl->dpy, _impl->surf, _impl->surf, _impl->ctx))
         throw std::runtime_error("eglMakeCurrent failed");
@@ -211,15 +237,16 @@ void Surface::swapBuffers() {
     eglSwapBuffers(_impl->dpy, _impl->surf);
 
     gbm_bo* next = gbm_surface_lock_front_buffer(_impl->gbmSurf);
-    if (!next) throw std::runtime_error("gbm_surface_lock_front_buffer failed");
+    if (!next)
+        throw std::runtime_error("gbm_surface_lock_front_buffer failed");
     uint32_t fb = bo_to_fb(next, _impl->drmFd);
     if (!fb) {
         gbm_surface_release_buffer(_impl->gbmSurf, next);
         throw std::runtime_error("drmModeAddFB2 failed");
     }
 
-    if (drmModeSetCrtc(_impl->drmFd, _impl->crtcId, fb, 0, 0, &_impl->connectorId, 1,
-                       &_impl->mode) != 0) {
+    if (drmModeSetCrtc(
+            _impl->drmFd, _impl->crtcId, fb, 0, 0, &_impl->connectorId, 1, &_impl->mode) != 0) {
         drmModeRmFB(_impl->drmFd, fb);
         gbm_surface_release_buffer(_impl->gbmSurf, next);
         throw std::runtime_error("drmModeSetCrtc failed");
@@ -239,8 +266,13 @@ void Surface::swapBuffers() {
 
 void Surface::destroy() {
     if (_impl->origCrtc && _impl->drmFd >= 0 && _impl->crtcId) {
-        drmModeSetCrtc(_impl->drmFd, _impl->origCrtc->crtc_id, _impl->origCrtc->buffer_id,
-                       _impl->origCrtc->x, _impl->origCrtc->y, &_impl->connectorId, 1,
+        drmModeSetCrtc(_impl->drmFd,
+                       _impl->origCrtc->crtc_id,
+                       _impl->origCrtc->buffer_id,
+                       _impl->origCrtc->x,
+                       _impl->origCrtc->y,
+                       &_impl->connectorId,
+                       1,
                        &_impl->origCrtc->mode);
     }
 
@@ -255,8 +287,10 @@ void Surface::destroy() {
 
     if (_impl->dpy != EGL_NO_DISPLAY) {
         eglMakeCurrent(_impl->dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-        if (_impl->surf != EGL_NO_SURFACE) eglDestroySurface(_impl->dpy, _impl->surf);
-        if (_impl->ctx != EGL_NO_CONTEXT) eglDestroyContext(_impl->dpy, _impl->ctx);
+        if (_impl->surf != EGL_NO_SURFACE)
+            eglDestroySurface(_impl->dpy, _impl->surf);
+        if (_impl->ctx != EGL_NO_CONTEXT)
+            eglDestroyContext(_impl->dpy, _impl->ctx);
         eglTerminate(_impl->dpy);
         _impl->dpy = EGL_NO_DISPLAY;
     }

@@ -15,13 +15,9 @@ struct OkayVertex {
     glm::vec3 color{1.0f, 1.0f, 1.0f};
     glm::vec2 uv{0.0f, 0.0f};
 
-    static std::size_t numFloats() {
-        return 3 + 3 + 3 + 2;
-    }
+    static std::size_t numFloats() { return 3 + 3 + 3 + 2; }
 
-    static std::size_t stride() {
-        return numFloats() * sizeof(float);
-    }
+    static std::size_t stride() { return numFloats() * sizeof(float); }
 
     OkayVertex& operator=(const OkayVertex& other) {
         position = other.position;
@@ -36,9 +32,7 @@ struct OkayVertex {
                uv == other.uv;
     }
 
-    bool operator!=(const OkayVertex& other) const {
-        return !(*this == other);
-    }
+    bool operator!=(const OkayVertex& other) const { return !(*this == other); }
 };
 
 struct OkayMeshData {
@@ -56,14 +50,9 @@ struct OkayMesh {
     OkayMesh(std::size_t vOffset, std::size_t vCount, std::size_t iOffset, std::size_t iCount)
         : vertexOffset(vOffset), vertexCount(vCount), indexOffset(iOffset), indexCount(iCount) {}
 
-    static OkayMesh none() {
-        return OkayMesh(0, 0, 0, 0);
-    }
-    
-    bool isEmpty() {
-        return indexCount == 0;
-    }
+    static OkayMesh none() { return OkayMesh(0, 0, 0, 0); }
 
+    bool isEmpty() { return indexCount == 0; }
 
     OkayMesh& operator=(const OkayMesh& other) {
         vertexOffset = other.vertexOffset;
@@ -78,9 +67,7 @@ struct OkayMesh {
                indexOffset == other.indexOffset && indexCount == other.indexCount;
     }
 
-    bool operator!=(const OkayMesh& other) const {
-        return !(*this == other);
-    }
+    bool operator!=(const OkayMesh& other) const { return !(*this == other); }
 };
 
 class OkayModelView;
@@ -94,7 +81,7 @@ class OkayMeshBuffer {
     GLuint _vao{0};
     GLuint _vbo{0};
     GLuint _ebo{0};
-    
+
     bool _hasInitVertexAttributes{false};
     bool _dataOutofDate{true};
 

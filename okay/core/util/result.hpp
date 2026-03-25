@@ -40,7 +40,8 @@ class Result {
     T value() const
         requires(std::is_copy_constructible_v<T>)
     {
-        if (!_value.has_value()) return T{};
+        if (!_value.has_value())
+            return T{};
         return *_value;
     }
 
@@ -75,7 +76,8 @@ class Result {
     Result& operator=(const Result& other)
         requires(std::is_copy_assignable_v<T>)
     {
-        if (this == &other) return *this;
+        if (this == &other)
+            return *this;
         _value = other._value;
         _errorMessage = other._errorMessage;
         return *this;
@@ -160,7 +162,8 @@ class Result {
         requires ResultLike<std::invoke_result_t<F, Ref>>
     {
         using R = std::invoke_result_t<F, Ref>;
-        if (isError()) return R::errorResult(_errorMessage);
+        if (isError())
+            return R::errorResult(_errorMessage);
         if constexpr (std::is_const_v<std::remove_reference_t<Ref>>) {
             return std::invoke(std::forward<F>(f), static_cast<const T&>(*_value));
         } else {
@@ -173,7 +176,8 @@ class Result {
         requires ResultLike<std::invoke_result_t<F>>
     {
         using R = std::invoke_result_t<F>;
-        if (isError()) return R::errorResult(_errorMessage);
+        if (isError())
+            return R::errorResult(_errorMessage);
         return std::invoke(std::forward<F>(f));
     }
 };
@@ -197,7 +201,6 @@ Result<U> catchResult(Result<U>&& r, F&& handler)
 }
 
 using Failable = Result<NoneType>;
-
 
 // A deferred function object that, when invoked, returns a ResultLike
 template <class F>
@@ -230,7 +233,7 @@ concept DeferredResultFnLike =
 
 template <class... Fs>
 Failable runAll(Fs&&... fs)
-    requires (DeferredResultFnLike<Fs> && ...)
+    requires(DeferredResultFnLike<Fs> && ...)
 {
     Failable out = Failable::ok(NoneType{});
 

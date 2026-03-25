@@ -10,13 +10,14 @@ void OkayTweenSequence::append(std::shared_ptr<IOkayTween> tweenPtr) {
         okay::Engine.logger.error("Could not append tween. Sequence has already started.\n");
         return;
     }
-    
+
     _sequence.push_back(tweenPtr);
 }
 
 void OkayTweenSequence::start() {
     if (_sequence.size() > 0) {
-        okay::Engine.systems.getSystemChecked<OkayTweenEngine>()->addTween(this->shared_from_this());
+        okay::Engine.systems.getSystemChecked<OkayTweenEngine>()->addTween(
+            this->shared_from_this());
         _sequence[_index]->setIsTweening(true);
         _started = true;
     } else {
@@ -28,7 +29,7 @@ void OkayTweenSequence::tick() {
     if (_sequence[_index]->isFinished()) {
         _sequence[_index]->reset();
         ++_index;
-        
+
         if (!isFinished()) {
             _sequence[_index]->setIsTweening(true);
         }
@@ -59,7 +60,7 @@ void OkayTweenSequence::kill() {
     for (auto& tween : _sequence) {
         tween->kill();
     }
-    
+
     _sequence.clear();
     _index = 0;
 }

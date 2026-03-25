@@ -51,12 +51,8 @@ class OkayTextMeshBuilder {
         int ascentPx{0};
         int descentPx{0};
 
-        int heightPx() const {
-            return ascentPx + descentPx;
-        }
-        float advancePx(float extraSpacingPx) const {
-            return (float)heightPx() + extraSpacingPx;
-        }
+        int heightPx() const { return ascentPx + descentPx; }
+        float advancePx(float extraSpacingPx) const { return (float)heightPx() + extraSpacingPx; }
     };
 
     const OkayTextOptions& _opt;

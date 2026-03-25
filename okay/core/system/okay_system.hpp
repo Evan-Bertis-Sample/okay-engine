@@ -153,7 +153,8 @@ class OkaySystemPool {
     IOkaySystem* operator[](std::size_t i) { return nthPtr(i); }
 
     IOkaySystem* at(std::size_t i) {
-        if (i >= _systems.size()) throw std::out_of_range("OkaySystemPool::at");
+        if (i >= _systems.size())
+            throw std::out_of_range("OkaySystemPool::at");
         return nthPtr(i);
     }
 
@@ -180,7 +181,8 @@ class OkaySystemManager {
     template <typename T>
     T* getSystemChecked() {
         Option<T*> opt = getSystem<T>();
-        if (!opt) {            // for now, we just stall the program until a proper exit mechanismm is implemented
+        if (!opt) {  // for now, we just stall the program until a proper exit mechanismm is
+                     // implemented
             while (true) {
             }
         }
@@ -196,7 +198,8 @@ class OkaySystemManager {
 
     bool hasSystem(std::size_t hash) {
         for (const OkaySystemPool& pool : _pools) {
-            if (pool.hasSystem(hash)) return true;
+            if (pool.hasSystem(hash))
+                return true;
         }
         return false;
     }

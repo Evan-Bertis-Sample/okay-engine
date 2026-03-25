@@ -10,17 +10,17 @@ class OkayIMGUI : public OkaySystem<OkaySystemScope::GAME> {
     OkayIMGUI() = default;
 
     void initialize();
-    
+
     void postInitialize();
 
     void tick();
 
     void shutdown();
-    
+
    private:
-    bool _initialized { false };
+    bool _initialized{false};
 };
 
-} // namespace okay
+}  // namespace okay
 
 #endif

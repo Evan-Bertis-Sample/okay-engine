@@ -19,8 +19,10 @@ std::string OkayLogger::makeStartFilename(const std::string& prefix) {
 }
 
 void OkayLogger::openFileIfNeeded() {
-    if (!_options.ToFile) return;
-    if (_logFileName.empty()) _logFileName = makeStartFilename(_options.filePrefix);
+    if (!_options.ToFile)
+        return;
+    if (_logFileName.empty())
+        _logFileName = makeStartFilename(_options.filePrefix);
     // make the file if it doesn't exist
     // create the directories if they don't exist
     std::filesystem::create_directories(std::filesystem::path{_logFileName}.parent_path());

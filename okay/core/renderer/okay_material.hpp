@@ -23,31 +23,20 @@ class IOkayMaterialPropertyCollection {
 
 class OkayMaterial {
    public:
-    static constexpr std::uint32_t invalidID() {
-        return 0xFFFFFFFFu;
-    }
+    static constexpr std::uint32_t invalidID() { return 0xFFFFFFFFu; }
 
     OkayMaterial(OkayShaderHandle shader,
                  std::unique_ptr<IOkayMaterialPropertyCollection> uniforms,
                  std::uint32_t id)
-        : _shader(shader), _uniforms(std::move(uniforms)), _id(id) {
-    }
+        : _shader(shader), _uniforms(std::move(uniforms)), _id(id) {}
 
-    bool isNone() const {
-        return _id == invalidID();
-    }
+    bool isNone() const { return _id == invalidID(); }
 
-    std::uint32_t id() const {
-        return _id;
-    }
+    std::uint32_t id() const { return _id; }
 
-    std::uint32_t shaderID() const {
-        return _shader->srcHash();
-    }
+    std::uint32_t shaderID() const { return _shader->srcHash(); }
 
-    GLuint programID() const {
-        return _shader->programID();
-    }
+    GLuint programID() const { return _shader->programID(); }
 
     Failable setShader() {
         if (_shader->isNone()) {
@@ -92,13 +81,9 @@ class OkayMaterial {
         return _shader == other._shader && _id == other._id;
     }
 
-    bool operator!=(const OkayMaterial& other) const {
-        return !(*this == other);
-    }
+    bool operator!=(const OkayMaterial& other) const { return !(*this == other); }
 
-    std::unique_ptr<IOkayMaterialPropertyCollection>& uniforms() {
-        return _uniforms;
-    }
+    std::unique_ptr<IOkayMaterialPropertyCollection>& uniforms() { return _uniforms; }
 
    private:
     OkayShaderHandle _shader;
@@ -115,17 +100,13 @@ struct OkayMaterialHandle {
     OkayMaterialRegistry* owner = nullptr;
     std::uint32_t id = OkayMaterial::invalidID();
 
-    bool isValid() const {
-        return owner != nullptr && id != OkayMaterial::invalidID();
-    }
+    bool isValid() const { return owner != nullptr && id != OkayMaterial::invalidID(); }
 
     bool operator==(const OkayMaterialHandle& other) const {
         return owner == other.owner && id == other.id;
     }
 
-    bool operator!=(const OkayMaterialHandle& other) const {
-        return !(*this == other);
-    }
+    bool operator!=(const OkayMaterialHandle& other) const { return !(*this == other); }
 
     const std::unique_ptr<OkayMaterial>& operator*() const;
     const std::unique_ptr<OkayMaterial>& operator->() const;
@@ -162,25 +143,17 @@ class OkayMaterialRegistry {
         return &_shaders.at(handle.id);
     }
 
-    const OkayShader* getShader(GLuint programID) const {
-        return &_shaders.at(programID);
-    }
+    const OkayShader* getShader(GLuint programID) const { return &_shaders.at(programID); }
 
-    OkayShader* getShader(const OkayShaderHandle& handle) {
-        return &_shaders.at(handle.id);
-    }
+    OkayShader* getShader(const OkayShaderHandle& handle) { return &_shaders.at(handle.id); }
 
-    OkayShader* getShader(GLuint programID) {
-        return &_shaders.at(programID);
-    }
+    OkayShader* getShader(GLuint programID) { return &_shaders.at(programID); }
 
     const OkayShader& getShader(const OkayMaterialHandle& handle) const {
         return _shaders.at(handle.id);
     }
 
-    OkayShader& getShader(const OkayMaterialHandle& handle) {
-        return _shaders.at(handle.id);
-    }
+    OkayShader& getShader(const OkayMaterialHandle& handle) { return _shaders.at(handle.id); }
 
     // equality
     bool operator==(const OkayMaterialRegistry& other) const {
@@ -192,21 +165,20 @@ class OkayMaterialRegistry {
     std::unordered_map<GLuint, OkayShader> _shaders;
 
     static std::uint32_t _materialID;
-    static std::uint32_t nextID() {
-        return _materialID++;
-    }
+    static std::uint32_t nextID() { return _materialID++; }
 };
 
 template <class Derived>
 class OkayMaterialProperties : public IOkayMaterialPropertyCollection {
-public:
+   public:
     Failable init(OkayShaderHandle shader) override {
         auto& d = static_cast<Derived&>(*this);
         Failable out = Failable::ok({});
 
         // init plain uniforms (cache locations)
         tupleForEach(d.uniformRefs(), [&](auto& u) {
-            if (out.isError()) return;
+            if (out.isError())
+                return;
             shader->findUniformLocation(u.name());
         });
 
@@ -216,7 +188,8 @@ public:
 
         // init textures: cache sampler locations (program-specific, belongs to shader)
         tupleForEach(d.textureRefs(), [&](auto& t) {
-            if (out.isError()) return;
+            if (out.isError())
+                return;
             shader->findUniformLocation(t.name());
         });
 
@@ -254,14 +227,11 @@ public:
         tupleForEach(d.textureRefs(), [&](auto& t) {
             GLuint loc = shader->findUniformLocation(t.name());
             if (loc == uni::inactiveLocation()) {
-                return; // optimized out / not present
+                return;  // optimized out / not present
             }
 
-            auto r = gpu.textures.bindSampler2D(shader->programID(),
-                                                loc,
-                                                t.get(),
-                                                t.params(),
-                                                t.unit());
+            auto r =
+                gpu.textures.bindSampler2D(shader->programID(), loc, t.get(), t.params(), t.unit());
             if (r.isError()) {
                 errorMessages << r.error() << '\n';
                 anyErrors = true;
@@ -271,7 +241,7 @@ public:
         return anyErrors ? Failable::errorResult(errorMessages.str()) : Failable::ok({});
     }
 
-private:
+   private:
     bool _initialized{false};
 };
 

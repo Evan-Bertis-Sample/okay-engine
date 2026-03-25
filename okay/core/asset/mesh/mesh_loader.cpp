@@ -9,7 +9,8 @@ using namespace okay;
 static std::unique_ptr<MeshLoader> CreateMeshLoaderForExtension(const std::filesystem::path& path) {
     std::string ext = StringUtils::ToLower(path.extension().string());
 
-    if (ext == ".obj") return std::make_unique<ObjLoader>();
+    if (ext == ".obj")
+        return std::make_unique<ObjLoader>();
 
     return nullptr;
 }

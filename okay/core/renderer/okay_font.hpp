@@ -16,19 +16,12 @@ class OkayFontAtlas {
    public:
     static constexpr int PAD = 1;
 
-    OkayFontAtlas(int w, int h) : _width(w), _height(h), _pixels((size_t)w * (size_t)h * 4, 0) {
-    }
+    OkayFontAtlas(int w, int h) : _width(w), _height(h), _pixels((size_t)w * (size_t)h * 4, 0) {}
 
-    int width() const {
-        return _width;
-    }
-    int height() const {
-        return _height;
-    }
+    int width() const { return _width; }
+    int height() const { return _height; }
 
-    const std::vector<std::uint8_t>& pixels() const {
-        return _pixels;
-    }
+    const std::vector<std::uint8_t>& pixels() const { return _pixels; }
 
     bool addGlyph(const FT_Bitmap& bm, int& outX, int& outY) {
         const int gw = (int)bm.width;
@@ -135,9 +128,7 @@ class OkayFontManager {
         }
     }
 
-    ~OkayFontManager() {
-        FT_Done_FreeType(_ftLibrary);
-    }
+    ~OkayFontManager() { FT_Done_FreeType(_ftLibrary); }
 
     Option<FontHandle> loadFont(const std::string& fontPath,
                                 const OkayFontLoadOptions& options = {}) {
@@ -169,9 +160,7 @@ class OkayFontManager {
         return Glyph{codepoint, 0, 0, 0, 0, 0, 0, 0};
     }
 
-    OkayTexture getGlyphAtlas(FontHandle font) {
-        return _glyphAtlases[font.id];
-    }
+    OkayTexture getGlyphAtlas(FontHandle font) { return _glyphAtlases[font.id]; }
 
    private:
     constexpr static int ATLAS_W = 2048;
@@ -250,7 +239,8 @@ class OkayFontManager {
 
         auto store = OkayTextureDataStore::mainStore();
 
-        auto handle = store->addTexture(meta, (void*)_atlas.pixels().data(), _atlas.pixels().size());
+        auto handle =
+            store->addTexture(meta, (void*)_atlas.pixels().data(), _atlas.pixels().size());
         _glyphAtlases[faceId] = OkayTexture(store, handle);
 
         _atlas.reset();  // clear the atlas for the next font face

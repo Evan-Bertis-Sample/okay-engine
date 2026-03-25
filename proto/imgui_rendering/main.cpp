@@ -21,7 +21,7 @@ static void __gameShutdown();
 int main() {
     okay::SurfaceConfig surfaceConfig;
     okay::Surface surface(surfaceConfig);
-    
+
     okay::OkayRendererSettings rendererSettings{surfaceConfig};
     auto renderer = okay::OkayRenderer::create(rendererSettings);
 
@@ -29,7 +29,8 @@ int main() {
     auto levelManager = okay::OkayLevelManager::create(levelManagerSettings);
 
     okay::OkayGame::create()
-        .addSystems(std::move(renderer), std::move(levelManager),
+        .addSystems(std::move(renderer),
+                    std::move(levelManager),
                     std::make_unique<okay::OkayAssetManager>(),
                     std::make_unique<okay::OkayTweenEngine>(),
                     std::make_unique<okay::OkayIMGUI>())

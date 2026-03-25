@@ -12,23 +12,26 @@ void OkayIMGUI::initialize() {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;   // Enable Gamepad Controls
 
-    okay::OkayRenderer *renderer = okay::Engine.systems.getSystemChecked<okay::OkayRenderer>();
+    okay::OkayRenderer* renderer = okay::Engine.systems.getSystemChecked<okay::OkayRenderer>();
     auto win = renderer->getSurfaceWindow();
     if (win == nullptr) {
         Engine.logger.warn("No GLFW window available");
         return;
     }
-    ImGui_ImplGlfw_InitForOpenGL(win, true);    // Second param install_callback=true will install GLFW callbacks and chain to existing ones.
+    ImGui_ImplGlfw_InitForOpenGL(win, true);  // Second param install_callback=true will install
+                                              // GLFW callbacks and chain to existing ones.
     ImGui_ImplOpenGL3_Init();
     _initialized = true;
 }
 
-void OkayIMGUI::postInitialize() {}
+void OkayIMGUI::postInitialize() {
+}
 
-void OkayIMGUI::tick() {}
+void OkayIMGUI::tick() {
+}
 
 void OkayIMGUI::shutdown() {
     if (_initialized) {

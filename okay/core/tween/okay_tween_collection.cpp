@@ -11,7 +11,8 @@ void OkayTweenCollection::append(std::shared_ptr<IOkayTween> tweenPtr) {
 
 void OkayTweenCollection::start() {
     if (_collection.size() > 0) {
-        okay::Engine.systems.getSystemChecked<OkayTweenEngine>()->addTween(this->shared_from_this());
+        okay::Engine.systems.getSystemChecked<OkayTweenEngine>()->addTween(
+            this->shared_from_this());
         for (auto& tween : _collection) {
             tween->reset();
             tween->setIsTweening(true);
@@ -48,12 +49,13 @@ void OkayTweenCollection::kill() {
 }
 
 bool OkayTweenCollection::isFinished() {
-    bool allTweensFinished { true };
+    bool allTweensFinished{true};
 
     for (auto& tween : _collection) {
-        if (!tween->isFinished()) allTweensFinished = false;
+        if (!tween->isFinished())
+            allTweensFinished = false;
     }
-    
+
     return allTweensFinished;
 }
 

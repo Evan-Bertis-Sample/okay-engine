@@ -4,7 +4,7 @@
 
 namespace okay {
 
-const std::float_t PI { std::numbers::pi };
+const std::float_t PI{std::numbers::pi};
 
 namespace easing {
 
@@ -45,9 +45,8 @@ std::float_t cubicOut(std::float_t progress) {
 }
 
 std::float_t cubicInOut(std::float_t progress) {
-    return progress < 0.5
-            ? 4 * progress * progress * progress
-            : 1 - std::pow(-2 * progress + 2, 3) / 2;
+    return progress < 0.5 ? 4 * progress * progress * progress
+                          : 1 - std::pow(-2 * progress + 2, 3) / 2;
 }
 
 std::float_t quartIn(std::float_t progress) {
@@ -59,9 +58,8 @@ std::float_t quartOut(std::float_t progress) {
 }
 
 std::float_t quartInOut(std::float_t progress) {
-    return progress < 0.5
-            ? 8 * progress * progress * progress * progress
-            : 1 - std::pow(-2 * progress + 2, 4) / 2;
+    return progress < 0.5 ? 8 * progress * progress * progress * progress
+                          : 1 - std::pow(-2 * progress + 2, 4) / 2;
 }
 
 std::float_t quintIn(std::float_t progress) {
@@ -73,9 +71,8 @@ std::float_t quintOut(std::float_t progress) {
 }
 
 std::float_t quintInOut(std::float_t progress) {
-    return progress < 0.5
-            ? 16 * progress * progress * progress * progress * progress
-            : 1 - std::pow(-2 * progress + 2, 5) / 2;
+    return progress < 0.5 ? 16 * progress * progress * progress * progress * progress
+                          : 1 - std::pow(-2 * progress + 2, 5) / 2;
 }
 
 std::float_t expoIn(std::float_t progress) {
@@ -87,12 +84,10 @@ std::float_t expoOut(std::float_t progress) {
 }
 
 std::float_t expoInOut(std::float_t progress) {
-    return progress == 0
-            ? 0
-            : progress == 1
-            ? 1
-            : progress < 0.5 ? std::pow(2, 20 * progress - 10) / 2
-            : (2 - std::pow(2, -20 * progress + 10)) / 2;
+    return progress == 0    ? 0
+           : progress == 1  ? 1
+           : progress < 0.5 ? std::pow(2, 20 * progress - 10) / 2
+                            : (2 - std::pow(2, -20 * progress + 10)) / 2;
 }
 
 std::float_t circIn(std::float_t progress) {
@@ -104,64 +99,60 @@ std::float_t circOut(std::float_t progress) {
 }
 
 std::float_t circInOut(std::float_t progress) {
-    return progress < 0.5
-            ? (1 - std::sqrt(1 - std::pow(2 * progress, 2))) / 2
-            : (std::sqrt(1 - std::pow(-2 * progress + 2, 2)) + 1) / 2;
+    return progress < 0.5 ? (1 - std::sqrt(1 - std::pow(2 * progress, 2))) / 2
+                          : (std::sqrt(1 - std::pow(-2 * progress + 2, 2)) + 1) / 2;
 }
 
 std::float_t elasticIn(std::float_t progress) {
-    const std::float_t C4 { (2 * PI) / 3 };
+    const std::float_t C4{(2 * PI) / 3};
 
-    return progress == 0
-            ? 0
-            : progress == 1
-            ? 1
-            : -std::pow(2, 10 * progress - 10) * std::sin((progress * 10 - 10.75) * C4);
+    return progress == 0 ? 0
+           : progress == 1
+               ? 1
+               : -std::pow(2, 10 * progress - 10) * std::sin((progress * 10 - 10.75) * C4);
 }
 
 std::float_t elasticOut(std::float_t progress) {
-    const std::float_t C4 { (2 * PI) / 3 };
+    const std::float_t C4{(2 * PI) / 3};
 
-    return progress == 0
-            ? 0
-            : progress == 1
-            ? 1
-            : std::pow(2, -10 * progress) * std::sin((progress * 10 - 0.75) * C4) + 1;
+    return progress == 0 ? 0
+           : progress == 1
+               ? 1
+               : std::pow(2, -10 * progress) * std::sin((progress * 10 - 0.75) * C4) + 1;
 }
 
 std::float_t elasticInOut(std::float_t progress) {
-    const std::float_t C5 { (2 * PI) / 4.5f };
+    const std::float_t C5{(2 * PI) / 4.5f};
 
-    return progress == 0
-            ? 0
-            : progress == 1
-            ? 1
-            : progress < 0.5
-            ? -(std::pow(2, 20 * progress - 10) * std::sin((20 * progress - 11.125) * C5)) / 2
-            : (std::pow(2, -20 * progress + 10) * std::sin((20 * progress - 11.125) * C5)) / 2 + 1;
+    return progress == 0   ? 0
+           : progress == 1 ? 1
+           : progress < 0.5
+               ? -(std::pow(2, 20 * progress - 10) * std::sin((20 * progress - 11.125) * C5)) / 2
+               : (std::pow(2, -20 * progress + 10) * std::sin((20 * progress - 11.125) * C5)) / 2 +
+                     1;
 }
 
 std::float_t backIn(std::float_t progress) {
-    const std::float_t C1 { 1.70158 };
-    const std::float_t C3 { C1 + 1 };
+    const std::float_t C1{1.70158};
+    const std::float_t C3{C1 + 1};
 
     return C3 * progress * progress * progress - C1 * progress * progress;
 }
 
 std::float_t backOut(std::float_t progress) {
-    const std::float_t C1 { 1.70158 };
-    const std::float_t C3 { C1 + 1 };
+    const std::float_t C1{1.70158};
+    const std::float_t C3{C1 + 1};
 
     return 1 + C3 * std::pow(progress - 1, 3) + C1 * std::pow(progress - 1, 2);
 }
 
 std::float_t backInOut(std::float_t progress) {
-    const std::float_t C1 { 1.70158 };
-    const std::float_t C2 { C1 * 1.525f };
+    const std::float_t C1{1.70158};
+    const std::float_t C2{C1 * 1.525f};
 
     return progress < 0.5
-            ? (std::pow(2 * progress, 2) * ((C2 + 1) * 2 * progress - C2)) / 2
-            : (std::pow(2 * progress - 2, 2) * ((C2 + 1) * (progress * 2 - 2) + C2) + 2) / 2;
+               ? (std::pow(2 * progress, 2) * ((C2 + 1) * 2 * progress - C2)) / 2
+               : (std::pow(2 * progress - 2, 2) * ((C2 + 1) * (progress * 2 - 2) + C2) + 2) / 2;
 }
 
 std::float_t bounceIn(std::float_t progress) {
@@ -197,6 +188,6 @@ std::float_t bounceInOut(std::float_t progress) {
     }
 }
 
-} // namespace easing
+}  // namespace easing
 
-} // namespace okay
+}  // namespace okay

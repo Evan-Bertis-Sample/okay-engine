@@ -19,6 +19,6 @@ class IOkayTween {
     virtual ~IOkayTween() = default;
 };
 
-} // namespace okay
+}  // namespace okay
 
 #endif

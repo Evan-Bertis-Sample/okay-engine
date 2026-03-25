@@ -26,7 +26,7 @@ class IOkayRenderPass {
     virtual void resize(int newWidth, int newHeight) = 0;
     virtual void render(const OkayRenderContext& context) = 0;
 };
-  
+
 class OkayRenderPipeline {
    public:
     template <typename... Ts>
@@ -44,9 +44,7 @@ class OkayRenderPipeline {
         return *this;
     }
 
-    void addPass(std::unique_ptr<IOkayRenderPass> pass) {
-        _passes.emplace_back(std::move(pass));
-    }
+    void addPass(std::unique_ptr<IOkayRenderPass> pass) { _passes.emplace_back(std::move(pass)); }
 
     void initialize() {
         for (auto& pass : _passes) {

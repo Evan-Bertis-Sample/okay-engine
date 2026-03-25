@@ -203,7 +203,7 @@ Failable OkayRenderWorld::addChild(OkayRenderEntity parent, OkayRenderEntity chi
     // link the child to the parent
     childItem.parent = parent._renderItem;
 
-    childItem.nextSibling = parentItem.firstChild; // invalid if none
+    childItem.nextSibling = parentItem.firstChild;  // invalid if none
     parentItem.firstChild = children._renderItem;
 
     // mark the transforms dirty

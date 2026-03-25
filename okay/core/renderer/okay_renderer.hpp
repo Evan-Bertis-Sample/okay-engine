@@ -33,8 +33,7 @@ class OkayRenderer : public OkaySystem<OkaySystemScope::ENGINE> {
         : _surfaceConfig(settings.surfaceConfig),
           _surface(std::make_unique<Surface>(settings.surfaceConfig)),
           _renderTargetPool(settings.surfaceConfig.width, settings.surfaceConfig.height),
-          _pipeline(std::move(settings.pipeline)) {
-    }
+          _pipeline(std::move(settings.pipeline)) {}
 
     OkayShader shader;
 
@@ -44,29 +43,15 @@ class OkayRenderer : public OkaySystem<OkaySystemScope::ENGINE> {
     void postTick() override;
     void shutdown() override;
 
-    OkayRenderWorld& world() {
-        return _world;
-    }
-    OkayMeshBuffer& meshBuffer() {
-        return _meshBuffer;
-    }
-    OkayRenderTargetPool& renderTargetPool() {
-        return _renderTargetPool;
-    }
-    OkayMaterialRegistry& materialRegistry() {
-        return _materialRegistry;
-    }
+    OkayRenderWorld& world() { return _world; }
+    OkayMeshBuffer& meshBuffer() { return _meshBuffer; }
+    OkayRenderTargetPool& renderTargetPool() { return _renderTargetPool; }
+    OkayMaterialRegistry& materialRegistry() { return _materialRegistry; }
 
-    uint32_t width() const {
-        return _surfaceConfig.width;
-    }
-    uint32_t height() const {
-        return _surfaceConfig.height;
-    }
+    uint32_t width() const { return _surfaceConfig.width; }
+    uint32_t height() const { return _surfaceConfig.height; }
 
-    GLFWwindow* getSurfaceWindow() {
-        return reinterpret_cast<GLFWwindow*>(_surface->getWindow());
-    }
+    GLFWwindow* getSurfaceWindow() { return reinterpret_cast<GLFWwindow*>(_surface->getWindow()); }
 
    private:
     SurfaceConfig _surfaceConfig;

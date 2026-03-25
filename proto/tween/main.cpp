@@ -35,7 +35,8 @@ int main() {
     auto levelManager = okay::OkayLevelManager::create(levelManagerSettings);
 
     okay::OkayGame::create()
-        .addSystems(std::move(renderer), std::move(levelManager),
+        .addSystems(std::move(renderer),
+                    std::move(levelManager),
                     std::make_unique<okay::OkayAssetManager>(),
                     std::make_unique<okay::OkayTweenEngine>())
         .onInitialize(__gameInitialize)
@@ -46,26 +47,26 @@ int main() {
     return 0;
 }
 
-okay::TweenConfig<float> tweenConfig0 {
+okay::TweenConfig<float> tweenConfig0{
     .start = -0.5,
     .end = 0.5,
     .ref = ref0,
 };
-okay::TweenConfig<float> tweenConfig1 {
+okay::TweenConfig<float> tweenConfig1{
     .start = -0.5f,
     .end = 0.5f,
     .ref = ref1,
     .durationMs = 2000,
     .inOutBack = true,
 };
-okay::TweenConfig<float> tweenConfig2 {
+okay::TweenConfig<float> tweenConfig2{
     .start = -0.5f,
     .end = 0.5f,
     .ref = ref2,
     .durationMs = 2000,
     .inOutBack = true,
 };
-okay::TweenConfig<float> tweenConfig3 {
+okay::TweenConfig<float> tweenConfig3{
     .start = -0.5f,
     .end = 0.5f,
     .ref = ref3,
@@ -73,7 +74,7 @@ okay::TweenConfig<float> tweenConfig3 {
     .durationMs = 2000,
     .inOutBack = true,
 };
-okay::TweenConfig<float> tweenConfig4 {
+okay::TweenConfig<float> tweenConfig4{
     .start = -0.5f,
     .end = 0.5f,
     .ref = ref4,
@@ -87,13 +88,13 @@ std::shared_ptr<okay::OkayTween<float>> tween1;
 std::shared_ptr<okay::OkayTween<float>> tween2;
 std::shared_ptr<okay::OkayTween<float>> tween3;
 std::shared_ptr<okay::OkayTween<float>> tween4;
-std::shared_ptr<okay::OkayTweenSequence> seq { okay::OkayTweenSequence::create() };
-std::shared_ptr<okay::OkayTweenCollection> col {okay::OkayTweenCollection::create() };
+std::shared_ptr<okay::OkayTweenSequence> seq{okay::OkayTweenSequence::create()};
+std::shared_ptr<okay::OkayTweenCollection> col{okay::OkayTweenCollection::create()};
 
 static void __gameInitialize() {
     // Additional game initialization logic
     okay::Engine.logger.info("Game initialized.");
-    
+
     tween0 = okay::OkayTween<float>::create(tweenConfig0);
     // tween0->start();
 

@@ -22,9 +22,7 @@ class IComponentPool {
 template <typename T>
 class ComponentPool : public IComponentPool {
    public:
-    void reserve(std::size_t size) {
-        _pool.reserve(size);
-    }
+    void reserve(std::size_t size) { _pool.reserve(size); }
 
    private:
     std::vector<T> _pool;
@@ -34,12 +32,9 @@ class OkayECS : public OkaySystem<OkaySystemScope::LEVEL> {
    public:
     struct Entity {
        public:
-        Entity() {
-        }
-        Entity(const Entity& other) : _ecs(other._ecs), _id(other._id) {
-        }
-        Entity(Entity&& other) : _ecs(other._ecs), _id(other._id) {
-        }
+        Entity() {}
+        Entity(const Entity& other) : _ecs(other._ecs), _id(other._id) {}
+        Entity(Entity&& other) : _ecs(other._ecs), _id(other._id) {}
         Entity& operator=(const Entity& other) {
             _ecs = other._ecs;
             _id = other._id;
@@ -53,15 +48,9 @@ class OkayECS : public OkaySystem<OkaySystemScope::LEVEL> {
         bool operator==(const Entity& other) const {
             return _ecs == other._ecs && _id == other._id;
         }
-        bool operator!=(const Entity& other) const {
-            return !(*this == other);
-        }
-        bool operator<(const Entity& other) const {
-            return _id < other._id;
-        }
-        bool operator>(const Entity& other) const {
-            return _id > other._id;
-        }
+        bool operator!=(const Entity& other) const { return !(*this == other); }
+        bool operator<(const Entity& other) const { return _id < other._id; }
+        bool operator>(const Entity& other) const { return _id > other._id; }
 
         template <typename T>
         Option<T> getComponent() const {
@@ -79,6 +68,12 @@ class OkayECS : public OkaySystem<OkaySystemScope::LEVEL> {
             return *this;
         }
 
+        template <typename T, typename... Args>
+        Entity& addComponent(Args&&... args) {
+            _ecs->addComponent<T>(*this, std::forward<Args>(args)...);
+            return *this;
+        }
+
         template <typename T>
         Entity& removeComponent() {
             _ecs->removeComponent<T>(*this);
@@ -91,8 +86,7 @@ class OkayECS : public OkaySystem<OkaySystemScope::LEVEL> {
         }
 
        private:
-        Entity(OkayECS* ecs, std::size_t id) : _ecs(ecs), _id(id) {
-        }
+        Entity(OkayECS* ecs, std::size_t id) : _ecs(ecs), _id(id) {}
 
         std::size_t _id{0};
         OkayECS* _ecs{nullptr};

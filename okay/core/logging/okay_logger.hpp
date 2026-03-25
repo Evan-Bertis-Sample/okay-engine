@@ -51,7 +51,6 @@ struct LogPhrases {
         "\033[31m"   // ERROR
     };
 
-
     static constexpr std::string_view COLOR_RESET = "\033[0m";
 
     template <Severity s>
@@ -81,17 +80,17 @@ struct OkayLog final {
 
     const char* shortFileName() const {
         // return the last path component of the file name
-        const char *p = strrchr(loc.file_name(), '/');
+        const char* p = strrchr(loc.file_name(), '/');
         return p ? p + 1 : loc.file_name();
     }
 
     template <Severity S, Verbosity V, typename... Ts>
     void invoke(std::ostream& os, bool enableColor, Ts&&... ts) const {
         os << LogPhrases::severityColor<S>(enableColor);
-        os << LogPhrases::severityTag<S>() << '[' << shortFileName() << ':' << loc.line()
-           << "] ";
+        os << LogPhrases::severityTag<S>() << '[' << shortFileName() << ':' << loc.line() << "] ";
         os << std::vformat(fmt, std::make_format_args(ts...));
-        if (enableColor) os << LogPhrases::COLOR_RESET;
+        if (enableColor)
+            os << LogPhrases::COLOR_RESET;
         os << '\n';
     }
 };
@@ -134,7 +133,8 @@ class OkayLogger {
 
     template <Severity S, Verbosity V, typename... Ts>
     void emit(std::ostream& os, const OkayLog& log, Ts&&... ts) {
-        if constexpr (!OkayLog::logEnabled<S, V>()) return;
+        if constexpr (!OkayLog::logEnabled<S, V>())
+            return;
 
         log.invoke<S, V, Ts...>(os, true, std::forward<Ts>(ts)...);
 

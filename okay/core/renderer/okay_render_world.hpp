@@ -28,8 +28,7 @@ struct OkayTransform {
     OkayTransform(const glm::vec3& pos = glm::vec3(0.0f),
                   const glm::vec3& scl = glm::vec3(1.0f),
                   const glm::quat& rot = glm::quat())
-        : position(pos), scale(scl), rotation(rot) {
-    }
+        : position(pos), scale(scl), rotation(rot) {}
 
     // asignment, equality comparison overloads
     OkayTransform& operator=(const OkayTransform& other) {
@@ -43,9 +42,7 @@ struct OkayTransform {
         return position == other.position && scale == other.scale && rotation == other.rotation;
     }
 
-    bool operator!=(const OkayTransform& other) const {
-        return !(*this == other);
-    }
+    bool operator!=(const OkayTransform& other) const { return !(*this == other); }
 
     glm::mat4 toMatrix() const {
         glm::mat4 mat(1.0f);
@@ -119,9 +116,7 @@ class OkayCamera {
         }
     }
 
-    glm::mat4 viewMatrix() const {
-        return glm::inverse(transform.toMatrix());
-    }
+    glm::mat4 viewMatrix() const { return glm::inverse(transform.toMatrix()); }
 
     void lookAt(glm::vec3 center, glm::vec3 up = glm::vec3(0, 1, 0)) {
         glm::vec3 eye = transform.position;
@@ -136,12 +131,8 @@ class OkayCamera {
         transform.rotation = glm::quat_cast(worldRot);
     }
 
-    glm::vec3 position() const {
-        return transform.position;
-    }
-    glm::vec3 direction() const {
-        return transform.rotation * glm::vec3(0, 0, -1);
-    }
+    glm::vec3 position() const { return transform.position; }
+    glm::vec3 direction() const { return transform.rotation * glm::vec3(0, 0, -1); }
 
    private:
     ProjectionType _projectionType{ProjectionType::PERPSECTIVE};
@@ -192,13 +183,9 @@ struct alignas(16) OkayLight {
         return l;
     }
 
-    Type type() const {
-        return static_cast<Type>((int)posType.w);
-    }
+    Type type() const { return static_cast<Type>((int)posType.w); }
 
-    void setPosition(glm::vec3 pos) {
-        posType = glm::vec4(pos, posType.w);
-    }
+    void setPosition(glm::vec3 pos) { posType = glm::vec4(pos, posType.w); }
 
     static constexpr std::size_t MAX_LIGHTS = 16;
 };
@@ -223,29 +210,17 @@ struct OkayRenderItem {
     OkayRenderItem(OkayMaterialHandle mat, OkayMesh m);
 
     // operator overloads for std::map
-    bool operator<(const OkayRenderItem& other) const {
-        return sortKey < other.sortKey;
-    }
+    bool operator<(const OkayRenderItem& other) const { return sortKey < other.sortKey; }
 
-    bool operator>(const OkayRenderItem& other) const {
-        return sortKey > other.sortKey;
-    }
+    bool operator>(const OkayRenderItem& other) const { return sortKey > other.sortKey; }
 
-    bool operator==(const OkayRenderItem& other) const {
-        return sortKey == other.sortKey;
-    }
+    bool operator==(const OkayRenderItem& other) const { return sortKey == other.sortKey; }
 
-    bool operator!=(const OkayRenderItem& other) const {
-        return !(*this == other);
-    }
+    bool operator!=(const OkayRenderItem& other) const { return !(*this == other); }
 
-    bool operator<=(const OkayRenderItem& other) const {
-        return sortKey <= other.sortKey;
-    }
+    bool operator<=(const OkayRenderItem& other) const { return sortKey <= other.sortKey; }
 
-    bool operator>=(const OkayRenderItem& other) const {
-        return sortKey >= other.sortKey;
-    }
+    bool operator>=(const OkayRenderItem& other) const { return sortKey >= other.sortKey; }
 };
 
 struct OkayRenderEntity {
@@ -260,21 +235,16 @@ struct OkayRenderEntity {
 
         ~Properties();
 
-        Properties* operator->() {
-            return this;
-        }
+        Properties* operator->() { return this; }
 
-        const Properties* operator->() const {
-            return this;
-        }
+        const Properties* operator->() const { return this; }
 
        private:
         RenderItemHandle _renderItem{RenderItemHandle::invalidHandle()};
         OkayRenderWorld* _owner;
 
         Properties(OkayRenderWorld* owner, RenderItemHandle renderItem)
-            : _owner(owner), _renderItem(renderItem) {
-        }
+            : _owner(owner), _renderItem(renderItem) {}
     };
 
     friend class OkayRenderWorld;
@@ -282,23 +252,18 @@ struct OkayRenderEntity {
     constexpr OkayRenderEntity() = default;
 
     OkayRenderEntity(OkayRenderWorld* owner, RenderItemHandle renderItem)
-        : _owner(owner), _renderItem(renderItem) {
-    }
+        : _owner(owner), _renderItem(renderItem) {}
 
     bool operator==(const OkayRenderEntity& other) const {
         return _renderItem == other._renderItem;
     }
 
-    bool operator!=(const OkayRenderEntity& other) const {
-        return !(*this == other);
-    }
+    bool operator!=(const OkayRenderEntity& other) const { return !(*this == other); }
 
     Properties operator*() const;
     Properties operator->() const;
 
-    Properties prop() const {
-        return **this;
-    }
+    Properties prop() const { return **this; }
 
    private:
     OkayRenderWorld* _owner{nullptr};
@@ -311,12 +276,10 @@ class OkayRenderWorld {
        public:
         OkayRenderWorld& world;
 
-        ChildIterator(OkayRenderWorld& world, RenderItemHandle h) : world(world), _renderItem(h) {
-        }
+        ChildIterator(OkayRenderWorld& world, RenderItemHandle h) : world(world), _renderItem(h) {}
 
         ChildIterator(const ChildIterator& other)
-            : world(other.world), _renderItem(other._renderItem) {
-        }
+            : world(other.world), _renderItem(other._renderItem) {}
 
         ChildIterator& operator++();
 
@@ -334,20 +297,13 @@ class OkayRenderWorld {
         ChildIterator b;
         ChildIterator e;
 
-        ChildIterator begin() const {
-            return b;
-        }
-        ChildIterator end() const {
-            return e;
-        }
+        ChildIterator begin() const { return b; }
+        ChildIterator end() const { return e; }
 
-        ChildRange(ChildIterator b, ChildIterator e) : b(b), e(e) {
-        }
+        ChildRange(ChildIterator b, ChildIterator e) : b(b), e(e) {}
     };
 
-    OkayCamera& camera() {
-        return _camera;
-    }
+    OkayCamera& camera() { return _camera; }
 
     ChildRange children(OkayRenderEntity parent);
     const ChildRange children(OkayRenderEntity parent) const;
@@ -369,9 +325,7 @@ class OkayRenderWorld {
         return _renderItemPool.get(handle);
     }
 
-    OkayRenderItem& getRenderItem(RenderItemHandle handle) {
-        return _renderItemPool.get(handle);
-    }
+    OkayRenderItem& getRenderItem(RenderItemHandle handle) { return _renderItemPool.get(handle); }
 
     OkayRenderEntity getRenderEntity(RenderItemHandle handle) {
         return OkayRenderEntity(this, handle);
@@ -386,7 +340,7 @@ class OkayRenderWorld {
         return std::span<const OkayLight>(_lights.data(), _activeLights);
     }
 
-    std::size_t addLight(const OkayLight& light) { 
+    std::size_t addLight(const OkayLight& light) {
         _lights[_activeLights++] = light;
         return _activeLights - 1;
     }
@@ -396,15 +350,13 @@ class OkayRenderWorld {
         _lights[index] = _lights[--_activeLights];
     }
 
-    OkayLight& getLight(std::size_t index) {
-        return _lights[index];
-    }
+    OkayLight& getLight(std::size_t index) { return _lights[index]; }
 
    private:
     ObjectPool<OkayRenderItem> _renderItemPool;
     std::vector<RenderItemHandle> _memoizedRenderItems;
     std::set<RenderItemHandle> _dirtyTransforms;
-    
+
     std::array<OkayLight, OkayLight::MAX_LIGHTS> _lights{};
     std::size_t _activeLights{0};
 

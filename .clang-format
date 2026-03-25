@@ -1,12 +1,12 @@
 # .clang-format
 BasedOnStyle: Google
-IndentWidth:   4
-ColumnLimit:   100
+IndentWidth: 4
+ColumnLimit: 100
 DerivePointerAlignment: false
 PointerAlignment: Left
-SortIncludes:   false
+SortIncludes: false
 
-AllowShortFunctionsOnASingleLine: None
+AllowShortFunctionsOnASingleLine: InlineOnly
 AllowShortIfStatementsOnASingleLine: Never
 AllowShortLoopsOnASingleLine: false
 AllowShortBlocksOnASingleLine: Never

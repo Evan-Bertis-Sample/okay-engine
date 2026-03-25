@@ -9,7 +9,7 @@
 namespace okay {
 
 struct OkayRenderTargetConfig {
-    const std::string &name;
+    const std::string& name;
     int width = 800;
     int height = 600;
 };
@@ -18,15 +18,12 @@ class OkayRenderTarget {
    public:
     OkayRenderTarget() : OkayRenderTarget({""}) {}
 
-    OkayRenderTarget(const OkayRenderTargetConfig& config)
-        : _config(config) {}
+    OkayRenderTarget(const OkayRenderTargetConfig& config) : _config(config) {}
 
-    const std::string& name() const {
-        return _config.name;
-    }
+    const std::string& name() const { return _config.name; }
 
    private:
-   OkayRenderTargetConfig _config;
+    OkayRenderTargetConfig _config;
 };
 
 class OkayRenderTargetPool {
@@ -46,8 +43,7 @@ class OkayRenderTargetPool {
     }
 
     OkayRenderTargetPool(int surfaceWidth, int surfaceHeight)
-        : _surfaceWidth(surfaceWidth), _surfaceHeight(surfaceHeight) {
-    }
+        : _surfaceWidth(surfaceWidth), _surfaceHeight(surfaceHeight) {}
 
     TargetHandle addRenderTarget(const OkayRenderTargetConfig& config) {
         TargetHandle handle{_targets.size()};
@@ -65,7 +61,6 @@ class OkayRenderTargetPool {
     void initializeBuiltins() {}
 
    private:
-
     std::vector<OkayRenderTarget> _targets;
     int _surfaceWidth;
     int _surfaceHeight;

@@ -30,19 +30,13 @@ class OkayTextureDataStore {
         size_t start;
         size_t size;
 
-        static bool isNone(TextureHandle handle) {
-            return handle.start == 0 && handle.size == 0;
-        }
-        static TextureHandle none() {
-            return TextureHandle{0, 0};
-        }
+        static bool isNone(TextureHandle handle) { return handle.start == 0 && handle.size == 0; }
+        static TextureHandle none() { return TextureHandle{0, 0}; }
 
         bool operator==(TextureHandle other) const {
             return start == other.start && size == other.size;
         }
-        bool operator!=(TextureHandle other) const {
-            return !(*this == other);
-        }
+        bool operator!=(TextureHandle other) const { return !(*this == other); }
 
         // comparison operator for using TextureHandle as a key in std::map
         bool operator<(const TextureHandle& other) const {
@@ -51,7 +45,8 @@ class OkayTextureDataStore {
     };
 
     static std::shared_ptr<OkayTextureDataStore> mainStore() {
-        static std::shared_ptr<OkayTextureDataStore> store = std::make_shared<OkayTextureDataStore>();
+        static std::shared_ptr<OkayTextureDataStore> store =
+            std::make_shared<OkayTextureDataStore>();
         return store;
     }
 
@@ -77,17 +72,13 @@ class OkayTextureDataStore {
         _metaMap.erase(handle);
     }
 
-    OkayTextureMeta getTextureMeta(TextureHandle handle) const {
-        return _metaMap.at(handle);
-    }
+    OkayTextureMeta getTextureMeta(TextureHandle handle) const { return _metaMap.at(handle); }
 
     std::span<const std::byte> getTextureData(TextureHandle handle) const {
         return std::span<const std::byte>(_blob.begin() + handle.start, handle.size);
     }
 
-    std::byte* getTextureDataStart(TextureHandle handle) {
-        return _blob.data() + handle.start;
-    }
+    std::byte* getTextureDataStart(TextureHandle handle) { return _blob.data() + handle.start; }
 
    private:
     struct BlockMeta {
@@ -122,16 +113,21 @@ class OkayTextureDataStore {
             handle.start = blockStart;
             handle.size = size;
 
-            Engine.logger.info("Reusing texture block: start={}, size={}", handle.start, handle.size);
+            Engine.logger.info(
+                "Reusing texture block: start={}, size={}", handle.start, handle.size);
 
             // now update open blocks with the remaining free space, if any
             size_t remainingSize = blockSize - size;
             if (remainingSize > 0) {
                 _openBlocks[i].start = handle.start + handle.size;
                 _openBlocks[i].size = remainingSize;
-                Engine.logger.info("Updated open block: start={}, size={}", _openBlocks[i].start, _openBlocks[i].size);
+                Engine.logger.info("Updated open block: start={}, size={}",
+                                   _openBlocks[i].start,
+                                   _openBlocks[i].size);
             } else {
-                Engine.logger.info("Removing open block: start={}, size={}", _openBlocks[i].start, _openBlocks[i].size);
+                Engine.logger.info("Removing open block: start={}, size={}",
+                                   _openBlocks[i].start,
+                                   _openBlocks[i].size);
 
                 _openBlocks.erase(_openBlocks.begin() + i);
             }
@@ -172,31 +168,26 @@ class OkayTexture {
 
     OkayTexture() = default;
 
-    OkayTexture(std::shared_ptr<OkayTextureDataStore> store, OkayTextureDataStore::TextureHandle handle)
-        : store(store), handle(handle) {
-    }
+    OkayTexture(std::shared_ptr<OkayTextureDataStore> store,
+                OkayTextureDataStore::TextureHandle handle)
+        : store(store), handle(handle) {}
 
-    std::span<const std::byte> getData() const {
-        return store->getTextureData(handle);
-    }
+    std::span<const std::byte> getData() const { return store->getTextureData(handle); }
 
-    OkayTextureMeta getMeta() const {
-        return store->getTextureMeta(handle);
-    }
+    OkayTextureMeta getMeta() const { return store->getTextureMeta(handle); }
 
-    bool hasBeenUploadedToGPU() const {
-        return _glTextureID != 0;
-    }
+    bool hasBeenUploadedToGPU() const { return _glTextureID != 0; }
 
-    GLuint getGLTextureID() const {
-        return _glTextureID;
-    }
+    GLuint getGLTextureID() const { return _glTextureID; }
 
     Failable uploadToGPU(const TextureParameters& params) {
         const auto meta = getMeta();
         const auto data = getData();
 
-        Engine.logger.info("Uploading texture to GPU: width={}, height={}, format={}", meta.width, meta.height, static_cast<int>(meta.format));
+        Engine.logger.info("Uploading texture to GPU: width={}, height={}, format={}",
+                           meta.width,
+                           meta.height,
+                           static_cast<int>(meta.format));
 
         if (meta.format == OkayTextureMeta::Format::DEPTH24_STENCIL8) {
             GL_CHECK_FAILABLE(glGenTextures(1, &_glTextureID));
@@ -234,7 +225,8 @@ class OkayTexture {
                     return Failable::errorResult("Unsupported texture format");
             }
 
-            Engine.logger.debug("Texture format: glFormat={}, glInternalFormat={}", glFormat, glInternalFormat);
+            Engine.logger.debug(
+                "Texture format: glFormat={}, glInternalFormat={}", glFormat, glInternalFormat);
 
             GL_CHECK_FAILABLE(glGenTextures(1, &_glTextureID));
             GL_CHECK_FAILABLE(glBindTexture(GL_TEXTURE_2D, _glTextureID));

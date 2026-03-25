@@ -14,18 +14,13 @@ namespace okay {
 
 class ScenePass : public IOkayRenderPass {
    public:
-    ScenePass() {
-    }
+    ScenePass() {}
 
-    virtual const std::string_view name() const override {
-        return "ScenePass";
-    }
+    virtual const std::string_view name() const override { return "ScenePass"; }
 
-    virtual void initialize() override {
-    }
+    virtual void initialize() override {}
 
-    virtual void resize(int newWidth, int newHeight) override {
-    }
+    virtual void resize(int newWidth, int newHeight) override {}
 
     virtual void render(const OkayRenderContext& context) override {
         GL_CHECK(glClearColor(0.113f, 0.008, 0.208, 1.0f));
@@ -35,7 +30,7 @@ class ScenePass : public IOkayRenderPass {
         GL_CHECK(glEnable(GL_DEPTH_TEST));
         GL_CHECK(glEnable(GL_MULTISAMPLE));
         glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         // glFrontFace(GL_CW);
 
         _shaderIndex = OkayShader::invalidID();
@@ -76,11 +71,11 @@ class ScenePass : public IOkayRenderPass {
     }
 
     void handleMaterialSwitch(const OkayRenderContext& context,
-                               OkayRenderItem& item,
-                               const glm::mat4& projection,
-                               const glm::mat4& view,
-                               const glm::vec3& camPos,
-                               const glm::vec3& camDir) {
+                              OkayRenderItem& item,
+                              const glm::mat4& projection,
+                              const glm::mat4& view,
+                              const glm::vec3& camPos,
+                              const glm::vec3& camDir) {
         if (_shaderIndex != item.material->shaderID()) {
             if (auto f = item.material->setShader(); f.isError()) {
                 Engine.logger.error("Failed to set shader : {}", f.error());

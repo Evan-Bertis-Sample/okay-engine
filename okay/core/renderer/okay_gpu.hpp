@@ -20,9 +20,7 @@ namespace okay {
 class OkayUniformBlockManager {
    public:
     OkayUniformBlockManager() = default;
-    ~OkayUniformBlockManager() {
-        destroyAll();
-    }
+    ~OkayUniformBlockManager() { destroyAll(); }
 
     OkayUniformBlockManager(const OkayUniformBlockManager&) = delete;
     OkayUniformBlockManager& operator=(const OkayUniformBlockManager&) = delete;
@@ -97,9 +95,7 @@ class OkayUniformBlockManager {
     }
 
    private:
-    static constexpr GLuint invalidBinding() {
-        return 0xFFFFFFFFu;
-    }
+    static constexpr GLuint invalidBinding() { return 0xFFFFFFFFu; }
 
     struct GpuUbo {
         GLuint id = 0;
@@ -127,9 +123,7 @@ class OkayUniformBlockManager {
         return it != u.boundPrograms.end();
     }
 
-    static void markBoundToProgram(GpuUbo& u, GLuint program) {
-        u.boundPrograms[program] = true;
-    }
+    static void markBoundToProgram(GpuUbo& u, GLuint program) { u.boundPrograms[program] = true; }
 
     template <class BlockProp>
     static std::uint32_t versionOf(const BlockProp& p) {
@@ -152,13 +146,10 @@ class OkayUniformBlockManager {
     }
 };
 
-
 class OkayTextureManager {
    public:
     OkayTextureManager() = default;
-    ~OkayTextureManager() {
-        destroyAll();
-    }
+    ~OkayTextureManager() { destroyAll(); }
 
     OkayTextureManager(const OkayTextureManager&) = delete;
     OkayTextureManager& operator=(const OkayTextureManager&) = delete;
@@ -189,10 +180,14 @@ class OkayTextureManager {
             auto meta = tex.getMeta();
             auto data = tex.getData();
 
-            
             GL_CHECK_FAILABLE(glGenTextures(1, &gt.id));
             GL_CHECK_FAILABLE(glBindTexture(GL_TEXTURE_2D, gt.id));
-            Engine.logger.info("Uploading texture to GPU: textureId={}, width={}, height={}, format={}", gt.id, meta.width, meta.height, static_cast<int>(meta.format));
+            Engine.logger.info(
+                "Uploading texture to GPU: textureId={}, width={}, height={}, format={}",
+                gt.id,
+                meta.width,
+                meta.height,
+                static_cast<int>(meta.format));
 
             if (meta.format == OkayTextureMeta::Format::DEPTH24_STENCIL8) {
                 GL_CHECK_FAILABLE(glTexImage2D(GL_TEXTURE_2D,
@@ -247,8 +242,12 @@ class OkayTextureManager {
 
         // Apply params if first time or changed
         if (!gt.paramsInitialized || !sameParams(gt.params, params)) {
-            Engine.logger.info("Setting texture parameters: minFilter={}, magFilter={}, wrapS={}, wrapT={}",
-                               params.minFilter, params.magFilter, params.wrapS, params.wrapT);
+            Engine.logger.info(
+                "Setting texture parameters: minFilter={}, magFilter={}, wrapS={}, wrapT={}",
+                params.minFilter,
+                params.magFilter,
+                params.wrapS,
+                params.wrapT);
             GL_CHECK_FAILABLE(glBindTexture(GL_TEXTURE_2D, gt.id));
             GL_CHECK_FAILABLE(
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, params.minFilter));

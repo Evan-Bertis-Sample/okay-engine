@@ -90,7 +90,6 @@ OkayShader* OkayShaderHandle::get() {
     return owner->getShader(id);
 }
 
-
 const std::unique_ptr<OkayMaterial>& OkayMaterialHandle::operator*() const {
     return owner->getMaterial(id);
 }

@@ -16,9 +16,7 @@ class OkayShader {
    public:
     enum class State { NOT_COMPILED, STANDBY };
 
-    static constexpr std::uint32_t invalidID() {
-        return 0xFFFFFFFFu;
-    }
+    static constexpr std::uint32_t invalidID() { return 0xFFFFFFFFu; }
 
     OkayShader(const std::string& vertexSource, const std::string& fragmentSource)
         : vertexShader(std::move(vertexSource)),
@@ -34,8 +32,7 @@ class OkayShader {
           fragmentShader(""),
           _shaderProgram(0),
           _state(State::NOT_COMPILED),
-          _srcHash(invalidID()) {
-    }
+          _srcHash(invalidID()) {}
 
     std::string vertexShader;
     std::string fragmentShader;
@@ -43,21 +40,13 @@ class OkayShader {
     Failable compile();
     Failable set();
 
-    bool isNone() const {
-        return _srcHash == invalidID();
-    }
+    bool isNone() const { return _srcHash == invalidID(); }
 
-    State state() const {
-        return _state;
-    }
+    State state() const { return _state; }
 
-    std::uint32_t srcHash() const {
-        return _srcHash;
-    }
+    std::uint32_t srcHash() const { return _srcHash; }
 
-    GLuint programID() const {
-        return _shaderProgram;
-    }
+    GLuint programID() const { return _shaderProgram; }
 
     GLuint findUniformLocation(const std::string& uniform) {
         auto it = _uniforms.find(uniform);
@@ -74,12 +63,12 @@ class OkayShader {
         }
 
         // add to map
-        UniformInfo info {
+        UniformInfo info{
             .location = location,
             .value = uni::UniformValue::none(),
         };
         _uniforms[uniform] = info;
-        
+
         return location;
     }
 
@@ -87,7 +76,7 @@ class OkayShader {
     Failable setUniform(const std::string& uniform, const T& value) {
         auto it = _uniforms.find(uniform);
 
-        // If we have this uniform already, then we only need to 
+        // If we have this uniform already, then we only need to
         // grab the info once
         if (it != _uniforms.end()) {
             UniformInfo& info = it->second;
@@ -109,9 +98,9 @@ class OkayShader {
         if (location == uni::inactiveLocation()) {
             return Failable::ok({});
         };
-        
+
         // add to map
-        UniformInfo &info = _uniforms[uniform];
+        UniformInfo& info = _uniforms[uniform];
         info.location = location;
         info.value = value;
         uni::set(location, value);
@@ -126,14 +115,12 @@ class OkayShader {
     }
 
     // enable inequality operator
-    bool operator!=(const OkayShader& other) const {
-        return !(*this == other);
-    }
+    bool operator!=(const OkayShader& other) const { return !(*this == other); }
 
    private:
-   struct UniformInfo {
-       GLuint location;
-       uni::UniformValue value;
+    struct UniformInfo {
+        GLuint location;
+        uni::UniformValue value;
     };
 
     GLuint _shaderProgram;
@@ -149,17 +136,13 @@ struct OkayShaderHandle {
     OkayMaterialRegistry* owner = nullptr;
     std::uint32_t id = OkayShader::invalidID();
 
-    bool isValid() const {
-        return owner != nullptr && id != OkayShader::invalidID();
-    }
+    bool isValid() const { return owner != nullptr && id != OkayShader::invalidID(); }
 
     bool operator==(const OkayShaderHandle& other) const {
         return owner == other.owner && id == other.id;
     }
 
-    bool operator!=(const OkayShaderHandle& other) const {
-        return !(*this == other);
-    }
+    bool operator!=(const OkayShaderHandle& other) const { return !(*this == other); }
 
     const OkayShader* operator*() const;
     const OkayShader* operator->() const;
