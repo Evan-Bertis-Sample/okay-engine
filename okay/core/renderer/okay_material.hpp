@@ -97,6 +97,8 @@ class OkayMaterial {
 };
 
 struct OkayMaterialHandle {
+    static OkayMaterialHandle none() { return {nullptr, OkayMaterial::invalidID()}; }
+
     OkayMaterialRegistry* owner = nullptr;
     std::uint32_t id = OkayMaterial::invalidID();
 

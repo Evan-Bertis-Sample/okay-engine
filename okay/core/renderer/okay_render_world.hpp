@@ -211,15 +211,10 @@ struct OkayRenderItem {
 
     // operator overloads for std::map
     bool operator<(const OkayRenderItem& other) const { return sortKey < other.sortKey; }
-
     bool operator>(const OkayRenderItem& other) const { return sortKey > other.sortKey; }
-
     bool operator==(const OkayRenderItem& other) const { return sortKey == other.sortKey; }
-
     bool operator!=(const OkayRenderItem& other) const { return !(*this == other); }
-
     bool operator<=(const OkayRenderItem& other) const { return sortKey <= other.sortKey; }
-
     bool operator>=(const OkayRenderItem& other) const { return sortKey >= other.sortKey; }
 };
 

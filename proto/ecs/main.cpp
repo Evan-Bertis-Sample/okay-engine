@@ -96,14 +96,16 @@ static void __gameInitialize() {
 
     okay::OkayShaderHandle shader = renderer->materialRegistry().registerShader(
         shaderLoadRes.value().asset.vertexShader, shaderLoadRes.value().asset.fragmentShader);
-    auto materialProprties = std::make_unique<okay::LitMaterial>();
-    materialProprties->color.set(glm::vec4(1.0f, 1.0f, 0.0f, 1.0f));
-    materialProprties->albedo = texture;
+    auto materialProperties = std::make_unique<okay::LitMaterial>();
+    materialProperties->color.set(glm::vec4(1.0f, 1.0f, 0.0f, 1.0f));
+    materialProperties->albedo = texture;
+
+    okay::OkayMaterialHandle material =
+        renderer->materialRegistry().registerMaterial(shader, std::move(materialProperties));
 
     okay::OkayECS* ecs = okay::Engine.systems.getSystemChecked<okay::OkayECS>();
     ecs->registerComponentType<okay::RenderComponent>();
-    ecs->createEntity().addComponent<okay::RenderComponent>(
-        teapot, shader, std::move(materialProprties));
+    ecs->createEntity().addComponent<okay::RenderComponent>(teapot, material);
 }
 
 static void __gameUpdate() {
