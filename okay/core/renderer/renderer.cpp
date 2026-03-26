@@ -1,10 +1,9 @@
-
-#include "okay_gl.hpp"
-#include "okay_renderer.hpp"
+#include "gl.hpp"
+#include "renderer.hpp"
 #include "okay/core/util/result.hpp"
-#include "okay_primitive.hpp"
-#include "okay_render_pipeline.hpp"
-#include "okay_render_world.hpp"
+#include "primitive.hpp"
+#include "render_pipeline.hpp"
+#include "render_world.hpp"
 
 using namespace okay;
 

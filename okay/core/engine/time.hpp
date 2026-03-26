@@ -4,6 +4,7 @@
 #include <chrono>
 
 namespace okay {
+
 class OkayTime {
     using HighResClock = std::chrono::high_resolution_clock;
     using TimePoint = std::chrono::time_point<HighResClock>;

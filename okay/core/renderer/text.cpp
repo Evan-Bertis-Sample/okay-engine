@@ -1,4 +1,4 @@
-#include "okay_text.hpp"
+#include "text.hpp"
 
 namespace okay {
 

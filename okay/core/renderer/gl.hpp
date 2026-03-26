@@ -2,8 +2,7 @@
 #define __OKAY_GL_H__
 
 #include <glad/glad.h>
-#include <string>
-#include <okay/core/okay.hpp>
+#include <okay/core/engine/engine.hpp>
 #include <okay/core/util/result.hpp>
 
 inline void glClearErrors() {

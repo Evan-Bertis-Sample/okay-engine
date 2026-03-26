@@ -38,7 +38,7 @@ enum class Verbosity : std::uint8_t {
 
 struct OkayLoggerOptions {
     bool ToFile{true};
-    std::string filePrefix{"okay_log_"};
+    std::string filePrefix{"log_"};
 };
 
 struct LogPhrases {

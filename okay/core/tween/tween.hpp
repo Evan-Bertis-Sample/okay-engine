@@ -2,7 +2,7 @@
 #define __OKAY_TWEEN_H__
 
 #include <functional>
-#include <okay/core/logging/logger.hpp>
+#include <okay/core/engine/logger.hpp>
 #include <okay/core/tween/tween_engine.hpp>
 #include <okay/core/tween/i_okay_tween.hpp>
 #include <okay/core/tween/tween_easing.hpp>
@@ -180,13 +180,13 @@ class OkayTween : public IOkayTween, public std::enable_shared_from_this<OkayTwe
                 _timeElapsed = _durationMs;
             }
 
-            std::float_t progress = static_cast<std::float_t>(_timeElapsed) / _durationMs;
+            float progress = static_cast<float>(_timeElapsed) / _durationMs;
 
             if (_isReversing) {
                 progress = 1.0f - progress;
             }
 
-            std::float_t step = _easingFn(progress);
+            float step = _easingFn(progress);
             _current = START + step * DISPLACEMENT;
 
             if (_reference.has_value())

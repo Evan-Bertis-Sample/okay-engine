@@ -3,7 +3,7 @@
 
 #include <memory>
 #include <okay/core/renderer/gl.hpp>
-#include <okay/core/okay.hpp>
+#include <okay/core/engine/engine.hpp>
 #include <okay/core/renderer/render_pipeline.hpp>
 #include <okay/core/renderer/renderer.hpp>
 #include <okay/core/renderer/uniform.hpp>

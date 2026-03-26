@@ -1,8 +1,8 @@
 #ifndef __OBJECT_POOL_H__
 #define __OBJECT_POOL_H__
 
-#include <okay/core/okay.hpp>
-#include <okay/core/logging/logger.hpp>
+#include <okay/core/engine/engine.hpp>
+#include <okay/core/engine/logger.hpp>
 #include <cstdint>
 #include <type_traits>
 #include <utility>

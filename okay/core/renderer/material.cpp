@@ -1,4 +1,4 @@
-#include "okay_material.hpp"
+#include "material.hpp"
 
 namespace okay {
 

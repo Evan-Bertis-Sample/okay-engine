@@ -1,7 +1,6 @@
 #ifndef __FONT_LOADER_H__
 #define __FONT_LOADER_H__
 
-#include <cstddef>
 #include <filesystem>
 #include <okay/core/asset/asset.hpp>
 #include <okay/core/renderer/material.hpp>

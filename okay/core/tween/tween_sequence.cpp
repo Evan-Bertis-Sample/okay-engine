@@ -1,7 +1,7 @@
-#include <okay/core/tween/okay_tween_sequence.hpp>
+#include <okay/core/tween/tween_sequence.hpp>
 #include <okay/core/tween/i_okay_tween.hpp>
-#include <okay/core/tween/okay_tween_engine.hpp>
-#include <okay/core/okay.hpp>
+#include <okay/core/tween/tween_engine.hpp>
+#include <okay/core/engine/engine.hpp>
 
 using namespace okay;
 

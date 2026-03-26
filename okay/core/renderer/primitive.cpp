@@ -1,4 +1,4 @@
-#include "okay_primitive.hpp"
+#include "primitive.hpp"
 
 #include <algorithm>
 #include <cmath>

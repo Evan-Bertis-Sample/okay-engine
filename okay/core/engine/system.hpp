@@ -7,7 +7,6 @@
 #include <map>
 #include <memory>
 #include <okay/core/util/option.hpp>
-#include <stdexcept>
 #include <type_traits>
 
 namespace okay {

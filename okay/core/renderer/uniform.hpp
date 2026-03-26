@@ -4,8 +4,8 @@
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <okay/core/renderer/gl.hpp>
-#include <okay/core/okay.hpp>
-#include <okay/core/logging/logger.hpp>
+#include <okay/core/engine/engine.hpp>
+#include <okay/core/engine/logger.hpp>
 #include <okay/core/util/result.hpp>
 #include <okay/core/util/type.hpp>
 #include <okay/core/renderer/texture.hpp>

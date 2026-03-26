@@ -1,4 +1,4 @@
-#include <okay/core/ecs/okay_ecs.hpp>
+#include "ecs.hpp"
 
 namespace okay {
 

@@ -8,7 +8,7 @@
 #include <okay/core/renderer/texture.hpp>
 #include <okay/core/renderer/uniform.hpp>
 #include <okay/core/util/result.hpp>
-#include <okay/core/okay.hpp>
+#include <okay/core/engine/engine.hpp>
 
 namespace okay {
 

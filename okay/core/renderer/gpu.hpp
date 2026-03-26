@@ -10,7 +10,7 @@
 #include <unordered_map>
 #include <utility>
 
-#include <okay/core/okay.hpp>
+#include <okay/core/engine/engine.hpp>
 #include <okay/core/renderer/gl.hpp>
 #include <okay/core/renderer/texture.hpp>
 #include <okay/core/util/result.hpp>

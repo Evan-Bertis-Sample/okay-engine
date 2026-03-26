@@ -1,34 +1,6 @@
-#include <okay/core/okay.hpp>
-#include <okay/core/renderer/okay_renderer.hpp>
-#include <okay/core/renderer/okay_surface.hpp>
-#include <okay/core/renderer/okay_text.hpp>
-#include <okay/core/level/okay_level_manager.hpp>
-#include <okay/core/asset/mesh/mesh_loader.hpp>
-#include <okay/core/asset/generic/font_loader.hpp>
-#include <okay/core/asset/generic/texture_loader.hpp>
-#include <okay/core/asset/okay_asset.hpp>
-#include <okay/core/logging/okay_logger.hpp>
-#include <okay/core/okay_renderer.hpp>
-#include <okay/core/ecs/okay_ecs.hpp>
-#include <okay/core/ecs/components/render_component.hpp>
-
+#include <okay/okay.hpp>
 #include <utility>
-#include <okay/core/renderer/okay_material.hpp>
-#include <okay/core/renderer/okay_texture.hpp>
-#include <okay/core/renderer/okay_render_pipeline.hpp>
-#include <okay/core/renderer/okay_uniform.hpp>
-#include <okay/core/renderer/passes/scene_pass.hpp>
-#include <glm/ext/quaternion_trigonometric.hpp>
-#include <glm/ext/vector_float3.hpp>
-#include <glm/gtc/random.hpp>
-
-#include <glm/ext/matrix_transform.hpp>
-#include <glm/ext/vector_float4.hpp>
-#include <okay/core/renderer/materials/lit.hpp>
-#include <okay/core/renderer/materials/unlit.hpp>
-#include <okay/core/renderer/okay_font.hpp>
-#include <okay/core/renderer/okay_mesh.hpp>
-#include <okay/core/util/result.hpp>
+#include <glm/glm.hpp>
 
 static void __gameInitialize();
 static void __gameUpdate();
@@ -46,12 +18,8 @@ int main() {
 
     auto renderer = okay::OkayRenderer::create(std::move(rendererSettings));
 
-    okay::OkayLevelManagerSettings levelManagerSettings;
-    auto levelManager = okay::OkayLevelManager::create(levelManagerSettings);
-
     okay::OkayGame::create()
         .addSystems(std::move(renderer),
-                    std::move(levelManager),
                     std::make_unique<okay::OkayAssetManager>(),
                     std::make_unique<okay::OkayECS>())
         .onInitialize(__gameInitialize)

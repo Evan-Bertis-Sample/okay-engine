@@ -1,12 +1,11 @@
 #ifndef __ENGINE_H__
 #define __ENGINE_H__
 
-#include <okay/core/system/system.hpp>
-#include <okay/core/logging/logger.hpp>
+#include <okay/core/engine/system.hpp>
+#include <okay/core/engine/logger.hpp>
+#include <okay/core/engine/time.hpp>
 
 #include <glad/glad.h>
-#include <iostream>
-#include <chrono>
 #include <utility>
 #include <functional>
 

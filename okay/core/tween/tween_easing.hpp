@@ -11,50 +11,50 @@ namespace okay {
  *
  * @param progress interpolation percentage completed
  */
-using EasingFn = std::function<std::float_t(std::float_t progress)>;
+using EasingFn = std::function<float(float progress)>;
 
 namespace easing {
-std::float_t linear(std::float_t progress);
+float linear(float progress);
 
-std::float_t sineIn(std::float_t progress);
-std::float_t sineOut(std::float_t progress);
-std::float_t sineInOut(std::float_t progress);
+float sineIn(float progress);
+float sineOut(float progress);
+float sineInOut(float progress);
 
-std::float_t quadIn(std::float_t progress);
-std::float_t quadOut(std::float_t progress);
-std::float_t quadInOut(std::float_t progress);
+float quadIn(float progress);
+float quadOut(float progress);
+float quadInOut(float progress);
 
-std::float_t cubicIn(std::float_t progress);
-std::float_t cubicOut(std::float_t progress);
-std::float_t cubicInOut(std::float_t progress);
+float cubicIn(float progress);
+float cubicOut(float progress);
+float cubicInOut(float progress);
 
-std::float_t quartIn(std::float_t progress);
-std::float_t quartOut(std::float_t progress);
-std::float_t quartInOut(std::float_t progress);
+float quartIn(float progress);
+float quartOut(float progress);
+float quartInOut(float progress);
 
-std::float_t quintIn(std::float_t progress);
-std::float_t quintOut(std::float_t progress);
-std::float_t quintInOut(std::float_t progress);
+float quintIn(float progress);
+float quintOut(float progress);
+float quintInOut(float progress);
 
-std::float_t expoIn(std::float_t progress);
-std::float_t expoOut(std::float_t progress);
-std::float_t expoInOut(std::float_t progress);
+float expoIn(float progress);
+float expoOut(float progress);
+float expoInOut(float progress);
 
-std::float_t circIn(std::float_t progress);
-std::float_t circOut(std::float_t progress);
-std::float_t circInOut(std::float_t progress);
+float circIn(float progress);
+float circOut(float progress);
+float circInOut(float progress);
 
-std::float_t elasticIn(std::float_t progress);
-std::float_t elasticOut(std::float_t progress);
-std::float_t elasticInOut(std::float_t progress);
+float elasticIn(float progress);
+float elasticOut(float progress);
+float elasticInOut(float progress);
 
-std::float_t backIn(std::float_t progress);
-std::float_t backOut(std::float_t progress);
-std::float_t backInOut(std::float_t progress);
+float backIn(float progress);
+float backOut(float progress);
+float backInOut(float progress);
 
-std::float_t bounceIn(std::float_t progress);
-std::float_t bounceOut(std::float_t progress);
-std::float_t bounceInOut(std::float_t progress);
+float bounceIn(float progress);
+float bounceOut(float progress);
+float bounceInOut(float progress);
 
 };  // namespace easing
 
