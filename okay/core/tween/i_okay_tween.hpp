@@ -21,4 +21,4 @@ class IOkayTween {
 
 }  // namespace okay
 
-#endif // __I_OKAY_TWEEN_H__
+#endif  // __I_OKAY_TWEEN_H__

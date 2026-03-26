@@ -17,4 +17,4 @@ struct RenderComponent {
 
 }  // namespace okay
 
-#endif  // __RENDER_COMPONENT_H__    
+#endif  // __RENDER_COMPONENT_H__

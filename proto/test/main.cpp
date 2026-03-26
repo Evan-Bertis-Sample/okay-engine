@@ -77,12 +77,9 @@ static void __gameInitialize() {
 
     for (auto view : ecs->query<okay::RenderComponent>()) {
         okay::RenderComponent& renderComponent = std::get<okay::RenderComponent&>(view.components);
-        
+
         renderer->world().addRenderEntity(
-            view.entity.transform,
-            renderComponent.material,
-            renderComponent.mesh
-        );
+            view.entity.transform, renderComponent.material, renderComponent.mesh);
     }
 }
 

@@ -170,7 +170,7 @@ class OkaySystemManager {
     template <typename T>
     T* getSystemChecked() {
         Option<T*> opt = getSystem<T>();
-        if (!opt) { 
+        if (!opt) {
             while (true) {
             }
         }
