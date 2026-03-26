@@ -14,9 +14,9 @@
 namespace okay {
 
 template <>
-struct OkayAssetLoader<OkayShader> {
-    static Result<OkayShader> loadAsset(const std::filesystem::path& path,
-                                        const OkayAssetIO& assetIO) {
+struct AssetLoader<Shader> {
+    static Result<Shader> loadAsset(const std::filesystem::path& path,
+                                        const AssetIO& assetIO) {
         // by standard, the fragment shader will be path + .frag
         // and the vertex shader will be path + .vert
         Engine.logger.info("Loading shader: {}", path.string());
@@ -27,7 +27,7 @@ struct OkayAssetLoader<OkayShader> {
 
         if (vertexStreamRes.isError()) {
             Engine.logger.error("Failed to open vertex shader: {}", path.string());
-            return Result<OkayShader>::errorResult("Failed to open vertex shader: " +
+            return Result<Shader>::errorResult("Failed to open vertex shader: " +
                                                    path.string());
         }
 
@@ -42,7 +42,7 @@ struct OkayAssetLoader<OkayShader> {
 
         if (fragmentStreamRes.isError()) {
             Engine.logger.error("Failed to open fragment shader: {}", path.string());
-            return Result<OkayShader>::errorResult("Failed to open fragment shader: " +
+            return Result<Shader>::errorResult("Failed to open fragment shader: " +
                                                    path.string());
         }
 
@@ -69,7 +69,7 @@ struct OkayAssetLoader<OkayShader> {
         replaceVersionAndPrecision(fragmentShaderCode);
 #endif
 
-        return Result<OkayShader>::ok(OkayShader(vertexShaderCode, fragmentShaderCode));
+        return Result<Shader>::ok(Shader(vertexShaderCode, fragmentShaderCode));
     }
 };
 

@@ -1,10 +1,10 @@
-#ifndef __OKAY_TEXTURE_H__
-#define __OKAY_TEXTURE_H__
+#ifndef _TEXTURE_H__
+#define _TEXTURE_H__
 
 #include <okay/core/renderer/gl.hpp>
 #include <okay/core/util/result.hpp>
 
-#include <glad/glad.h>
+
 #include <span>
 #include <vector>
 
@@ -20,7 +20,7 @@ struct OkayTextureMeta {
     Format format;
 };
 
-class OkayTextureDataStore {
+class TextureDataStore {
    public:
     // TODO: make texture handles have reference counting so that we can automatically release
     // texture data when it's no longer used
@@ -42,9 +42,9 @@ class OkayTextureDataStore {
         }
     };
 
-    static std::shared_ptr<OkayTextureDataStore> mainStore() {
-        static std::shared_ptr<OkayTextureDataStore> store =
-            std::make_shared<OkayTextureDataStore>();
+    static std::shared_ptr<TextureDataStore> mainStore() {
+        static std::shared_ptr<TextureDataStore> store =
+            std::make_shared<TextureDataStore>();
         return store;
     }
 
@@ -152,7 +152,7 @@ class OkayTextureDataStore {
     }
 };
 
-class OkayTexture {
+class Texture {
    public:
     struct TextureParameters {
         GLenum minFilter{GL_LINEAR};
@@ -161,13 +161,13 @@ class OkayTexture {
         GLenum wrapT{GL_REPEAT};
     };
 
-    std::shared_ptr<OkayTextureDataStore> store;
-    OkayTextureDataStore::TextureHandle handle;
+    std::shared_ptr<TextureDataStore> store;
+    TextureDataStore::TextureHandle handle;
 
-    OkayTexture() = default;
+    Texture() = default;
 
-    OkayTexture(std::shared_ptr<OkayTextureDataStore> store,
-                OkayTextureDataStore::TextureHandle handle)
+    Texture(std::shared_ptr<TextureDataStore> store,
+                TextureDataStore::TextureHandle handle)
         : store(store), handle(handle) {}
 
     std::span<const std::byte> getData() const { return store->getTextureData(handle); }
@@ -265,4 +265,4 @@ class OkayTexture {
 
 }  // namespace okay
 
-#endif  // __OKAY_TEXTURE_H__
+#endif  // _TEXTURE_H__

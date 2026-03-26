@@ -2,11 +2,11 @@
 
 namespace okay {
 
-OkayEntity OkayECS::createEntity() {
+ECSEntity ECS::createEntity() {
     const std::size_t id = _entityMetas.size();
     if (id >= MAX_ENTITIES) {
         Engine.logger.error("Exceeded maximum number of entities ({})", MAX_ENTITIES);
-        return OkayEntity{};
+        return ECSEntity{};
     }
 
     _entityMetas.push_back(EntityMeta{});
@@ -19,18 +19,18 @@ OkayEntity OkayECS::createEntity() {
         pool->reserve(desiredCapacity);
     }
 
-    return OkayEntity(this, id);
+    return ECSEntity(this, id);
 }
 
-OkayECS::EntityMeta& OkayECS::getEntityMeta(const OkayEntity& entity) {
+ECS::EntityMeta& ECS::getEntityMeta(const ECSEntity& entity) {
     return _entityMetas[entity._id];
 }
 
-const OkayECS::EntityMeta& OkayECS::getEntityMeta(const OkayEntity& entity) const {
+const ECS::EntityMeta& ECS::getEntityMeta(const ECSEntity& entity) const {
     return _entityMetas[entity._id];
 }
 
-bool OkayECS::isValidEntity(const OkayEntity& entity) const {
+bool ECS::isValidEntity(const ECSEntity& entity) const {
     return entity._id < _entityMetas.size() && entity._ecs == this;
 };
 

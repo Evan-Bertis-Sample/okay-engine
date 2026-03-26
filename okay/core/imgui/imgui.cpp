@@ -9,7 +9,7 @@
 
 using namespace okay;
 
-void OkayIMGUI::initialize() {
+void IMGUISystem::initialize() {
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -17,7 +17,7 @@ void OkayIMGUI::initialize() {
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;   // Enable Gamepad Controls
 
-    okay::OkayRenderer* renderer = okay::Engine.systems.getSystemChecked<okay::OkayRenderer>();
+    okay::Renderer* renderer = okay::Engine.systems.getSystemChecked<okay::Renderer>();
     auto win = renderer->getSurfaceWindow();
     if (win == nullptr) {
         Engine.logger.warn("No GLFW window available");
@@ -29,13 +29,13 @@ void OkayIMGUI::initialize() {
     _initialized = true;
 }
 
-void OkayIMGUI::postInitialize() {
+void IMGUISystem::postInitialize() {
 }
 
-void OkayIMGUI::tick() {
+void IMGUISystem::tick() {
 }
 
-void OkayIMGUI::shutdown() {
+void IMGUISystem::shutdown() {
     if (_initialized) {
         ImGui_ImplOpenGL3_Shutdown();
         ImGui_ImplGlfw_Shutdown();

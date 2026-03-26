@@ -1,5 +1,5 @@
-#ifndef __OKAY_SHADER_H__
-#define __OKAY_SHADER_H__
+#ifndef _SHADER_H__
+#define _SHADER_H__
 
 #include <okay/core/engine/engine.hpp>
 #include <okay/core/renderer/texture.hpp>
@@ -8,18 +8,18 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <glad/glad.h>
+
 #include <glm/glm.hpp>
 
 namespace okay {
 
-class OkayShader {
+class Shader {
    public:
     enum class State { NOT_COMPILED, STANDBY };
 
     static constexpr std::uint32_t invalidID() { return 0xFFFFFFFFu; }
 
-    OkayShader(const std::string& vertexSource, const std::string& fragmentSource)
+    Shader(const std::string& vertexSource, const std::string& fragmentSource)
         : vertexShader(std::move(vertexSource)),
           fragmentShader(std::move(fragmentSource)),
           _shaderProgram(0),
@@ -28,7 +28,7 @@ class OkayShader {
         _srcHash = hasher(vertexShader + fragmentShader);
     }
 
-    OkayShader()
+    Shader()
         : vertexShader(""),
           fragmentShader(""),
           _shaderProgram(0),
@@ -110,13 +110,13 @@ class OkayShader {
     }
 
     // enable equality operator
-    bool operator==(const OkayShader& other) const {
+    bool operator==(const Shader& other) const {
         return _shaderProgram == other._shaderProgram && _state == other._state &&
                _srcHash == other._srcHash;
     }
 
     // enable inequality operator
-    bool operator!=(const OkayShader& other) const { return !(*this == other); }
+    bool operator!=(const Shader& other) const { return !(*this == other); }
 
    private:
     struct UniformInfo {
@@ -131,29 +131,29 @@ class OkayShader {
     std::unordered_map<std::string, UniformInfo> _uniforms;
 };
 
-class OkayMaterialRegistry;
+class MaterialRegistry;
 
-struct OkayShaderHandle {
-    OkayMaterialRegistry* owner = nullptr;
-    std::uint32_t id = OkayShader::invalidID();
+struct ShaderHandle {
+    MaterialRegistry* owner = nullptr;
+    std::uint32_t id = Shader::invalidID();
 
-    bool isValid() const { return owner != nullptr && id != OkayShader::invalidID(); }
+    bool isValid() const { return owner != nullptr && id != Shader::invalidID(); }
 
-    bool operator==(const OkayShaderHandle& other) const {
+    bool operator==(const ShaderHandle& other) const {
         return owner == other.owner && id == other.id;
     }
 
-    bool operator!=(const OkayShaderHandle& other) const { return !(*this == other); }
+    bool operator!=(const ShaderHandle& other) const { return !(*this == other); }
 
-    const OkayShader* operator*() const;
-    const OkayShader* operator->() const;
-    const OkayShader* get() const;
+    const Shader* operator*() const;
+    const Shader* operator->() const;
+    const Shader* get() const;
 
-    OkayShader* operator*();
-    OkayShader* operator->();
-    OkayShader* get();
+    Shader* operator*();
+    Shader* operator->();
+    Shader* get();
 };
 
 }  // namespace okay
 
-#endif  // __OKAY_SHADER_H__
+#endif  // _SHADER_H__

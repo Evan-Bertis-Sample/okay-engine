@@ -1,5 +1,5 @@
-#ifndef __OKAY_SYSTEM_H__
-#define __OKAY_SYSTEM_H__
+#ifndef _SYSTEM_H__
+#define _SYSTEM_H__
 
 #include <okay/core/util/option.hpp>
 
@@ -12,13 +12,9 @@
 
 namespace okay {
 
-enum OkaySystemScope : std::uint8_t { ENGINE, GAME, LEVEL, SCOPE_COUNT };
+enum SystemScope : std::uint8_t { ENGINE, GAME, LEVEL, SCOPE_COUNT };
 
-struct OkaySystemConfig {
-    std::uint32_t tickTime;
-};
-
-class IOkaySystem {
+class ISystem {
    public:
     template <typename T>
     static const std::size_t sysid() {
@@ -37,20 +33,15 @@ class IOkaySystem {
     virtual void postTick() {}
 
     virtual void shutdown() {}
-
-    const OkaySystemConfig& getConfig() { return _systemConfig; }
-
-   protected:
-    OkaySystemConfig _systemConfig;
 };
 
-template <OkaySystemScope ScopeV>
-class OkaySystem : public IOkaySystem {
+template <SystemScope ScopeV>
+class System : public ISystem {
    public:
-    static_assert(ScopeV >= OkaySystemScope::ENGINE && ScopeV < OkaySystemScope::SCOPE_COUNT,
+    static_assert(ScopeV >= SystemScope::ENGINE && ScopeV < SystemScope::SCOPE_COUNT,
                   "ScopeV must be a valid OkaySystemScope value.");
 
-    static const OkaySystemScope SCOPE = ScopeV;
+    static const SystemScope SCOPE = ScopeV;
 };
 
 struct OkaySystemDescriptor {
@@ -59,9 +50,9 @@ struct OkaySystemDescriptor {
 
     template <typename T>
     static OkaySystemDescriptor create() {
-        static_assert(std::is_base_of<IOkaySystem, T>::value, "T must inherit from OkaySystem");
+        static_assert(std::is_base_of<ISystem, T>::value, "T must inherit from OkaySystem");
 
-        return OkaySystemDescriptor(IOkaySystem::sysid<T>(), IOkaySystem::sysName<T>());
+        return OkaySystemDescriptor(ISystem::sysid<T>(), ISystem::sysName<T>());
     }
 
    private:
@@ -69,12 +60,12 @@ struct OkaySystemDescriptor {
         : SysId(sysid), SystemName(systemName) {}
 };
 
-class OkaySystemPool {
+class SystemPool {
    public:
     template <typename T>
     Option<T*> getSystem() {
-        static_assert(std::is_base_of<IOkaySystem, T>::value, "T must inherit from OkaySystem.");
-        auto it = _systems.find(IOkaySystem::sysid<T>());
+        static_assert(std::is_base_of<ISystem, T>::value, "T must inherit from OkaySystem.");
+        auto it = _systems.find(ISystem::sysid<T>());
         if (it != _systems.end()) {
             return Option<T*>::some(static_cast<T*>(it->second.get()));
         }
@@ -83,60 +74,60 @@ class OkaySystemPool {
 
     template <typename T>
     void registerSystem(std::unique_ptr<T> system) {
-        static_assert(std::is_base_of_v<IOkaySystem, T>, "T must inherit from OkaySystem.");
-        _systems.emplace(IOkaySystem::sysid<T>(), std::move(system));
+        static_assert(std::is_base_of_v<ISystem, T>, "T must inherit from OkaySystem.");
+        _systems.emplace(ISystem::sysid<T>(), std::move(system));
     }
 
     template <typename T>
     bool hasSystem() const {
-        static_assert(std::is_base_of_v<IOkaySystem, T>, "T must inherit from OkaySystem.");
-        return _systems.find(IOkaySystem::sysid<T>) != _systems.end();
+        static_assert(std::is_base_of_v<ISystem, T>, "T must inherit from OkaySystem.");
+        return _systems.find(ISystem::sysid<T>) != _systems.end();
     }
 
     bool hasSystem(std::size_t hash) const { return _systems.find(hash) != _systems.end(); }
 
-    class iterator {
+    class Iterator {
        private:
-        using base_it = std::map<std::size_t, std::unique_ptr<IOkaySystem>>::iterator;
+        using base_it = std::map<std::size_t, std::unique_ptr<ISystem>>::iterator;
 
        public:
         using iterator_category = std::bidirectional_iterator_tag;
-        using value_type = IOkaySystem*;
+        using value_type = ISystem*;
         using difference_type = std::ptrdiff_t;
-        using pointer = IOkaySystem**;
-        using reference = IOkaySystem*&;
+        using pointer = ISystem**;
+        using reference = ISystem*&;
 
-        iterator() = default;
-        explicit iterator(base_it it) : _it(it) {}
+        Iterator() = default;
+        explicit Iterator(base_it it) : _it(it) {}
 
         // Deref to raw pointer
         value_type operator*() const { return _it->second.get(); }
         value_type operator->() const { return _it->second.get(); }
 
-        iterator& operator++() {
+        Iterator& operator++() {
             ++_it;
             return *this;
         }
 
-        iterator operator++(int) {
+        Iterator operator++(int) {
             auto tmp = *this;
             ++_it;
             return tmp;
         }
 
-        iterator& operator--() {
+        Iterator& operator--() {
             --_it;
             return *this;
         }
 
-        iterator operator--(int) {
+        Iterator operator--(int) {
             auto tmp = *this;
             --_it;
             return tmp;
         }
 
-        friend bool operator==(const iterator& a, const iterator& b) { return a._it == b._it; }
-        friend bool operator!=(const iterator& a, const iterator& b) { return a._it != b._it; }
+        friend bool operator==(const Iterator& a, const Iterator& b) { return a._it == b._it; }
+        friend bool operator!=(const Iterator& a, const Iterator& b) { return a._it != b._it; }
 
         // expose underlying for internal helpers
         base_it base() const { return _it; }
@@ -148,18 +139,18 @@ class OkaySystemPool {
     std::size_t size() const noexcept { return _systems.size(); }
     bool empty() const noexcept { return _systems.empty(); }
 
-    iterator begin() { return iterator{_systems.begin()}; }
-    iterator end() { return iterator{_systems.end()}; }
+    Iterator begin() { return Iterator{_systems.begin()}; }
+    Iterator end() { return Iterator{_systems.end()}; }
 
    private:
-    std::map<std::size_t, std::unique_ptr<IOkaySystem>> _systems;
+    std::map<std::size_t, std::unique_ptr<ISystem>> _systems;
 };
 
-class OkaySystemManager {
+class SystemManager {
    public:
-    OkaySystemManager() {
-        for (std::size_t i = 0; i < OkaySystemScope::SCOPE_COUNT; ++i) {
-            _pools[i] = OkaySystemPool();
+    SystemManager() {
+        for (std::size_t i = 0; i < SystemScope::SCOPE_COUNT; ++i) {
+            _pools[i] = SystemPool();
         }
     }
 
@@ -183,10 +174,10 @@ class OkaySystemManager {
         _pools[T::SCOPE].registerSystem(std::move(system));
     }
 
-    OkaySystemPool& getPool(const OkaySystemScope scope) { return _pools[scope]; }
+    SystemPool& getPool(const SystemScope scope) { return _pools[scope]; }
 
     bool hasSystem(std::size_t hash) {
-        for (const OkaySystemPool& pool : _pools) {
+        for (const SystemPool& pool : _pools) {
             if (pool.hasSystem(hash))
                 return true;
         }
@@ -194,8 +185,8 @@ class OkaySystemManager {
     }
 
    private:
-    static std::array<OkaySystemPool, OkaySystemScope::SCOPE_COUNT> _pools;
+    static std::array<SystemPool, SystemScope::SCOPE_COUNT> _pools;
 };
 };  // namespace okay
 
-#endif  // __OKAY_SYSTEM_H__
+#endif  // _SYSTEM_H__

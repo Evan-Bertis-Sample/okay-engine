@@ -8,7 +8,7 @@
 
 using namespace okay;
 
-void OkayRenderer::initialize() {
+void Renderer::initialize() {
     _surface->initialize();
 
     Engine.logger.info("GL_VERSION: {}", (const char*)glGetString(GL_VERSION));
@@ -36,18 +36,18 @@ void OkayRenderer::initialize() {
     Engine.logger.debug("Renderer initialized");
 }
 
-void OkayRenderer::postInitialize() {
+void Renderer::postInitialize() {
 }
 
-void OkayRenderer::tick() {
+void Renderer::tick() {
     _surface->pollEvents();
-    OkayRenderContext context{*this, _world, _renderTargetPool};
+    RendererContext context{*this, _world, _renderTargetPool};
     _pipeline.render(context);
 }
 
-void OkayRenderer::postTick() {
+void Renderer::postTick() {
     _surface->swapBuffers();
 }
 
-void OkayRenderer::shutdown() {
+void Renderer::shutdown() {
 }

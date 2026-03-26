@@ -1,5 +1,5 @@
-#ifndef __OKAY_TEXT_H__
-#define __OKAY_TEXT_H__
+#ifndef _TEXT_H__
+#define _TEXT_H__
 
 #include <okay/core/renderer/font.hpp>
 #include <okay/core/renderer/mesh.hpp>
@@ -14,12 +14,12 @@
 
 namespace okay {
 
-struct OkayTextOptions {
+struct TextOptions {
     enum class HoriztonalAlignment { LEFT, CENTER, RIGHT };
     enum class VerticalAlignment { TOP, MIDDLE, BOTTOM };
 
-    OkayFontManager::FontHandle font;
-    OkayMeshBuffer& meshBuffer;
+    FontManager::FontHandle font;
+    MeshBuffer& meshBuffer;
 
     float fontSize{1.0f};
     float verticalSpacing{0.0f};  // pixels before scaling
@@ -35,15 +35,15 @@ struct OkayTextBounds {
     float bottom{0.0f};
 };
 
-class OkayTextMeshBuilder {
+class TextMeshBuilder {
    public:
-    explicit OkayTextMeshBuilder(const OkayTextOptions& options);
+    explicit TextMeshBuilder(const TextOptions& options);
 
-    OkayMesh build(const std::string& text);
+    Mesh build(const std::string& text);
 
    private:
     struct TextQuad {
-        OkayVertex vertices[4];
+        MeshVertex vertices[4];
     };
 
     struct LineInfo {
@@ -55,8 +55,8 @@ class OkayTextMeshBuilder {
         float advancePx(float extraSpacingPx) const { return (float)heightPx() + extraSpacingPx; }
     };
 
-    const OkayTextOptions& _opt;
-    OkayFontManager& _fm;
+    const TextOptions& _opt;
+    FontManager& _fm;
 
     std::vector<LineInfo> _lines;
     std::size_t _quadCount{0};
@@ -76,7 +76,7 @@ class OkayTextMeshBuilder {
     static void appendQuadIndices(std::vector<std::uint32_t>& indices,
                                   std::uint32_t base,
                                   bool doubleSided);
-    static TextQuad generateQuadForGlyph(const OkayFontManager::Glyph& glyph,
+    static TextQuad generateQuadForGlyph(const FontManager::Glyph& glyph,
                                          float dx,
                                          float dy,
                                          float scale);
@@ -84,12 +84,12 @@ class OkayTextMeshBuilder {
 
 class OkayText {
    public:
-    static OkayMesh generateTextMesh(const std::string& text, const OkayTextOptions& options) {
-        OkayTextMeshBuilder b(options);
+    static Mesh generateTextMesh(const std::string& text, const TextOptions& options) {
+        TextMeshBuilder b(options);
         return b.build(text);
     }
 };
 
 }  // namespace okay
 
-#endif  // __OKAY_TEXT_H__
+#endif  // _TEXT_H__

@@ -1,15 +1,16 @@
-#ifndef __OKAY_MESH_H__
-#define __OKAY_MESH_H__
+#ifndef _MESH_H__
+#define _MESH_H__
 
+#include <okay/core/renderer/gl.hpp>
 #include <okay/core/util/result.hpp>
+#include <okay/core/renderer/gl.hpp>
 
-#include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <vector>
 
 namespace okay {
 
-struct OkayVertex {
+struct MeshVertex {
     glm::vec3 position{0.0f, 0.0f, 0.0f};
     glm::vec3 normal{0.0f, 0.0f, 0.0f};
     glm::vec3 color{1.0f, 1.0f, 1.0f};
@@ -19,7 +20,7 @@ struct OkayVertex {
 
     static std::size_t stride() { return numFloats() * sizeof(float); }
 
-    OkayVertex& operator=(const OkayVertex& other) {
+    MeshVertex& operator=(const MeshVertex& other) {
         position = other.position;
         normal = other.normal;
         color = other.color;
@@ -27,34 +28,34 @@ struct OkayVertex {
         return *this;
     }
 
-    bool operator==(const OkayVertex& other) const {
+    bool operator==(const MeshVertex& other) const {
         return position == other.position && normal == other.normal && color == other.color &&
                uv == other.uv;
     }
 
-    bool operator!=(const OkayVertex& other) const { return !(*this == other); }
+    bool operator!=(const MeshVertex& other) const { return !(*this == other); }
 };
 
-struct OkayMeshData {
-    std::vector<OkayVertex> vertices;
+struct MeshData {
+    std::vector<MeshVertex> vertices;
     std::vector<std::uint32_t> indices;
 };
 
-struct OkayMesh {
+struct Mesh {
     std::size_t vertexOffset{0};
     std::size_t vertexCount{0};
     std::size_t indexOffset{0};
     std::size_t indexCount{0};
 
-    OkayMesh() = default;
-    OkayMesh(std::size_t vOffset, std::size_t vCount, std::size_t iOffset, std::size_t iCount)
+    Mesh() = default;
+    Mesh(std::size_t vOffset, std::size_t vCount, std::size_t iOffset, std::size_t iCount)
         : vertexOffset(vOffset), vertexCount(vCount), indexOffset(iOffset), indexCount(iCount) {}
 
-    static OkayMesh none() { return OkayMesh(0, 0, 0, 0); }
+    static Mesh none() { return Mesh(0, 0, 0, 0); }
 
     bool isEmpty() { return indexCount == 0; }
 
-    OkayMesh& operator=(const OkayMesh& other) {
+    Mesh& operator=(const Mesh& other) {
         vertexOffset = other.vertexOffset;
         vertexCount = other.vertexCount;
         indexOffset = other.indexOffset;
@@ -62,17 +63,17 @@ struct OkayMesh {
         return *this;
     }
 
-    bool operator==(const OkayMesh& other) const {
+    bool operator==(const Mesh& other) const {
         return vertexOffset == other.vertexOffset && vertexCount == other.vertexCount &&
                indexOffset == other.indexOffset && indexCount == other.indexCount;
     }
 
-    bool operator!=(const OkayMesh& other) const { return !(*this == other); }
+    bool operator!=(const Mesh& other) const { return !(*this == other); }
 };
 
-class OkayModelView;
+class ModelView;
 
-class OkayMeshBuffer {
+class MeshBuffer {
    private:
     std::vector<float> _bufferData;
     std::vector<uint32_t> _indices;
@@ -89,21 +90,21 @@ class OkayMeshBuffer {
     Failable initVertexAttributes();
 
     std::size_t size() const { return _indices.size(); }
-    OkayMesh addMesh(const OkayMeshData& model);
-    void removeMesh(const OkayMesh& mesh);
+    Mesh addMesh(const MeshData& model);
+    void removeMesh(const Mesh& mesh);
     Failable bindMeshData();
-    void drawMesh(const OkayMesh& mesh);
+    void drawMesh(const Mesh& mesh);
 
     class iterator {
        public:
-        using value_type = OkayVertex;
+        using value_type = MeshVertex;
         using difference_type = std::ptrdiff_t;
         using iterator_category = std::forward_iterator_tag;
 
-        iterator(const OkayMeshBuffer* buffer, std::size_t index)
+        iterator(const MeshBuffer* buffer, std::size_t index)
             : _buffer(buffer), _index(index) {}
 
-        OkayVertex operator*() const {
+        MeshVertex operator*() const {
             std::size_t attrIndex = _buffer->_indices[_index];
 
             // A SLIGHT bit of UB at the end of the reinterpret cast
@@ -121,7 +122,7 @@ class OkayMeshBuffer {
             const glm::vec2* uv =
                 reinterpret_cast<const glm::vec2*>(&_buffer->_bufferData[attrIndex + 9]);
 
-            return OkayVertex{*position, *normal, *color, *uv};
+            return MeshVertex{*position, *normal, *color, *uv};
         }
 
         iterator& operator++() {
@@ -132,29 +133,29 @@ class OkayMeshBuffer {
         bool operator!=(const iterator& other) const { return _index != other._index; }
 
        private:
-        const OkayMeshBuffer* _buffer;
+        const MeshBuffer* _buffer;
         std::size_t _index;
     };
 
     class OkayModelView {
        public:
-        OkayModelView(const OkayMeshBuffer* buffer, OkayMesh model)
+        OkayModelView(const MeshBuffer* buffer, Mesh model)
             : _buffer(buffer), _model(model) {}
 
-        OkayMeshBuffer::iterator begin() const {
-            return OkayMeshBuffer::iterator(_buffer, _model.indexOffset);
+        MeshBuffer::iterator begin() const {
+            return MeshBuffer::iterator(_buffer, _model.indexOffset);
         }
 
-        OkayMeshBuffer::iterator end() const {
-            return OkayMeshBuffer::iterator(_buffer, _model.indexOffset + _model.indexCount);
+        MeshBuffer::iterator end() const {
+            return MeshBuffer::iterator(_buffer, _model.indexOffset + _model.indexCount);
         }
 
        private:
-        const OkayMeshBuffer* _buffer;
-        OkayMesh _model;
+        const MeshBuffer* _buffer;
+        Mesh _model;
     };
 };
 
 }  // namespace okay
 
-#endif  // __OKAY_MESH_H__
+#endif  // _MESH_H__

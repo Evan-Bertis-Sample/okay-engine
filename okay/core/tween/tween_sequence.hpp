@@ -1,5 +1,5 @@
-#ifndef __OKAY_TWEEN_SEQUENCE_H__
-#define __OKAY_TWEEN_SEQUENCE_H__
+#ifndef _TWEEN_SEQUENCE_H__
+#define _TWEEN_SEQUENCE_H__
 
 #include <okay/core/tween/i_okay_tween.hpp>
 
@@ -10,16 +10,16 @@
  * @brief Sequence of composed tweens; control lifetime of multiple tweens together.
  */
 namespace okay {
-class OkayTweenSequence : public IOkayTween,
-                          public std::enable_shared_from_this<OkayTweenSequence> {
+class TweenSequence : public ITween,
+                          public std::enable_shared_from_this<TweenSequence> {
    public:
-    OkayTweenSequence() = default;
+    TweenSequence() = default;
 
     /**
      * @brief Return a shared_ptr to this sequence.
      */
-    static std::shared_ptr<OkayTweenSequence> create() {
-        auto sequencePtr{std::make_shared<OkayTweenSequence>()};
+    static std::shared_ptr<TweenSequence> create() {
+        auto sequencePtr{std::make_shared<TweenSequence>()};
 
         return sequencePtr;
     }
@@ -29,7 +29,7 @@ class OkayTweenSequence : public IOkayTween,
      *
      * @param tweenPtr shared ptr to a tween
      */
-    void append(std::shared_ptr<IOkayTween> tweenPtr);
+    void append(std::shared_ptr<ITween> tweenPtr);
 
     /**
      * @brief Call start() on the first tween in the sequence.
@@ -73,7 +73,7 @@ class OkayTweenSequence : public IOkayTween,
     void setIsTweening(bool isTweening);
 
    private:
-    std::vector<std::shared_ptr<IOkayTween>> _sequence;
+    std::vector<std::shared_ptr<ITween>> _sequence;
     bool _started{false};
     uint32_t _index{0};
 };

@@ -1,6 +1,7 @@
-#ifndef __OKAY_SURFACE_H__
-#define __OKAY_SURFACE_H__
+#ifndef _SURFACE_H__
+#define _SURFACE_H__
 
+#include <okay/core/renderer/gl.hpp>
 #include <okay/core/engine/system.hpp>
 
 #include <memory>
@@ -36,4 +37,4 @@ class Surface {
 
 }  // namespace okay
 
-#endif  // __OKAY_SURFACE_H__
+#endif  // _SURFACE_H__

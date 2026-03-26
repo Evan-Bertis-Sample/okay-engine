@@ -95,11 +95,11 @@ struct OkayLog final {
     }
 };
 
-class OkayLogger {
+class Logger {
    public:
-    OkayLogger() = default;
+    Logger() = default;
 
-    explicit OkayLogger(const OkayLoggerOptions& options);
+    explicit Logger(const OkayLoggerOptions& options);
 
     void setOptions(const OkayLoggerOptions& options);
 

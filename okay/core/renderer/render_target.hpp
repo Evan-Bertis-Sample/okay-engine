@@ -1,32 +1,33 @@
-#ifndef __OKAY_RENDER_TARGET_H__
-#define __OKAY_RENDER_TARGET_H__
+#ifndef _RENDER_TARGET_H__
+#define _RENDER_TARGET_H__
 
 #include <okay/core/util/option.hpp>
+#include <okay/core/renderer/gl.hpp>
 
 #include <string>
 #include <vector>
 
 namespace okay {
 
-struct OkayRenderTargetConfig {
+struct RenderTargetConfig {
     const std::string& name;
     int width = 800;
     int height = 600;
 };
 
-class OkayRenderTarget {
+class RenderTarget {
    public:
-    OkayRenderTarget() : OkayRenderTarget({""}) {}
+    RenderTarget() : RenderTarget({""}) {}
 
-    OkayRenderTarget(const OkayRenderTargetConfig& config) : _config(config) {}
+    RenderTarget(const RenderTargetConfig& config) : _config(config) {}
 
     const std::string& name() const { return _config.name; }
 
    private:
-    OkayRenderTargetConfig _config;
+    RenderTargetConfig _config;
 };
 
-class OkayRenderTargetPool {
+class RenderTargetPool {
    public:
     struct TargetHandle {
         std::size_t index;
@@ -42,30 +43,30 @@ class OkayRenderTargetPool {
         return TargetHandle{static_cast<int>(BuiltinTargetID::DEPTH)};
     }
 
-    OkayRenderTargetPool(int surfaceWidth, int surfaceHeight)
+    RenderTargetPool(int surfaceWidth, int surfaceHeight)
         : _surfaceWidth(surfaceWidth), _surfaceHeight(surfaceHeight) {}
 
-    TargetHandle addRenderTarget(const OkayRenderTargetConfig& config) {
+    TargetHandle addRenderTarget(const RenderTargetConfig& config) {
         TargetHandle handle{_targets.size()};
         _targets.emplace_back(config);
         return handle;
     }
 
-    const Option<OkayRenderTarget> getRenderTarget(const TargetHandle& handle) const {
+    const Option<RenderTarget> getRenderTarget(const TargetHandle& handle) const {
         if (handle.index >= _targets.size()) {
-            return Option<OkayRenderTarget>::none();
+            return Option<RenderTarget>::none();
         }
-        return Option<OkayRenderTarget>::some(_targets[handle.index]);
+        return Option<RenderTarget>::some(_targets[handle.index]);
     }
 
     void initializeBuiltins() {}
 
    private:
-    std::vector<OkayRenderTarget> _targets;
+    std::vector<RenderTarget> _targets;
     int _surfaceWidth;
     int _surfaceHeight;
 };
 
 };  // namespace okay
 
-#endif  // __OKAY_RENDER_TARGET_H__
+#endif  // _RENDER_TARGET_H__

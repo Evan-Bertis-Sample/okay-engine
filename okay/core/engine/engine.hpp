@@ -5,18 +5,18 @@
 #include <okay/core/engine/system.hpp>
 #include <okay/core/engine/time.hpp>
 
+
 #include <functional>
-#include <glad/glad.h>
 #include <utility>
 
 namespace okay {
-class OkayGame;
+class Game;
 
 class OkayEngine {
    public:
-    OkaySystemManager systems;
-    OkayLogger logger;
-    std::unique_ptr<OkayTime> time{std::make_unique<OkayTime>()};
+    SystemManager systems;
+    Logger logger;
+    std::unique_ptr<Time> time{std::make_unique<Time>()};
 
     OkayEngine() {}
     ~OkayEngine() {}
@@ -30,33 +30,33 @@ class OkayEngine {
     bool _shouldRun{true};
     std::size_t _frameCount{0};
 
-    friend class OkayGame;
+    friend class Game;
 };
 
 extern OkayEngine Engine;
 
-class OkayGame {
+class Game {
    public:
-    static OkayGame create() { return OkayGame(); }
+    static Game create() { return Game(); }
 
     // ...variadic function that takes in std::unique_ptr<OkaySystem<T>> for each system type
     template <typename... Systems>
-    OkayGame& addSystems(std::unique_ptr<Systems>... systems) {
+    Game& addSystems(std::unique_ptr<Systems>... systems) {
         (Engine.systems.registerSystem(std::move(systems)), ...);
         return *this;
     }
 
-    OkayGame& onInitialize(std::function<void()> callback) {
+    Game& onInitialize(std::function<void()> callback) {
         _onInitialize = std::move(callback);
         return *this;
     }
 
-    OkayGame& onUpdate(std::function<void()> callback) {
+    Game& onUpdate(std::function<void()> callback) {
         _onUpdate = std::move(callback);
         return *this;
     }
 
-    OkayGame& onShutdown(std::function<void()> callback) {
+    Game& onShutdown(std::function<void()> callback) {
         _onShutdown = std::move(callback);
         return *this;
     }
@@ -75,17 +75,17 @@ class OkayGame {
             return;
         }
 
-        OkaySystemPool& enginePool = Engine.systems.getPool(OkaySystemScope::ENGINE);
+        SystemPool& enginePool = Engine.systems.getPool(SystemScope::ENGINE);
 
-        for (IOkaySystem* system : enginePool) {
+        for (ISystem* system : enginePool) {
             system->initialize();
             if (!Engine.shouldRun())
                 break;
         }
 
-        OkaySystemPool& gamePool = Engine.systems.getPool(OkaySystemScope::GAME);
+        SystemPool& gamePool = Engine.systems.getPool(SystemScope::GAME);
 
-        for (IOkaySystem* system : gamePool) {
+        for (ISystem* system : gamePool) {
             system->initialize();
             if (!Engine.shouldRun())
                 break;
@@ -95,13 +95,13 @@ class OkayGame {
 
         Engine.time->reset();
         while (Engine.shouldRun()) {
-            for (IOkaySystem* system : enginePool) {
+            for (ISystem* system : enginePool) {
                 system->tick();
                 if (!Engine.shouldRun())
                     break;
             }
 
-            for (IOkaySystem* system : gamePool) {
+            for (ISystem* system : gamePool) {
                 system->tick();
                 if (!Engine.shouldRun())
                     break;
@@ -109,11 +109,11 @@ class OkayGame {
 
             _onUpdate();
 
-            for (IOkaySystem* system : enginePool) {
+            for (ISystem* system : enginePool) {
                 system->postTick();
             }
 
-            for (IOkaySystem* system : gamePool) {
+            for (ISystem* system : gamePool) {
                 system->postTick();
             }
             Engine.time->updateDeltaTime();
@@ -122,15 +122,15 @@ class OkayGame {
             // Engine.logger.info("Frame {} completed.", Engine.frameCount());
         }
 
-        for (IOkaySystem* system : enginePool) {
+        for (ISystem* system : enginePool) {
             system->shutdown();
         }
 
-        for (IOkaySystem* system : gamePool) {
+        for (ISystem* system : gamePool) {
             system->shutdown();
         }
 
-        for (IOkaySystem* system : Engine.systems.getPool(OkaySystemScope::LEVEL)) {
+        for (ISystem* system : Engine.systems.getPool(SystemScope::LEVEL)) {
             system->shutdown();
         }
 

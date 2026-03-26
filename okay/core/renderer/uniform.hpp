@@ -1,5 +1,5 @@
-#ifndef __OKAY_UNIFORM_H__
-#define __OKAY_UNIFORM_H__
+#ifndef _UNIFORM_H__
+#define _UNIFORM_H__
 
 #include <okay/core/engine/engine.hpp>
 #include <okay/core/engine/logger.hpp>
@@ -10,7 +10,7 @@
 
 #include <atomic>
 #include <cstdint>
-#include <glad/glad.h>
+
 #include <glm/glm.hpp>
 #include <set>
 #include <string>
@@ -40,7 +40,7 @@ constexpr UniformKind kindFromType() {
         return UniformKind::MAT3;
     else if constexpr (std::is_same_v<T, glm::mat4>)
         return UniformKind::MAT4;
-    else if constexpr (std::is_same_v<T, OkayTexture>)
+    else if constexpr (std::is_same_v<T, Texture>)
         return UniformKind::TEXTURE;
     else if constexpr (std::is_same_v<T, NoneType>)
         return UniformKind::VOID;
@@ -226,50 +226,50 @@ class BlockProperty {
 template <auto SamplerName>
 class TextureProperty {
    public:
-    using ValueType = OkayTexture;
+    using ValueType = Texture;
     static constexpr auto nameV = SamplerName;
     static constexpr uni::UniformKind kind = uni::UniformKind::TEXTURE;
 
     TextureProperty() = default;
-    TextureProperty(const OkayTexture& tex, const OkayTexture::TextureParameters& params = {})
+    TextureProperty(const Texture& tex, const Texture::TextureParameters& params = {})
         : _value(tex), _params(params) {}
 
     constexpr std::string_view nameView() const { return nameV.sv(); }
     constexpr std::string name() const { return std::string(nameV.sv()); }
 
-    void set(const OkayTexture& tex) {
+    void set(const Texture& tex) {
         _value = tex;
         ++_version;
     }
-    OkayTexture& edit() {
+    Texture& edit() {
         ++_version;
         return _value;
     }
-    const OkayTexture& get() const { return _value; }
+    const Texture& get() const { return _value; }
 
-    void setParams(const OkayTexture::TextureParameters& p) {
+    void setParams(const Texture::TextureParameters& p) {
         _params = p;
         ++_version;
     }
-    const OkayTexture::TextureParameters& params() const { return _params; }
+    const Texture::TextureParameters& params() const { return _params; }
 
     void setUnit(GLuint unit) { _unit = unit; }
     GLuint unit() const { return _unit; }
 
     std::uint32_t version() const { return _version; }
 
-    TextureProperty& operator=(const OkayTexture& tex) {
+    TextureProperty& operator=(const Texture& tex) {
         set(tex);
         return *this;
     }
 
    private:
-    OkayTexture _value{};
-    OkayTexture::TextureParameters _params{};
+    Texture _value{};
+    Texture::TextureParameters _params{};
     GLuint _unit{0};
     std::uint32_t _version{1};
 };
 
 };  // namespace okay
 
-#endif  // __OKAY_UNIFORM_H__
+#endif  // _UNIFORM_H__

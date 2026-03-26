@@ -1,4 +1,4 @@
-#include <okay/core/renderer/okay_surface.hpp>
+#include <okay/core/renderer/surface.hpp>
 
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
@@ -6,7 +6,7 @@
 #include <csignal>
 #include <fcntl.h>
 #include <gbm.h>
-#include <glad/glad.h>
+
 #include <iostream>
 #include <stdexcept>
 #include <unistd.h>

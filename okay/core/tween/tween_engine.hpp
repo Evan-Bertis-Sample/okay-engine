@@ -1,5 +1,5 @@
-#ifndef __OKAY_TWEEN_ENGINE_H__
-#define __OKAY_TWEEN_ENGINE_H__
+#ifndef _TWEEN_ENGINE_H__
+#define _TWEEN_ENGINE_H__
 
 #include <okay/core/engine/system.hpp>
 #include <okay/core/tween/i_okay_tween.hpp>
@@ -11,7 +11,7 @@
  * @brief OkayTween manager.
  */
 namespace okay {
-class OkayTweenEngine : public OkaySystem<OkaySystemScope::ENGINE> {
+class OkayTweenEngine : public System<SystemScope::ENGINE> {
    public:
     OkayTweenEngine() {}
 
@@ -20,7 +20,7 @@ class OkayTweenEngine : public OkaySystem<OkaySystemScope::ENGINE> {
      *
      * @param tween shared_ptr to a tween
      */
-    void addTween(std::shared_ptr<IOkayTween> tween);
+    void addTween(std::shared_ptr<ITween> tween);
 
     /**
      * @brief Tick and remove finished tweens.
@@ -28,7 +28,7 @@ class OkayTweenEngine : public OkaySystem<OkaySystemScope::ENGINE> {
     void tick() override;
 
    private:
-    std::vector<std::shared_ptr<IOkayTween>> _activeTweens;
+    std::vector<std::shared_ptr<ITween>> _activeTweens;
 
     /**
      * @brief Erase tween ptr from _activeTweens at given index.

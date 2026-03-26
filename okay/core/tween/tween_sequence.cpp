@@ -5,7 +5,7 @@
 
 using namespace okay;
 
-void OkayTweenSequence::append(std::shared_ptr<IOkayTween> tweenPtr) {
+void TweenSequence::append(std::shared_ptr<ITween> tweenPtr) {
     if (_started) {
         okay::Engine.logger.error("Could not append tween. Sequence has already started.\n");
         return;
@@ -14,7 +14,7 @@ void OkayTweenSequence::append(std::shared_ptr<IOkayTween> tweenPtr) {
     _sequence.push_back(tweenPtr);
 }
 
-void OkayTweenSequence::start() {
+void TweenSequence::start() {
     if (_sequence.size() > 0) {
         okay::Engine.systems.getSystemChecked<OkayTweenEngine>()->addTween(
             this->shared_from_this());
@@ -25,7 +25,7 @@ void OkayTweenSequence::start() {
     }
 }
 
-void OkayTweenSequence::tick() {
+void TweenSequence::tick() {
     if (_sequence[_index]->isFinished()) {
         _sequence[_index]->reset();
         ++_index;
@@ -38,7 +38,7 @@ void OkayTweenSequence::tick() {
     }
 }
 
-void OkayTweenSequence::pause() {
+void TweenSequence::pause() {
     if (!_started) {
         okay::Engine.logger.error("Could not pause. Sequence has not started.\n");
         return;
@@ -47,7 +47,7 @@ void OkayTweenSequence::pause() {
     _sequence[_index]->pause();
 }
 
-void OkayTweenSequence::resume() {
+void TweenSequence::resume() {
     if (!_started) {
         okay::Engine.logger.error("Could not resume. Sequence has not started.\n");
         return;
@@ -56,7 +56,7 @@ void OkayTweenSequence::resume() {
     _sequence[_index]->resume();
 }
 
-void OkayTweenSequence::kill() {
+void TweenSequence::kill() {
     for (auto& tween : _sequence) {
         tween->kill();
     }
@@ -65,17 +65,17 @@ void OkayTweenSequence::kill() {
     _index = 0;
 }
 
-bool OkayTweenSequence::isFinished() {
+bool TweenSequence::isFinished() {
     return _index >= _sequence.size();
 }
 
-void OkayTweenSequence::reset() {
+void TweenSequence::reset() {
     _index = 0;
     _started = false;
     setIsTweening(false);
 }
 
-void OkayTweenSequence::setIsTweening(bool isTweening) {
+void TweenSequence::setIsTweening(bool isTweening) {
     if (_sequence.size() > 0) {
         _sequence[_index]->setIsTweening(isTweening);
     }

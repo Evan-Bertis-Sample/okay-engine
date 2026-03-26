@@ -1,5 +1,5 @@
-#ifndef __OKAY_RENDERER_H__
-#define __OKAY_RENDERER_H__
+#ifndef _RENDERER_H__
+#define _RENDERER_H__
 
 #include "render_pipeline.hpp"
 #include "render_target.hpp"
@@ -20,24 +20,24 @@
 
 namespace okay {
 
-struct OkayRendererSettings {
+struct RenderSettings {
     SurfaceConfig surfaceConfig;
-    OkayRenderPipeline pipeline;
+    RenderPipeline pipeline;
 };
 
-class OkayRenderer : public OkaySystem<OkaySystemScope::ENGINE> {
+class Renderer : public System<SystemScope::ENGINE> {
    public:
-    static std::unique_ptr<OkayRenderer> create(OkayRendererSettings settings) {
-        return std::make_unique<OkayRenderer>(std::move(settings));
+    static std::unique_ptr<Renderer> create(RenderSettings settings) {
+        return std::make_unique<Renderer>(std::move(settings));
     }
 
-    explicit OkayRenderer(OkayRendererSettings settings)
+    explicit Renderer(RenderSettings settings)
         : _surfaceConfig(settings.surfaceConfig),
           _surface(std::make_unique<Surface>(settings.surfaceConfig)),
           _renderTargetPool(settings.surfaceConfig.width, settings.surfaceConfig.height),
           _pipeline(std::move(settings.pipeline)) {}
 
-    OkayShader shader;
+    Shader shader;
 
     void initialize() override;
     void postInitialize() override;
@@ -45,10 +45,10 @@ class OkayRenderer : public OkaySystem<OkaySystemScope::ENGINE> {
     void postTick() override;
     void shutdown() override;
 
-    OkayRenderWorld& world() { return _world; }
-    OkayMeshBuffer& meshBuffer() { return _meshBuffer; }
-    OkayRenderTargetPool& renderTargetPool() { return _renderTargetPool; }
-    OkayMaterialRegistry& materialRegistry() { return _materialRegistry; }
+    RenderWorld& world() { return _world; }
+    MeshBuffer& meshBuffer() { return _meshBuffer; }
+    RenderTargetPool& renderTargetPool() { return _renderTargetPool; }
+    MaterialRegistry& materialRegistry() { return _materialRegistry; }
 
     uint32_t width() const { return _surfaceConfig.width; }
     uint32_t height() const { return _surfaceConfig.height; }
@@ -57,14 +57,14 @@ class OkayRenderer : public OkaySystem<OkaySystemScope::ENGINE> {
 
    private:
     SurfaceConfig _surfaceConfig;
-    OkayRenderWorld _world;
-    OkayMeshBuffer _meshBuffer;
-    OkayRenderPipeline _pipeline;
-    OkayRenderTargetPool _renderTargetPool;
-    OkayMaterialRegistry _materialRegistry;
+    RenderWorld _world;
+    MeshBuffer _meshBuffer;
+    RenderPipeline _pipeline;
+    RenderTargetPool _renderTargetPool;
+    MaterialRegistry _materialRegistry;
     std::unique_ptr<Surface> _surface;
 };
 
 }  // namespace okay
 
-#endif  // __OKAY_RENDERER_H__
+#endif  // _RENDERER_H__

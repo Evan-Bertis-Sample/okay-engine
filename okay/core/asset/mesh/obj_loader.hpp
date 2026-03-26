@@ -14,7 +14,7 @@ namespace okay {
 
 class ObjLoader final : public MeshLoader {
    public:
-    Result<OkayMeshData> Load(const std::filesystem::path& path, std::istream& file) override;
+    Result<MeshData> Load(const std::filesystem::path& path, std::istream& file) override;
 
    private:
     struct ObjIndex {
@@ -40,7 +40,7 @@ class ObjLoader final : public MeshLoader {
         std::vector<glm::vec3> normals;
         std::vector<glm::vec2> uvs;
         std::vector<glm::vec3> colors;  // optional, if present
-        OkayMeshData out;
+        MeshData out;
 
         std::unordered_map<VertKey, std::uint32_t, VertKeyHash> dedup;
     };

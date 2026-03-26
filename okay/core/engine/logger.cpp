@@ -7,7 +7,7 @@
 
 using namespace okay;
 
-std::string OkayLogger::makeStartFilename(const std::string& prefix) {
+std::string Logger::makeStartFilename(const std::string& prefix) {
     auto now = std::chrono::system_clock::now();
     auto time = std::chrono::system_clock::to_time_t(now);
     auto tm = *std::localtime(&time);
@@ -18,7 +18,7 @@ std::string OkayLogger::makeStartFilename(const std::string& prefix) {
     return ss.str();
 }
 
-void OkayLogger::openFileIfNeeded() {
+void Logger::openFileIfNeeded() {
     if (!_options.ToFile)
         return;
     if (_logFileName.empty())
@@ -33,7 +33,7 @@ void OkayLogger::openFileIfNeeded() {
     }
 }
 
-void OkayLogger::setOptions(const OkayLoggerOptions& options) {
+void Logger::setOptions(const OkayLoggerOptions& options) {
     std::lock_guard<std::mutex> g(_optionsMtx);
     _options = options;
     if (_file.is_open()) {
@@ -44,6 +44,6 @@ void OkayLogger::setOptions(const OkayLoggerOptions& options) {
     openFileIfNeeded();
 }
 
-OkayLogger::OkayLogger(const OkayLoggerOptions& options) : _options(options) {
+Logger::Logger(const OkayLoggerOptions& options) : _options(options) {
     openFileIfNeeded();
 }

@@ -1,13 +1,13 @@
-#ifndef __OKAY_IMGUI_H__
-#define __OKAY_IMGUI_H__
+#ifndef _IMGUI_H__
+#define _IMGUI_H__
 
 #include <okay/core/engine/system.hpp>
 
 namespace okay {
 
-class OkayIMGUI : public OkaySystem<OkaySystemScope::GAME> {
+class IMGUISystem : public System<SystemScope::GAME> {
    public:
-    OkayIMGUI() = default;
+    IMGUISystem() = default;
 
     void initialize();
 

@@ -1,5 +1,5 @@
-#ifndef __OKAY_TWEEN_H__
-#define __OKAY_TWEEN_H__
+#ifndef _TWEEN_H__
+#define _TWEEN_H__
 
 #include <okay/core/engine/logger.hpp>
 #include <okay/core/tween/i_okay_tween.hpp>
@@ -59,11 +59,11 @@ struct TweenConfig {
 };
 
 template <Tweenable T>
-class OkayTween : public IOkayTween, public std::enable_shared_from_this<OkayTween<T>> {
+class Tween : public ITween, public std::enable_shared_from_this<Tween<T>> {
    public:
-    OkayTween() = default;
+    Tween() = default;
 
-    explicit OkayTween(const TweenConfig<T>& cfg)
+    explicit Tween(const TweenConfig<T>& cfg)
         : START{cfg.start},
           END{cfg.end},
           DISPLACEMENT{cfg.end - cfg.start},
@@ -81,7 +81,7 @@ class OkayTween : public IOkayTween, public std::enable_shared_from_this<OkayTwe
           _onResume{cfg.onResume},
           _onLoop{cfg.onLoop} {}
 
-    OkayTween(
+    Tween(
         T start,
         T end,
         std::optional<std::reference_wrapper<T>> ref = std::nullopt,
@@ -112,7 +112,7 @@ class OkayTween : public IOkayTween, public std::enable_shared_from_this<OkayTwe
           _onResume{onResume},
           _onLoop{onLoop} {}
 
-    static std::shared_ptr<OkayTween<T>> create(
+    static std::shared_ptr<Tween<T>> create(
         T start,
         T end,
         std::optional<std::reference_wrapper<T>> ref = std::nullopt,
@@ -126,7 +126,7 @@ class OkayTween : public IOkayTween, public std::enable_shared_from_this<OkayTwe
         std::function<void()> onPause = []() {},
         std::function<void()> onResume = []() {},
         std::function<void()> onLoop = []() {}) {
-        auto tweenPtr{std::make_shared<OkayTween<T>>(start,
+        auto tweenPtr{std::make_shared<Tween<T>>(start,
                                                      end,
                                                      ref,
                                                      durationMs,
@@ -143,8 +143,8 @@ class OkayTween : public IOkayTween, public std::enable_shared_from_this<OkayTwe
         return tweenPtr;
     }
 
-    static std::shared_ptr<OkayTween<T>> create(const TweenConfig<T>& cfg) {
-        auto tweenPtr{std::make_shared<OkayTween<T>>(cfg.start,
+    static std::shared_ptr<Tween<T>> create(const TweenConfig<T>& cfg) {
+        auto tweenPtr{std::make_shared<Tween<T>>(cfg.start,
                                                      cfg.end,
                                                      cfg.ref,
                                                      cfg.durationMs,

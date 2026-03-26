@@ -12,8 +12,8 @@ namespace okay {
 
 struct RenderComponent {
    public:
-    OkayMesh mesh{OkayMesh::none()};
-    OkayMaterialHandle material{OkayMaterialHandle::none()};
+    Mesh mesh{Mesh::none()};
+    MaterialHandle material{MaterialHandle::none()};
 };
 
 }  // namespace okay

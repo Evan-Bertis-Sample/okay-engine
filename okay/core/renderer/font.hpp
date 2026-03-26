@@ -1,5 +1,5 @@
-#ifndef __OKAY_FONT_H__
-#define __OKAY_FONT_H__
+#ifndef _FONT_H__
+#define _FONT_H__
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -12,11 +12,11 @@
 
 namespace okay {
 
-class OkayFontAtlas {
+class FontAtlas {
    public:
     static constexpr int PAD = 1;
 
-    OkayFontAtlas(int w, int h) : _width(w), _height(h), _pixels((size_t)w * (size_t)h * 4, 0) {}
+    FontAtlas(int w, int h) : _width(w), _height(h), _pixels((size_t)w * (size_t)h * 4, 0) {}
 
     int width() const { return _width; }
     int height() const { return _height; }
@@ -89,12 +89,12 @@ class OkayFontAtlas {
     }
 };
 
-struct OkayFontLoadOptions {
+struct FontLoadOptions {
     int width{32};
     int height{0};
 };
 
-class OkayFontManager {
+class FontManager {
    public:
     struct FontHandle {
        public:
@@ -117,21 +117,21 @@ class OkayFontManager {
         int descent;
     };
 
-    static OkayFontManager& instance() {
-        static OkayFontManager instance;
+    static FontManager& instance() {
+        static FontManager instance;
         return instance;
     }
 
-    OkayFontManager() {
+    FontManager() {
         if (FT_Init_FreeType(&_ftLibrary)) {
             throw std::runtime_error("Failed to initialize FreeType library");
         }
     }
 
-    ~OkayFontManager() { FT_Done_FreeType(_ftLibrary); }
+    ~FontManager() { FT_Done_FreeType(_ftLibrary); }
 
     Option<FontHandle> loadFont(const std::string& fontPath,
-                                const OkayFontLoadOptions& options = {}) {
+                                const FontLoadOptions& options = {}) {
         if (_fontFaces.find(fontPath) != _fontFaces.end()) {
             return Option<FontHandle>::some(FontHandle{_fontFaces[fontPath]});
         }
@@ -160,7 +160,7 @@ class OkayFontManager {
         return Glyph{codepoint, 0, 0, 0, 0, 0, 0, 0};
     }
 
-    OkayTexture getGlyphAtlas(FontHandle font) { return _glyphAtlases[font.id]; }
+    Texture getGlyphAtlas(FontHandle font) { return _glyphAtlases[font.id]; }
 
    private:
     constexpr static int ATLAS_W = 2048;
@@ -170,8 +170,8 @@ class OkayFontManager {
     std::unordered_map<std::string, std::uint32_t> _fontFaces;
     std::vector<FT_Face> _loadedFaces;
     std::vector<std::unordered_map<std::uint32_t, Glyph>> _glyphsPerFace;
-    std::vector<OkayTexture> _glyphAtlases;
-    OkayFontAtlas _atlas{ATLAS_W, ATLAS_H};
+    std::vector<Texture> _glyphAtlases;
+    FontAtlas _atlas{ATLAS_W, ATLAS_H};
 
     std::unordered_map<std::uint32_t, Glyph>& getGlyphsForFace(std::uint32_t faceId) {
         if (faceId >= _glyphsPerFace.size()) {
@@ -237,11 +237,11 @@ class OkayFontManager {
         meta.mipLevels = 1;
         meta.format = OkayTextureMeta::Format::RGBA8;
 
-        auto store = OkayTextureDataStore::mainStore();
+        auto store = TextureDataStore::mainStore();
 
         auto handle =
             store->addTexture(meta, (void*)_atlas.pixels().data(), _atlas.pixels().size());
-        _glyphAtlases[faceId] = OkayTexture(store, handle);
+        _glyphAtlases[faceId] = Texture(store, handle);
 
         _atlas.reset();  // clear the atlas for the next font face
     }
@@ -249,4 +249,4 @@ class OkayFontManager {
 
 };  // namespace okay
 
-#endif  // __OKAY_FONT_H__
+#endif  // _FONT_H__

@@ -1,5 +1,5 @@
-#ifndef __OKAY_TWEEN_COLLECTION_H__
-#define __OKAY_TWEEN_COLLECTION_H__
+#ifndef _TWEEN_COLLECTION_H__
+#define _TWEEN_COLLECTION_H__
 
 #include "okay/core/tween/i_okay_tween.hpp"
 
@@ -10,16 +10,16 @@
  * @brief Collection of tweens; control lifetime of multiple tweens together.
  */
 namespace okay {
-class OkayTweenCollection : public IOkayTween,
-                            public std::enable_shared_from_this<OkayTweenCollection> {
+class TweenCollection : public ITween,
+                            public std::enable_shared_from_this<TweenCollection> {
    public:
-    OkayTweenCollection() = default;
+    TweenCollection() = default;
 
     /**
      * @brief Return a shared_ptr to this collection.
      */
-    static std::shared_ptr<OkayTweenCollection> create() {
-        auto collectionPtr{std::make_shared<OkayTweenCollection>()};
+    static std::shared_ptr<TweenCollection> create() {
+        auto collectionPtr{std::make_shared<TweenCollection>()};
 
         return collectionPtr;
     }
@@ -29,7 +29,7 @@ class OkayTweenCollection : public IOkayTween,
      *
      * @param tweenPtr shared ptr to a tween
      */
-    void append(std::shared_ptr<IOkayTween> tweenPtr);
+    void append(std::shared_ptr<ITween> tweenPtr);
 
     /**
      * @brief Call start() on all tweens in _collection.
@@ -72,7 +72,7 @@ class OkayTweenCollection : public IOkayTween,
     void setIsTweening(bool isTweening);
 
    private:
-    std::vector<std::shared_ptr<IOkayTween>> _collection;
+    std::vector<std::shared_ptr<ITween>> _collection;
 };
 }  // namespace okay
 

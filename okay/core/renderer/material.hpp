@@ -1,5 +1,5 @@
-#ifndef __OKAY_MATERIAL_H__
-#define __OKAY_MATERIAL_H__
+#ifndef _MATERIAL_H__
+#define _MATERIAL_H__
 
 #include <okay/core/engine/engine.hpp>
 #include <okay/core/renderer/gpu.hpp>
@@ -7,27 +7,28 @@
 #include <okay/core/renderer/texture.hpp>
 #include <okay/core/renderer/uniform.hpp>
 #include <okay/core/util/result.hpp>
+#include <okay/core/renderer/gl.hpp>
 
 #include <cstddef>
 #include <cstdint>
-#include <glad/glad.h>
+
 #include <glm/glm.hpp>
 #include <memory>
 
 namespace okay {
 
-class IOkayMaterialPropertyCollection {
+class IMaterialPropertyCollection {
    public:
-    virtual Failable init(OkayShaderHandle shader) = 0;
-    virtual Failable pass(OkayShaderHandle shader) = 0;
+    virtual Failable init(ShaderHandle shader) = 0;
+    virtual Failable pass(ShaderHandle shader) = 0;
 };
 
-class OkayMaterial {
+class Material {
    public:
     static constexpr std::uint32_t invalidID() { return 0xFFFFFFFFu; }
 
-    OkayMaterial(OkayShaderHandle shader,
-                 std::unique_ptr<IOkayMaterialPropertyCollection> uniforms,
+    Material(ShaderHandle shader,
+                 std::unique_ptr<IMaterialPropertyCollection> uniforms,
                  std::uint32_t id)
         : _shader(shader), _uniforms(std::move(uniforms)), _id(id) {}
 
@@ -44,7 +45,7 @@ class OkayMaterial {
             return Failable::errorResult("Material has no shader.");
         }
 
-        if (_shader->state() == OkayShader::State::NOT_COMPILED) {
+        if (_shader->state() == Shader::State::NOT_COMPILED) {
             Failable compile = _shader->compile();
             if (compile.isError()) {
                 return compile;
@@ -72,24 +73,24 @@ class OkayMaterial {
     }
 
     // disable copy
-    OkayMaterial(const OkayMaterial&) = delete;
-    OkayMaterial& operator=(const OkayMaterial&) = delete;
-    OkayMaterial(OkayMaterial&&) = default;
-    OkayMaterial& operator=(OkayMaterial&&) = default;
+    Material(const Material&) = delete;
+    Material& operator=(const Material&) = delete;
+    Material(Material&&) = default;
+    Material& operator=(Material&&) = default;
 
     // equality operator
-    bool operator==(const OkayMaterial& other) const {
+    bool operator==(const Material& other) const {
         return _shader == other._shader && _id == other._id;
     }
 
-    bool operator!=(const OkayMaterial& other) const { return !(*this == other); }
+    bool operator!=(const Material& other) const { return !(*this == other); }
 
-    std::unique_ptr<IOkayMaterialPropertyCollection>& uniforms() { return _uniforms; }
+    std::unique_ptr<IMaterialPropertyCollection>& uniforms() { return _uniforms; }
 
    private:
-    OkayShaderHandle _shader;
+    ShaderHandle _shader;
     std::size_t _id{invalidID()};
-    std::unique_ptr<IOkayMaterialPropertyCollection> _uniforms;
+    std::unique_ptr<IMaterialPropertyCollection> _uniforms;
 
     void setMaterial() {
         setShader();
@@ -97,84 +98,84 @@ class OkayMaterial {
     }
 };
 
-struct OkayMaterialHandle {
-    static OkayMaterialHandle none() { return {nullptr, OkayMaterial::invalidID()}; }
+struct MaterialHandle {
+    static MaterialHandle none() { return {nullptr, Material::invalidID()}; }
 
-    OkayMaterialRegistry* owner = nullptr;
-    std::uint32_t id = OkayMaterial::invalidID();
+    MaterialRegistry* owner = nullptr;
+    std::uint32_t id = Material::invalidID();
 
-    bool isValid() const { return owner != nullptr && id != OkayMaterial::invalidID(); }
+    bool isValid() const { return owner != nullptr && id != Material::invalidID(); }
 
-    bool operator==(const OkayMaterialHandle& other) const {
+    bool operator==(const MaterialHandle& other) const {
         return owner == other.owner && id == other.id;
     }
 
-    bool operator!=(const OkayMaterialHandle& other) const { return !(*this == other); }
+    bool operator!=(const MaterialHandle& other) const { return !(*this == other); }
 
-    const std::unique_ptr<OkayMaterial>& operator*() const;
-    const std::unique_ptr<OkayMaterial>& operator->() const;
-    const std::unique_ptr<OkayMaterial>& get() const;
+    const std::unique_ptr<Material>& operator*() const;
+    const std::unique_ptr<Material>& operator->() const;
+    const std::unique_ptr<Material>& get() const;
 };
 
-class OkayMaterialRegistry {
+class MaterialRegistry {
    public:
-    OkayShaderHandle registerShader(const std::string& vertexSource,
+    ShaderHandle registerShader(const std::string& vertexSource,
                                     const std::string& fragmentSource) {
         // Create the shader, compile it, and add it to the registry
-        OkayShader shader(vertexSource, fragmentSource);
+        Shader shader(vertexSource, fragmentSource);
         shader.compile();
         _shaders.emplace(shader.programID(), shader);
         return {this, shader.programID()};
     };
 
-    OkayMaterialHandle registerMaterial(const OkayShaderHandle& shader,
-                                        std::unique_ptr<IOkayMaterialPropertyCollection> uniforms) {
+    MaterialHandle registerMaterial(const ShaderHandle& shader,
+                                        std::unique_ptr<IMaterialPropertyCollection> uniforms) {
         std::uint32_t id = nextID();
-        _materials.emplace_back(std::make_unique<OkayMaterial>(shader, std::move(uniforms), id));
+        _materials.emplace_back(std::make_unique<Material>(shader, std::move(uniforms), id));
         return {this, id};
     }
 
-    const std::unique_ptr<OkayMaterial>& getMaterial(const OkayMaterialHandle& handle) const {
+    const std::unique_ptr<Material>& getMaterial(const MaterialHandle& handle) const {
         return _materials[handle.id];
     }
 
-    const std::unique_ptr<OkayMaterial>& getMaterial(std::uint32_t id) const {
+    const std::unique_ptr<Material>& getMaterial(std::uint32_t id) const {
         return _materials[id];
     }
 
-    const OkayShader* getShader(const OkayShaderHandle& handle) const {
+    const Shader* getShader(const ShaderHandle& handle) const {
         return &_shaders.at(handle.id);
     }
 
-    const OkayShader* getShader(GLuint programID) const { return &_shaders.at(programID); }
+    const Shader* getShader(GLuint programID) const { return &_shaders.at(programID); }
 
-    OkayShader* getShader(const OkayShaderHandle& handle) { return &_shaders.at(handle.id); }
+    Shader* getShader(const ShaderHandle& handle) { return &_shaders.at(handle.id); }
 
-    OkayShader* getShader(GLuint programID) { return &_shaders.at(programID); }
+    Shader* getShader(GLuint programID) { return &_shaders.at(programID); }
 
-    const OkayShader& getShader(const OkayMaterialHandle& handle) const {
+    const Shader& getShader(const MaterialHandle& handle) const {
         return _shaders.at(handle.id);
     }
 
-    OkayShader& getShader(const OkayMaterialHandle& handle) { return _shaders.at(handle.id); }
+    Shader& getShader(const MaterialHandle& handle) { return _shaders.at(handle.id); }
 
     // equality
-    bool operator==(const OkayMaterialRegistry& other) const {
+    bool operator==(const MaterialRegistry& other) const {
         return _materials == other._materials;
     }
 
    private:
-    std::vector<std::unique_ptr<OkayMaterial>> _materials;
-    std::unordered_map<GLuint, OkayShader> _shaders;
+    std::vector<std::unique_ptr<Material>> _materials;
+    std::unordered_map<GLuint, Shader> _shaders;
 
     static std::uint32_t _materialID;
     static std::uint32_t nextID() { return _materialID++; }
 };
 
 template <class Derived>
-class OkayMaterialProperties : public IOkayMaterialPropertyCollection {
+class OkayMaterialProperties : public IMaterialPropertyCollection {
    public:
-    Failable init(OkayShaderHandle shader) override {
+    Failable init(ShaderHandle shader) override {
         auto& d = static_cast<Derived&>(*this);
         Failable out = Failable::ok({});
 
@@ -195,7 +196,7 @@ class OkayMaterialProperties : public IOkayMaterialPropertyCollection {
         return out;
     }
 
-    Failable pass(OkayShaderHandle shader) override {
+    Failable pass(ShaderHandle shader) override {
         auto& d = static_cast<Derived&>(*this);
 
         std::stringstream errorMessages;
@@ -210,7 +211,7 @@ class OkayMaterialProperties : public IOkayMaterialPropertyCollection {
             }
         });
 
-        auto& gpu = OkayGpuState::instance();
+        auto& gpu = GPUState::instance();
 
         // uniform blocks (GPU manager owns UBO objects + binding points)
         tupleForEach(d.uniformBlockRefs(), [&](auto& b) {
@@ -245,4 +246,4 @@ class OkayMaterialProperties : public IOkayMaterialPropertyCollection {
 
 };  // namespace okay
 
-#endif  // __OKAY_MATERIAL_H__
+#endif  // _MATERIAL_H__

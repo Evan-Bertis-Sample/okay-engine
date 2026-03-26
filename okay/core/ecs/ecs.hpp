@@ -1,5 +1,5 @@
-#ifndef __OKAY_ECS_H__
-#define __OKAY_ECS_H__
+#ifndef _ECS_H__
+#define _ECS_H__
 
 #include <okay/core/engine/engine.hpp>
 #include <okay/core/engine/logger.hpp>
@@ -21,10 +21,10 @@
 
 namespace okay {
 
-class OkayECS;
-struct OkayEntity;
+class ECS;
+struct ECSEntity;
 template <typename... Components>
-struct OkaySystemView;
+struct ECSSystemView;
 
 class IComponentPool {
    public:
@@ -79,38 +79,38 @@ class ComponentPool final : public IComponentPool {
     std::vector<bool> _present;
 };
 
-class OkayECS : public OkaySystem<OkaySystemScope::LEVEL> {
+class ECS : public System<SystemScope::LEVEL> {
    public:
-    OkayECS() = default;
+    ECS() = default;
 
     template <typename T>
     void registerComponentType();
 
     template <typename T, typename... Args>
-    void addComponent(OkayEntity& entity, Args&&... args);
+    void addComponent(ECSEntity& entity, Args&&... args);
 
     template <typename T>
-    void removeComponent(OkayEntity& entity);
+    void removeComponent(ECSEntity& entity);
 
     template <typename T>
-    Option<std::reference_wrapper<T>> getComponent(OkayEntity& entity);
+    Option<std::reference_wrapper<T>> getComponent(ECSEntity& entity);
 
     template <typename T>
-    Option<std::reference_wrapper<const T>> getComponent(const OkayEntity& entity) const;
+    Option<std::reference_wrapper<const T>> getComponent(const ECSEntity& entity) const;
 
     template <typename T, typename... Args>
-    T& getOrAddComponent(OkayEntity& entity, Args&&... args);
+    T& getOrAddComponent(ECSEntity& entity, Args&&... args);
 
     template <typename T>
-    bool hasComponent(const OkayEntity& entity);
+    bool hasComponent(const ECSEntity& entity);
 
-    OkayEntity createEntity();
-    bool isValidEntity(const OkayEntity& entity) const;
+    ECSEntity createEntity();
+    bool isValidEntity(const ECSEntity& entity) const;
 
     std::size_t getEntityCount() const { return _entityMetas.size(); }
 
     template <typename... Components>
-    OkaySystemView<Components...> query();
+    ECSSystemView<Components...> query();
 
    private:
     static constexpr std::size_t MAX_COMPONENTS = 32;
@@ -146,8 +146,8 @@ class OkayECS : public OkaySystem<OkaySystemScope::LEVEL> {
     template <typename T>
     Option<std::size_t> getComponentID() const;
 
-    EntityMeta& getEntityMeta(const OkayEntity& entity);
-    const EntityMeta& getEntityMeta(const OkayEntity& entity) const;
+    EntityMeta& getEntityMeta(const ECSEntity& entity);
+    const EntityMeta& getEntityMeta(const ECSEntity& entity) const;
 
     std::vector<EntityMeta> _entityMetas;
     std::unordered_map<ComponentInfo, std::size_t, ComponentInfoHash> _infoToPoolIndex;
@@ -155,19 +155,19 @@ class OkayECS : public OkaySystem<OkaySystemScope::LEVEL> {
     std::size_t _reservedEntityCount{0};
 };
 
-struct OkayEntity {
+struct ECSEntity {
    public:
-    OkayTransform transform;
+    Transform transform;
 
-    OkayEntity() = default;
+    ECSEntity() = default;
 
-    bool operator==(const OkayEntity& other) const {
+    bool operator==(const ECSEntity& other) const {
         return _ecs == other._ecs && _id == other._id;
     }
 
-    bool operator!=(const OkayEntity& other) const { return !(*this == other); }
-    bool operator<(const OkayEntity& other) const { return _id < other._id; }
-    bool operator>(const OkayEntity& other) const { return _id > other._id; }
+    bool operator!=(const ECSEntity& other) const { return !(*this == other); }
+    bool operator<(const ECSEntity& other) const { return _id < other._id; }
+    bool operator>(const ECSEntity& other) const { return _id > other._id; }
 
     template <typename T>
     Option<std::reference_wrapper<const T>> getComponent() const {
@@ -176,18 +176,18 @@ struct OkayEntity {
 
     template <typename T, typename... Args>
     T& getOrAddComponent(Args&&... args) const {
-        return _ecs->getOrAddComponent<T>(const_cast<OkayEntity&>(*this),
+        return _ecs->getOrAddComponent<T>(const_cast<ECSEntity&>(*this),
                                           std::forward<Args>(args)...);
     }
 
     template <typename T, typename... Args>
-    OkayEntity& addComponent(Args&&... args) {
+    ECSEntity& addComponent(Args&&... args) {
         _ecs->addComponent<T>(*this, std::forward<Args>(args)...);
         return *this;
     }
 
     template <typename T>
-    OkayEntity& removeComponent() {
+    ECSEntity& removeComponent() {
         _ecs->removeComponent<T>(*this);
         return *this;
     }
@@ -198,33 +198,33 @@ struct OkayEntity {
     }
 
    private:
-    OkayEntity(OkayECS* ecs, std::size_t id) : _id(id), _ecs(ecs) {}
+    ECSEntity(ECS* ecs, std::size_t id) : _id(id), _ecs(ecs) {}
 
     std::size_t _id{0};
-    OkayECS* _ecs{nullptr};
+    ECS* _ecs{nullptr};
 
-    friend class OkayECS;
+    friend class ECS;
     template <typename... Components>
-    friend struct OkaySystemView;
+    friend struct ECSSystemView;
 };
 
 template <typename... Components>
-struct OkaySystemView {
+struct ECSSystemView {
     struct EntityView {
-        OkayEntity& entity;
+        ECSEntity& entity;
         std::tuple<Components&...> components;
     };
 
-    OkaySystemView(OkayECS* ecs) : _ecs(ecs), _entity(ecs, 0) {
+    ECSSystemView(ECS* ecs) : _ecs(ecs), _entity(ecs, 0) {
         while (_ecs && _entity._id < _ecs->getEntityCount() && !hasAllComponents(_entity)) {
             ++_entity._id;
         }
     }
 
-    OkaySystemView(const OkaySystemView& other) : _ecs(other._ecs), _entity(other._entity) {}
-    OkaySystemView(OkayECS* ecs, std::size_t id) : _ecs(ecs), _entity(ecs, id) {}
+    ECSSystemView(const ECSSystemView& other) : _ecs(other._ecs), _entity(other._entity) {}
+    ECSSystemView(ECS* ecs, std::size_t id) : _ecs(ecs), _entity(ecs, id) {}
 
-    OkaySystemView& operator++() {
+    ECSSystemView& operator++() {
         do {
             ++_entity._id;
         } while (_entity._id < _ecs->getEntityCount() && !hasAllComponents(_entity));
@@ -234,22 +234,22 @@ struct OkaySystemView {
 
     EntityView operator*() const {
         return EntityView{
-            .entity = const_cast<OkayEntity&>(_entity),
+            .entity = const_cast<ECSEntity&>(_entity),
             .components = std::forward_as_tuple(
-                _ecs->getComponent<Components>(const_cast<OkayEntity&>(_entity)).value().get()...)};
+                _ecs->getComponent<Components>(const_cast<ECSEntity&>(_entity)).value().get()...)};
     }
 
-    bool operator==(const OkaySystemView& other) const { return _entity == other._entity; }
-    bool operator!=(const OkaySystemView& other) const { return !(*this == other); }
+    bool operator==(const ECSSystemView& other) const { return _entity == other._entity; }
+    bool operator!=(const ECSSystemView& other) const { return !(*this == other); }
 
-    OkaySystemView begin() const { return OkaySystemView(_ecs); }
-    OkaySystemView end() const { return OkaySystemView(_ecs, _ecs->getEntityCount()); }
+    ECSSystemView begin() const { return ECSSystemView(_ecs); }
+    ECSSystemView end() const { return ECSSystemView(_ecs, _ecs->getEntityCount()); }
 
    private:
-    OkayEntity _entity;
-    OkayECS* _ecs{nullptr};
+    ECSEntity _entity;
+    ECS* _ecs{nullptr};
 
-    bool hasAllComponents(const OkayEntity& entity) const {
+    bool hasAllComponents(const ECSEntity& entity) const {
         bool hasAll = true;
         ((hasAll &= entity.hasComponent<Components>()), ...);
         return hasAll;
@@ -257,7 +257,7 @@ struct OkaySystemView {
 };
 
 template <typename T>
-void OkayECS::registerComponentType() {
+void ECS::registerComponentType() {
     static_assert(!std::is_reference_v<T>, "Component type cannot be a reference");
     static_assert(!std::is_const_v<T>, "Component type cannot be const");
 
@@ -278,7 +278,7 @@ void OkayECS::registerComponentType() {
 }
 
 template <typename T>
-ComponentPool<T>& OkayECS::getPool() {
+ComponentPool<T>& ECS::getPool() {
     const ComponentInfo info = ComponentInfo::create<T>();
     auto it = _infoToPoolIndex.find(info);
     if (it == _infoToPoolIndex.end()) {
@@ -290,7 +290,7 @@ ComponentPool<T>& OkayECS::getPool() {
 }
 
 template <typename T>
-const ComponentPool<T>& OkayECS::getPool() const {
+const ComponentPool<T>& ECS::getPool() const {
     const ComponentInfo info = ComponentInfo::create<T>();
     auto it = _infoToPoolIndex.find(info);
     if (it == _infoToPoolIndex.end()) {
@@ -302,7 +302,7 @@ const ComponentPool<T>& OkayECS::getPool() const {
 }
 
 template <typename T>
-Option<std::size_t> OkayECS::getComponentID() const {
+Option<std::size_t> ECS::getComponentID() const {
     const ComponentInfo info = ComponentInfo::create<T>();
     auto it = _infoToPoolIndex.find(info);
     if (it == _infoToPoolIndex.end()) {
@@ -313,7 +313,7 @@ Option<std::size_t> OkayECS::getComponentID() const {
 }
 
 template <typename T, typename... Args>
-void OkayECS::addComponent(OkayEntity& entity, Args&&... args) {
+void ECS::addComponent(ECSEntity& entity, Args&&... args) {
     const Option<std::size_t> componentID = getComponentID<T>();
     if (!componentID) {
         Engine.logger.error("Component {} not registered", typeid(T).name());
@@ -328,7 +328,7 @@ void OkayECS::addComponent(OkayEntity& entity, Args&&... args) {
 }
 
 template <typename T>
-void OkayECS::removeComponent(OkayEntity& entity) {
+void ECS::removeComponent(ECSEntity& entity) {
     const Option<std::size_t> componentID = getComponentID<T>();
     if (!componentID) {
         Engine.logger.error("Component {} not registered", typeid(T).name());
@@ -342,7 +342,7 @@ void OkayECS::removeComponent(OkayEntity& entity) {
 }
 
 template <typename T>
-Option<std::reference_wrapper<T>> OkayECS::getComponent(OkayEntity& entity) {
+Option<std::reference_wrapper<T>> ECS::getComponent(ECSEntity& entity) {
     const Option<std::size_t> componentID = getComponentID<T>();
     if (!componentID) {
         Engine.logger.error("Component {} not registered", typeid(T).name());
@@ -363,7 +363,7 @@ Option<std::reference_wrapper<T>> OkayECS::getComponent(OkayEntity& entity) {
 }
 
 template <typename T>
-Option<std::reference_wrapper<const T>> OkayECS::getComponent(const OkayEntity& entity) const {
+Option<std::reference_wrapper<const T>> ECS::getComponent(const ECSEntity& entity) const {
     const Option<std::size_t> componentID = getComponentID<T>();
     if (!componentID) {
         Engine.logger.error("Component {} not registered", typeid(T).name());
@@ -384,7 +384,7 @@ Option<std::reference_wrapper<const T>> OkayECS::getComponent(const OkayEntity& 
 }
 
 template <typename T, typename... Args>
-T& OkayECS::getOrAddComponent(OkayEntity& entity, Args&&... args) {
+T& ECS::getOrAddComponent(ECSEntity& entity, Args&&... args) {
     auto existing = getComponent<T>(entity);
     if (existing) {
         return existing.value().get();
@@ -395,7 +395,7 @@ T& OkayECS::getOrAddComponent(OkayEntity& entity, Args&&... args) {
 }
 
 template <typename T>
-bool OkayECS::hasComponent(const OkayEntity& entity) {
+bool ECS::hasComponent(const ECSEntity& entity) {
     const Option<std::size_t> componentID = getComponentID<T>();
     if (!componentID) {
         return false;
@@ -410,8 +410,8 @@ bool OkayECS::hasComponent(const OkayEntity& entity) {
 }
 
 template <typename... Components>
-OkaySystemView<Components...> OkayECS::query() {
-    return OkaySystemView<Components...>(this);
+ECSSystemView<Components...> ECS::query() {
+    return ECSSystemView<Components...>(this);
 }
 
 }  // namespace okay

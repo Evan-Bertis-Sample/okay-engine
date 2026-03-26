@@ -1,7 +1,8 @@
-#include <okay/core/renderer/okay_surface.hpp>
+#include <okay/core/renderer/surface.hpp>
 
+#include <okay/core/renderer/gl.hpp>
 #include <GLFW/glfw3.h>
-#include <glad/glad.h>
+
 #include <iostream>
 #include <stdexcept>
 #include <string>

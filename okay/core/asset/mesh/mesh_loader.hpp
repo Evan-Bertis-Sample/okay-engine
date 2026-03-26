@@ -13,13 +13,13 @@ namespace okay {
 class MeshLoader {
    public:
     virtual ~MeshLoader() = default;
-    virtual Result<OkayMeshData> Load(const std::filesystem::path& path, std::istream& file) = 0;
+    virtual Result<MeshData> Load(const std::filesystem::path& path, std::istream& file) = 0;
 };
 
 template <>
-struct OkayAssetLoader<OkayMeshData> {
-    static Result<OkayMeshData> loadAsset(const std::filesystem::path& path,
-                                          const OkayAssetIO& assetIO);
+struct AssetLoader<MeshData> {
+    static Result<MeshData> loadAsset(const std::filesystem::path& path,
+                                          const AssetIO& assetIO);
 };
 
 }  // namespace okay

@@ -5,12 +5,12 @@
 
 namespace okay {
 
-class OkayTime {
+class Time {
     using HighResClock = std::chrono::high_resolution_clock;
     using TimePoint = std::chrono::time_point<HighResClock>;
 
    public:
-    OkayTime()
+    Time()
         : _lastTime(HighResClock::now()), _startOfProgram(HighResClock::now()), _deltaTime(0) {}
 
     void reset() {

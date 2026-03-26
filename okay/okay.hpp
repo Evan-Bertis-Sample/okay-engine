@@ -73,4 +73,4 @@
 #include <okay/core/util/string.hpp>
 #include <okay/core/util/type.hpp>
 
-#endif  // __OKAY_H__
+#endif // __OKAY_H__

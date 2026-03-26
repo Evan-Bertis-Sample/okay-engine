@@ -19,11 +19,11 @@ std::size_t ObjLoader::VertKeyHash::operator()(const VertKey& k) const noexcept 
     return h;
 }
 
-Result<OkayMeshData> ObjLoader::Load(const std::filesystem::path& path, std::istream& file) {
+Result<MeshData> ObjLoader::Load(const std::filesystem::path& path, std::istream& file) {
     // Good error if it isn't OBJ-ish content
     auto sniff = ValidateLooksLikeObj(file);
     if (sniff.isError())
-        return Result<OkayMeshData>::errorResult(sniff.error());
+        return Result<MeshData>::errorResult(sniff.error());
 
     State st;
     st.positions.reserve(1024);
@@ -64,22 +64,22 @@ Result<OkayMeshData> ObjLoader::Load(const std::filesystem::path& path, std::ist
         }
 
         if (r.isError()) {
-            return Result<OkayMeshData>::errorResult(PrefixLine(lineNo, r.error()));
+            return Result<MeshData>::errorResult(PrefixLine(lineNo, r.error()));
         }
     }
 
     if (file.bad()) {
-        return Result<OkayMeshData>::errorResult(
+        return Result<MeshData>::errorResult(
             "OBJ parse failed: stream became bad while reading.");
     }
 
     if (st.out.vertices.empty() || st.out.indices.empty()) {
-        return Result<OkayMeshData>::errorResult(
+        return Result<MeshData>::errorResult(
             "OBJ parse produced an empty mesh (no faces found).");
     }
 
     (void)path;  // reserved for future use (mtl, relative lookups)
-    return Result<OkayMeshData>::ok(std::move(st.out));
+    return Result<MeshData>::ok(std::move(st.out));
 }
 
 Failable ObjLoader::ValidateLooksLikeObj(std::istream& file) const {
@@ -275,7 +275,7 @@ Result<std::uint32_t> ObjLoader::EmitVertex(const ObjIndex& i, State& st) const 
     if (it != st.dedup.end())
         return Result<std::uint32_t>::ok(it->second);
 
-    OkayVertex v{};
+    MeshVertex v{};
     v.position = st.positions[vi];
     v.uv = (vti >= 0) ? st.uvs[vti] : glm::vec2(0.0f, 0.0f);
     v.normal = (vni >= 0) ? st.normals[vni] : glm::vec3(0.0f, 1.0f, 0.0f);

@@ -1,5 +1,5 @@
-#ifndef __OKAY_ASSET_H__
-#define __OKAY_ASSET_H__
+#ifndef _ASSET_H__
+#define _ASSET_H__
 
 #include <okay/core/engine/system.hpp>
 #include <okay/core/util/option.hpp>
@@ -27,21 +27,21 @@
 namespace okay {
 
 template <typename T>
-struct OkayAsset {
+struct Asset {
     T asset;
     // meta information about the asset
     std::size_t assetSize;
 };
 
-class OkayAssetIO {
+class AssetIO {
    public:
-    virtual ~OkayAssetIO() = default;
+    virtual ~AssetIO() = default;
 
     virtual Result<std::unique_ptr<std::istream>> open(const std::filesystem::path& path) const = 0;
     virtual Result<std::size_t> fileSize(const std::filesystem::path& path) const = 0;
 };
 
-class FilesystemAssetIO final : public OkayAssetIO {
+class FilesystemAssetIO final : public AssetIO {
    public:
     Result<std::unique_ptr<std::istream>> open(const std::filesystem::path& path) const override {
         auto f = std::make_unique<std::ifstream>(path, std::ios::in | std::ios::binary);
@@ -63,9 +63,9 @@ class FilesystemAssetIO final : public OkayAssetIO {
 };
 
 template <typename T, typename LoadOptions = void>
-struct OkayAssetLoader {
+struct AssetLoader {
     static Result<T> loadAsset(const std::filesystem::path& path,
-                               const OkayAssetIO& assetIO,
+                               const AssetIO& assetIO,
                                LoadOptions options) {
         static_assert(sizeof(T) != 0,
                       "No OkayAssetLoader<T> specialization found for this asset type.");
@@ -74,12 +74,12 @@ struct OkayAssetLoader {
 };
 
 template <typename T>
-using OnAssetSucceedCB = std::function<void(const OkayAsset<T>&)>;
+using OnAssetSucceedCB = std::function<void(const Asset<T>&)>;
 
 template <typename T>
 using OnAssetFailedCB = std::function<void(const std::string&)>;
 
-class OkayAssetManager : public OkaySystem<OkaySystemScope::ENGINE> {
+class AssetManager : public System<SystemScope::ENGINE> {
    public:
     using DefaultAssetIO = FilesystemAssetIO;
 
@@ -118,23 +118,23 @@ class OkayAssetManager : public OkaySystem<OkaySystemScope::ENGINE> {
        public:
         enum State { LOADING, COMPLETE, FAILED };
         State state;
-        Result<OkayAsset<T>> asset;
+        Result<Asset<T>> asset;
     };
 
     template <typename T, typename AssetIO = DefaultAssetIO, typename... LoadOptions>
     LoadHandle<T> loadAssetAsync(const Load<T, AssetIO>& load, LoadOptions... options) {
         Result<T> res =
-            OkayAssetLoader<T, LoadOptions...>::loadAsset(load.assetPath, load.assetIO, options...);
+            AssetLoader<T, LoadOptions...>::loadAsset(load.assetPath, load.assetIO, options...);
 
         if (res.isError()) {
-            auto handleAsset = Result<OkayAsset<T>>::errorResult(res.error());
+            auto handleAsset = Result<Asset<T>>::errorResult(res.error());
             if (load.onFailCB)
                 load.onFailCB(res.error());
 
             return LoadHandle<T>{.state = LoadHandle<T>::State::FAILED, .asset = handleAsset};
         } else {
-            OkayAsset<T> asset = createAsset<T>(load.assetPath, res.value(), load.assetIO);
-            auto handleAsset = Result<OkayAsset<T>>::ok(asset);
+            Asset<T> asset = createAsset<T>(load.assetPath, res.value(), load.assetIO);
+            auto handleAsset = Result<Asset<T>>::ok(asset);
             if (load.onCompleteCB)
                 load.onCompleteCB(asset);
 
@@ -143,38 +143,38 @@ class OkayAssetManager : public OkaySystem<OkaySystemScope::ENGINE> {
     };
 
     template <typename T, typename AssetIO = DefaultAssetIO, typename... LoadOptions>
-    Result<OkayAsset<T>> loadAssetSync(const Load<T, AssetIO>& load, LoadOptions... options) {
+    Result<Asset<T>> loadAssetSync(const Load<T, AssetIO>& load, LoadOptions... options) {
         Result<T> res =
-            OkayAssetLoader<T, LoadOptions...>::loadAsset(load.assetPath, load.assetIO, options...);
+            AssetLoader<T, LoadOptions...>::loadAsset(load.assetPath, load.assetIO, options...);
 
         if (res.isError()) {
-            return Result<OkayAsset<T>>::errorResult(res.error());
+            return Result<Asset<T>>::errorResult(res.error());
         } else {
-            return Result<OkayAsset<T>>::ok(
+            return Result<Asset<T>>::ok(
                 createAsset<T>(load.assetPath, res.value(), load.assetIO));
         };
     };
 
     template <typename T, typename AssetIO = DefaultAssetIO, typename... LoadOptions>
-    Result<OkayAsset<T>> loadEngineAssetSync(const std::filesystem::path& path,
+    Result<Asset<T>> loadEngineAssetSync(const std::filesystem::path& path,
                                              LoadOptions... options) {
         return loadAssetSync(Load<T, AssetIO>::EngineAsset(path), options...);
     }
 
     template <typename T, typename AssetIO = DefaultAssetIO, typename... LoadOptions>
-    Result<OkayAsset<T>> loadGameAssetSync(const std::filesystem::path& path,
+    Result<Asset<T>> loadGameAssetSync(const std::filesystem::path& path,
                                            LoadOptions... options) {
         return loadAssetSync(Load<T, AssetIO>::GameAsset(path), options...);
     }
 
    private:
     template <typename T>
-    inline OkayAsset<T> createAsset(const std::filesystem::path& path,
+    inline Asset<T> createAsset(const std::filesystem::path& path,
                                     T loaded,
-                                    const OkayAssetIO& assetIO) {
-        return OkayAsset<T>{.asset = loaded, .assetSize = assetIO.fileSize(path).value()};
+                                    const AssetIO& assetIO) {
+        return Asset<T>{.asset = loaded, .assetSize = assetIO.fileSize(path).value()};
     }
 };
 
 }  // namespace okay
-#endif  // __OKAY_ASSET_H__
+#endif  // _ASSET_H__

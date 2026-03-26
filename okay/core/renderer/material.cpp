@@ -2,7 +2,7 @@
 
 namespace okay {
 
-Failable OkayShader::compile() {
+Failable Shader::compile() {
     if (_state != State::NOT_COMPILED) {
         Engine.logger.warn("Shader is already compiled.");
         return Failable::ok({});
@@ -58,7 +58,7 @@ Failable OkayShader::compile() {
     return Failable::ok({});
 }
 
-Failable OkayShader::set() {
+Failable Shader::set() {
     if (_state != State::STANDBY) {
         return Failable::errorResult("Shader must be compiled before setting it for use.");
     }
@@ -66,42 +66,42 @@ Failable OkayShader::set() {
     return Failable::ok({});
 }
 
-const OkayShader* OkayShaderHandle::operator*() const {
+const Shader* ShaderHandle::operator*() const {
     return owner->getShader(id);
 }
 
-const OkayShader* OkayShaderHandle::operator->() const {
+const Shader* ShaderHandle::operator->() const {
     return owner->getShader(id);
 }
 
-const OkayShader* OkayShaderHandle::get() const {
+const Shader* ShaderHandle::get() const {
     return owner->getShader(id);
 }
 
-OkayShader* OkayShaderHandle::operator*() {
+Shader* ShaderHandle::operator*() {
     return owner->getShader(id);
 }
 
-OkayShader* OkayShaderHandle::operator->() {
+Shader* ShaderHandle::operator->() {
     return owner->getShader(id);
 }
 
-OkayShader* OkayShaderHandle::get() {
+Shader* ShaderHandle::get() {
     return owner->getShader(id);
 }
 
-const std::unique_ptr<OkayMaterial>& OkayMaterialHandle::operator*() const {
+const std::unique_ptr<Material>& MaterialHandle::operator*() const {
     return owner->getMaterial(id);
 }
 
-const std::unique_ptr<OkayMaterial>& OkayMaterialHandle::operator->() const {
+const std::unique_ptr<Material>& MaterialHandle::operator->() const {
     return owner->getMaterial(id);
 }
 
-const std::unique_ptr<OkayMaterial>& OkayMaterialHandle::get() const {
+const std::unique_ptr<Material>& MaterialHandle::get() const {
     return owner->getMaterial(id);
 }
 
-std::uint32_t OkayMaterialRegistry::_materialID = 0;
+std::uint32_t MaterialRegistry::_materialID = 0;
 
 };  // namespace okay

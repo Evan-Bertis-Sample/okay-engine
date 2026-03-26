@@ -1,5 +1,5 @@
-#ifndef __OKAY_RENDER_WORLD_H__
-#define __OKAY_RENDER_WORLD_H__
+#ifndef _RENDER_WORLD_H__
+#define _RENDER_WORLD_H__
 
 #include "glm/ext/vector_float3.hpp"
 #include "glm/ext/vector_float4.hpp"
@@ -9,6 +9,7 @@
 #include <okay/core/util/dirty_set.hpp>
 #include <okay/core/util/object_pool.hpp>
 #include <okay/core/util/property.hpp>
+#include <okay/core/renderer/gl.hpp>
 
 #include <cstdint>
 #include <glm/glm.hpp>
@@ -20,29 +21,29 @@
 
 namespace okay {
 
-struct OkayTransform {
+struct Transform {
     glm::vec3 position{0.0f, 0.0f, 0.0f};
     glm::vec3 scale{1.0f, 1.0f, 1.0f};
     glm::quat rotation{1.0f, 0.0f, 0.0f, 0.0f};
 
-    OkayTransform(const glm::vec3& pos = glm::vec3(0.0f),
+    Transform(const glm::vec3& pos = glm::vec3(0.0f),
                   const glm::vec3& scl = glm::vec3(1.0f),
                   const glm::quat& rot = glm::quat())
         : position(pos), scale(scl), rotation(rot) {}
 
     // asignment, equality comparison overloads
-    OkayTransform& operator=(const OkayTransform& other) {
+    Transform& operator=(const Transform& other) {
         position = other.position;
         scale = other.scale;
         rotation = other.rotation;
         return *this;
     }
 
-    bool operator==(const OkayTransform& other) const {
+    bool operator==(const Transform& other) const {
         return position == other.position && scale == other.scale && rotation == other.rotation;
     }
 
-    bool operator!=(const OkayTransform& other) const { return !(*this == other); }
+    bool operator!=(const Transform& other) const { return !(*this == other); }
 
     glm::mat4 toMatrix() const {
         glm::mat4 mat(1.0f);
@@ -53,7 +54,7 @@ struct OkayTransform {
     }
 };
 
-class OkayCamera {
+class Camera {
    public:
     enum class ProjectionType { PERPSECTIVE, ORTHOGRAPHIC };
 
@@ -72,9 +73,9 @@ class OkayCamera {
         float far{1000.0f};
     };
 
-    OkayTransform transform{};
+    Transform transform{};
 
-    OkayCamera() = default;
+    Camera() = default;
 
     template <typename T>
         requires(std::is_same_v<T, Perspective> || std::is_same_v<T, OrthographicConfig>)
@@ -139,7 +140,7 @@ class OkayCamera {
     std::variant<Perspective, OrthographicConfig> _config{Perspective{}};
 };
 
-struct alignas(16) OkayLight {
+struct alignas(16) Light {
     // xyz = position (world), w = type
     glm::vec4 posType;
     // rgb = color, w = intensity
@@ -153,29 +154,29 @@ struct alignas(16) OkayLight {
 
     enum class Type : int { DIRECTIONAL = 0, POINT = 1, SPOT = 2 };
 
-    static OkayLight directional(glm::vec3 dir, glm::vec3 rgb, float intensity = 1.0f) {
-        OkayLight l{};
+    static Light directional(glm::vec3 dir, glm::vec3 rgb, float intensity = 1.0f) {
+        Light l{};
         l.posType = glm::vec4(dir, Type::DIRECTIONAL);
         l.color = glm::vec4(rgb, intensity);
         l.direction = glm::vec4(dir, 0.0f);
         return l;
     }
 
-    static OkayLight point(glm::vec3 pos, float radius, glm::vec3 rgb, float intensity = 1.0f) {
-        OkayLight l{};
+    static Light point(glm::vec3 pos, float radius, glm::vec3 rgb, float intensity = 1.0f) {
+        Light l{};
         l.posType = glm::vec4(pos, Type::POINT);
         l.color = glm::vec4(rgb, intensity);
         l.extra = glm::vec4(radius);
         return l;
     }
 
-    static OkayLight spot(glm::vec3 pos,
+    static Light spot(glm::vec3 pos,
                           glm::vec3 dir,
                           float radius,
                           float angleRad,
                           glm::vec3 rgb,
                           float intensity = 1.0f) {
-        OkayLight l{};
+        Light l{};
         l.posType = glm::vec4(pos, Type::SPOT);
         l.color = glm::vec4(rgb, intensity);
         l.direction = glm::vec4(dir, 0.0f);
@@ -190,14 +191,14 @@ struct alignas(16) OkayLight {
     static constexpr std::size_t MAX_LIGHTS = 16;
 };
 
-class OkayRenderWorld;
+class RenderWorld;
 
 using RenderItemHandle = ObjectPoolHandle;
 
-struct OkayRenderItem {
-    OkayMaterialHandle material;
-    OkayMesh mesh;
-    OkayTransform transform;
+struct RenderItem {
+    MaterialHandle material;
+    Mesh mesh;
+    Transform transform;
     std::uint64_t sortKey;
     glm::mat4 worldMatrix{1.0f};
 
@@ -206,27 +207,27 @@ struct OkayRenderItem {
     RenderItemHandle previousSibling{RenderItemHandle::invalidHandle()};
     RenderItemHandle nextSibling{RenderItemHandle::invalidHandle()};
 
-    OkayRenderItem() = default;
-    OkayRenderItem(OkayMaterialHandle mat, OkayMesh m);
+    RenderItem() = default;
+    RenderItem(MaterialHandle mat, Mesh m);
 
     // operator overloads for std::map
-    bool operator<(const OkayRenderItem& other) const { return sortKey < other.sortKey; }
-    bool operator>(const OkayRenderItem& other) const { return sortKey > other.sortKey; }
-    bool operator==(const OkayRenderItem& other) const { return sortKey == other.sortKey; }
-    bool operator!=(const OkayRenderItem& other) const { return !(*this == other); }
-    bool operator<=(const OkayRenderItem& other) const { return sortKey <= other.sortKey; }
-    bool operator>=(const OkayRenderItem& other) const { return sortKey >= other.sortKey; }
+    bool operator<(const RenderItem& other) const { return sortKey < other.sortKey; }
+    bool operator>(const RenderItem& other) const { return sortKey > other.sortKey; }
+    bool operator==(const RenderItem& other) const { return sortKey == other.sortKey; }
+    bool operator!=(const RenderItem& other) const { return !(*this == other); }
+    bool operator<=(const RenderItem& other) const { return sortKey <= other.sortKey; }
+    bool operator>=(const RenderItem& other) const { return sortKey >= other.sortKey; }
 };
 
-struct OkayRenderEntity {
+struct RenderEntity {
    public:
     struct Properties {
-        friend class OkayRenderEntity;
-        friend class OkayRenderWorld;
+        friend class RenderEntity;
+        friend class RenderWorld;
 
-        OkayMaterialHandle material{};
-        OkayTransform transform{};
-        OkayMesh mesh{};
+        MaterialHandle material{};
+        Transform transform{};
+        Mesh mesh{};
 
         ~Properties();
 
@@ -236,24 +237,24 @@ struct OkayRenderEntity {
 
        private:
         RenderItemHandle _renderItem{RenderItemHandle::invalidHandle()};
-        OkayRenderWorld* _owner;
+        RenderWorld* _owner;
 
-        Properties(OkayRenderWorld* owner, RenderItemHandle renderItem)
+        Properties(RenderWorld* owner, RenderItemHandle renderItem)
             : _owner(owner), _renderItem(renderItem) {}
     };
 
-    friend class OkayRenderWorld;
+    friend class RenderWorld;
 
-    constexpr OkayRenderEntity() = default;
+    constexpr RenderEntity() = default;
 
-    OkayRenderEntity(OkayRenderWorld* owner, RenderItemHandle renderItem)
+    RenderEntity(RenderWorld* owner, RenderItemHandle renderItem)
         : _owner(owner), _renderItem(renderItem) {}
 
-    bool operator==(const OkayRenderEntity& other) const {
+    bool operator==(const RenderEntity& other) const {
         return _renderItem == other._renderItem;
     }
 
-    bool operator!=(const OkayRenderEntity& other) const { return !(*this == other); }
+    bool operator!=(const RenderEntity& other) const { return !(*this == other); }
 
     Properties operator*() const;
     Properties operator->() const;
@@ -261,17 +262,17 @@ struct OkayRenderEntity {
     Properties prop() const { return **this; }
 
    private:
-    OkayRenderWorld* _owner{nullptr};
+    RenderWorld* _owner{nullptr};
     RenderItemHandle _renderItem{RenderItemHandle::invalidHandle()};
 };
 
-class OkayRenderWorld {
+class RenderWorld {
    public:
     struct ChildIterator {
        public:
-        OkayRenderWorld& world;
+        RenderWorld& world;
 
-        ChildIterator(OkayRenderWorld& world, RenderItemHandle h) : world(world), _renderItem(h) {}
+        ChildIterator(RenderWorld& world, RenderItemHandle h) : world(world), _renderItem(h) {}
 
         ChildIterator(const ChildIterator& other)
             : world(other.world), _renderItem(other._renderItem) {}
@@ -281,8 +282,8 @@ class OkayRenderWorld {
         bool operator==(const ChildIterator& other) const;
         bool operator!=(const ChildIterator& other) const;
 
-        OkayRenderEntity operator*() const;
-        OkayRenderEntity operator->() const;
+        RenderEntity operator*() const;
+        RenderEntity operator->() const;
 
        private:
         RenderItemHandle _renderItem{RenderItemHandle::invalidHandle()};
@@ -298,44 +299,44 @@ class OkayRenderWorld {
         ChildRange(ChildIterator b, ChildIterator e) : b(b), e(e) {}
     };
 
-    OkayCamera& camera() { return _camera; }
+    Camera& camera() { return _camera; }
 
-    ChildRange children(OkayRenderEntity parent);
-    const ChildRange children(OkayRenderEntity parent) const;
+    ChildRange children(RenderEntity parent);
+    const ChildRange children(RenderEntity parent) const;
 
-    OkayRenderEntity addRenderEntity(const OkayTransform& transform,
-                                     const OkayMaterialHandle& material,
-                                     const OkayMesh& mesh,
-                                     OkayRenderEntity parent);
+    RenderEntity addRenderEntity(const Transform& transform,
+                                     const MaterialHandle& material,
+                                     const Mesh& mesh,
+                                     RenderEntity parent);
 
-    OkayRenderEntity addRenderEntity(const OkayTransform& transform,
-                                     const OkayMaterialHandle& material,
-                                     const OkayMesh& mesh) {
+    RenderEntity addRenderEntity(const Transform& transform,
+                                     const MaterialHandle& material,
+                                     const Mesh& mesh) {
         return addRenderEntity(
-            transform, material, mesh, OkayRenderEntity(this, RenderItemHandle::invalidHandle()));
+            transform, material, mesh, RenderEntity(this, RenderItemHandle::invalidHandle()));
     }
 
     const std::vector<RenderItemHandle>& getRenderItems();
-    const OkayRenderItem& getRenderItem(RenderItemHandle handle) const {
+    const RenderItem& getRenderItem(RenderItemHandle handle) const {
         return _renderItemPool.get(handle);
     }
 
-    OkayRenderItem& getRenderItem(RenderItemHandle handle) { return _renderItemPool.get(handle); }
+    RenderItem& getRenderItem(RenderItemHandle handle) { return _renderItemPool.get(handle); }
 
-    OkayRenderEntity getRenderEntity(RenderItemHandle handle) {
-        return OkayRenderEntity(this, handle);
+    RenderEntity getRenderEntity(RenderItemHandle handle) {
+        return RenderEntity(this, handle);
     }
 
-    void updateEntity(RenderItemHandle renderItem, const OkayRenderEntity::Properties&& properties);
+    void updateEntity(RenderItemHandle renderItem, const RenderEntity::Properties&& properties);
 
-    Failable addChild(OkayRenderEntity parent, OkayRenderEntity children);
-    bool isChildOf(OkayRenderEntity parent, OkayRenderEntity child) const;
+    Failable addChild(RenderEntity parent, RenderEntity children);
+    bool isChildOf(RenderEntity parent, RenderEntity child) const;
 
-    std::span<const OkayLight> lights() const {
-        return std::span<const OkayLight>(_lights.data(), _activeLights);
+    std::span<const Light> lights() const {
+        return std::span<const Light>(_lights.data(), _activeLights);
     }
 
-    std::size_t addLight(const OkayLight& light) {
+    std::size_t addLight(const Light& light) {
         _lights[_activeLights++] = light;
         return _activeLights - 1;
     }
@@ -345,18 +346,18 @@ class OkayRenderWorld {
         _lights[index] = _lights[--_activeLights];
     }
 
-    OkayLight& getLight(std::size_t index) { return _lights[index]; }
+    Light& getLight(std::size_t index) { return _lights[index]; }
 
    private:
-    ObjectPool<OkayRenderItem> _renderItemPool;
+    ObjectPool<RenderItem> _renderItemPool;
     std::vector<RenderItemHandle> _memoizedRenderItems;
     std::set<RenderItemHandle> _dirtyTransforms;
 
-    std::array<OkayLight, OkayLight::MAX_LIGHTS> _lights{};
+    std::array<Light, Light::MAX_LIGHTS> _lights{};
     std::size_t _activeLights{0};
 
     bool _needsMaterialRebuild{true};
-    OkayCamera _camera;
+    Camera _camera;
 
     void rebuildTransforms();
     void rebuildMaterials();
@@ -368,4 +369,4 @@ class OkayRenderWorld {
 
 }  // namespace okay
 
-#endif  // __OKAY_RENDER_WORLD_H__
+#endif  // _RENDER_WORLD_H__

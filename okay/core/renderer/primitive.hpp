@@ -1,5 +1,5 @@
-#ifndef __OKAY_PRIMITIVE_H__
-#define __OKAY_PRIMITIVE_H__
+#ifndef _PRIMITIVE_H__
+#define _PRIMITIVE_H__
 
 #include <okay/core/renderer/mesh.hpp>
 
@@ -14,11 +14,11 @@ namespace okay::primitives {
 
 template <typename BuilderT>
 using VertexTransformation =
-    std::function<okay::OkayVertex(const okay::OkayVertex&, const BuilderT&)>;
+    std::function<okay::MeshVertex(const okay::MeshVertex&, const BuilderT&)>;
 
 template <typename BuilderT>
 static VertexTransformation<BuilderT> colorTransform(const glm::vec4& color) {
-    return [color](const okay::OkayVertex& v, const BuilderT&) -> okay::OkayVertex {
+    return [color](const okay::MeshVertex& v, const BuilderT&) -> okay::MeshVertex {
         return {v.position, v.normal, color, v.uv};
     };
 }
@@ -80,8 +80,8 @@ class RectBuilder final : public PlacementMixin<RectBuilder> {
     OKAY_PRIM_FIELD(size)
     OKAY_PRIM_FIELD(twoSided)
 
-    okay::OkayMeshData build() const { return build(nullptr); }
-    okay::OkayMeshData build(const VertexTransformation<RectBuilder>& xf) const;
+    okay::MeshData build() const { return build(nullptr); }
+    okay::MeshData build(const VertexTransformation<RectBuilder>& xf) const;
 };
 
 class PlaneBuilder final : public PlacementMixin<PlaneBuilder> {
@@ -94,8 +94,8 @@ class PlaneBuilder final : public PlacementMixin<PlaneBuilder> {
     OKAY_PRIM_FIELD(segments)
     OKAY_PRIM_FIELD(twoSided)
 
-    okay::OkayMeshData build() const { return build(nullptr); }
-    okay::OkayMeshData build(const VertexTransformation<PlaneBuilder>& xf) const;
+    okay::MeshData build() const { return build(nullptr); }
+    okay::MeshData build(const VertexTransformation<PlaneBuilder>& xf) const;
 };
 
 class BoxBuilder final : public PlacementMixin<BoxBuilder> {
@@ -104,8 +104,8 @@ class BoxBuilder final : public PlacementMixin<BoxBuilder> {
 
     OKAY_PRIM_FIELD(size)
 
-    okay::OkayMeshData build() const { return build(nullptr); }
-    okay::OkayMeshData build(const VertexTransformation<BoxBuilder>& xf) const;
+    okay::MeshData build() const { return build(nullptr); }
+    okay::MeshData build(const VertexTransformation<BoxBuilder>& xf) const;
 };
 
 class UVSphereBuilder final : public PlacementMixin<UVSphereBuilder> {
@@ -120,8 +120,8 @@ class UVSphereBuilder final : public PlacementMixin<UVSphereBuilder> {
     OKAY_PRIM_FIELD(rings)
     OKAY_PRIM_FIELD(generateTangents)
 
-    okay::OkayMeshData build() const { return build(nullptr); }
-    okay::OkayMeshData build(const VertexTransformation<UVSphereBuilder>& xf) const;
+    okay::MeshData build() const { return build(nullptr); }
+    okay::MeshData build(const VertexTransformation<UVSphereBuilder>& xf) const;
 };
 
 class IcoSphereBuilder final : public PlacementMixin<IcoSphereBuilder> {
@@ -132,8 +132,8 @@ class IcoSphereBuilder final : public PlacementMixin<IcoSphereBuilder> {
     OKAY_PRIM_FIELD(radius)
     OKAY_PRIM_FIELD(subdivisions)
 
-    okay::OkayMeshData build() const { return build(nullptr); }
-    okay::OkayMeshData build(const VertexTransformation<IcoSphereBuilder>& xf) const;
+    okay::MeshData build() const { return build(nullptr); }
+    okay::MeshData build(const VertexTransformation<IcoSphereBuilder>& xf) const;
 };
 
 class CylinderBuilder final : public PlacementMixin<CylinderBuilder> {
@@ -148,8 +148,8 @@ class CylinderBuilder final : public PlacementMixin<CylinderBuilder> {
     OKAY_PRIM_FIELD(segments)
     OKAY_PRIM_FIELD(caps)
 
-    okay::OkayMeshData build() const { return build(nullptr); }
-    okay::OkayMeshData build(const VertexTransformation<CylinderBuilder>& xf) const;
+    okay::MeshData build() const { return build(nullptr); }
+    okay::MeshData build(const VertexTransformation<CylinderBuilder>& xf) const;
 };
 
 class ConeBuilder final : public PlacementMixin<ConeBuilder> {
@@ -164,8 +164,8 @@ class ConeBuilder final : public PlacementMixin<ConeBuilder> {
     OKAY_PRIM_FIELD(segments)
     OKAY_PRIM_FIELD(cap)
 
-    okay::OkayMeshData build() const { return build(nullptr); }
-    okay::OkayMeshData build(const VertexTransformation<ConeBuilder>& xf) const;
+    okay::MeshData build() const { return build(nullptr); }
+    okay::MeshData build(const VertexTransformation<ConeBuilder>& xf) const;
 };
 
 class CapsuleBuilder final : public PlacementMixin<CapsuleBuilder> {
@@ -180,8 +180,8 @@ class CapsuleBuilder final : public PlacementMixin<CapsuleBuilder> {
     OKAY_PRIM_FIELD(segments)
     OKAY_PRIM_FIELD(rings)
 
-    okay::OkayMeshData build() const { return build(nullptr); }
-    okay::OkayMeshData build(const VertexTransformation<CapsuleBuilder>& xf) const;
+    okay::MeshData build() const { return build(nullptr); }
+    okay::MeshData build(const VertexTransformation<CapsuleBuilder>& xf) const;
 };
 
 inline RectBuilder rect() {
@@ -211,4 +211,4 @@ inline CapsuleBuilder capsule() {
 
 }  // namespace okay::primitives
 
-#endif  // __OKAY_PRIMITIVE_H__
+#endif  // _PRIMITIVE_H__

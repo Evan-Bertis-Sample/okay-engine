@@ -6,8 +6,8 @@ namespace okay {
 
 OkayEngine Engine;
 
-const std::vector<OkaySystemDescriptor> OkayGame::REQUIRED_SYSTEMS = {
-    OkaySystemDescriptor::create<OkayAssetManager>(),
+const std::vector<OkaySystemDescriptor> Game::REQUIRED_SYSTEMS = {
+    OkaySystemDescriptor::create<AssetManager>(),
 };
 
 }  // namespace okay

@@ -16,31 +16,31 @@
 
 namespace okay {
 
-struct OkayTextureLoadSettings {
-    std::shared_ptr<OkayTextureDataStore> store;
+struct TextureLoadSettings {
+    std::shared_ptr<TextureDataStore> store;
 };
 
 template <>
-struct OkayAssetLoader<OkayTexture, OkayTextureLoadSettings> {
-    static Result<OkayTexture> loadAsset(const std::filesystem::path& path,
-                                         const OkayAssetIO& assetIO,
-                                         const OkayTextureLoadSettings& settings) {
+struct AssetLoader<Texture, TextureLoadSettings> {
+    static Result<Texture> loadAsset(const std::filesystem::path& path,
+                                         const AssetIO& assetIO,
+                                         const TextureLoadSettings& settings) {
         Engine.logger.info("Loading texture: {}", path.string());
 
-        std::shared_ptr<OkayTextureDataStore> store = settings.store;
+        std::shared_ptr<TextureDataStore> store = settings.store;
 
         // get the size of the image
         int width, height, channels;
         if (stbi_info(path.string().c_str(), &width, &height, &channels) == 0) {
             Engine.logger.error("Failed to get image info: {}", path.string());
-            return Result<OkayTexture>::errorResult("Failed to get image info: " + path.string());
+            return Result<Texture>::errorResult("Failed to get image info: " + path.string());
         }
 
         // now load the image into the texture data store
         stbi_uc* result = stbi_load(path.string().c_str(), &width, &height, &channels, 0);
         if (result == nullptr) {
             Engine.logger.error("Failed to load image: {}", path.string());
-            return Result<OkayTexture>::errorResult("Failed to load image: " + path.string());
+            return Result<Texture>::errorResult("Failed to load image: " + path.string());
         }
 
         // copy the image data into the texture data store
@@ -54,8 +54,8 @@ struct OkayAssetLoader<OkayTexture, OkayTextureLoadSettings> {
         Engine.logger.debug("Image size: {}", size);
         std::span<const std::byte> data =
             std::span<const std::byte>(reinterpret_cast<const std::byte*>(result), size);
-        OkayTextureDataStore::TextureHandle handle = store->addTexture(meta, data);
-        return Result<OkayTexture>::ok(OkayTexture(store, handle));
+        TextureDataStore::TextureHandle handle = store->addTexture(meta, data);
+        return Result<Texture>::ok(Texture(store, handle));
     }
 };
 

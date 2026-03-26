@@ -13,16 +13,16 @@ int main() {
     surfaceConfig.height = 480;
     okay::Surface surface(surfaceConfig);
 
-    okay::OkayRendererSettings rendererSettings{
+    okay::RenderSettings rendererSettings{
         .surfaceConfig = surfaceConfig,
-        .pipeline = okay::OkayRenderPipeline::create(std::make_unique<okay::ScenePass>())};
+        .pipeline = okay::RenderPipeline::create(std::make_unique<okay::ScenePass>())};
 
-    auto renderer = okay::OkayRenderer::create(std::move(rendererSettings));
+    auto renderer = okay::Renderer::create(std::move(rendererSettings));
 
-    okay::OkayGame::create()
+    okay::Game::create()
         .addSystems(std::move(renderer),
-                    std::make_unique<okay::OkayAssetManager>(),
-                    std::make_unique<okay::OkayECS>())
+                    std::make_unique<okay::AssetManager>(),
+                    std::make_unique<okay::ECS>())
         .onInitialize(__gameInitialize)
         .onUpdate(__gameUpdate)
         .onShutdown(__gameShutdown)
@@ -33,23 +33,23 @@ int main() {
 
 static void __gameInitialize() {
     // Additional game initialization logic
-    okay::OkayRenderer* renderer = okay::Engine.systems.getSystemChecked<okay::OkayRenderer>();
-    okay::OkayAssetManager* assetManager =
-        okay::Engine.systems.getSystemChecked<okay::OkayAssetManager>();
-    auto teapotRes = assetManager->loadEngineAssetSync<okay::OkayMeshData>("models/teapot.obj");
+    okay::Renderer* renderer = okay::Engine.systems.getSystemChecked<okay::Renderer>();
+    okay::AssetManager* assetManager =
+        okay::Engine.systems.getSystemChecked<okay::AssetManager>();
+    auto teapotRes = assetManager->loadEngineAssetSync<okay::MeshData>("models/teapot.obj");
     if (teapotRes.isError()) {
         okay::Engine.logger.error("Failed to load mesh: {}", teapotRes.error());
         return;
     }
 
-    okay::OkayTextureLoadSettings textureLoadSettings{.store =
-                                                          okay::OkayTextureDataStore::mainStore()};
-    okay::OkayTexture texture =
+    okay::TextureLoadSettings textureLoadSettings{.store =
+                                                          okay::TextureDataStore::mainStore()};
+    okay::Texture texture =
         assetManager
-            ->loadEngineAssetSync<okay::OkayTexture>("textures/uv_test.jpg", textureLoadSettings)
+            ->loadEngineAssetSync<okay::Texture>("textures/uv_test.jpg", textureLoadSettings)
             .value()
             .asset;
-    okay::OkayMesh teapot = renderer->meshBuffer().addMesh(teapotRes.value().asset);
+    okay::Mesh teapot = renderer->meshBuffer().addMesh(teapotRes.value().asset);
 
     okay::Failable res = renderer->meshBuffer().bindMeshData();
     if (res.isError()) {
@@ -57,22 +57,22 @@ static void __gameInitialize() {
         return;
     }
 
-    auto shaderLoadRes = assetManager->loadEngineAssetSync<okay::OkayShader>("shaders/lit");
+    auto shaderLoadRes = assetManager->loadEngineAssetSync<okay::Shader>("shaders/lit");
     if (shaderLoadRes.isError()) {
         okay::Engine.logger.error("Failed to load shader: {}", shaderLoadRes.error());
         return;
     }
 
-    okay::OkayShaderHandle shader = renderer->materialRegistry().registerShader(
+    okay::ShaderHandle shader = renderer->materialRegistry().registerShader(
         shaderLoadRes.value().asset.vertexShader, shaderLoadRes.value().asset.fragmentShader);
     auto materialProperties = std::make_unique<okay::LitMaterial>();
     materialProperties->color.set(glm::vec4(1.0f, 1.0f, 0.0f, 1.0f));
     materialProperties->albedo = texture;
 
-    okay::OkayMaterialHandle material =
+    okay::MaterialHandle material =
         renderer->materialRegistry().registerMaterial(shader, std::move(materialProperties));
 
-    okay::OkayECS* ecs = okay::Engine.systems.getSystemChecked<okay::OkayECS>();
+    okay::ECS* ecs = okay::Engine.systems.getSystemChecked<okay::ECS>();
     ecs->registerComponentType<okay::RenderComponent>();
     ecs->createEntity().addComponent<okay::RenderComponent>(teapot, material);
 
@@ -86,7 +86,7 @@ static void __gameInitialize() {
 
 static void __gameUpdate() {
     // move the camera in a circle, always looking at the origin
-    okay::OkayRenderer* renderer = okay::Engine.systems.getSystemChecked<okay::OkayRenderer>();
+    okay::Renderer* renderer = okay::Engine.systems.getSystemChecked<okay::Renderer>();
     float theta = okay::Engine.time->timeSinceStartSec() * 0.05f * glm::pi<float>();
     glm::vec3 pos = glm::vec3(sin(theta) * 5.0f, 0.0f, cos(theta) * 5.0f);
     // rotation much look at origin

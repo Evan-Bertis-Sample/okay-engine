@@ -7,11 +7,11 @@
 
 using namespace okay;
 
-void OkayTweenCollection::append(std::shared_ptr<IOkayTween> tweenPtr) {
+void TweenCollection::append(std::shared_ptr<ITween> tweenPtr) {
     _collection.push_back(tweenPtr);
 }
 
-void OkayTweenCollection::start() {
+void TweenCollection::start() {
     if (_collection.size() > 0) {
         okay::Engine.systems.getSystemChecked<OkayTweenEngine>()->addTween(
             this->shared_from_this());
@@ -24,33 +24,33 @@ void OkayTweenCollection::start() {
     }
 }
 
-void OkayTweenCollection::tick() {
+void TweenCollection::tick() {
     for (auto& tween : _collection) {
         tween->tick();
     }
 }
 
-void OkayTweenCollection::pause() {
+void TweenCollection::pause() {
     for (auto& tween : _collection) {
         tween->pause();
     }
 }
 
-void OkayTweenCollection::resume() {
+void TweenCollection::resume() {
     for (auto& tween : _collection) {
         tween->resume();
     }
 }
 
-void OkayTweenCollection::kill() {
-    for (std::shared_ptr<IOkayTween> tween : _collection) {
+void TweenCollection::kill() {
+    for (std::shared_ptr<ITween> tween : _collection) {
         tween->kill();
     }
 
     _collection.clear();
 }
 
-bool OkayTweenCollection::isFinished() {
+bool TweenCollection::isFinished() {
     bool allTweensFinished{true};
 
     for (auto& tween : _collection) {
@@ -61,13 +61,13 @@ bool OkayTweenCollection::isFinished() {
     return allTweensFinished;
 }
 
-void OkayTweenCollection::reset() {
+void TweenCollection::reset() {
     for (auto& tween : _collection) {
         tween->reset();
     }
 }
 
-void OkayTweenCollection::setIsTweening(bool isTweening) {
+void TweenCollection::setIsTweening(bool isTweening) {
     for (auto& tween : _collection) {
         tween->setIsTweening(isTweening);
     }

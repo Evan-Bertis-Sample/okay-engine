@@ -1,5 +1,5 @@
-#ifndef __OKAY_TWEEN_EASING_H__
-#define __OKAY_TWEEN_EASING_H__
+#ifndef _TWEEN_EASING_H__
+#define _TWEEN_EASING_H__
 
 #include <cmath>
 #include <functional>

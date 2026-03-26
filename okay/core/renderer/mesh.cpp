@@ -8,18 +8,18 @@
 
 using namespace okay;
 
-OkayMesh OkayMeshBuffer::addMesh(const OkayMeshData& mesh) {
-    OkayMesh m{};
+Mesh MeshBuffer::addMesh(const MeshData& mesh) {
+    Mesh m{};
 
     // get the vertexOffset of the mesh
-    m.vertexOffset = _bufferData.size() / OkayVertex::numFloats();
+    m.vertexOffset = _bufferData.size() / MeshVertex::numFloats();
     m.vertexCount = mesh.vertices.size();
 
     m.indexOffset = _indices.size();
     m.indexCount = mesh.indices.size();
 
     // push the vertices of the mesh
-    for (const OkayVertex& v : mesh.vertices) {
+    for (const MeshVertex& v : mesh.vertices) {
         // push this vertex into the buffer, compactly
         // position
         _bufferData.push_back(v.position.x);
@@ -48,7 +48,7 @@ OkayMesh OkayMeshBuffer::addMesh(const OkayMeshData& mesh) {
     return m;
 }
 
-void OkayMeshBuffer::removeMesh(const OkayMesh& mesh) {
+void MeshBuffer::removeMesh(const Mesh& mesh) {
     // update the indices that refer to vertices after this mesh -- their offset must be decremented
 
     // from mesh.indexOffset + mesh.indexCount ... end
@@ -61,14 +61,14 @@ void OkayMeshBuffer::removeMesh(const OkayMesh& mesh) {
     _indices.erase(_indices.begin() + mesh.indexOffset,
                    _indices.begin() + mesh.indexOffset + mesh.indexCount);
     // remove the vertices
-    _bufferData.erase(_bufferData.begin() + mesh.vertexOffset * OkayVertex::numFloats(),
-                      _bufferData.begin() + mesh.vertexOffset * OkayVertex::numFloats() +
-                          mesh.vertexCount * OkayVertex::numFloats());
+    _bufferData.erase(_bufferData.begin() + mesh.vertexOffset * MeshVertex::numFloats(),
+                      _bufferData.begin() + mesh.vertexOffset * MeshVertex::numFloats() +
+                          mesh.vertexCount * MeshVertex::numFloats());
 
     _dataOutofDate = true;
 }
 
-Failable OkayMeshBuffer::initVertexAttributes() {
+Failable MeshBuffer::initVertexAttributes() {
     if (_hasInitVertexAttributes)
         return Failable::ok({});
 
@@ -82,7 +82,7 @@ Failable OkayMeshBuffer::initVertexAttributes() {
     // MUST have a current context here.
     GL_CHECK(glBindVertexArray(_vao));
 
-    // This must be the VBO that contains OkayVertex data
+    // This must be the VBO that contains MeshVertex data
     GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, _vbo));
 
     GL_CHECK(glEnableVertexAttribArray(0));
@@ -90,7 +90,7 @@ Failable OkayMeshBuffer::initVertexAttributes() {
                                    3,
                                    GL_FLOAT,
                                    GL_FALSE,
-                                   OkayVertex::stride(),
+                                   MeshVertex::stride(),
                                    reinterpret_cast<void*>(0 * sizeof(float))));
 
     GL_CHECK(glEnableVertexAttribArray(1));
@@ -98,7 +98,7 @@ Failable OkayMeshBuffer::initVertexAttributes() {
                                    3,
                                    GL_FLOAT,
                                    GL_FALSE,
-                                   OkayVertex::stride(),
+                                   MeshVertex::stride(),
                                    reinterpret_cast<void*>(3 * sizeof(float))));
 
     GL_CHECK(glEnableVertexAttribArray(2));
@@ -106,7 +106,7 @@ Failable OkayMeshBuffer::initVertexAttributes() {
                                    3,
                                    GL_FLOAT,
                                    GL_FALSE,
-                                   OkayVertex::stride(),
+                                   MeshVertex::stride(),
                                    reinterpret_cast<void*>(6 * sizeof(float))));
 
     GL_CHECK(glEnableVertexAttribArray(3));
@@ -114,7 +114,7 @@ Failable OkayMeshBuffer::initVertexAttributes() {
                                    2,
                                    GL_FLOAT,
                                    GL_FALSE,
-                                   OkayVertex::stride(),
+                                   MeshVertex::stride(),
                                    reinterpret_cast<void*>(9 * sizeof(float))));
 
     GL_CHECK(glBindVertexArray(0));
@@ -130,7 +130,7 @@ Failable OkayMeshBuffer::initVertexAttributes() {
     return Failable::ok({});
 }
 
-Failable OkayMeshBuffer::bindMeshData() {
+Failable MeshBuffer::bindMeshData() {
     if (!_dataOutofDate) {
         Engine.logger.debug("Mesh data already bound");
         return Failable::ok({});
@@ -169,7 +169,7 @@ Failable OkayMeshBuffer::bindMeshData() {
     return Failable::ok({});
 }
 
-void OkayMeshBuffer::drawMesh(const OkayMesh& mesh) {
+void MeshBuffer::drawMesh(const Mesh& mesh) {
     if (_dataOutofDate) {
         Engine.logger.error("Mesh data not bound");
         return;

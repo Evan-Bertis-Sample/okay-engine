@@ -1,50 +1,51 @@
-#ifndef __OKAY_RENDER_PIPELINE_H__
-#define __OKAY_RENDER_PIPELINE_H__
+#ifndef _RENDER_PIPELINE_H__
+#define _RENDER_PIPELINE_H__
 
 #include <okay/core/renderer/render_target.hpp>
 #include <okay/core/renderer/render_world.hpp>
+#include <okay/core/renderer/gl.hpp>
 
 #include <memory>
 #include <vector>
 
 namespace okay {
 
-class OkayRenderer;
+class Renderer;
 
-struct OkayRenderContext {
-    OkayRenderer& renderer;
-    OkayRenderWorld& world;
-    OkayRenderTargetPool& renderTargetPool;
+struct RendererContext {
+    Renderer& renderer;
+    RenderWorld& world;
+    RenderTargetPool& renderTargetPool;
 };
 
-class IOkayRenderPass {
+class IRenderPass {
    public:
-    virtual ~IOkayRenderPass() = default;
+    virtual ~IRenderPass() = default;
 
     virtual const std::string_view name() const = 0;
     virtual void initialize() = 0;
     virtual void resize(int newWidth, int newHeight) = 0;
-    virtual void render(const OkayRenderContext& context) = 0;
+    virtual void render(const RendererContext& context) = 0;
 };
 
-class OkayRenderPipeline {
+class RenderPipeline {
    public:
     template <typename... Ts>
-    static OkayRenderPipeline create(std::unique_ptr<Ts>... passes) {
-        OkayRenderPipeline pipeline;
+    static RenderPipeline create(std::unique_ptr<Ts>... passes) {
+        RenderPipeline pipeline;
         (pipeline.addPass(std::move(passes)), ...);
         return pipeline;
     }
 
     // enable move semantics
-    OkayRenderPipeline() {}
-    OkayRenderPipeline(OkayRenderPipeline&& other) : _passes(std::move(other._passes)) {}
-    OkayRenderPipeline& operator=(OkayRenderPipeline&& other) {
+    RenderPipeline() {}
+    RenderPipeline(RenderPipeline&& other) : _passes(std::move(other._passes)) {}
+    RenderPipeline& operator=(RenderPipeline&& other) {
         _passes = std::move(other._passes);
         return *this;
     }
 
-    void addPass(std::unique_ptr<IOkayRenderPass> pass) { _passes.emplace_back(std::move(pass)); }
+    void addPass(std::unique_ptr<IRenderPass> pass) { _passes.emplace_back(std::move(pass)); }
 
     void initialize() {
         for (auto& pass : _passes) {
@@ -58,18 +59,18 @@ class OkayRenderPipeline {
         }
     }
 
-    void render(const OkayRenderContext& context) {
+    void render(const RendererContext& context) {
         for (auto& pass : _passes) {
             pass->render(context);
         }
     }
 
-    const std::vector<std::unique_ptr<IOkayRenderPass>>& passes() const { return _passes; }
+    const std::vector<std::unique_ptr<IRenderPass>>& passes() const { return _passes; }
 
    private:
-    std::vector<std::unique_ptr<IOkayRenderPass>> _passes;
+    std::vector<std::unique_ptr<IRenderPass>> _passes;
 };
 
 };  // namespace okay
 
-#endif  // __OKAY_RENDER_PIPELINE_H__
+#endif  // _RENDER_PIPELINE_H__

@@ -2,12 +2,12 @@
 
 namespace okay {
 
-OkayTextMeshBuilder::OkayTextMeshBuilder(const OkayTextOptions& options)
-    : _opt(options), _fm(OkayFontManager::instance()) {
+TextMeshBuilder::TextMeshBuilder(const TextOptions& options)
+    : _opt(options), _fm(FontManager::instance()) {
     _lines.reserve(8);
 }
 
-float OkayTextMeshBuilder::computeFontScale(float desiredFontSize, int maxLineHeightPx) {
+float TextMeshBuilder::computeFontScale(float desiredFontSize, int maxLineHeightPx) {
     if (desiredFontSize <= 0.0f)
         return 1.0f;
     if (maxLineHeightPx <= 0)
@@ -15,19 +15,19 @@ float OkayTextMeshBuilder::computeFontScale(float desiredFontSize, int maxLineHe
     return desiredFontSize / (float)maxLineHeightPx;
 }
 
-float OkayTextMeshBuilder::computeLineStartX(float lineWidthScaled) const {
+float TextMeshBuilder::computeLineStartX(float lineWidthScaled) const {
     switch (_opt.horizontalAlignment) {
-        case OkayTextOptions::HoriztonalAlignment::LEFT:
+        case TextOptions::HoriztonalAlignment::LEFT:
             return 0.0f;
-        case OkayTextOptions::HoriztonalAlignment::CENTER:
+        case TextOptions::HoriztonalAlignment::CENTER:
             return -lineWidthScaled * 0.5f;
-        case OkayTextOptions::HoriztonalAlignment::RIGHT:
+        case TextOptions::HoriztonalAlignment::RIGHT:
             return -lineWidthScaled;
     }
     return 0.0f;
 }
 
-void OkayTextMeshBuilder::calcSpacing(const std::string& text) {
+void TextMeshBuilder::calcSpacing(const std::string& text) {
     _lines.clear();
     _lines.push_back(LineInfo{});
 
@@ -62,7 +62,7 @@ void OkayTextMeshBuilder::calcSpacing(const std::string& text) {
     _yOffset = computeVerticalOffset();
 }
 
-OkayTextBounds OkayTextMeshBuilder::computeBounds() const {
+OkayTextBounds TextMeshBuilder::computeBounds() const {
     float top = -std::numeric_limits<float>::infinity();
     float bottom = std::numeric_limits<float>::infinity();
 
@@ -89,22 +89,22 @@ OkayTextBounds OkayTextMeshBuilder::computeBounds() const {
     return OkayTextBounds{top, bottom};
 }
 
-float OkayTextMeshBuilder::computeVerticalOffset() const {
+float TextMeshBuilder::computeVerticalOffset() const {
     const float top = _bounds.top;
     const float bottom = _bounds.bottom;
 
     switch (_opt.verticalAlignment) {
-        case OkayTextOptions::VerticalAlignment::TOP:
+        case TextOptions::VerticalAlignment::TOP:
             return -bottom;  // anchor bottom at y=0
-        case OkayTextOptions::VerticalAlignment::MIDDLE:
+        case TextOptions::VerticalAlignment::MIDDLE:
             return -0.5f * (top + bottom);  // anchor center at y=0
-        case OkayTextOptions::VerticalAlignment::BOTTOM:
+        case TextOptions::VerticalAlignment::BOTTOM:
             return -top;  // anchor top at y=0
     }
     return 0.0f;
 }
 
-void OkayTextMeshBuilder::appendQuadIndices(std::vector<std::uint32_t>& indices,
+void TextMeshBuilder::appendQuadIndices(std::vector<std::uint32_t>& indices,
                                             std::uint32_t base,
                                             bool doubleSided) {
     indices.push_back(base + 2);
@@ -125,8 +125,8 @@ void OkayTextMeshBuilder::appendQuadIndices(std::vector<std::uint32_t>& indices,
     indices.push_back(base + 0);
 }
 
-OkayTextMeshBuilder::TextQuad OkayTextMeshBuilder::generateQuadForGlyph(
-    const OkayFontManager::Glyph& glyph, float dx, float dy, float scale) {
+TextMeshBuilder::TextQuad TextMeshBuilder::generateQuadForGlyph(
+    const FontManager::Glyph& glyph, float dx, float dy, float scale) {
     TextQuad quad;
 
     const float w = (float)glyph.w * scale;
@@ -150,10 +150,10 @@ OkayTextMeshBuilder::TextQuad OkayTextMeshBuilder::generateQuadForGlyph(
     return quad;
 }
 
-OkayMesh OkayTextMeshBuilder::build(const std::string& text) {
+Mesh TextMeshBuilder::build(const std::string& text) {
     calcSpacing(text);
 
-    OkayMeshData meshData;
+    MeshData meshData;
     meshData.vertices.reserve(_quadCount * 4);
     meshData.indices.reserve(_quadCount * (_opt.doubleSided ? 12 : 6));
 

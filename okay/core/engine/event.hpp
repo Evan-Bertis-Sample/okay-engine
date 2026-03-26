@@ -1,12 +1,12 @@
-#ifndef __OKAY_EVENT_H__
-#define __OKAY_EVENT_H__
+#ifndef _EVENT_H__
+#define _EVENT_H__
 
 #include <functional>
 
 namespace okay {
 
 template <typename... Args>
-class OkayEvent {
+class Event {
     using ListenerFn = std::function<void(Args...)>;
 
    public:
@@ -26,4 +26,4 @@ class OkayEvent {
 
 };  // namespace okay
 
-#endif  // __OKAY_EVENT_H__
+#endif  // _EVENT_H__

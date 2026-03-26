@@ -1,5 +1,5 @@
-#ifndef __OKAY_GPU_H__
-#define __OKAY_GPU_H__
+#ifndef _GPU_H__
+#define _GPU_H__
 
 #include <okay/core/engine/engine.hpp>
 #include <okay/core/renderer/gl.hpp>
@@ -8,7 +8,6 @@
 
 #include <atomic>
 #include <cstdint>
-#include <glad/glad.h>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -16,13 +15,13 @@
 
 namespace okay {
 
-class OkayUniformBlockManager {
+class UniformBlockManager {
    public:
-    OkayUniformBlockManager() = default;
-    ~OkayUniformBlockManager() { destroyAll(); }
+    UniformBlockManager() = default;
+    ~UniformBlockManager() { destroyAll(); }
 
-    OkayUniformBlockManager(const OkayUniformBlockManager&) = delete;
-    OkayUniformBlockManager& operator=(const OkayUniformBlockManager&) = delete;
+    UniformBlockManager(const UniformBlockManager&) = delete;
+    UniformBlockManager& operator=(const UniformBlockManager&) = delete;
 
     void destroyAll() {
         for (auto& [k, u] : _ubos) {
@@ -145,13 +144,13 @@ class OkayUniformBlockManager {
     }
 };
 
-class OkayTextureManager {
+class TextureManager {
    public:
-    OkayTextureManager() = default;
-    ~OkayTextureManager() { destroyAll(); }
+    TextureManager() = default;
+    ~TextureManager() { destroyAll(); }
 
-    OkayTextureManager(const OkayTextureManager&) = delete;
-    OkayTextureManager& operator=(const OkayTextureManager&) = delete;
+    TextureManager(const TextureManager&) = delete;
+    TextureManager& operator=(const TextureManager&) = delete;
 
     void destroyAll() {
         for (auto& [k, gt] : _textures) {
@@ -164,10 +163,10 @@ class OkayTextureManager {
     }
 
     // Ensure a GL texture exists and is uploaded; returns GL id.
-    Failable ensureUploaded2D(const OkayTexture& tex,
-                              const OkayTexture::TextureParameters& params,
+    Failable ensureUploaded2D(const Texture& tex,
+                              const Texture::TextureParameters& params,
                               GLuint& outTextureId) {
-        if (!tex.store || OkayTextureDataStore::TextureHandle::isNone(tex.handle)) {
+        if (!tex.store || TextureDataStore::TextureHandle::isNone(tex.handle)) {
             return Failable::ok();
         }
 
@@ -265,8 +264,8 @@ class OkayTextureManager {
     // Bind a 2D texture to a unit and set sampler uniform = unit.
     Failable bindSampler2D(GLuint program,
                            GLuint samplerLoc,
-                           const OkayTexture& tex,
-                           const OkayTexture::TextureParameters& params,
+                           const Texture& tex,
+                           const Texture::TextureParameters& params,
                            GLuint unit) {
         GLuint id = 0;
         auto r = ensureUploaded2D(tex, params, id);
@@ -282,8 +281,8 @@ class OkayTextureManager {
 
    private:
     struct TextureKey {
-        const OkayTextureDataStore* storePtr{};
-        OkayTextureDataStore::TextureHandle handle{};
+        const TextureDataStore* storePtr{};
+        TextureDataStore::TextureHandle handle{};
 
         bool operator==(const TextureKey& o) const {
             return storePtr == o.storePtr && handle.start == o.handle.start &&
@@ -303,12 +302,12 @@ class OkayTextureManager {
     struct GpuTexture2D {
         GLuint id = 0;
         OkayTextureMeta meta{};
-        OkayTexture::TextureParameters params{};
+        Texture::TextureParameters params{};
         bool paramsInitialized = false;
     };
 
-    static bool sameParams(const OkayTexture::TextureParameters& a,
-                           const OkayTexture::TextureParameters& b) {
+    static bool sameParams(const Texture::TextureParameters& a,
+                           const Texture::TextureParameters& b) {
         return a.minFilter == b.minFilter && a.magFilter == b.magFilter && a.wrapS == b.wrapS &&
                a.wrapT == b.wrapT;
     }
@@ -316,20 +315,20 @@ class OkayTextureManager {
     std::unordered_map<TextureKey, GpuTexture2D, TextureKeyHash> _textures;
 };
 
-class OkayGpuState {
+class GPUState {
    public:
-    OkayUniformBlockManager blocks;
-    OkayTextureManager textures;
+    UniformBlockManager blocks;
+    TextureManager textures;
 
-    static OkayGpuState& instance() {
-        static OkayGpuState s_instance;
+    static GPUState& instance() {
+        static GPUState s_instance;
         return s_instance;
     }
 
    private:
-    OkayGpuState() = default;
+    GPUState() = default;
 };
 
 }  // namespace okay
 
-#endif  // __OKAY_GPU_H__
+#endif  // _GPU_H__
