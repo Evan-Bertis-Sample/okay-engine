@@ -1,5 +1,6 @@
-#include "gl.hpp"
 #include "renderer.hpp"
+
+#include "gl.hpp"
 #include "okay/core/util/result.hpp"
 #include "primitive.hpp"
 #include "render_pipeline.hpp"

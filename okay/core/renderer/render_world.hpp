@@ -1,22 +1,22 @@
 #ifndef __OKAY_RENDER_WORLD_H__
 #define __OKAY_RENDER_WORLD_H__
 
-#include <set>
-#include <vector>
-#include <cstdint>
-#include <variant>
-
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/quaternion.hpp>
+#include "glm/ext/vector_float3.hpp"
+#include "glm/ext/vector_float4.hpp"
 
 #include <okay/core/renderer/material.hpp>
 #include <okay/core/renderer/mesh.hpp>
 #include <okay/core/util/dirty_set.hpp>
 #include <okay/core/util/object_pool.hpp>
 #include <okay/core/util/property.hpp>
-#include "glm/ext/vector_float3.hpp"
-#include "glm/ext/vector_float4.hpp"
+
+#include <cstdint>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <set>
+#include <variant>
+#include <vector>
 
 namespace okay {
 

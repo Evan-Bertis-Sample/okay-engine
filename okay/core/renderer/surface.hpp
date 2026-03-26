@@ -1,8 +1,9 @@
 #ifndef __OKAY_SURFACE_H__
 #define __OKAY_SURFACE_H__
 
-#include <memory>
 #include <okay/core/engine/system.hpp>
+
+#include <memory>
 
 namespace okay {
 

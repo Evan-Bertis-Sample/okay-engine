@@ -1,9 +1,10 @@
 #ifndef __UNLIT_H__
 #define __UNLIT_H__
 
-#include <glm/glm.hpp>
-#include <okay/core/renderer/uniform.hpp>
 #include <okay/core/renderer/material.hpp>
+#include <okay/core/renderer/uniform.hpp>
+
+#include <glm/glm.hpp>
 
 namespace okay {
 

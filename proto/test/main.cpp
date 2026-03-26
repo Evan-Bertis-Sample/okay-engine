@@ -1,6 +1,7 @@
 #include <okay/okay.hpp>
-#include <utility>
+
 #include <glm/glm.hpp>
+#include <utility>
 
 static void __gameInitialize();
 static void __gameUpdate();

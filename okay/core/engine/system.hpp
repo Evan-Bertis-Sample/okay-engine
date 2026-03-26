@@ -1,12 +1,13 @@
 #ifndef __OKAY_SYSTEM_H__
 #define __OKAY_SYSTEM_H__
 
+#include <okay/core/util/option.hpp>
+
 #include <array>
 #include <cstdint>
 #include <iterator>
 #include <map>
 #include <memory>
-#include <okay/core/util/option.hpp>
 #include <type_traits>
 
 namespace okay {

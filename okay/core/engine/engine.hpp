@@ -1,13 +1,13 @@
 #ifndef __ENGINE_H__
 #define __ENGINE_H__
 
-#include <okay/core/engine/system.hpp>
 #include <okay/core/engine/logger.hpp>
+#include <okay/core/engine/system.hpp>
 #include <okay/core/engine/time.hpp>
 
+#include <functional>
 #include <glad/glad.h>
 #include <utility>
-#include <functional>
 
 namespace okay {
 class OkayGame;

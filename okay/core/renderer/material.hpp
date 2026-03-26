@@ -1,17 +1,18 @@
 #ifndef __OKAY_MATERIAL_H__
 #define __OKAY_MATERIAL_H__
 
+#include <okay/core/engine/engine.hpp>
+#include <okay/core/renderer/gpu.hpp>
+#include <okay/core/renderer/shader.hpp>
+#include <okay/core/renderer/texture.hpp>
+#include <okay/core/renderer/uniform.hpp>
+#include <okay/core/util/result.hpp>
+
 #include <cstddef>
 #include <cstdint>
-#include <glm/glm.hpp>
 #include <glad/glad.h>
+#include <glm/glm.hpp>
 #include <memory>
-#include <okay/core/renderer/texture.hpp>
-#include <okay/core/renderer/shader.hpp>
-#include <okay/core/renderer/uniform.hpp>
-#include <okay/core/renderer/gpu.hpp>
-#include <okay/core/util/result.hpp>
-#include <okay/core/engine/engine.hpp>
 
 namespace okay {
 

@@ -1,11 +1,11 @@
 #ifndef __OKAY_RENDER_PIPELINE_H__
 #define __OKAY_RENDER_PIPELINE_H__
 
-#include <vector>
-#include <memory>
-
 #include <okay/core/renderer/render_target.hpp>
 #include <okay/core/renderer/render_world.hpp>
+
+#include <memory>
+#include <vector>
 
 namespace okay {
 

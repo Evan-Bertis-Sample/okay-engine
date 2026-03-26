@@ -2,15 +2,15 @@
 #define __OKAY_TEXT_H__
 
 #include <okay/core/renderer/font.hpp>
-#include <okay/core/renderer/renderer.hpp>
 #include <okay/core/renderer/mesh.hpp>
+#include <okay/core/renderer/renderer.hpp>
 
-#include <vector>
-#include <string>
-#include <cstdint>
 #include <algorithm>
-#include <limits>
 #include <cmath>
+#include <cstdint>
+#include <limits>
+#include <string>
+#include <vector>
 
 namespace okay {
 

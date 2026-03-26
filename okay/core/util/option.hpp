@@ -2,8 +2,8 @@
 #define __OPTION_H__
 
 #include <optional>
-#include <utility>
 #include <stdexcept>
+#include <utility>
 
 namespace okay {
 

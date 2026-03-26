@@ -1,6 +1,8 @@
 #include "render_world.hpp"
-#include <queue>
+
 #include "glm/ext/matrix_transform.hpp"
+
+#include <queue>
 
 using namespace okay;
 

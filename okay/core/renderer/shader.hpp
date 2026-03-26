@@ -1,14 +1,15 @@
 #ifndef __OKAY_SHADER_H__
 #define __OKAY_SHADER_H__
 
-#include <cstddef>
-#include <cstdint>
-#include <glm/glm.hpp>
-#include <glad/glad.h>
+#include <okay/core/engine/engine.hpp>
 #include <okay/core/renderer/texture.hpp>
 #include <okay/core/renderer/uniform.hpp>
 #include <okay/core/util/result.hpp>
-#include <okay/core/engine/engine.hpp>
+
+#include <cstddef>
+#include <cstdint>
+#include <glad/glad.h>
+#include <glm/glm.hpp>
 
 namespace okay {
 

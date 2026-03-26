@@ -1,12 +1,13 @@
 #ifndef __SHADER_LOADER_H__
 #define __SHADER_LOADER_H__
 
-#include <filesystem>
-#include <istream>
 #include <okay/core/asset/asset.hpp>
 #include <okay/core/renderer/material.hpp>
 #include <okay/core/renderer/uniform.hpp>
 #include <okay/core/util/result.hpp>
+
+#include <filesystem>
+#include <istream>
 #include <regex>
 #include <string>
 

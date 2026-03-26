@@ -3,12 +3,12 @@
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
+#include <okay/core/renderer/renderer.hpp>
+#include <okay/core/util/option.hpp>
+
+#include <cstdint>
 #include <stdexcept>
 #include <unordered_map>
-#include <cstdint>
-
-#include <okay/core/util/option.hpp>
-#include <okay/core/renderer/renderer.hpp>
 
 namespace okay {
 

@@ -1,12 +1,12 @@
 #ifndef __OBJ_LOADER_H__
 #define __OBJ_LOADER_H__
 
+#include <okay/core/asset/mesh/mesh_loader.hpp>
+#include <okay/core/renderer/mesh.hpp>
+
 #include <filesystem>
 #include <glm/glm.hpp>
 #include <istream>
-
-#include <okay/core/asset/mesh/mesh_loader.hpp>
-#include <okay/core/renderer/mesh.hpp>
 #include <unordered_map>
 #include <vector>
 

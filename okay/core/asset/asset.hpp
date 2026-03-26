@@ -1,13 +1,14 @@
 #ifndef __OKAY_ASSET_H__
 #define __OKAY_ASSET_H__
 
+#include <okay/core/engine/system.hpp>
+#include <okay/core/util/option.hpp>
+#include <okay/core/util/result.hpp>
+
 #include <filesystem>
 #include <fstream>
 #include <functional>
 #include <istream>
-#include <okay/core/engine/system.hpp>
-#include <okay/core/util/option.hpp>
-#include <okay/core/util/result.hpp>
 
 #ifdef _WIN32
 #define SEP "\\"

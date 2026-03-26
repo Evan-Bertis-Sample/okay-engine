@@ -4,8 +4,8 @@
 #include <okay/core/engine/engine.hpp>
 #include <okay/core/engine/logger.hpp>
 #include <okay/core/engine/system.hpp>
-#include <okay/core/util/option.hpp>
 #include <okay/core/renderer/renderer.hpp>
+#include <okay/core/util/option.hpp>
 #include <okay/core/util/type.hpp>
 
 #include <bitset>

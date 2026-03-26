@@ -1,20 +1,22 @@
 #ifndef __OKAY_RENDERER_H__
 #define __OKAY_RENDERER_H__
 
-#include <cstdint>
-#include <okay/core/engine/engine.hpp>
-#include <okay/core/asset/generic/shader_loader.hpp>
+#include "render_pipeline.hpp"
+#include "render_target.hpp"
+
 #include <okay/core/asset/asset.hpp>
+#include <okay/core/asset/generic/shader_loader.hpp>
+#include <okay/core/engine/engine.hpp>
+#include <okay/core/engine/system.hpp>
 #include <okay/core/renderer/material.hpp>
 #include <okay/core/renderer/mesh.hpp>
 #include <okay/core/renderer/primitive.hpp>
-#include <okay/core/renderer/surface.hpp>
-#include <okay/core/engine/system.hpp>
-#include <okay/core/util/singleton.hpp>
 #include <okay/core/renderer/render_world.hpp>
+#include <okay/core/renderer/surface.hpp>
+#include <okay/core/util/singleton.hpp>
+
 #include <GLFW/glfw3.h>
-#include "render_pipeline.hpp"
-#include "render_target.hpp"
+#include <cstdint>
 
 namespace okay {
 

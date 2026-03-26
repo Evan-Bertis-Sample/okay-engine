@@ -2,6 +2,8 @@
 #define OKAY_LOGGER_HPP
 
 #include <cstdint>
+#include <cstring>
+#include <ctime>
 #include <format>
 #include <fstream>
 #include <iostream>
@@ -9,9 +11,7 @@
 #include <source_location>
 #include <string>
 #include <string_view>
-#include <cstring>
 #include <utility>
-#include <ctime>
 
 #ifndef OKAY_COMPILED_MIN_SEVERITY
 #define OKAY_COMPILED_MIN_SEVERITY 0

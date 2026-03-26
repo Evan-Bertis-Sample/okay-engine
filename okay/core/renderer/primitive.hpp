@@ -1,11 +1,12 @@
 #ifndef __OKAY_PRIMITIVE_H__
 #define __OKAY_PRIMITIVE_H__
 
+#include <okay/core/renderer/mesh.hpp>
+
 #include <cstdint>
 #include <functional>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
-#include <okay/core/renderer/mesh.hpp>
 #include <type_traits>
 #include <utility>
 

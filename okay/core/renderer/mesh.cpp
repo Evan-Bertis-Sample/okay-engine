@@ -1,9 +1,10 @@
 #include "mesh.hpp"
 
-#include <okay/core/engine/engine.hpp>
-#include <okay/core/renderer/gl.hpp>
-#include <okay/core/engine/logger.hpp>
 #include "okay/core/util/result.hpp"
+
+#include <okay/core/engine/engine.hpp>
+#include <okay/core/engine/logger.hpp>
+#include <okay/core/renderer/gl.hpp>
 
 using namespace okay;
 

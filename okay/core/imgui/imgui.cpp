@@ -1,10 +1,11 @@
 #include "imgui.hpp"
 
+#include <okay/core/engine/engine.hpp>
+#include <okay/core/renderer/renderer.hpp>
+
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
-#include <okay/core/engine/engine.hpp>
-#include <okay/core/renderer/renderer.hpp>
 
 using namespace okay;
 

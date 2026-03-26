@@ -1,8 +1,9 @@
 #ifndef __RESULT_H__
 #define __RESULT_H__
 
-#include <functional>
 #include <okay/core/util/type.hpp>
+
+#include <functional>
 #include <optional>
 #include <string>
 #include <type_traits>

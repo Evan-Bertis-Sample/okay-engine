@@ -1,16 +1,17 @@
+#include <okay/core/renderer/okay_surface.hpp>
+
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
+#include <atomic>
+#include <csignal>
+#include <fcntl.h>
+#include <gbm.h>
 #include <glad/glad.h>
 #include <iostream>
-#include <gbm.h>
+#include <stdexcept>
 #include <unistd.h>
 #include <xf86drm.h>
 #include <xf86drmMode.h>
-#include <fcntl.h>
-#include <atomic>
-#include <csignal>
-#include <okay/core/renderer/okay_surface.hpp>
-#include <stdexcept>
 
 #ifndef DRM_DEVICE_PATH
 #define DRM_DEVICE_PATH "/dev/dri/card1"

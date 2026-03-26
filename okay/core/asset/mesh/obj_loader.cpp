@@ -1,6 +1,7 @@
-#include <cctype>
 #include <okay/core/asset/mesh/obj_loader.hpp>
 #include <okay/core/util/string.hpp>
+
+#include <cctype>
 #include <sstream>
 #include <string>
 

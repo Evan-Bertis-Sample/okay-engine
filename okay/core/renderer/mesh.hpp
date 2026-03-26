@@ -1,10 +1,10 @@
 #ifndef __OKAY_MESH_H__
 #define __OKAY_MESH_H__
 
-#include <glad/glad.h>
-
-#include <glm/glm.hpp>
 #include <okay/core/util/result.hpp>
+
+#include <glad/glad.h>
+#include <glm/glm.hpp>
 #include <vector>
 
 namespace okay {

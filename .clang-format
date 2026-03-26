@@ -4,7 +4,7 @@ IndentWidth: 4
 ColumnLimit: 100
 DerivePointerAlignment: false
 PointerAlignment: Left
-SortIncludes: false
+SortIncludes: CaseSensitive
 
 AllowShortFunctionsOnASingleLine: InlineOnly
 AllowShortIfStatementsOnASingleLine: Never
@@ -13,3 +13,15 @@ AllowShortBlocksOnASingleLine: Never
 
 BinPackParameters: false
 BinPackArguments: false
+
+IncludeBlocks: Regroup
+IncludeCategories:
+  - Regex: '^"(.*/)?[^/"]+\.hpp"$'
+    Priority: 1
+  - Regex: '^<okay/.*>'
+    Priority: 2
+  - Regex: '^<.*>'
+    Priority: 3
+
+IncludeIsMainRegex: '([-_](test|unittest))?$'
+IncludeIsMainSourceRegex: '(\.cpp|\.cc|\.cxx)$'

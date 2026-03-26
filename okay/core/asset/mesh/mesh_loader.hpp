@@ -1,12 +1,12 @@
 #ifndef __MESH_LOADER_H__
 #define __MESH_LOADER_H__
 
+#include <okay/core/asset/asset.hpp>
+#include <okay/core/renderer/mesh.hpp>
+#include <okay/core/util/result.hpp>
+
 #include <filesystem>
 #include <istream>
-
-#include <okay/core/asset/asset.hpp>
-#include <okay/core/util/result.hpp>
-#include <okay/core/renderer/mesh.hpp>
 
 namespace okay {
 

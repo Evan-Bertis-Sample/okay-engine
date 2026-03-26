@@ -1,19 +1,18 @@
 #ifndef __OKAY_GPU_H__
 #define __OKAY_GPU_H__
 
-#include <glad/glad.h>
-
-#include <atomic>
-#include <cstdint>
-#include <string>
-#include <string_view>
-#include <unordered_map>
-#include <utility>
-
 #include <okay/core/engine/engine.hpp>
 #include <okay/core/renderer/gl.hpp>
 #include <okay/core/renderer/texture.hpp>
 #include <okay/core/util/result.hpp>
+
+#include <atomic>
+#include <cstdint>
+#include <glad/glad.h>
+#include <string>
+#include <string_view>
+#include <unordered_map>
+#include <utility>
 
 namespace okay {
 

@@ -1,10 +1,10 @@
 #ifndef __OKAY_RENDER_TARGET_H__
 #define __OKAY_RENDER_TARGET_H__
 
+#include <okay/core/util/option.hpp>
+
 #include <string>
 #include <vector>
-
-#include <okay/core/util/option.hpp>
 
 namespace okay {
 

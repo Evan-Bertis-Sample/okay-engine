@@ -1,13 +1,14 @@
 #ifndef __TEXTURE_LOADER_H__
 #define __TEXTURE_LOADER_H__
 
-#include <cstddef>
-#include <filesystem>
 #include <okay/core/asset/asset.hpp>
 #include <okay/core/renderer/material.hpp>
-#include <okay/core/renderer/uniform.hpp>
 #include <okay/core/renderer/texture.hpp>
+#include <okay/core/renderer/uniform.hpp>
 #include <okay/core/util/result.hpp>
+
+#include <cstddef>
+#include <filesystem>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>

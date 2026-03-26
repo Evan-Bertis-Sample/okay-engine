@@ -1,9 +1,10 @@
 #ifndef __OKAY_TWEEN_COLLECTION_H__
 #define __OKAY_TWEEN_COLLECTION_H__
 
+#include "okay/core/tween/i_okay_tween.hpp"
+
 #include <memory>
 #include <vector>
-#include "okay/core/tween/i_okay_tween.hpp"
 
 /**
  * @brief Collection of tweens; control lifetime of multiple tweens together.

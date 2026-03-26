@@ -2,6 +2,7 @@
 #define __OKAY_TWEEN_SEQUENCE_H__
 
 #include <okay/core/tween/i_okay_tween.hpp>
+
 #include <memory>
 #include <vector>
 

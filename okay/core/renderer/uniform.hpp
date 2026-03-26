@@ -1,21 +1,21 @@
 #ifndef __OKAY_UNIFORM_H__
 #define __OKAY_UNIFORM_H__
 
-#include <glad/glad.h>
-#include <glm/glm.hpp>
-#include <okay/core/renderer/gl.hpp>
 #include <okay/core/engine/engine.hpp>
 #include <okay/core/engine/logger.hpp>
+#include <okay/core/renderer/gl.hpp>
+#include <okay/core/renderer/texture.hpp>
 #include <okay/core/util/result.hpp>
 #include <okay/core/util/type.hpp>
-#include <okay/core/renderer/texture.hpp>
 
-#include <type_traits>
-#include <set>
 #include <atomic>
 #include <cstdint>
+#include <glad/glad.h>
+#include <glm/glm.hpp>
+#include <set>
 #include <string>
 #include <string_view>
+#include <type_traits>
 #include <unordered_map>
 
 namespace okay {

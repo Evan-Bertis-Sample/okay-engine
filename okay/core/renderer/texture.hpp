@@ -1,10 +1,10 @@
 #ifndef __OKAY_TEXTURE_H__
 #define __OKAY_TEXTURE_H__
 
-#include <glad/glad.h>
 #include <okay/core/renderer/gl.hpp>
 #include <okay/core/util/result.hpp>
 
+#include <glad/glad.h>
 #include <span>
 #include <vector>
 
