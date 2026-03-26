@@ -10,7 +10,9 @@
 
 #include <bitset>
 #include <cstddef>
+#include <functional>
 #include <memory>
+#include <tuple>
 #include <type_traits>
 #include <typeinfo>
 #include <unordered_map>
@@ -70,7 +72,6 @@ class ComponentPool final : public IComponentPool {
     }
 
     T& get(std::size_t index) { return _pool[index]; }
-
     const T& get(std::size_t index) const { return _pool[index]; }
 
    private:
@@ -92,10 +93,13 @@ class OkayECS : public OkaySystem<OkaySystemScope::LEVEL> {
     void removeComponent(OkayEntity& entity);
 
     template <typename T>
-    Option<T> getComponent(const OkayEntity& entity);
+    Option<std::reference_wrapper<T>> getComponent(OkayEntity& entity);
+
+    template <typename T>
+    Option<std::reference_wrapper<const T>> getComponent(const OkayEntity& entity) const;
 
     template <typename T, typename... Args>
-    T getOrAddComponent(OkayEntity& entity, Args&&... args);
+    T& getOrAddComponent(OkayEntity& entity, Args&&... args);
 
     template <typename T>
     bool hasComponent(const OkayEntity& entity);
@@ -104,6 +108,9 @@ class OkayECS : public OkaySystem<OkaySystemScope::LEVEL> {
     bool isValidEntity(const OkayEntity& entity) const;
 
     std::size_t getEntityCount() const { return _entityMetas.size(); }
+
+    template <typename... Components>
+    OkaySystemView<Components...> query();
 
    private:
     static constexpr std::size_t MAX_COMPONENTS = 32;
@@ -163,12 +170,12 @@ struct OkayEntity {
     bool operator>(const OkayEntity& other) const { return _id > other._id; }
 
     template <typename T>
-    Option<T> getComponent() const {
+    Option<std::reference_wrapper<const T>> getComponent() const {
         return _ecs->getComponent<T>(*this);
     }
 
     template <typename T, typename... Args>
-    T getOrAddComponent(Args&&... args) const {
+    T& getOrAddComponent(Args&&... args) const {
         return _ecs->getOrAddComponent<T>(const_cast<OkayEntity&>(*this),
                                           std::forward<Args>(args)...);
     }
@@ -203,32 +210,44 @@ struct OkayEntity {
 
 template <typename... Components>
 struct OkaySystemView {
-    OkayECS* _ecs{nullptr};
+    struct EntityView {
+        OkayEntity& entity;
+        std::tuple<Components&...> components;
+    };
 
-    OkaySystemView(OkayECS* ecs) : _ecs(ecs), _entity(ecs, 0) {};
+    OkaySystemView(OkayECS* ecs) : _ecs(ecs), _entity(ecs, 0) {
+        while (_ecs && _entity._id < _ecs->getEntityCount() && !hasAllComponents(_entity)) {
+            ++_entity._id;
+        }
+    }
+
     OkaySystemView(const OkaySystemView& other) : _ecs(other._ecs), _entity(other._entity) {}
     OkaySystemView(OkayECS* ecs, std::size_t id) : _ecs(ecs), _entity(ecs, id) {}
 
     OkaySystemView& operator++() {
         do {
             ++_entity._id;
-        } while (!hasAllComponents(_entity) && _ecs->isValidEntity(_entity));
+        } while (_entity._id < _ecs->getEntityCount() && !hasAllComponents(_entity));
 
         return *this;
     }
 
-    OkayEntity operator*() const { return _entity; }
+    EntityView operator*() const {
+        return EntityView{
+            .entity = const_cast<OkayEntity&>(_entity),
+            .components = std::forward_as_tuple(
+                _ecs->getComponent<Components>(const_cast<OkayEntity&>(_entity)).value().get()...)};
+    }
 
     bool operator==(const OkaySystemView& other) const { return _entity == other._entity; }
     bool operator!=(const OkaySystemView& other) const { return !(*this == other); }
-    bool operator<(const OkaySystemView& other) const { return _entity < other._entity; }
-    bool operator>(const OkaySystemView& other) const { return _entity > other._entity; }
 
     OkaySystemView begin() const { return OkaySystemView(_ecs); }
     OkaySystemView end() const { return OkaySystemView(_ecs, _ecs->getEntityCount()); }
 
    private:
     OkayEntity _entity;
+    OkayECS* _ecs{nullptr};
 
     bool hasAllComponents(const OkayEntity& entity) const {
         bool hasAll = true;
@@ -255,7 +274,6 @@ void OkayECS::registerComponentType() {
 
     _infoToPoolIndex.emplace(info, componentID);
     _componentPools.push_back(std::make_unique<ComponentPool<T>>());
-
     _componentPools.back()->reserve(_reservedEntityCount);
 }
 
@@ -267,7 +285,7 @@ ComponentPool<T>& OkayECS::getPool() {
         Engine.logger.error("Component {} not registered", typeid(T).name());
         std::abort();
     }
-    
+
     return *static_cast<ComponentPool<T>*>(_componentPools[it->second].get());
 }
 
@@ -324,35 +342,56 @@ void OkayECS::removeComponent(OkayEntity& entity) {
 }
 
 template <typename T>
-Option<T> OkayECS::getComponent(const OkayEntity& entity) {
+Option<std::reference_wrapper<T>> OkayECS::getComponent(OkayEntity& entity) {
     const Option<std::size_t> componentID = getComponentID<T>();
     if (!componentID) {
         Engine.logger.error("Component {} not registered", typeid(T).name());
-        return Option<T>::none();
+        return Option<std::reference_wrapper<T>>::none();
     }
 
     const EntityMeta& meta = getEntityMeta(entity);
     if (!meta.componentMask.test(componentID.value())) {
-        return Option<T>::none();
+        return Option<std::reference_wrapper<T>>::none();
+    }
+
+    auto& pool = getPool<T>();
+    if (!pool.has(entity._id)) {
+        return Option<std::reference_wrapper<T>>::none();
+    }
+
+    return Option<std::reference_wrapper<T>>::some(std::ref(pool.get(entity._id)));
+}
+
+template <typename T>
+Option<std::reference_wrapper<const T>> OkayECS::getComponent(const OkayEntity& entity) const {
+    const Option<std::size_t> componentID = getComponentID<T>();
+    if (!componentID) {
+        Engine.logger.error("Component {} not registered", typeid(T).name());
+        return Option<std::reference_wrapper<const T>>::none();
+    }
+
+    const EntityMeta& meta = getEntityMeta(entity);
+    if (!meta.componentMask.test(componentID.value())) {
+        return Option<std::reference_wrapper<const T>>::none();
     }
 
     const auto& pool = getPool<T>();
     if (!pool.has(entity._id)) {
-        return Option<T>::none();
+        return Option<std::reference_wrapper<const T>>::none();
     }
 
-    return Option<T>::some(pool.get(entity._id));
+    return Option<std::reference_wrapper<const T>>::some(std::cref(pool.get(entity._id)));
 }
 
 template <typename T, typename... Args>
-T OkayECS::getOrAddComponent(OkayEntity& entity, Args&&... args) {
-    Option<T> existing = getComponent<T>(entity);
+T& OkayECS::getOrAddComponent(OkayEntity& entity, Args&&... args) {
+    auto existing = getComponent<T>(entity);
     if (existing) {
-        return existing.value();
+        return existing.value().get();
     }
 
     addComponent<T>(entity, std::forward<Args>(args)...);
-    return getComponent<T>(entity).value();
+    return getComponent<T>(entity).value().get();
 }
 
 template <typename T>
@@ -370,6 +409,11 @@ bool OkayECS::hasComponent(const OkayEntity& entity) {
     return getPool<T>().has(entity._id);
 }
 
+template <typename... Components>
+OkaySystemView<Components...> OkayECS::query() {
+    return OkaySystemView<Components...>(this);
+}
+
 }  // namespace okay
 
-#endif  // __OKAY_ECS_H__
+#endif
