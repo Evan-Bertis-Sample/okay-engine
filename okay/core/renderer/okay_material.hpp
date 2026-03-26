@@ -184,11 +184,6 @@ class OkayMaterialProperties : public IOkayMaterialPropertyCollection {
             shader->findUniformLocation(u.name());
         });
 
-        // init blocks: no longer needed (GPU manager is lazy),
-        // but you may optionally "touch" the block name per program here if you want.
-        // (We do nothing.)
-
-        // init textures: cache sampler locations (program-specific, belongs to shader)
         tupleForEach(d.textureRefs(), [&](auto& t) {
             if (out.isError())
                 return;

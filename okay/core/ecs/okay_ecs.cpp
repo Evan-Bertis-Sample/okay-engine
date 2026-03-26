@@ -30,4 +30,8 @@ const OkayECS::EntityMeta& OkayECS::getEntityMeta(const OkayEntity& entity) cons
     return _entityMetas[entity._id];
 }
 
+bool OkayECS::isValidEntity(const OkayEntity& entity) const {
+    return entity._id < _entityMetas.size() && entity._ecs == this;
+};
+
 };  // namespace okay

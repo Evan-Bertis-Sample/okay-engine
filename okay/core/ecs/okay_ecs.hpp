@@ -5,6 +5,8 @@
 #include <okay/core/logging/okay_logger.hpp>
 #include <okay/core/system/okay_system.hpp>
 #include <okay/core/util/option.hpp>
+#include <okay/core/renderer/okay_renderer.hpp>
+#include <okay/core/util/type.hpp>
 
 #include <bitset>
 #include <cstddef>
@@ -19,6 +21,8 @@ namespace okay {
 
 class OkayECS;
 struct OkayEntity;
+template <typename... Components>
+struct OkaySystemView;
 
 class IComponentPool {
    public:
@@ -97,6 +101,9 @@ class OkayECS : public OkaySystem<OkaySystemScope::LEVEL> {
     bool hasComponent(const OkayEntity& entity);
 
     OkayEntity createEntity();
+    bool isValidEntity(const OkayEntity& entity) const;
+
+    std::size_t getEntityCount() const { return _entityMetas.size(); }
 
    private:
     static constexpr std::size_t MAX_COMPONENTS = 32;
@@ -143,6 +150,8 @@ class OkayECS : public OkaySystem<OkaySystemScope::LEVEL> {
 
 struct OkayEntity {
    public:
+    OkayTransform transform;
+
     OkayEntity() = default;
 
     bool operator==(const OkayEntity& other) const {
@@ -150,9 +159,7 @@ struct OkayEntity {
     }
 
     bool operator!=(const OkayEntity& other) const { return !(*this == other); }
-
     bool operator<(const OkayEntity& other) const { return _id < other._id; }
-
     bool operator>(const OkayEntity& other) const { return _id > other._id; }
 
     template <typename T>
@@ -190,6 +197,44 @@ struct OkayEntity {
     OkayECS* _ecs{nullptr};
 
     friend class OkayECS;
+    template <typename... Components>
+    friend struct OkaySystemView;
+};
+
+template <typename... Components>
+struct OkaySystemView {
+    OkayECS* _ecs{nullptr};
+
+    OkaySystemView(OkayECS* ecs) : _ecs(ecs), _entity(ecs, 0) {};
+    OkaySystemView(const OkaySystemView& other) : _ecs(other._ecs), _entity(other._entity) {}
+    OkaySystemView(OkayECS* ecs, std::size_t id) : _ecs(ecs), _entity(ecs, id) {}
+
+    OkaySystemView& operator++() {
+        do {
+            ++_entity._id;
+        } while (!hasAllComponents(_entity) && _ecs->isValidEntity(_entity));
+
+        return *this;
+    }
+
+    OkayEntity operator*() const { return _entity; }
+
+    bool operator==(const OkaySystemView& other) const { return _entity == other._entity; }
+    bool operator!=(const OkaySystemView& other) const { return !(*this == other); }
+    bool operator<(const OkaySystemView& other) const { return _entity < other._entity; }
+    bool operator>(const OkaySystemView& other) const { return _entity > other._entity; }
+
+    OkaySystemView begin() const { return OkaySystemView(_ecs); }
+    OkaySystemView end() const { return OkaySystemView(_ecs, _ecs->getEntityCount()); }
+
+   private:
+    OkayEntity _entity;
+
+    bool hasAllComponents(const OkayEntity& entity) const {
+        bool hasAll = true;
+        ((hasAll &= entity.hasComponent<Components>()), ...);
+        return hasAll;
+    }
 };
 
 template <typename T>
@@ -222,7 +267,7 @@ ComponentPool<T>& OkayECS::getPool() {
         Engine.logger.error("Component {} not registered", typeid(T).name());
         std::abort();
     }
-
+    
     return *static_cast<ComponentPool<T>*>(_componentPools[it->second].get());
 }
 

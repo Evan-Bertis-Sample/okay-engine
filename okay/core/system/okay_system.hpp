@@ -148,16 +148,6 @@ class OkaySystemPool {
     std::size_t size() const noexcept { return _systems.size(); }
     bool empty() const noexcept { return _systems.empty(); }
 
-    IOkaySystem* nthPtr(std::size_t i);
-
-    IOkaySystem* operator[](std::size_t i) { return nthPtr(i); }
-
-    IOkaySystem* at(std::size_t i) {
-        if (i >= _systems.size())
-            throw std::out_of_range("OkaySystemPool::at");
-        return nthPtr(i);
-    }
-
     iterator begin() { return iterator{_systems.begin()}; }
     iterator end() { return iterator{_systems.end()}; }
 
@@ -181,8 +171,7 @@ class OkaySystemManager {
     template <typename T>
     T* getSystemChecked() {
         Option<T*> opt = getSystem<T>();
-        if (!opt) {  // for now, we just stall the program until a proper exit mechanismm is
-                     // implemented
+        if (!opt) { 
             while (true) {
             }
         }
