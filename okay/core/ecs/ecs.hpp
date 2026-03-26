@@ -2,10 +2,10 @@
 #define __OKAY_ECS_H__
 
 #include <okay/core/okay.hpp>
-#include <okay/core/logging/okay_logger.hpp>
-#include <okay/core/system/okay_system.hpp>
+#include <okay/core/logging/logger.hpp>
+#include <okay/core/system/system.hpp>
 #include <okay/core/util/option.hpp>
-#include <okay/core/renderer/okay_renderer.hpp>
+#include <okay/core/renderer/renderer.hpp>
 #include <okay/core/util/type.hpp>
 
 #include <bitset>

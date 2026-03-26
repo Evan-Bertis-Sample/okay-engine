@@ -5,7 +5,7 @@
 #include <fstream>
 #include <functional>
 #include <istream>
-#include <okay/core/system/okay_system.hpp>
+#include <okay/core/system/system.hpp>
 #include <okay/core/util/option.hpp>
 #include <okay/core/util/result.hpp>
 

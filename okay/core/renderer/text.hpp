@@ -1,9 +1,9 @@
 #ifndef __OKAY_TEXT_H__
 #define __OKAY_TEXT_H__
 
-#include <okay/core/renderer/okay_font.hpp>
-#include <okay/core/renderer/okay_renderer.hpp>
-#include <okay/core/renderer/okay_mesh.hpp>
+#include <okay/core/renderer/font.hpp>
+#include <okay/core/renderer/renderer.hpp>
+#include <okay/core/renderer/mesh.hpp>
 
 #include <vector>
 #include <string>

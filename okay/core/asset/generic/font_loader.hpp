@@ -3,13 +3,13 @@
 
 #include <cstddef>
 #include <filesystem>
-#include <okay/core/asset/okay_asset.hpp>
-#include <okay/core/renderer/okay_material.hpp>
-#include <okay/core/renderer/okay_uniform.hpp>
-#include <okay/core/renderer/okay_texture.hpp>
+#include <okay/core/asset/asset.hpp>
+#include <okay/core/renderer/material.hpp>
+#include <okay/core/renderer/uniform.hpp>
+#include <okay/core/renderer/texture.hpp>
 #include <okay/core/util/result.hpp>
 
-#include <okay/core/renderer/okay_font.hpp>
+#include <okay/core/renderer/font.hpp>
 #include <okay/core/util/option.hpp>
 
 namespace okay {

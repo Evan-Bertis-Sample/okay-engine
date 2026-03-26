@@ -2,7 +2,7 @@
 #define __OKAY_SURFACE_H__
 
 #include <memory>
-#include <okay/core/system/okay_system.hpp>
+#include <okay/core/system/system.hpp>
 
 namespace okay {
 

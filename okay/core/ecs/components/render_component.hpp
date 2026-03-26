@@ -2,10 +2,10 @@
 #define __RENDER_COMPONENT_H__
 
 #include <glm/glm.hpp>
-#include <okay/core/ecs/okay_ecs.hpp>
-#include <okay/core/renderer/okay_mesh.hpp>
-#include <okay/core/renderer/okay_material.hpp>
-#include <okay/core/renderer/okay_renderer.hpp>
+#include <okay/core/ecs/ecs.hpp>
+#include <okay/core/renderer/mesh.hpp>
+#include <okay/core/renderer/material.hpp>
+#include <okay/core/renderer/renderer.hpp>
 
 namespace okay {
 

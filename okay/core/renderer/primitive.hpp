@@ -5,7 +5,7 @@
 #include <functional>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
-#include <okay/core/renderer/okay_mesh.hpp>
+#include <okay/core/renderer/mesh.hpp>
 #include <type_traits>
 #include <utility>
 

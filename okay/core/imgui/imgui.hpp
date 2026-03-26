@@ -1,7 +1,7 @@
 #ifndef __OKAY_IMGUI_H__
 #define __OKAY_IMGUI_H__
 
-#include <okay/core/system/okay_system.hpp>
+#include <okay/core/system/system.hpp>
 
 namespace okay {
 

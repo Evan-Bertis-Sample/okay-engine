@@ -4,8 +4,8 @@
 #include <vector>
 #include <memory>
 
-#include <okay/core/renderer/okay_render_target.hpp>
-#include <okay/core/renderer/okay_render_world.hpp>
+#include <okay/core/renderer/render_target.hpp>
+#include <okay/core/renderer/render_world.hpp>
 
 namespace okay {
 

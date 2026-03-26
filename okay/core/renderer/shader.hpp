@@ -5,8 +5,8 @@
 #include <cstdint>
 #include <glm/glm.hpp>
 #include <glad/glad.h>
-#include <okay/core/renderer/okay_texture.hpp>
-#include <okay/core/renderer/okay_uniform.hpp>
+#include <okay/core/renderer/texture.hpp>
+#include <okay/core/renderer/uniform.hpp>
 #include <okay/core/util/result.hpp>
 #include <okay/core/okay.hpp>
 
@@ -152,6 +152,7 @@ struct OkayShaderHandle {
     OkayShader* operator->();
     OkayShader* get();
 };
+
 }  // namespace okay
 
 #endif  // __OKAY_SHADER_H__

@@ -2,11 +2,11 @@
 #define __SCENE_PASS_H__
 
 #include <memory>
-#include <okay/core/renderer/okay_gl.hpp>
+#include <okay/core/renderer/gl.hpp>
 #include <okay/core/okay.hpp>
-#include <okay/core/renderer/okay_render_pipeline.hpp>
-#include <okay/core/renderer/okay_renderer.hpp>
-#include <okay/core/renderer/okay_uniform.hpp>
+#include <okay/core/renderer/render_pipeline.hpp>
+#include <okay/core/renderer/renderer.hpp>
+#include <okay/core/renderer/uniform.hpp>
 #include <okay/core/renderer/materials/unlit.hpp>
 #include <okay/core/renderer/materials/lit.hpp>
 

@@ -6,7 +6,7 @@
 #include <istream>
 
 #include <okay/core/asset/mesh/mesh_loader.hpp>
-#include <okay/core/renderer/okay_mesh.hpp>
+#include <okay/core/renderer/mesh.hpp>
 #include <unordered_map>
 #include <vector>
 

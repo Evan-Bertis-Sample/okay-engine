@@ -10,8 +10,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
 
-#include <okay/core/renderer/okay_material.hpp>
-#include <okay/core/renderer/okay_mesh.hpp>
+#include <okay/core/renderer/material.hpp>
+#include <okay/core/renderer/mesh.hpp>
 #include <okay/core/util/dirty_set.hpp>
 #include <okay/core/util/object_pool.hpp>
 #include <okay/core/util/property.hpp>

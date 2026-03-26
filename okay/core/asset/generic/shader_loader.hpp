@@ -3,9 +3,9 @@
 
 #include <filesystem>
 #include <istream>
-#include <okay/core/asset/okay_asset.hpp>
-#include <okay/core/renderer/okay_material.hpp>
-#include <okay/core/renderer/okay_uniform.hpp>
+#include <okay/core/asset/asset.hpp>
+#include <okay/core/renderer/material.hpp>
+#include <okay/core/renderer/uniform.hpp>
 #include <okay/core/util/result.hpp>
 #include <regex>
 #include <string>

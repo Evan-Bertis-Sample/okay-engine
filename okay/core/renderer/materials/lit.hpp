@@ -2,9 +2,9 @@
 #define __LIT_H__
 
 #include <glm/glm.hpp>
-#include <okay/core/renderer/okay_uniform.hpp>
+#include <okay/core/renderer/uniform.hpp>
 #include <okay/core/renderer/materials/unlit.hpp>
-#include <okay/core/renderer/okay_render_world.hpp>
+#include <okay/core/renderer/render_world.hpp>
 #include <okay/core/util/type.hpp>
 
 namespace okay {

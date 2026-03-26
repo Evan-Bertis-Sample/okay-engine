@@ -2,8 +2,8 @@
 #define __UNLIT_H__
 
 #include <glm/glm.hpp>
-#include <okay/core/renderer/okay_uniform.hpp>
-#include <okay/core/renderer/okay_material.hpp>
+#include <okay/core/renderer/uniform.hpp>
+#include <okay/core/renderer/material.hpp>
 
 namespace okay {
 

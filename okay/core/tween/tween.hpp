@@ -2,11 +2,10 @@
 #define __OKAY_TWEEN_H__
 
 #include <functional>
-#include <okay/core/okay.hpp>
-#include <okay/core/logging/okay_logger.hpp>
-#include <okay/core/tween/okay_tween_engine.hpp>
+#include <okay/core/logging/logger.hpp>
+#include <okay/core/tween/tween_engine.hpp>
 #include <okay/core/tween/i_okay_tween.hpp>
-#include <okay/core/tween/okay_tween_easing.hpp>
+#include <okay/core/tween/tween_easing.hpp>
 
 #include <cstdint>
 #include <cmath>

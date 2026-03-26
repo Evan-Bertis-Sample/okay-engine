@@ -6,10 +6,10 @@
 #include <glm/glm.hpp>
 #include <glad/glad.h>
 #include <memory>
-#include <okay/core/renderer/okay_texture.hpp>
-#include <okay/core/renderer/okay_shader.hpp>
-#include <okay/core/renderer/okay_uniform.hpp>
-#include <okay/core/renderer/okay_gpu.hpp>
+#include <okay/core/renderer/texture.hpp>
+#include <okay/core/renderer/shader.hpp>
+#include <okay/core/renderer/uniform.hpp>
+#include <okay/core/renderer/gpu.hpp>
 #include <okay/core/util/result.hpp>
 #include <okay/core/okay.hpp>
 

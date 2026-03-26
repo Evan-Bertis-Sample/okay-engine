@@ -1,5 +1,5 @@
-#ifndef __I_OKAY_TWEEN_ENGINE_H__
-#define __I_OKAY_TWEEN_ENGINE_H__
+#ifndef __I_OKAY_TWEEN_H__
+#define __I_OKAY_TWEEN_H__
 
 namespace okay {
 
@@ -21,4 +21,4 @@ class IOkayTween {
 
 }  // namespace okay
 
-#endif
+#endif // __I_OKAY_TWEEN_H__

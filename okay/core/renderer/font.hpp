@@ -8,7 +8,7 @@
 #include <cstdint>
 
 #include <okay/core/util/option.hpp>
-#include <okay/core/renderer/okay_renderer.hpp>
+#include <okay/core/renderer/renderer.hpp>
 
 namespace okay {
 

@@ -3,7 +3,7 @@
 
 #include <glad/glad.h>
 #include <okay/core/okay.hpp>
-#include <okay/core/renderer/okay_gl.hpp>
+#include <okay/core/renderer/gl.hpp>
 #include <okay/core/util/result.hpp>
 
 #include <span>
