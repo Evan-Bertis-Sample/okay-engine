@@ -256,6 +256,7 @@ struct OkaySystemView {
     }
 };
 
+
 template <typename T>
 void OkayECS::registerComponentType() {
     static_assert(!std::is_reference_v<T>, "Component type cannot be a reference");
