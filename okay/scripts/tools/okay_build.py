@@ -11,4 +11,4 @@ def register_subparser(subparser):
 
 def main(args):
     build_options = OkayBuildOptions.from_args(args)
-    OkayBuildUtil.run_project(build_options, use_gdb=args.gdb)
+    OkayBuildUtil.build_project(build_options)
