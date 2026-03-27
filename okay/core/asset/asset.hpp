@@ -150,28 +150,26 @@ class AssetManager : public System<SystemScope::ENGINE> {
         if (res.isError()) {
             return Result<Asset<T>>::errorResult(res.error());
         } else {
-            return Result<Asset<T>>::ok(
-                createAsset<T>(load.assetPath, res.value(), load.assetIO));
+            return Result<Asset<T>>::ok(createAsset<T>(load.assetPath, res.value(), load.assetIO));
         };
     };
 
     template <typename T, typename AssetIO = DefaultAssetIO, typename... LoadOptions>
     Result<Asset<T>> loadEngineAssetSync(const std::filesystem::path& path,
-                                             LoadOptions... options) {
+                                         LoadOptions... options) {
         return loadAssetSync(Load<T, AssetIO>::EngineAsset(path), options...);
     }
 
     template <typename T, typename AssetIO = DefaultAssetIO, typename... LoadOptions>
-    Result<Asset<T>> loadGameAssetSync(const std::filesystem::path& path,
-                                           LoadOptions... options) {
+    Result<Asset<T>> loadGameAssetSync(const std::filesystem::path& path, LoadOptions... options) {
         return loadAssetSync(Load<T, AssetIO>::GameAsset(path), options...);
     }
 
    private:
     template <typename T>
     inline Asset<T> createAsset(const std::filesystem::path& path,
-                                    T loaded,
-                                    const AssetIO& assetIO) {
+                                T loaded,
+                                const AssetIO& assetIO) {
         return Asset<T>{.asset = loaded, .assetSize = assetIO.fileSize(path).value()};
     }
 };

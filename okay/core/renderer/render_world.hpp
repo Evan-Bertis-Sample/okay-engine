@@ -4,12 +4,12 @@
 #include "glm/ext/vector_float3.hpp"
 #include "glm/ext/vector_float4.hpp"
 
+#include <okay/core/renderer/gl.hpp>
 #include <okay/core/renderer/material.hpp>
 #include <okay/core/renderer/mesh.hpp>
 #include <okay/core/util/dirty_set.hpp>
 #include <okay/core/util/object_pool.hpp>
 #include <okay/core/util/property.hpp>
-#include <okay/core/renderer/gl.hpp>
 
 #include <cstdint>
 #include <glm/glm.hpp>
@@ -27,8 +27,8 @@ struct Transform {
     glm::quat rotation{1.0f, 0.0f, 0.0f, 0.0f};
 
     Transform(const glm::vec3& pos = glm::vec3(0.0f),
-                  const glm::vec3& scl = glm::vec3(1.0f),
-                  const glm::quat& rot = glm::quat())
+              const glm::vec3& scl = glm::vec3(1.0f),
+              const glm::quat& rot = glm::quat())
         : position(pos), scale(scl), rotation(rot) {}
 
     // asignment, equality comparison overloads
@@ -171,11 +171,11 @@ struct alignas(16) Light {
     }
 
     static Light spot(glm::vec3 pos,
-                          glm::vec3 dir,
-                          float radius,
-                          float angleRad,
-                          glm::vec3 rgb,
-                          float intensity = 1.0f) {
+                      glm::vec3 dir,
+                      float radius,
+                      float angleRad,
+                      glm::vec3 rgb,
+                      float intensity = 1.0f) {
         Light l{};
         l.posType = glm::vec4(pos, Type::SPOT);
         l.color = glm::vec4(rgb, intensity);
@@ -250,9 +250,7 @@ struct RenderEntity {
     RenderEntity(RenderWorld* owner, RenderItemHandle renderItem)
         : _owner(owner), _renderItem(renderItem) {}
 
-    bool operator==(const RenderEntity& other) const {
-        return _renderItem == other._renderItem;
-    }
+    bool operator==(const RenderEntity& other) const { return _renderItem == other._renderItem; }
 
     bool operator!=(const RenderEntity& other) const { return !(*this == other); }
 
@@ -305,13 +303,13 @@ class RenderWorld {
     const ChildRange children(RenderEntity parent) const;
 
     RenderEntity addRenderEntity(const Transform& transform,
-                                     const MaterialHandle& material,
-                                     const Mesh& mesh,
-                                     RenderEntity parent);
+                                 const MaterialHandle& material,
+                                 const Mesh& mesh,
+                                 RenderEntity parent);
 
     RenderEntity addRenderEntity(const Transform& transform,
-                                     const MaterialHandle& material,
-                                     const Mesh& mesh) {
+                                 const MaterialHandle& material,
+                                 const Mesh& mesh) {
         return addRenderEntity(
             transform, material, mesh, RenderEntity(this, RenderItemHandle::invalidHandle()));
     }
@@ -323,9 +321,7 @@ class RenderWorld {
 
     RenderItem& getRenderItem(RenderItemHandle handle) { return _renderItemPool.get(handle); }
 
-    RenderEntity getRenderEntity(RenderItemHandle handle) {
-        return RenderEntity(this, handle);
-    }
+    RenderEntity getRenderEntity(RenderItemHandle handle) { return RenderEntity(this, handle); }
 
     void updateEntity(RenderItemHandle renderItem, const RenderEntity::Properties&& properties);
 

@@ -2,16 +2,15 @@
 #define __MATERIAL_H__
 
 #include <okay/core/engine/engine.hpp>
+#include <okay/core/renderer/gl.hpp>
 #include <okay/core/renderer/gpu.hpp>
 #include <okay/core/renderer/shader.hpp>
 #include <okay/core/renderer/texture.hpp>
 #include <okay/core/renderer/uniform.hpp>
 #include <okay/core/util/result.hpp>
-#include <okay/core/renderer/gl.hpp>
 
 #include <cstddef>
 #include <cstdint>
-
 #include <glm/glm.hpp>
 #include <memory>
 
@@ -28,8 +27,8 @@ class Material {
     static constexpr std::uint32_t invalidID() { return 0xFFFFFFFFu; }
 
     Material(ShaderHandle shader,
-                 std::unique_ptr<IMaterialPropertyCollection> uniforms,
-                 std::uint32_t id)
+             std::unique_ptr<IMaterialPropertyCollection> uniforms,
+             std::uint32_t id)
         : _shader(shader), _uniforms(std::move(uniforms)), _id(id) {}
 
     bool isNone() const { return _id == invalidID(); }
@@ -120,7 +119,7 @@ struct MaterialHandle {
 class MaterialRegistry {
    public:
     ShaderHandle registerShader(const std::string& vertexSource,
-                                    const std::string& fragmentSource) {
+                                const std::string& fragmentSource) {
         // Create the shader, compile it, and add it to the registry
         Shader shader(vertexSource, fragmentSource);
         shader.compile();
@@ -129,7 +128,7 @@ class MaterialRegistry {
     };
 
     MaterialHandle registerMaterial(const ShaderHandle& shader,
-                                        std::unique_ptr<IMaterialPropertyCollection> uniforms) {
+                                    std::unique_ptr<IMaterialPropertyCollection> uniforms) {
         std::uint32_t id = nextID();
         _materials.emplace_back(std::make_unique<Material>(shader, std::move(uniforms), id));
         return {this, id};
@@ -139,13 +138,9 @@ class MaterialRegistry {
         return _materials[handle.id];
     }
 
-    const std::unique_ptr<Material>& getMaterial(std::uint32_t id) const {
-        return _materials[id];
-    }
+    const std::unique_ptr<Material>& getMaterial(std::uint32_t id) const { return _materials[id]; }
 
-    const Shader* getShader(const ShaderHandle& handle) const {
-        return &_shaders.at(handle.id);
-    }
+    const Shader* getShader(const ShaderHandle& handle) const { return &_shaders.at(handle.id); }
 
     const Shader* getShader(GLuint programID) const { return &_shaders.at(programID); }
 
@@ -153,16 +148,12 @@ class MaterialRegistry {
 
     Shader* getShader(GLuint programID) { return &_shaders.at(programID); }
 
-    const Shader& getShader(const MaterialHandle& handle) const {
-        return _shaders.at(handle.id);
-    }
+    const Shader& getShader(const MaterialHandle& handle) const { return _shaders.at(handle.id); }
 
     Shader& getShader(const MaterialHandle& handle) { return _shaders.at(handle.id); }
 
     // equality
-    bool operator==(const MaterialRegistry& other) const {
-        return _materials == other._materials;
-    }
+    bool operator==(const MaterialRegistry& other) const { return _materials == other._materials; }
 
    private:
     std::vector<std::unique_ptr<Material>> _materials;

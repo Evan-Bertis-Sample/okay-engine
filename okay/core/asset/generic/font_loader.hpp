@@ -16,19 +16,18 @@ namespace okay {
 template <>
 struct AssetLoader<FontManager::FontHandle, FontLoadOptions> {
     static Result<FontManager::FontHandle> loadAsset(const std::filesystem::path& path,
-                                                         const AssetIO& assetIO,
-                                                         const FontLoadOptions& settings) {
+                                                     const AssetIO& assetIO,
+                                                     const FontLoadOptions& settings) {
         Engine.logger.info("Loading font: {}", path.string());
 
         FontManager& fontManager = FontManager::instance();
 
-        Option<FontManager::FontHandle> handleOpt =
-            fontManager.loadFont(path.string(), settings);
+        Option<FontManager::FontHandle> handleOpt = fontManager.loadFont(path.string(), settings);
         if (handleOpt.isSome()) {
             return Result<FontManager::FontHandle>::ok(handleOpt.value());
         } else {
             return Result<FontManager::FontHandle>::errorResult("Failed to load font: " +
-                                                                    path.string());
+                                                                path.string());
         }
     }
 };

@@ -1,10 +1,10 @@
 #ifndef __GL_H__
 #define __GL_H__
 
-#include <glad/glad.h>
 #include <okay/core/engine/engine.hpp>
 #include <okay/core/util/result.hpp>
 
+#include <glad/glad.h>
 
 inline void glClearErrors() {
     while (glGetError() != GL_NO_ERROR) {

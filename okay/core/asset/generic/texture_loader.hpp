@@ -23,8 +23,8 @@ struct TextureLoadSettings {
 template <>
 struct AssetLoader<Texture, TextureLoadSettings> {
     static Result<Texture> loadAsset(const std::filesystem::path& path,
-                                         const AssetIO& assetIO,
-                                         const TextureLoadSettings& settings) {
+                                     const AssetIO& assetIO,
+                                     const TextureLoadSettings& settings) {
         Engine.logger.info("Loading texture: {}", path.string());
 
         std::shared_ptr<TextureDataStore> store = settings.store;

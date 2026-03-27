@@ -3,7 +3,6 @@
 
 #include <okay/core/renderer/gl.hpp>
 #include <okay/core/util/result.hpp>
-#include <okay/core/renderer/gl.hpp>
 
 #include <glm/glm.hpp>
 #include <vector>
@@ -101,8 +100,7 @@ class MeshBuffer {
         using difference_type = std::ptrdiff_t;
         using iterator_category = std::forward_iterator_tag;
 
-        iterator(const MeshBuffer* buffer, std::size_t index)
-            : _buffer(buffer), _index(index) {}
+        iterator(const MeshBuffer* buffer, std::size_t index) : _buffer(buffer), _index(index) {}
 
         MeshVertex operator*() const {
             std::size_t attrIndex = _buffer->_indices[_index];
@@ -139,8 +137,7 @@ class MeshBuffer {
 
     class OkayModelView {
        public:
-        OkayModelView(const MeshBuffer* buffer, Mesh model)
-            : _buffer(buffer), _model(model) {}
+        OkayModelView(const MeshBuffer* buffer, Mesh model) : _buffer(buffer), _model(model) {}
 
         MeshBuffer::iterator begin() const {
             return MeshBuffer::iterator(_buffer, _model.indexOffset);

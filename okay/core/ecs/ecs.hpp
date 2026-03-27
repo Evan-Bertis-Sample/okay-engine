@@ -161,9 +161,7 @@ struct ECSEntity {
 
     ECSEntity() = default;
 
-    bool operator==(const ECSEntity& other) const {
-        return _ecs == other._ecs && _id == other._id;
-    }
+    bool operator==(const ECSEntity& other) const { return _ecs == other._ecs && _id == other._id; }
 
     bool operator!=(const ECSEntity& other) const { return !(*this == other); }
     bool operator<(const ECSEntity& other) const { return _id < other._id; }

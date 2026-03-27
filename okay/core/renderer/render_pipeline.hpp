@@ -1,9 +1,9 @@
 #ifndef __RENDER_PIPELINE_H__
 #define __RENDER_PIPELINE_H__
 
+#include <okay/core/renderer/gl.hpp>
 #include <okay/core/renderer/render_target.hpp>
 #include <okay/core/renderer/render_world.hpp>
-#include <okay/core/renderer/gl.hpp>
 
 #include <memory>
 #include <vector>

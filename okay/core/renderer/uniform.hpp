@@ -10,7 +10,6 @@
 
 #include <atomic>
 #include <cstdint>
-
 #include <glm/glm.hpp>
 #include <set>
 #include <string>

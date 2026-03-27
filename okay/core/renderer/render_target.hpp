@@ -1,8 +1,8 @@
 #ifndef __RENDER_TARGET_H__
 #define __RENDER_TARGET_H__
 
-#include <okay/core/util/option.hpp>
 #include <okay/core/renderer/gl.hpp>
+#include <okay/core/util/option.hpp>
 
 #include <string>
 #include <vector>

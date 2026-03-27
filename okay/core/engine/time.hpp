@@ -10,8 +10,7 @@ class Time {
     using TimePoint = std::chrono::time_point<HighResClock>;
 
    public:
-    Time()
-        : _lastTime(HighResClock::now()), _startOfProgram(HighResClock::now()), _deltaTime(0) {}
+    Time() : _lastTime(HighResClock::now()), _startOfProgram(HighResClock::now()), _deltaTime(0) {}
 
     void reset() {
         _lastTime = HighResClock::now();

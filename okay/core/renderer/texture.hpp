@@ -4,7 +4,6 @@
 #include <okay/core/renderer/gl.hpp>
 #include <okay/core/util/result.hpp>
 
-
 #include <span>
 #include <vector>
 
@@ -43,8 +42,7 @@ class TextureDataStore {
     };
 
     static std::shared_ptr<TextureDataStore> mainStore() {
-        static std::shared_ptr<TextureDataStore> store =
-            std::make_shared<TextureDataStore>();
+        static std::shared_ptr<TextureDataStore> store = std::make_shared<TextureDataStore>();
         return store;
     }
 
@@ -166,8 +164,7 @@ class Texture {
 
     Texture() = default;
 
-    Texture(std::shared_ptr<TextureDataStore> store,
-                TextureDataStore::TextureHandle handle)
+    Texture(std::shared_ptr<TextureDataStore> store, TextureDataStore::TextureHandle handle)
         : store(store), handle(handle) {}
 
     std::span<const std::byte> getData() const { return store->getTextureData(handle); }

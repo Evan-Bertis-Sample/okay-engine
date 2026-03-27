@@ -10,8 +10,7 @@
  * @brief Collection of tweens; control lifetime of multiple tweens together.
  */
 namespace okay {
-class TweenCollection : public ITween,
-                            public std::enable_shared_from_this<TweenCollection> {
+class TweenCollection : public ITween, public std::enable_shared_from_this<TweenCollection> {
    public:
     TweenCollection() = default;
 

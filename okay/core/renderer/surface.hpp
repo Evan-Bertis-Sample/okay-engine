@@ -1,8 +1,8 @@
 #ifndef __SURFACE_H__
 #define __SURFACE_H__
 
-#include <okay/core/renderer/gl.hpp>
 #include <okay/core/engine/system.hpp>
+#include <okay/core/renderer/gl.hpp>
 
 #include <memory>
 

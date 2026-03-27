@@ -130,8 +130,7 @@ class FontManager {
 
     ~FontManager() { FT_Done_FreeType(_ftLibrary); }
 
-    Option<FontHandle> loadFont(const std::string& fontPath,
-                                const FontLoadOptions& options = {}) {
+    Option<FontHandle> loadFont(const std::string& fontPath, const FontLoadOptions& options = {}) {
         if (_fontFaces.find(fontPath) != _fontFaces.end()) {
             return Option<FontHandle>::some(FontHandle{_fontFaces[fontPath]});
         }

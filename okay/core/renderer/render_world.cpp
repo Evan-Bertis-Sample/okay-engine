@@ -153,9 +153,9 @@ const std::vector<RenderItemHandle>& RenderWorld::getRenderItems() {
 }
 
 RenderEntity RenderWorld::addRenderEntity(const Transform& transform,
-                                                  const MaterialHandle& material,
-                                                  const Mesh& mesh,
-                                                  RenderEntity parent) {
+                                          const MaterialHandle& material,
+                                          const Mesh& mesh,
+                                          RenderEntity parent) {
     RenderItemHandle handle = _renderItemPool.emplace(material, mesh);
     // add this handle to the _memozedRenderItems vector
     _memoizedRenderItems.push_back(handle);
@@ -235,7 +235,7 @@ bool RenderWorld::isChildOf(RenderEntity parent, RenderEntity child) const {
 }
 
 void RenderWorld::updateEntity(RenderItemHandle renderItem,
-                                   const RenderEntity::Properties&& properties) {
+                               const RenderEntity::Properties&& properties) {
     if (!_renderItemPool.valid(renderItem)) {
         return;
     }

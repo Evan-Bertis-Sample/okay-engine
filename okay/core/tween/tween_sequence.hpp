@@ -10,8 +10,7 @@
  * @brief Sequence of composed tweens; control lifetime of multiple tweens together.
  */
 namespace okay {
-class TweenSequence : public ITween,
-                          public std::enable_shared_from_this<TweenSequence> {
+class TweenSequence : public ITween, public std::enable_shared_from_this<TweenSequence> {
    public:
     TweenSequence() = default;
 

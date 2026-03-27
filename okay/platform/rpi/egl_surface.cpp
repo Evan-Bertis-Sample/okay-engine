@@ -6,7 +6,6 @@
 #include <csignal>
 #include <fcntl.h>
 #include <gbm.h>
-
 #include <iostream>
 #include <stdexcept>
 #include <unistd.h>

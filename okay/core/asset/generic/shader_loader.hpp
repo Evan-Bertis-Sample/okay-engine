@@ -15,8 +15,7 @@ namespace okay {
 
 template <>
 struct AssetLoader<Shader> {
-    static Result<Shader> loadAsset(const std::filesystem::path& path,
-                                        const AssetIO& assetIO) {
+    static Result<Shader> loadAsset(const std::filesystem::path& path, const AssetIO& assetIO) {
         // by standard, the fragment shader will be path + .frag
         // and the vertex shader will be path + .vert
         Engine.logger.info("Loading shader: {}", path.string());
@@ -27,8 +26,7 @@ struct AssetLoader<Shader> {
 
         if (vertexStreamRes.isError()) {
             Engine.logger.error("Failed to open vertex shader: {}", path.string());
-            return Result<Shader>::errorResult("Failed to open vertex shader: " +
-                                                   path.string());
+            return Result<Shader>::errorResult("Failed to open vertex shader: " + path.string());
         }
 
         // read vertex shader code
@@ -42,8 +40,7 @@ struct AssetLoader<Shader> {
 
         if (fragmentStreamRes.isError()) {
             Engine.logger.error("Failed to open fragment shader: {}", path.string());
-            return Result<Shader>::errorResult("Failed to open fragment shader: " +
-                                                   path.string());
+            return Result<Shader>::errorResult("Failed to open fragment shader: " + path.string());
         }
 
         // read fragment shader code

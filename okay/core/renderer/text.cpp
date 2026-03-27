@@ -105,8 +105,8 @@ float TextMeshBuilder::computeVerticalOffset() const {
 }
 
 void TextMeshBuilder::appendQuadIndices(std::vector<std::uint32_t>& indices,
-                                            std::uint32_t base,
-                                            bool doubleSided) {
+                                        std::uint32_t base,
+                                        bool doubleSided) {
     indices.push_back(base + 2);
     indices.push_back(base + 1);
     indices.push_back(base + 0);
@@ -125,8 +125,10 @@ void TextMeshBuilder::appendQuadIndices(std::vector<std::uint32_t>& indices,
     indices.push_back(base + 0);
 }
 
-TextMeshBuilder::TextQuad TextMeshBuilder::generateQuadForGlyph(
-    const FontManager::Glyph& glyph, float dx, float dy, float scale) {
+TextMeshBuilder::TextQuad TextMeshBuilder::generateQuadForGlyph(const FontManager::Glyph& glyph,
+                                                                float dx,
+                                                                float dy,
+                                                                float scale) {
     TextQuad quad;
 
     const float w = (float)glyph.w * scale;

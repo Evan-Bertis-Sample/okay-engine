@@ -69,13 +69,11 @@ Result<MeshData> ObjLoader::Load(const std::filesystem::path& path, std::istream
     }
 
     if (file.bad()) {
-        return Result<MeshData>::errorResult(
-            "OBJ parse failed: stream became bad while reading.");
+        return Result<MeshData>::errorResult("OBJ parse failed: stream became bad while reading.");
     }
 
     if (st.out.vertices.empty() || st.out.indices.empty()) {
-        return Result<MeshData>::errorResult(
-            "OBJ parse produced an empty mesh (no faces found).");
+        return Result<MeshData>::errorResult("OBJ parse produced an empty mesh (no faces found).");
     }
 
     (void)path;  // reserved for future use (mtl, relative lookups)
