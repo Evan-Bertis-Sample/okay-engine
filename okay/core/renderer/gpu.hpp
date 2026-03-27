@@ -1,5 +1,5 @@
-#ifndef _GPU_H__
-#define _GPU_H__
+#ifndef __GPU_H__
+#define __GPU_H__
 
 #include <okay/core/engine/engine.hpp>
 #include <okay/core/renderer/gl.hpp>

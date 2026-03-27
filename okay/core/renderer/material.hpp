@@ -1,5 +1,5 @@
-#ifndef _MATERIAL_H__
-#define _MATERIAL_H__
+#ifndef __MATERIAL_H__
+#define __MATERIAL_H__
 
 #include <okay/core/engine/engine.hpp>
 #include <okay/core/renderer/gpu.hpp>

@@ -1,5 +1,5 @@
-#ifndef _UNIFORM_H__
-#define _UNIFORM_H__
+#ifndef __UNIFORM_H__
+#define __UNIFORM_H__
 
 #include <okay/core/engine/engine.hpp>
 #include <okay/core/engine/logger.hpp>

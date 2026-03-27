@@ -1,5 +1,5 @@
-#ifndef _RENDERER_H__
-#define _RENDERER_H__
+#ifndef __RENDERER_H__
+#define __RENDERER_H__
 
 #include "render_pipeline.hpp"
 #include "render_target.hpp"

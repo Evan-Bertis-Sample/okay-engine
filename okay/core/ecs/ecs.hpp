@@ -1,5 +1,5 @@
-#ifndef _ECS_H__
-#define _ECS_H__
+#ifndef __ECS_H__
+#define __ECS_H__
 
 #include <okay/core/engine/engine.hpp>
 #include <okay/core/engine/logger.hpp>

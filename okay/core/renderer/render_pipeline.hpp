@@ -1,5 +1,5 @@
-#ifndef _RENDER_PIPELINE_H__
-#define _RENDER_PIPELINE_H__
+#ifndef __RENDER_PIPELINE_H__
+#define __RENDER_PIPELINE_H__
 
 #include <okay/core/renderer/render_target.hpp>
 #include <okay/core/renderer/render_world.hpp>

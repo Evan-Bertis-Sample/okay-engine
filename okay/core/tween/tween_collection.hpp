@@ -1,5 +1,5 @@
-#ifndef _TWEEN_COLLECTION_H__
-#define _TWEEN_COLLECTION_H__
+#ifndef __TWEEN_COLLECTION_H__
+#define __TWEEN_COLLECTION_H__
 
 #include "okay/core/tween/i_okay_tween.hpp"
 

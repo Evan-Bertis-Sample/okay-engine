@@ -1,5 +1,5 @@
-#ifndef _TWEEN_H__
-#define _TWEEN_H__
+#ifndef __TWEEN_H__
+#define __TWEEN_H__
 
 #include <okay/core/engine/logger.hpp>
 #include <okay/core/tween/i_okay_tween.hpp>

@@ -1,5 +1,5 @@
-#ifndef _PRIMITIVE_H__
-#define _PRIMITIVE_H__
+#ifndef __PRIMITIVE_H__
+#define __PRIMITIVE_H__
 
 #include <okay/core/renderer/mesh.hpp>
 

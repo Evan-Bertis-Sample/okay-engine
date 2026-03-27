@@ -1,5 +1,5 @@
-#ifndef _MESH_H__
-#define _MESH_H__
+#ifndef __MESH_H__
+#define __MESH_H__
 
 #include <okay/core/renderer/gl.hpp>
 #include <okay/core/util/result.hpp>

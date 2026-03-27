@@ -1,5 +1,5 @@
-#ifndef _RENDER_WORLD_H__
-#define _RENDER_WORLD_H__
+#ifndef __RENDER_WORLD_H__
+#define __RENDER_WORLD_H__
 
 #include "glm/ext/vector_float3.hpp"
 #include "glm/ext/vector_float4.hpp"

@@ -1,5 +1,5 @@
-#ifndef _SHADER_H__
-#define _SHADER_H__
+#ifndef __SHADER_H__
+#define __SHADER_H__
 
 #include <okay/core/engine/engine.hpp>
 #include <okay/core/renderer/texture.hpp>

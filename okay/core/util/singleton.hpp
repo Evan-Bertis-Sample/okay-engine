@@ -1,5 +1,5 @@
-#ifndef _SINGLETON_HPP__
-#define _SINGLETON_HPP__
+#ifndef __SINGLETON_HPP__
+#define __SINGLETON_HPP__
 
 #include <type_traits>
 #include <utility>

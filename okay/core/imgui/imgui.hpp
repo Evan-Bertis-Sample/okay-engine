@@ -1,5 +1,5 @@
-#ifndef _IMGUI_H__
-#define _IMGUI_H__
+#ifndef __IMGUI_H__
+#define __IMGUI_H__
 
 #include <okay/core/engine/system.hpp>
 

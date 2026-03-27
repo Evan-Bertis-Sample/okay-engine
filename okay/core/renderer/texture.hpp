@@ -1,5 +1,5 @@
-#ifndef _TEXTURE_H__
-#define _TEXTURE_H__
+#ifndef __TEXTURE_H__
+#define __TEXTURE_H__
 
 #include <okay/core/renderer/gl.hpp>
 #include <okay/core/util/result.hpp>

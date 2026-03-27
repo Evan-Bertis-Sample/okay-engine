@@ -1,5 +1,5 @@
-#ifndef _SYSTEM_H__
-#define _SYSTEM_H__
+#ifndef __SYSTEM_H__
+#define __SYSTEM_H__
 
 #include <okay/core/util/option.hpp>
 

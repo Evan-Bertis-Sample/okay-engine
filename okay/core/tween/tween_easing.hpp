@@ -1,5 +1,5 @@
-#ifndef _TWEEN_EASING_H__
-#define _TWEEN_EASING_H__
+#ifndef __TWEEN_EASING_H__
+#define __TWEEN_EASING_H__
 
 #include <cmath>
 #include <functional>

@@ -1,5 +1,5 @@
-#ifndef _ASSET_H__
-#define _ASSET_H__
+#ifndef __ASSET_H__
+#define __ASSET_H__
 
 #include <okay/core/engine/system.hpp>
 #include <okay/core/util/option.hpp>

@@ -1,5 +1,5 @@
-#ifndef _SURFACE_H__
-#define _SURFACE_H__
+#ifndef __SURFACE_H__
+#define __SURFACE_H__
 
 #include <okay/core/renderer/gl.hpp>
 #include <okay/core/engine/system.hpp>

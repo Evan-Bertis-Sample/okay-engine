@@ -1,5 +1,5 @@
-#ifndef _TWEEN_ENGINE_H__
-#define _TWEEN_ENGINE_H__
+#ifndef __TWEEN_ENGINE_H__
+#define __TWEEN_ENGINE_H__
 
 #include <okay/core/engine/system.hpp>
 #include <okay/core/tween/i_okay_tween.hpp>
