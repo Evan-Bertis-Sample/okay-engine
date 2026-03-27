@@ -1,8 +1,9 @@
 #ifndef __OBJECT_POOL_H__
 #define __OBJECT_POOL_H__
 
-#include <okay/core/okay.hpp>
-#include <okay/core/logging//okay_logger.hpp>
+#include <okay/core/engine/engine.hpp>
+#include <okay/core/engine/logger.hpp>
+
 #include <cstdint>
 #include <type_traits>
 #include <utility>
@@ -20,23 +21,13 @@ struct ObjectPoolHandle {
     friend bool operator!=(ObjectPoolHandle a, ObjectPoolHandle b) { return !(a == b); }
 
     static constexpr std::uint32_t invalidIndex() { return 0xFFFFFFFFu; }
-    static ObjectPoolHandle invalidHandle() {
-        return ObjectPoolHandle(invalidIndex());
-    }
+    static ObjectPoolHandle invalidHandle() { return ObjectPoolHandle(invalidIndex()); }
 
     // operator overloads for std::map
-    bool operator<(const ObjectPoolHandle& other) const {
-        return index < other.index;
-    }
-    bool operator>(const ObjectPoolHandle& other) const {
-        return index > other.index;
-    }
-    bool operator<=(const ObjectPoolHandle& other) const {
-        return index <= other.index;
-    }
-    bool operator>=(const ObjectPoolHandle& other) const {
-        return index >= other.index;
-    }
+    bool operator<(const ObjectPoolHandle& other) const { return index < other.index; }
+    bool operator>(const ObjectPoolHandle& other) const { return index > other.index; }
+    bool operator<=(const ObjectPoolHandle& other) const { return index <= other.index; }
+    bool operator>=(const ObjectPoolHandle& other) const { return index >= other.index; }
 };
 
 template <typename T>
@@ -53,7 +44,8 @@ class ObjectPool final {
 
     ObjectPool(ObjectPool&& other) noexcept { *this = std::move(other); }
     ObjectPool& operator=(ObjectPool&& other) noexcept {
-        if (this == &other) return *this;
+        if (this == &other)
+            return *this;
 
         clear();
 
@@ -81,7 +73,8 @@ class ObjectPool final {
     }
 
     void destroy(ObjectPoolHandle h) {
-        if (!valid(h)) return;
+        if (!valid(h))
+            return;
 
         Slot& s = _slots[h.index];
         if (!s.alive) {
@@ -108,7 +101,8 @@ class ObjectPool final {
         // destroy all live objects
         for (std::uint32_t i = 0; i < _slots.size(); ++i) {
             Slot& s = _slots[i];
-            if (!s.alive) continue;
+            if (!s.alive)
+                continue;
             s.ref().~T();
             s.alive = false;
             s.generation += 1;
@@ -125,8 +119,10 @@ class ObjectPool final {
     }
 
     bool valid(ObjectPoolHandle h) const {
-        if (h.index == invalidIndex()) return false;
-        if (h.index >= _slots.size()) return false;
+        if (h.index == invalidIndex())
+            return false;
+        if (h.index >= _slots.size())
+            return false;
         const Slot& s = _slots[h.index];
         return s.alive && s.generation == h.generation;
     }
@@ -134,9 +130,7 @@ class ObjectPool final {
     std::size_t size() const { return _aliveCount; }
     std::size_t capacity() const { return _slots.size(); }
 
-    T& get(ObjectPoolHandle h) {
-        return _slots[h.index].ref();
-    }
+    T& get(ObjectPoolHandle h) { return _slots[h.index].ref(); }
 
     const T& get(ObjectPoolHandle h) const {
         if (!valid(h)) {
@@ -166,12 +160,13 @@ class ObjectPool final {
     }
 
     bool aliveAt(std::uint32_t index) const {
-        if (index >= _slots.size()) return false;
+        if (index >= _slots.size())
+            return false;
         return _slots[index].alive;
     }
 
     T& atIndex(std::uint32_t index) {
-        if (index >= _slots.size()) { 
+        if (index >= _slots.size()) {
             Engine.logger.error("invalid index");
             return _slots[0].ref();
         }
@@ -185,7 +180,7 @@ class ObjectPool final {
     }
 
     const T& atIndex(std::uint32_t index) const {
-        if (index >= _slots.size()) { 
+        if (index >= _slots.size()) {
             Engine.logger.error("invalid index");
             return _slots[0].ref();
         }
@@ -199,7 +194,6 @@ class ObjectPool final {
     }
 
     std::uint32_t generationAt(std::uint32_t index) const {
-    
         if (index >= _slots.size()) {
             Engine.logger.error("invalid index");
             return 0;

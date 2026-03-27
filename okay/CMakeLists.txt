@@ -28,6 +28,9 @@ project(${PROJECT} C CXX)
 
 add_executable(${PROJECT})
 
+# generate compile commands
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 # do some initial checking
 if(NOT DEFINED PROJECT)
   message(FATAL_ERROR "PROJECT not defined.")
@@ -99,6 +102,10 @@ option(GLM_STATIC "Static build" OFF)
 option(GLM_USE_TEST "Enable Tests" OFF)
 add_subdirectory(${OKAY_VENDOR_DIR}/glm)
 
+# freetype
+add_subdirectory(${OKAY_VENDOR_DIR}/freetype)
+# append to engine libraries so it's linked in the final game
+list(APPEND OKAY_ENGINE_LIBRARIES freetype)
 
 # platform selection (creates INTERFACE target 'okay_platform')
 # set OKAY_PLATFORM to override autodetect (e.g., -DOKAY_PLATFORM=windows)
@@ -160,5 +167,4 @@ message(STATUS "okay Include Directories: ${INCLUDE_DIRS}")
 
 target_link_libraries(${PROJECT} PRIVATE okay)
 
-# generate compile commands
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+

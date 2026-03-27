@@ -1,6 +1,7 @@
-#include <cctype>
 #include <okay/core/asset/mesh/obj_loader.hpp>
 #include <okay/core/util/string.hpp>
+
+#include <cctype>
 #include <sstream>
 #include <string>
 
@@ -18,10 +19,11 @@ std::size_t ObjLoader::VertKeyHash::operator()(const VertKey& k) const noexcept 
     return h;
 }
 
-Result<OkayMeshData> ObjLoader::Load(const std::filesystem::path& path, std::istream& file) {
+Result<MeshData> ObjLoader::Load(const std::filesystem::path& path, std::istream& file) {
     // Good error if it isn't OBJ-ish content
     auto sniff = ValidateLooksLikeObj(file);
-    if (sniff.isError()) return Result<OkayMeshData>::errorResult(sniff.error());
+    if (sniff.isError())
+        return Result<MeshData>::errorResult(sniff.error());
 
     State st;
     st.positions.reserve(1024);
@@ -36,12 +38,14 @@ Result<OkayMeshData> ObjLoader::Load(const std::filesystem::path& path, std::ist
     while (std::getline(file, line)) {
         ++lineNo;
         line = StringUtils::LTrim(std::move(line));
-        if (line.empty() || line[0] == '#') continue;
+        if (line.empty() || line[0] == '#')
+            continue;
 
         std::istringstream ls(line);
         std::string head;
         ls >> head;
-        if (head.empty()) continue;
+        if (head.empty())
+            continue;
 
         head = StringUtils::ToLower(std::move(head));
 
@@ -60,22 +64,20 @@ Result<OkayMeshData> ObjLoader::Load(const std::filesystem::path& path, std::ist
         }
 
         if (r.isError()) {
-            return Result<OkayMeshData>::errorResult(PrefixLine(lineNo, r.error()));
+            return Result<MeshData>::errorResult(PrefixLine(lineNo, r.error()));
         }
     }
 
     if (file.bad()) {
-        return Result<OkayMeshData>::errorResult(
-            "OBJ parse failed: stream became bad while reading.");
+        return Result<MeshData>::errorResult("OBJ parse failed: stream became bad while reading.");
     }
 
     if (st.out.vertices.empty() || st.out.indices.empty()) {
-        return Result<OkayMeshData>::errorResult(
-            "OBJ parse produced an empty mesh (no faces found).");
+        return Result<MeshData>::errorResult("OBJ parse produced an empty mesh (no faces found).");
     }
 
     (void)path;  // reserved for future use (mtl, relative lookups)
-    return Result<OkayMeshData>::ok(std::move(st.out));
+    return Result<MeshData>::ok(std::move(st.out));
 }
 
 Failable ObjLoader::ValidateLooksLikeObj(std::istream& file) const {
@@ -85,7 +87,8 @@ Failable ObjLoader::ValidateLooksLikeObj(std::istream& file) const {
     std::string line;
     while (std::getline(file, line)) {
         line = StringUtils::LTrim(std::move(line));
-        if (line.empty() || line[0] == '#') continue;
+        if (line.empty() || line[0] == '#')
+            continue;
 
         std::istringstream ls(line);
         std::string tok;
@@ -172,11 +175,14 @@ Failable ObjLoader::ParseF(std::istream& ls, State& st) const {
     // Fan triangulate: (0, i, i+1)
     for (std::size_t i = 1; i + 1 < face.size(); ++i) {
         auto a = EmitVertex(face[0], st);
-        if (a.isError()) return Failable::errorResult(a.error());
+        if (a.isError())
+            return Failable::errorResult(a.error());
         auto b = EmitVertex(face[i], st);
-        if (b.isError()) return Failable::errorResult(b.error());
+        if (b.isError())
+            return Failable::errorResult(b.error());
         auto c = EmitVertex(face[i + 1], st);
-        if (c.isError()) return Failable::errorResult(c.error());
+        if (c.isError())
+            return Failable::errorResult(c.error());
 
         st.out.indices.push_back(a.value());
         st.out.indices.push_back(b.value());
@@ -194,13 +200,16 @@ bool ObjLoader::ParseObjIndexToken(std::string_view tok, ObjIndex& out) const {
     auto parts = StringUtils::Split(tok, '/', /*keepEmpty=*/true);
 
     int v = 0, vt = 0, vn = 0;
-    if (parts.empty() || parts[0].empty() || !ParseInt(parts[0], v)) return false;
+    if (parts.empty() || parts[0].empty() || !ParseInt(parts[0], v))
+        return false;
 
     if (parts.size() >= 2 && !parts[1].empty()) {
-        if (!ParseInt(parts[1], vt)) return false;
+        if (!ParseInt(parts[1], vt))
+            return false;
     }
     if (parts.size() >= 3 && !parts[2].empty()) {
-        if (!ParseInt(parts[2], vn)) return false;
+        if (!ParseInt(parts[2], vn))
+            return false;
     }
 
     out.v = v;
@@ -217,14 +226,17 @@ bool ObjLoader::ParseInt(std::string_view s, int& out) const {
         ++i;
     }
 
-    if (i >= s.size()) return false;
+    if (i >= s.size())
+        return false;
 
     long val = 0;
     for (; i < s.size(); ++i) {
         const char c = s[i];
-        if (!std::isdigit(static_cast<unsigned char>(c))) return false;
+        if (!std::isdigit(static_cast<unsigned char>(c)))
+            return false;
         val = val * 10 + (c - '0');
-        if (val > 1'000'000'000L) return false;
+        if (val > 1'000'000'000L)
+            return false;
     }
 
     out = static_cast<int>(val) * sign;
@@ -233,8 +245,10 @@ bool ObjLoader::ParseInt(std::string_view s, int& out) const {
 
 int ObjLoader::ResolveIndex(int idx, int count) const {
     // OBJ indices are 1-based; negative indices are relative to end (-1 is last)
-    if (idx > 0) return idx - 1;
-    if (idx < 0) return count + idx;
+    if (idx > 0)
+        return idx - 1;
+    if (idx < 0)
+        return count + idx;
     return -1;
 }
 
@@ -256,9 +270,10 @@ Result<std::uint32_t> ObjLoader::EmitVertex(const ObjIndex& i, State& st) const 
 
     VertKey key{vi, vti, vni};
     auto it = st.dedup.find(key);
-    if (it != st.dedup.end()) return Result<std::uint32_t>::ok(it->second);
+    if (it != st.dedup.end())
+        return Result<std::uint32_t>::ok(it->second);
 
-    OkayVertex v{};
+    MeshVertex v{};
     v.position = st.positions[vi];
     v.uv = (vti >= 0) ? st.uvs[vti] : glm::vec2(0.0f, 0.0f);
     v.normal = (vni >= 0) ? st.normals[vni] : glm::vec3(0.0f, 1.0f, 0.0f);

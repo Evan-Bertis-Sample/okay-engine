@@ -1,0 +1,185 @@
+#include "mesh.hpp"
+
+#include "okay/core/util/result.hpp"
+
+#include <okay/core/engine/engine.hpp>
+#include <okay/core/engine/logger.hpp>
+#include <okay/core/renderer/gl.hpp>
+
+using namespace okay;
+
+Mesh MeshBuffer::addMesh(const MeshData& mesh) {
+    Mesh m{};
+
+    // get the vertexOffset of the mesh
+    m.vertexOffset = _bufferData.size() / MeshVertex::numFloats();
+    m.vertexCount = mesh.vertices.size();
+
+    m.indexOffset = _indices.size();
+    m.indexCount = mesh.indices.size();
+
+    // push the vertices of the mesh
+    for (const MeshVertex& v : mesh.vertices) {
+        // push this vertex into the buffer, compactly
+        // position
+        _bufferData.push_back(v.position.x);
+        _bufferData.push_back(v.position.y);
+        _bufferData.push_back(v.position.z);
+        // normal
+        _bufferData.push_back(v.normal.x);
+        _bufferData.push_back(v.normal.y);
+        _bufferData.push_back(v.normal.z);
+        // color
+        _bufferData.push_back(v.color.x);
+        _bufferData.push_back(v.color.y);
+        _bufferData.push_back(v.color.z);
+        // uv
+        _bufferData.push_back(v.uv.x);
+        _bufferData.push_back(v.uv.y);
+    }
+
+    // Now add the indices, but with an offset
+    for (std::uint32_t i : mesh.indices) {
+        _indices.push_back(i + m.vertexOffset);
+    }
+
+    _dataOutofDate = true;
+
+    return m;
+}
+
+void MeshBuffer::removeMesh(const Mesh& mesh) {
+    // update the indices that refer to vertices after this mesh -- their offset must be decremented
+
+    // from mesh.indexOffset + mesh.indexCount ... end
+    // decrement by mesh.vertexCount
+    for (std::size_t i = mesh.indexOffset + mesh.indexCount; i < _indices.size(); ++i) {
+        _indices[i] -= mesh.vertexCount;
+    }
+
+    // remove the indices
+    _indices.erase(_indices.begin() + mesh.indexOffset,
+                   _indices.begin() + mesh.indexOffset + mesh.indexCount);
+    // remove the vertices
+    _bufferData.erase(_bufferData.begin() + mesh.vertexOffset * MeshVertex::numFloats(),
+                      _bufferData.begin() + mesh.vertexOffset * MeshVertex::numFloats() +
+                          mesh.vertexCount * MeshVertex::numFloats());
+
+    _dataOutofDate = true;
+}
+
+Failable MeshBuffer::initVertexAttributes() {
+    if (_hasInitVertexAttributes)
+        return Failable::ok({});
+
+    Engine.logger.debug("Initializing vertex attributes");
+
+    // create buffers
+    GL_CHECK(glGenVertexArrays(1, &_vao));
+    GL_CHECK(glGenBuffers(1, &_vbo));
+    GL_CHECK(glGenBuffers(1, &_ebo));
+
+    // MUST have a current context here.
+    GL_CHECK(glBindVertexArray(_vao));
+
+    // This must be the VBO that contains MeshVertex data
+    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, _vbo));
+
+    GL_CHECK(glEnableVertexAttribArray(0));
+    GL_CHECK(glVertexAttribPointer(0,
+                                   3,
+                                   GL_FLOAT,
+                                   GL_FALSE,
+                                   MeshVertex::stride(),
+                                   reinterpret_cast<void*>(0 * sizeof(float))));
+
+    GL_CHECK(glEnableVertexAttribArray(1));
+    GL_CHECK(glVertexAttribPointer(1,
+                                   3,
+                                   GL_FLOAT,
+                                   GL_FALSE,
+                                   MeshVertex::stride(),
+                                   reinterpret_cast<void*>(3 * sizeof(float))));
+
+    GL_CHECK(glEnableVertexAttribArray(2));
+    GL_CHECK(glVertexAttribPointer(2,
+                                   3,
+                                   GL_FLOAT,
+                                   GL_FALSE,
+                                   MeshVertex::stride(),
+                                   reinterpret_cast<void*>(6 * sizeof(float))));
+
+    GL_CHECK(glEnableVertexAttribArray(3));
+    GL_CHECK(glVertexAttribPointer(3,
+                                   2,
+                                   GL_FLOAT,
+                                   GL_FALSE,
+                                   MeshVertex::stride(),
+                                   reinterpret_cast<void*>(9 * sizeof(float))));
+
+    GL_CHECK(glBindVertexArray(0));
+    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+    GLint vao = 0, vbo = 0;
+    glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &vao);
+    glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &vbo);
+    Engine.logger.debug("attrib setup bindings: VAO={}, ARRAY_BUFFER={}", _vao, _vbo);
+
+    _hasInitVertexAttributes = true;
+    Engine.logger.debug("Vertex attributes initialized");
+    return Failable::ok({});
+}
+
+Failable MeshBuffer::bindMeshData() {
+    if (!_dataOutofDate) {
+        Engine.logger.debug("Mesh data already bound");
+        return Failable::ok({});
+    }
+
+    Engine.logger.debug("Binding mesh data");
+
+    if (!_hasInitVertexAttributes) {
+        Failable r = initVertexAttributes();
+        if (r.isError()) {
+            return r;
+        }
+    }
+
+    if (_vao == 0 || _vbo == 0 || _ebo == 0) {
+        Engine.logger.error("Mesh data not initialized");
+        return Failable::errorResult("Mesh data not initialized");
+    }
+
+    GL_CHECK(glBindVertexArray(_vao));
+
+    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, _vbo));
+    GL_CHECK(glBufferData(
+        GL_ARRAY_BUFFER, _bufferData.size() * sizeof(GLfloat), _bufferData.data(), GL_STATIC_DRAW));
+
+    GL_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ebo));
+    GL_CHECK(glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+                          _indices.size() * sizeof(GLuint),
+                          _indices.data(),
+                          GL_STATIC_DRAW));
+
+    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+    Engine.logger.debug("Mesh data bound");
+    _dataOutofDate = false;
+    return Failable::ok({});
+}
+
+void MeshBuffer::drawMesh(const Mesh& mesh) {
+    if (_dataOutofDate) {
+        Engine.logger.error("Mesh data not bound");
+        return;
+    }
+
+    glBindVertexArray(_vao);
+
+    void* start = reinterpret_cast<void*>(mesh.indexOffset * sizeof(GLuint));
+    GLsizei count = static_cast<GLsizei>(mesh.indexCount);
+
+    glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, start);
+    glBindVertexArray(0);
+}

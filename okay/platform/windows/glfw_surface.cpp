@@ -1,9 +1,9 @@
-#include <glad/glad.h>
+#include <okay/core/renderer/gl.hpp>
+#include <okay/core/renderer/surface.hpp>
+
 #include <GLFW/glfw3.h>
 #include <iostream>
-#include <okay/core/renderer/okay_surface.hpp>
 #include <stdexcept>
-#include <string>
 
 namespace okay {
 
@@ -13,13 +13,15 @@ struct Surface::SurfaceImpl {
     explicit SurfaceImpl(const SurfaceConfig& c) : cfg(c) {}
 };
 
-Surface::Surface(const SurfaceConfig& cfg) : _impl(std::make_unique<SurfaceImpl>(cfg)) {}
+Surface::Surface(const SurfaceConfig& cfg) : _impl(std::make_unique<SurfaceImpl>(cfg)) {
+}
 Surface::~Surface() = default;
 Surface::Surface(Surface&&) noexcept = default;
 Surface& Surface::operator=(Surface&&) noexcept = default;
 
 void Surface::initialize() {
-    if (!glfwInit()) throw std::runtime_error("glfwInit failed");
+    if (!glfwInit())
+        throw std::runtime_error("glfwInit failed");
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_SAMPLES, 4);
@@ -28,7 +30,8 @@ void Surface::initialize() {
 
     _impl->window =
         glfwCreateWindow(_impl->cfg.width, _impl->cfg.height, _impl->cfg.title, nullptr, nullptr);
-    if (!_impl->window) throw std::runtime_error("glfwCreateWindow failed");
+    if (!_impl->window)
+        throw std::runtime_error("glfwCreateWindow failed");
 
     glfwMakeContextCurrent(_impl->window);
     glfwSwapInterval(_impl->cfg.vsync ? 1 : 0);

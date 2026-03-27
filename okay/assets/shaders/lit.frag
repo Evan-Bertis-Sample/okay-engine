@@ -62,8 +62,8 @@ void main() {
     vec3 N = safeNormalize(v_worldNormal);
     vec3 V = safeNormalize(u_cameraPosition - v_worldPos);
 
-    vec3 texAlbedo = texture(u_albedo, v_uv).rgb;
-    vec3 albedo = clamp(texAlbedo * v_color, vec3(0.0), vec3(1.0));
+    vec4 texAlbedo = texture(u_albedo, v_uv);
+    vec3 albedo = clamp(texAlbedo.rgb * v_color, vec3(0.0), vec3(1.0));
     vec3 colorOut = u_ambient * albedo;
 
     int count = int(meta.x + 0.5);
@@ -133,5 +133,5 @@ void main() {
     float viewDep = pow(1.0 - max(dot(N, V), 0.0), 5.0);
     colorOut += viewDep * 0.25;
 
-    FragColor = vec4(colorOut, 1.0);
+    FragColor = vec4(colorOut, texAlbedo.a);
 }
