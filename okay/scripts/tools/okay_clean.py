@@ -32,3 +32,11 @@ def main(args):
     except OSError as e:
         print(f"Error removing work directory: {e}")
         return
+
+    # remake the work directory
+    print(f"Recreating work directory: {okay_work_dir}")
+    try:
+        os.makedirs(okay_work_dir)
+    except OSError as e:
+        print(f"Error creating work directory: {e}")
+        return
