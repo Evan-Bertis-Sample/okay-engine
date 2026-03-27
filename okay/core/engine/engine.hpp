@@ -92,8 +92,24 @@ class Game {
 
         _onInitialize();
 
+        for (ISystem* system : enginePool) {
+            system->postInitialize();
+        }
+
+        for (ISystem* system : gamePool) {
+            system->postInitialize();
+        }
+
         Engine.time->reset();
         while (Engine.shouldRun()) {
+            for (ISystem* system : enginePool) {
+                system->preTick();
+            }
+
+            for (ISystem* system : gamePool) {
+                system->preTick();
+            }
+
             for (ISystem* system : enginePool) {
                 system->tick();
                 if (!Engine.shouldRun())

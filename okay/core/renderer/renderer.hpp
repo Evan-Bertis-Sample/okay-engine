@@ -23,6 +23,7 @@ namespace okay {
 struct RendererSettings {
     SurfaceConfig surfaceConfig;
     RenderPipeline pipeline;
+    bool enableIMGUI{true};
 };
 
 class Renderer : public System<SystemScope::ENGINE> {
@@ -35,12 +36,14 @@ class Renderer : public System<SystemScope::ENGINE> {
         : _surfaceConfig(settings.surfaceConfig),
           _surface(std::make_unique<Surface>(settings.surfaceConfig)),
           _renderTargetPool(settings.surfaceConfig.width, settings.surfaceConfig.height),
-          _pipeline(std::move(settings.pipeline)) {}
+          _pipeline(std::move(settings.pipeline)),
+          _imguiEnabled(settings.enableIMGUI) {}
 
     Shader shader;
 
     void initialize() override;
     void postInitialize() override;
+    void preTick() override;
     void tick() override;
     void postTick() override;
     void shutdown() override;
@@ -63,6 +66,8 @@ class Renderer : public System<SystemScope::ENGINE> {
     RenderTargetPool _renderTargetPool;
     MaterialRegistry _materialRegistry;
     std::unique_ptr<Surface> _surface;
+    bool _imguiEnabled{false};
+    bool _imguiInitialized{false};
 };
 
 }  // namespace okay

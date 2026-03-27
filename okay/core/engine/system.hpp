@@ -29,6 +29,7 @@ class ISystem {
     virtual void initialize() {}
     virtual void postInitialize() {}
 
+    virtual void preTick() {}
     virtual void tick() {}
     virtual void postTick() {}
 

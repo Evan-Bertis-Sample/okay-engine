@@ -28,9 +28,6 @@
 #include <okay/core/engine/system.hpp>
 #include <okay/core/engine/time.hpp>
 
-// okay/core/imgui
-#include <okay/core/imgui/imgui.hpp>
-
 // okay/core/renderer
 #include <okay/core/renderer/font.hpp>
 #include <okay/core/renderer/gl.hpp>
