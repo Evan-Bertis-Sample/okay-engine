@@ -11,12 +11,4 @@ def register_subparser(subparser):
 
 def main(args):
     build_options = OkayBuildOptions.from_args(args)
-    project_dir = OkayToolUtil.get_root_dir() + os.sep + "proto" + os.sep + "core"
-
-    if not os.path.exists(project_dir):
-        print(f"Error: The project directory {project_dir} does not exist")
-        return
-    
-    build_options.project_dir = project_dir
-    OkayBuildUtil.build_project(build_options)
     OkayBuildUtil.run_project(build_options, use_gdb=args.gdb)
