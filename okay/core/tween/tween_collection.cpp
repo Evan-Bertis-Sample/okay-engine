@@ -13,8 +13,7 @@ void TweenCollection::append(std::shared_ptr<ITween> tweenPtr) {
 
 void TweenCollection::start() {
     if (_collection.size() > 0) {
-        okay::Engine.systems.getSystemChecked<OkayTweenEngine>()->addTween(
-            this->shared_from_this());
+        okay::Engine.systems.getSystemChecked<TweenEngine>()->addTween(this->shared_from_this());
         for (auto& tween : _collection) {
             tween->reset();
             tween->setIsTweening(true);

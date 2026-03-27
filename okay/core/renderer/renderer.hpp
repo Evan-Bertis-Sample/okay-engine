@@ -20,18 +20,18 @@
 
 namespace okay {
 
-struct RenderSettings {
+struct RendererSettings {
     SurfaceConfig surfaceConfig;
     RenderPipeline pipeline;
 };
 
 class Renderer : public System<SystemScope::ENGINE> {
    public:
-    static std::unique_ptr<Renderer> create(RenderSettings settings) {
+    static std::unique_ptr<Renderer> create(RendererSettings settings) {
         return std::make_unique<Renderer>(std::move(settings));
     }
 
-    explicit Renderer(RenderSettings settings)
+    explicit Renderer(RendererSettings settings)
         : _surfaceConfig(settings.surfaceConfig),
           _surface(std::make_unique<Surface>(settings.surfaceConfig)),
           _renderTargetPool(settings.surfaceConfig.width, settings.surfaceConfig.height),

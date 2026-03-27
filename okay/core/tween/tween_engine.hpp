@@ -11,9 +11,9 @@
  * @brief OkayTween manager.
  */
 namespace okay {
-class OkayTweenEngine : public System<SystemScope::ENGINE> {
+class TweenEngine : public System<SystemScope::ENGINE> {
    public:
-    OkayTweenEngine() {}
+    TweenEngine() {}
 
     /**
      * @brief Push back tween ptr into _activeTweens.

@@ -13,7 +13,7 @@ int main() {
     surfaceConfig.height = 480;
     okay::Surface surface(surfaceConfig);
 
-    okay::RenderSettings rendererSettings{
+    okay::RendererSettings rendererSettings{
         .surfaceConfig = surfaceConfig,
         .pipeline = okay::RenderPipeline::create(std::make_unique<okay::ScenePass>())};
 

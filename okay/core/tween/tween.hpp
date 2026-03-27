@@ -162,8 +162,7 @@ class Tween : public ITween, public std::enable_shared_from_this<Tween<T>> {
     }
 
     void start() {
-        okay::Engine.systems.getSystemChecked<OkayTweenEngine>()->addTween(
-            this->shared_from_this());
+        okay::Engine.systems.getSystemChecked<TweenEngine>()->addTween(this->shared_from_this());
         setIsTweening(true);
     }
 

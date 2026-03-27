@@ -16,8 +16,7 @@ void TweenSequence::append(std::shared_ptr<ITween> tweenPtr) {
 
 void TweenSequence::start() {
     if (_sequence.size() > 0) {
-        okay::Engine.systems.getSystemChecked<OkayTweenEngine>()->addTween(
-            this->shared_from_this());
+        okay::Engine.systems.getSystemChecked<TweenEngine>()->addTween(this->shared_from_this());
         _sequence[_index]->setIsTweening(true);
         _started = true;
     } else {
