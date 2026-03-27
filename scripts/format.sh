@@ -1,20 +1,14 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
-# Exit on error
-set -e
-
-# Directory to format (default = current directory)
 TARGET_DIR="${1:-.}"
 
-# Check if clang-format exists
-if ! command -v clang-format &> /dev/null; then
+if ! command -v clang-format >/dev/null 2>&1; then
     echo "Error: clang-format not found in PATH."
-    echo "Install it with: sudo apt install clang-format"
     exit 1
 fi
 
-
-# Find and format files in-place, but skip the okay/vendor directory and any .okay/ directories
-find "$TARGET_DIR" -type f \( -name "*.cpp" -o -name "*.hpp" \) -not -path "*/okay/vendor/*" -not -path "*/.okay/*" | while read -r file; do
-    clang-format -i "$file"
-done
+find "$TARGET_DIR" \
+    -type d \( -path "*/okay/vendor" -o -path "*/.okay" \) -prune \
+    -o -type f \( -name "*.cpp" -o -name "*.hpp" \) -print0 |
+xargs -0 clang-format -i

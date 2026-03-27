@@ -182,5 +182,4 @@ build/
 .clangd
 compile_commands.json
 
-# vscode
-.vscode
+.vscode/
