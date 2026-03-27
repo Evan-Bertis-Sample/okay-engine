@@ -34,16 +34,14 @@ int main() {
 static void __gameInitialize() {
     // Additional game initialization logic
     okay::Renderer* renderer = okay::Engine.systems.getSystemChecked<okay::Renderer>();
-    okay::AssetManager* assetManager =
-        okay::Engine.systems.getSystemChecked<okay::AssetManager>();
+    okay::AssetManager* assetManager = okay::Engine.systems.getSystemChecked<okay::AssetManager>();
     auto teapotRes = assetManager->loadEngineAssetSync<okay::MeshData>("models/teapot.obj");
     if (teapotRes.isError()) {
         okay::Engine.logger.error("Failed to load mesh: {}", teapotRes.error());
         return;
     }
 
-    okay::TextureLoadSettings textureLoadSettings{.store =
-                                                          okay::TextureDataStore::mainStore()};
+    okay::TextureLoadSettings textureLoadSettings{.store = okay::TextureDataStore::mainStore()};
     okay::Texture texture =
         assetManager
             ->loadEngineAssetSync<okay::Texture>("textures/uv_test.jpg", textureLoadSettings)
