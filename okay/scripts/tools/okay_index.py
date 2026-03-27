@@ -1,9 +1,12 @@
+#!/usr/bin/env python3
+
+import argparse
+import json
 from pathlib import Path
+from typing import Iterable
 
-from tools.build_util import OkayBuildOptions, OkayBuildType
-from tools.tool_util import OkayToolUtil
 
-CLANGD_PATH = ".clangd"
+DEFAULT_OUTPUT = "compile_commands.json"
 
 
 def require_okay_project():
@@ -11,59 +14,129 @@ def require_okay_project():
 
 
 def register_subparser(subparser):
-    OkayBuildOptions.add_subparser_args(subparser)
+    subparser.add_argument(
+        "--project-dir",
+        default=".",
+        help="Root directory to search from",
+    )
+    subparser.add_argument(
+        "--output",
+        default=DEFAULT_OUTPUT,
+        help="Path to write merged compile_commands.json",
+    )
     subparser.add_argument(
         "--overwrite",
         action="store_true",
-        help="Overwrite the .clangd file",
+        help="Overwrite the output file if it already exists",
+    )
+    subparser.add_argument(
+        "--quiet",
+        action="store_true",
+        help="Suppress per-file logging",
     )
 
 
-def _abs_posix(p: Path) -> str:
-    return p.resolve().as_posix()
+def find_compile_commands(project_root: Path) -> Iterable[Path]:
+    """
+    Find all compile_commands.json files that live somewhere under a .okay/build directory.
+    """
+    for path in project_root.rglob("compile_commands.json"):
+        parts = path.parts
+        try:
+            okay_idx = parts.index(".okay")
+        except ValueError:
+            continue
+
+        # Require `.okay/build/.../compile_commands.json`
+        if okay_idx + 2 >= len(parts):
+            continue
+        if parts[okay_idx + 1] != "build":
+            continue
+
+        yield path
+
+
+def load_entries(path: Path) -> list[dict]:
+    with path.open("r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    if not isinstance(data, list):
+        raise ValueError(f"{path} does not contain a JSON list")
+
+    entries = []
+    for i, entry in enumerate(data):
+        if not isinstance(entry, dict):
+            raise ValueError(f"{path}: entry {i} is not an object")
+
+        if "file" not in entry:
+            raise ValueError(f"{path}: entry {i} is missing 'file'")
+
+        entries.append(entry)
+
+    return entries
+
+
+def normalize_file_key(entry: dict, db_path: Path) -> str:
+    file_path = Path(entry["file"])
+
+    if file_path.is_absolute():
+        return str(file_path.resolve())
+
+    directory = entry.get("directory")
+    if directory:
+        return str((Path(directory) / file_path).resolve())
+
+    return str((db_path.parent / file_path).resolve())
 
 
 def main(args):
-    build_options = OkayBuildOptions.from_args(args)
+    project_root = Path(args.project_dir).resolve()
+    output_path = Path(args.output).resolve()
 
-    workspace_root = Path(build_options.project_dir).resolve()
-    clangd_file = workspace_root / CLANGD_PATH
-    engine_root = OkayToolUtil.get_okay_parent_dir()
-
-    if clangd_file.exists() and not args.overwrite:
+    if output_path.exists() and not args.overwrite:
         while True:
-            choice = input(f"{clangd_file} exists. Overwrite? [y/n]: ").lower()
+            choice = input(f"{output_path} exists. Overwrite? [y/n]: ").strip().lower()
             if choice == "y":
                 break
             if choice == "n":
                 return
-        
 
-    include_subpaths = [
-        ".",  # <okay/...>
-        "okay/vendor/",
-        "okay/vendor/glad/include",  # <glad/...>
-        "okay/vendor/glm",  # <glm/...>
-        "okay/vendor/glfw/include",  # <GLFW/...>
-        "okay/vendor/imgui",
-        "okay/vendor/imgui/backends",
-        "okay/vendor/freetype/include",  # <ft2build.h> and <freetype/...>
-    ]
+    db_paths = sorted(find_compile_commands(project_root))
 
-    lines = []
-    lines.append("CompileFlags:")
-    lines.append("  Add:")
-    lines.append("    - -std=gnu++20")
+    if not db_paths:
+        print("No compile_commands.json files found under .okay/build/")
+        return
 
-    for sp in include_subpaths:
-        inc = _abs_posix(engine_root / sp)
-        lines.append(f"    - -I{inc}")
+    merged_by_file: dict[str, dict] = {}
+    total_entries = 0
 
-    clangd_file.write_text(
-        "\n".join(lines) + "\n",
+    for db_path in db_paths:
+        if not args.quiet:
+            print(f"Loading {db_path.relative_to(project_root)}")
+
+        try:
+            entries = load_entries(db_path)
+        except Exception as e:
+            print(f"Skipping {db_path}: {e}")
+            continue
+
+        total_entries += len(entries)
+
+        for entry in entries:
+            key = normalize_file_key(entry, db_path)
+            merged_by_file[key] = entry
+
+    merged_entries = list(merged_by_file.values())
+
+    output_path.write_text(
+        json.dumps(merged_entries, indent=2) + "\n",
         encoding="utf-8",
         newline="\n",
     )
 
-    print(f"Wrote {clangd_file}")
-    print("Restart clangd to apply changes")
+    print(f"Wrote {output_path}")
+    print(f"Found {len(db_paths)} compilation database(s)")
+    print(f"Loaded {total_entries} total entr{'y' if total_entries == 1 else 'ies'}")
+    print(
+        f"Wrote {len(merged_entries)} unique file entr{'y' if len(merged_entries) == 1 else 'ies'}"
+    )

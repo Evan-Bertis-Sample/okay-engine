@@ -13,13 +13,8 @@ if ! command -v clang-format &> /dev/null; then
     exit 1
 fi
 
-echo "Formatting all .cpp and .hpp files under: $TARGET_DIR"
-echo
 
 # Find and format files in-place, but skip the okay/vendor directory and any .okay/ directories
 find "$TARGET_DIR" -type f \( -name "*.cpp" -o -name "*.hpp" \) -not -path "*/okay/vendor/*" -not -path "*/.okay/*" | while read -r file; do
     clang-format -i "$file"
 done
-
-echo
-echo "Done!"

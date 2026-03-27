@@ -28,6 +28,9 @@ project(${PROJECT} C CXX)
 
 add_executable(${PROJECT})
 
+# generate compile commands
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 # do some initial checking
 if(NOT DEFINED PROJECT)
   message(FATAL_ERROR "PROJECT not defined.")
@@ -164,5 +167,4 @@ message(STATUS "okay Include Directories: ${INCLUDE_DIRS}")
 
 target_link_libraries(${PROJECT} PRIVATE okay)
 
-# generate compile commands
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
