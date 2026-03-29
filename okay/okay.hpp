@@ -17,6 +17,7 @@
 
 // okay/core/ecs
 #include <okay/core/ecs/ecs.hpp>
+#include <okay/core/ecs/query.hpp>
 
 // okay/core/ecs/components
 #include <okay/core/ecs/components/render_component.hpp>
