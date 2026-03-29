@@ -38,6 +38,17 @@ bool EntityComponentStore::isValidEntity(const ECSEntity& entity) const {
 
 void EntityComponentStore::destroyEntity(ECSEntity& entity) {
     EntityMeta& meta = getEntityMeta(entity);
+
+    // delete from the bottom of the hierarchy up to avoid invalidating parent/child relationships
+    // before they're processed
+    ObjectPoolHandle childHandle = meta.firstChild;
+    while (childHandle != ObjectPoolHandle::invalidHandle()) {
+        EntityMeta& childMeta = _entityMetas.get(childHandle);
+        ECSEntity child{this, childHandle};
+        destroyEntity(child);
+        childHandle = childMeta.nextSibling;
+    }
+
     for (auto& pool : _componentPools) {
         pool->remove(entity._handle.index);
     }

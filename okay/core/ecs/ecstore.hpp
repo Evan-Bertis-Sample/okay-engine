@@ -23,7 +23,6 @@
 namespace okay {
 
 class ECS;
-class EntityComponentStore;
 struct ECSEntity;
 
 class IComponentPool {
@@ -113,7 +112,7 @@ class EntityComponentStore {
     template <typename T>
     Option<std::size_t> getComponentID() const;
 
-   private:
+   protected:
     static constexpr int POOL_GROWTH_FACTOR = 2;
 
     struct ComponentInfo {
@@ -161,8 +160,6 @@ class EntityComponentStore {
 
     ConstIterator begin() const { return _entityMetas.begin(); }
     ConstIterator end() const { return _entityMetas.end(); }
-
-    friend class ECS;
 };
 
 struct ECSEntity {

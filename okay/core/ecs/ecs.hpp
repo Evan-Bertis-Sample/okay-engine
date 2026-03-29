@@ -30,35 +30,8 @@ class IECSSystem {
     virtual void entityRemoved(ECS& ecs, ECSEntity& entity) = 0;
 };
 
-class ECS : public System<SystemScope::LEVEL> {
+class ECS : public EntityComponentStore, public System<SystemScope::LEVEL> {
    public:
-    ECSEntity createEntity() { return _store.createEntity(); }
-    ECSEntity createEntity(const ECSEntity& parent) { return _store.createEntity(parent); }
-    bool isValidEntity(const ECSEntity& entity) const { return _store.isValidEntity(entity); }
-    void destroyEntity(ECSEntity& entity) { _store.destroyEntity(entity); }
-
-    void addChild(const ECSEntity& parent, const ECSEntity& child) {
-        _store.addChild(parent, child);
-    }
-
-    bool isChildOf(const ECSEntity& parent, const ECSEntity& child) const {
-        return _store.isChildOf(parent, child);
-    }
-
-    void removeChild(const ECSEntity& parent, const ECSEntity& child) {
-        _store.removeChild(parent, child);
-    }
-
-    std::size_t getEntityCount() const { return _store.getEntityCount(); }
-
-    template <typename T>
-    void registerComponentType() {
-        _store.registerComponentType<T>();
-    }
-
-    EntityComponentStore& getStore() { return _store; }
-    const EntityComponentStore& getStore() const { return _store; }
-
     template <typename Query>
     class EntityIterator {
        public:
@@ -71,14 +44,14 @@ class ECS : public System<SystemScope::LEVEL> {
         EntityIterator() = default;
 
         EntityIterator(ECS* ecs, std::uint32_t index) : _ecs(ecs), _index(index) {
-            Query::initialize(_ecs->_store);
+            Query::initialize(*_ecs);
             skipInvalid();
         }
 
         value_type operator*() const {
-            ObjectPoolHandle handle{_index, _ecs->_store._entityMetas.generationAt(_index)};
-            ECSEntity entity{&_ecs->_store, handle};
-            return Query::createItem(std::move(entity), _ecs->_store);
+            ObjectPoolHandle handle{_index, _ecs->_entityMetas.generationAt(_index)};
+            ECSEntity entity{_ecs, handle};
+            return Query::createItem(std::move(entity), *_ecs);
         }
 
         EntityIterator& operator++() {
@@ -101,13 +74,13 @@ class ECS : public System<SystemScope::LEVEL> {
 
        private:
         void skipInvalid() {
-            while (_ecs != nullptr && _index < _ecs->_store._entityMetas.capacity()) {
-                if (!_ecs->_store._entityMetas.aliveAt(_index)) {
+            while (_ecs != nullptr && _index < _ecs->_entityMetas.capacity()) {
+                if (!_ecs->_entityMetas.aliveAt(_index)) {
                     ++_index;
                     continue;
                 }
 
-                const auto& meta = _ecs->_store._entityMetas.atIndex(_index);
+                const auto& meta = _ecs->_entityMetas.atIndex(_index);
                 if (!Query::matches(meta.componentMask)) {
                     ++_index;
                     continue;
@@ -124,13 +97,13 @@ class ECS : public System<SystemScope::LEVEL> {
     template <typename Query>
     class QueryRange {
        public:
-        explicit QueryRange(ECS* ecs) : _ecs(ecs) { Query::initialize(_ecs->_store); }
+        explicit QueryRange(ECS* ecs) : _ecs(ecs) { Query::initialize(*_ecs); }
 
         EntityIterator<Query> begin() { return EntityIterator<Query>(_ecs, 0); }
 
         EntityIterator<Query> end() {
-            return EntityIterator<Query>(
-                _ecs, static_cast<std::uint32_t>(_ecs->_store._entityMetas.capacity()));
+            return EntityIterator<Query>(_ecs,
+                                         static_cast<std::uint32_t>(_ecs->_entityMetas.capacity()));
         }
 
        private:
@@ -142,8 +115,58 @@ class ECS : public System<SystemScope::LEVEL> {
         return QueryRange<ECSQuery<QueryArgs...>>(this);
     }
 
+    // overrides for addComponent and removeComponent to trigger entityAdded and entityRemoved
+    // events
+    template <typename T, typename... Args>
+    void addComponent(ECSEntity& entity, Args&&... args) {
+        ECSComponentMask oldMask = getEntityMeta(entity).componentMask;
+        EntityComponentStore::addComponent<T>(entity, std::forward<Args>(args)...);
+        ECSComponentMask newMask = getEntityMeta(entity).componentMask;
+        for (auto& system : _systems) {
+            if (system->matches(*this, newMask) && !system->matches(*this, oldMask)) {
+                system->entityAdded(*this, entity);
+            }
+        }
+    }
+
+    template <typename T>
+    void removeComponent(ECSEntity& entity) {
+        ECSComponentMask oldMask = getEntityMeta(entity).componentMask;
+        EntityComponentStore::removeComponent<T>(entity);
+        ECSComponentMask newMask = getEntityMeta(entity).componentMask;
+        for (auto& system : _systems) {
+            if (system->matches(*this, newMask) && !system->matches(*this, oldMask)) {
+                system->entityAdded(*this, entity);
+            } else if (!system->matches(*this, newMask) && system->matches(*this, oldMask)) {
+                system->entityRemoved(*this, entity);
+            }
+        }
+    }
+
+    void tick() {
+        for (auto& system : _systems) {
+            system->preTick(*this);
+        }
+        for (auto& system : _systems) {
+            system->tick(*this);
+        }
+        for (auto& system : _systems) {
+            system->postTick(*this);
+        }
+    }
+
+    template <typename T>
+    void addSystem(std::unique_ptr<T> system) {
+        static_assert(std::derived_from<T, IECSSystem>, "T must derive from IECSSystem");
+        _systems.push_back(std::move(system));
+    }
+
+    template <typename... Ts>
+    void addSystems(std::unique_ptr<Ts>... systems) {
+        (addSystem(std::move(systems)), ...);
+    }
+
    private:
-    EntityComponentStore _store;
     std::vector<std::unique_ptr<IECSSystem>> _systems;
 };
 
@@ -153,7 +176,7 @@ class ECSSystem : public IECSSystem {
     using QueryT = ECSQuery<QueryArgs...>;
 
     bool matches(ECS& ecs, ECSComponentMask componentMask) const override {
-        QueryT::initialize(ecs.getStore());
+        QueryT::initialize(ecs);
         return QueryT::matches(componentMask);
     }
 
@@ -167,12 +190,12 @@ class ECSSystem : public IECSSystem {
     virtual void onPostTick(QueryT::Item& item) {};
 
     void entityAdded(ECS& ecs, ECSEntity& entity) override {
-        auto item = QueryT::createItem(entity, ecs.getStore());
+        auto item = QueryT::createItem(entity, ecs);
         onEntityAdded(item);
     }
 
     void entityRemoved(ECS& ecs, ECSEntity& entity) override {
-        auto item = QueryT::createItem(entity, ecs.getStore());
+        auto item = QueryT::createItem(entity, ecs);
         onEntityRemoved(item);
     }
 
