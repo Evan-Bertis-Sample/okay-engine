@@ -15,13 +15,13 @@
 
 namespace okay {
 
-using ECSBitmask = std::bitset<EntityComponentStore::MAX_COMPONENTS>;
+using ECSComponentMask = std::bitset<EntityComponentStore::MAX_COMPONENTS>;
 
 enum class ECSQueryBitmaskType { Get, Exclude, Optional };
 
 template <typename T>
 concept TemplatedECSQueryish = requires(const EntityComponentStore& ecs) {
-    { T::bitmask(ecs) } -> std::same_as<ECSBitmask>;
+    { T::bitmask(ecs) } -> std::same_as<ECSComponentMask>;
     typename T::ComponentTypes;
     typename T::Specifier;
 };
@@ -31,8 +31,8 @@ struct TemplatedECSQuery {
     using ComponentTypes = std::tuple<Components...>;
     using Specifier = std::integral_constant<ECSQueryBitmaskType, Type>;
 
-    static ECSBitmask bitmask(const EntityComponentStore& store) {
-        ECSBitmask bitmask{};
+    static ECSComponentMask bitmask(const EntityComponentStore& store) {
+        ECSComponentMask bitmask{};
         ((bitmask.set(store.template getComponentID<Components>().value())), ...);
         return bitmask;
     }
@@ -87,7 +87,7 @@ struct ECSQuery {
         _optionalBitmask = Optional::bitmask(store);
     }
 
-    static bool matches(const ECSBitmask& bitmask) {
+    static bool matches(const ECSComponentMask& bitmask) {
         return (bitmask & _getBitmask) == _getBitmask && (bitmask & _excludeBitmask).none();
     }
 
@@ -111,9 +111,9 @@ struct ECSQuery {
                         (store.template getComponent<OptionalComponents>(entity))...)};
     }
 
-    inline static ECSBitmask _getBitmask{};
-    inline static ECSBitmask _excludeBitmask{};
-    inline static ECSBitmask _optionalBitmask{};
+    inline static ECSComponentMask _getBitmask{};
+    inline static ECSComponentMask _excludeBitmask{};
+    inline static ECSComponentMask _optionalBitmask{};
 };
 
 }  // namespace okay

@@ -13,21 +13,42 @@
 
 namespace okay {
 
+class ECS;
+
+class IECSSystem {
+   public:
+    virtual ~IECSSystem() = default;
+    virtual bool matches(ECS& ecs, ECSComponentMask componentMask) const = 0;
+    virtual void systemInitialize(ECS& ecs) = 0;
+    virtual void systemShutdown(ECS& ecs) = 0;
+
+    virtual void preTick(ECS& ecs) = 0;
+    virtual void tick(ECS& ecs) = 0;
+    virtual void postTick(ECS& ecs) = 0;
+
+    virtual void entityAdded(ECS& ecs, ECSEntity& entity) = 0;
+    virtual void entityRemoved(ECS& ecs, ECSEntity& entity) = 0;
+};
+
 class ECS : public System<SystemScope::LEVEL> {
    public:
     ECSEntity createEntity() { return _store.createEntity(); }
     ECSEntity createEntity(const ECSEntity& parent) { return _store.createEntity(parent); }
     bool isValidEntity(const ECSEntity& entity) const { return _store.isValidEntity(entity); }
     void destroyEntity(ECSEntity& entity) { _store.destroyEntity(entity); }
+
     void addChild(const ECSEntity& parent, const ECSEntity& child) {
         _store.addChild(parent, child);
     }
+
     bool isChildOf(const ECSEntity& parent, const ECSEntity& child) const {
         return _store.isChildOf(parent, child);
     }
+
     void removeChild(const ECSEntity& parent, const ECSEntity& child) {
         _store.removeChild(parent, child);
     }
+
     std::size_t getEntityCount() const { return _store.getEntityCount(); }
 
     template <typename T>
@@ -123,6 +144,55 @@ class ECS : public System<SystemScope::LEVEL> {
 
    private:
     EntityComponentStore _store;
+    std::vector<std::unique_ptr<IECSSystem>> _systems;
+};
+
+template <typename... QueryArgs>
+class ECSSystem : public IECSSystem {
+   public:
+    using QueryT = ECSQuery<QueryArgs...>;
+
+    bool matches(ECS& ecs, ECSComponentMask componentMask) const override {
+        QueryT::initialize(ecs.getStore());
+        return QueryT::matches(componentMask);
+    }
+
+    void systemInitialize(ECS& ecs) override {}
+    void systemShutdown(ECS& ecs) override {}
+
+    virtual void onEntityAdded(QueryT::Item& item) {};
+    virtual void onEntityRemoved(QueryT::Item& item) {};
+    virtual void onPreTick(QueryT::Item& item) {};
+    virtual void onTick(QueryT::Item& item) {};
+    virtual void onPostTick(QueryT::Item& item) {};
+
+    void entityAdded(ECS& ecs, ECSEntity& entity) override {
+        auto item = QueryT::createItem(entity, ecs.getStore());
+        onEntityAdded(item);
+    }
+
+    void entityRemoved(ECS& ecs, ECSEntity& entity) override {
+        auto item = QueryT::createItem(entity, ecs.getStore());
+        onEntityRemoved(item);
+    }
+
+    void preTick(ECS& ecs) override {
+        for (auto& item : ecs.query<QueryArgs...>()) {
+            onPreTick(item);
+        }
+    }
+
+    void tick(ECS& ecs) override {
+        for (auto& item : ecs.query<QueryArgs...>()) {
+            onTick(item);
+        }
+    }
+
+    void postTick(ECS& ecs) override {
+        for (auto& item : ecs.query<QueryArgs...>()) {
+            onPostTick(item);
+        }
+    }
 };
 
 }  // namespace okay
