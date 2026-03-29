@@ -5,6 +5,7 @@
 #include <okay/core/engine/logger.hpp>
 #include <okay/core/engine/system.hpp>
 #include <okay/core/renderer/renderer.hpp>
+#include <okay/core/util/object_pool.hpp>
 #include <okay/core/util/option.hpp>
 #include <okay/core/util/type.hpp>
 
@@ -114,7 +115,6 @@ class ECS : public System<SystemScope::LEVEL> {
 
    private:
     static constexpr std::size_t MAX_COMPONENTS = 32;
-    static constexpr std::size_t MAX_ENTITIES = 2048;
     static constexpr int POOL_GROWTH_FACTOR = 2;
 
     struct ComponentInfo {
@@ -149,7 +149,7 @@ class ECS : public System<SystemScope::LEVEL> {
     EntityMeta& getEntityMeta(const ECSEntity& entity);
     const EntityMeta& getEntityMeta(const ECSEntity& entity) const;
 
-    std::vector<EntityMeta> _entityMetas;
+    ObjectPool<EntityMeta> _entityMetas;
     std::unordered_map<ComponentInfo, std::size_t, ComponentInfoHash> _infoToPoolIndex;
     std::vector<std::unique_ptr<IComponentPool>> _componentPools;
     std::size_t _reservedEntityCount{0};
@@ -161,11 +161,13 @@ struct ECSEntity {
 
     ECSEntity() = default;
 
-    bool operator==(const ECSEntity& other) const { return _ecs == other._ecs && _id == other._id; }
+    bool operator==(const ECSEntity& other) const {
+        return _ecs == other._ecs && _handle == other._handle;
+    }
 
     bool operator!=(const ECSEntity& other) const { return !(*this == other); }
-    bool operator<(const ECSEntity& other) const { return _id < other._id; }
-    bool operator>(const ECSEntity& other) const { return _id > other._id; }
+    bool operator<(const ECSEntity& other) const { return _handle < other._handle; }
+    bool operator>(const ECSEntity& other) const { return _handle > other._handle; }
 
     template <typename T>
     Option<std::reference_wrapper<const T>> getComponent() const {
@@ -196,62 +198,14 @@ struct ECSEntity {
     }
 
    private:
-    ECSEntity(ECS* ecs, std::size_t id) : _id(id), _ecs(ecs) {}
+    ECSEntity(ECS* ecs, ObjectPoolHandle handle) : _handle(handle), _ecs(ecs) {}
 
-    std::size_t _id{0};
+    ObjectPoolHandle _handle;
     ECS* _ecs{nullptr};
 
     friend class ECS;
     template <typename... Components>
     friend struct ECSSystemView;
-};
-
-template <typename... Components>
-struct ECSSystemView {
-    struct EntityView {
-        ECSEntity& entity;
-        std::tuple<Components&...> components;
-    };
-
-    ECSSystemView(ECS* ecs) : _ecs(ecs), _entity(ecs, 0) {
-        while (_ecs && _entity._id < _ecs->getEntityCount() && !hasAllComponents(_entity)) {
-            ++_entity._id;
-        }
-    }
-
-    ECSSystemView(const ECSSystemView& other) : _ecs(other._ecs), _entity(other._entity) {}
-    ECSSystemView(ECS* ecs, std::size_t id) : _ecs(ecs), _entity(ecs, id) {}
-
-    ECSSystemView& operator++() {
-        do {
-            ++_entity._id;
-        } while (_entity._id < _ecs->getEntityCount() && !hasAllComponents(_entity));
-
-        return *this;
-    }
-
-    EntityView operator*() const {
-        return EntityView{
-            .entity = const_cast<ECSEntity&>(_entity),
-            .components = std::forward_as_tuple(
-                _ecs->getComponent<Components>(const_cast<ECSEntity&>(_entity)).value().get()...)};
-    }
-
-    bool operator==(const ECSSystemView& other) const { return _entity == other._entity; }
-    bool operator!=(const ECSSystemView& other) const { return !(*this == other); }
-
-    ECSSystemView begin() const { return ECSSystemView(_ecs); }
-    ECSSystemView end() const { return ECSSystemView(_ecs, _ecs->getEntityCount()); }
-
-   private:
-    ECSEntity _entity;
-    ECS* _ecs{nullptr};
-
-    bool hasAllComponents(const ECSEntity& entity) const {
-        bool hasAll = true;
-        ((hasAll &= entity.hasComponent<Components>()), ...);
-        return hasAll;
-    }
 };
 
 template <typename T>
@@ -322,7 +276,7 @@ void ECS::addComponent(ECSEntity& entity, Args&&... args) {
     meta.componentMask.set(componentID.value(), true);
 
     auto& pool = getPool<T>();
-    pool.emplaceAt(entity._id, std::forward<Args>(args)...);
+    pool.emplaceAt(entity._handle.index, std::forward<Args>(args)...);
 }
 
 template <typename T>
@@ -336,7 +290,7 @@ void ECS::removeComponent(ECSEntity& entity) {
     EntityMeta& meta = getEntityMeta(entity);
     meta.componentMask.set(componentID.value(), false);
 
-    getPool<T>().remove(entity._id);
+    getPool<T>().remove(entity._handle.index);
 }
 
 template <typename T>
@@ -353,11 +307,11 @@ Option<std::reference_wrapper<T>> ECS::getComponent(ECSEntity& entity) {
     }
 
     auto& pool = getPool<T>();
-    if (!pool.has(entity._id)) {
+    if (!pool.has(entity._handle.index)) {
         return Option<std::reference_wrapper<T>>::none();
     }
 
-    return Option<std::reference_wrapper<T>>::some(std::ref(pool.get(entity._id)));
+    return Option<std::reference_wrapper<T>>::some(std::ref(pool.get(entity._handle.index)));
 }
 
 template <typename T>
@@ -374,11 +328,11 @@ Option<std::reference_wrapper<const T>> ECS::getComponent(const ECSEntity& entit
     }
 
     const auto& pool = getPool<T>();
-    if (!pool.has(entity._id)) {
+    if (!pool.has(entity._handle.index)) {
         return Option<std::reference_wrapper<const T>>::none();
     }
 
-    return Option<std::reference_wrapper<const T>>::some(std::cref(pool.get(entity._id)));
+    return Option<std::reference_wrapper<const T>>::some(std::cref(pool.get(entity._handle.index)));
 }
 
 template <typename T, typename... Args>
@@ -404,7 +358,7 @@ bool ECS::hasComponent(const ECSEntity& entity) {
         return false;
     }
 
-    return getPool<T>().has(entity._id);
+    return getPool<T>().has(entity._handle.index);
 }
 
 template <typename... Components>

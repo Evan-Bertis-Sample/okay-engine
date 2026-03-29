@@ -3,14 +3,7 @@
 namespace okay {
 
 ECSEntity ECS::createEntity() {
-    const std::size_t id = _entityMetas.size();
-    if (id >= MAX_ENTITIES) {
-        Engine.logger.error("Exceeded maximum number of entities ({})", MAX_ENTITIES);
-        return ECSEntity{};
-    }
-
-    _entityMetas.push_back(EntityMeta{});
-    _reservedEntityCount = _entityMetas.size();
+    ObjectPoolHandle handle = _entityMetas.emplace();
 
     const std::size_t desiredCapacity =
         _reservedEntityCount * static_cast<std::size_t>(POOL_GROWTH_FACTOR);
@@ -19,19 +12,19 @@ ECSEntity ECS::createEntity() {
         pool->reserve(desiredCapacity);
     }
 
-    return ECSEntity(this, id);
+    return ECSEntity(this, handle);
 }
 
 ECS::EntityMeta& ECS::getEntityMeta(const ECSEntity& entity) {
-    return _entityMetas[entity._id];
+    return _entityMetas.get(entity._handle);
 }
 
 const ECS::EntityMeta& ECS::getEntityMeta(const ECSEntity& entity) const {
-    return _entityMetas[entity._id];
+    return _entityMetas.get(entity._handle);
 }
 
 bool ECS::isValidEntity(const ECSEntity& entity) const {
-    return entity._id < _entityMetas.size() && entity._ecs == this;
+    return _entityMetas.valid(entity._handle) && entity._ecs == this;
 };
 
 };  // namespace okay
