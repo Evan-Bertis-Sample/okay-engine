@@ -16,8 +16,18 @@ namespace okay {
 class ECS : public System<SystemScope::LEVEL> {
    public:
     ECSEntity createEntity() { return _store.createEntity(); }
+    ECSEntity createEntity(const ECSEntity& parent) { return _store.createEntity(parent); }
     bool isValidEntity(const ECSEntity& entity) const { return _store.isValidEntity(entity); }
     void destroyEntity(ECSEntity& entity) { _store.destroyEntity(entity); }
+    void addChild(const ECSEntity& parent, const ECSEntity& child) {
+        _store.addChild(parent, child);
+    }
+    bool isChildOf(const ECSEntity& parent, const ECSEntity& child) const {
+        return _store.isChildOf(parent, child);
+    }
+    void removeChild(const ECSEntity& parent, const ECSEntity& child) {
+        _store.removeChild(parent, child);
+    }
     std::size_t getEntityCount() const { return _store.getEntityCount(); }
 
     template <typename T>
