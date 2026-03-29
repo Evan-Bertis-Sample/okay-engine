@@ -107,6 +107,7 @@ class ECS : public System<SystemScope::LEVEL> {
 
     ECSEntity createEntity();
     bool isValidEntity(const ECSEntity& entity) const;
+    void destroyEntity(ECSEntity& entity);
 
     std::size_t getEntityCount() const { return _entityMetas.size(); }
 
@@ -157,10 +158,7 @@ class ECS : public System<SystemScope::LEVEL> {
 
 struct ECSEntity {
    public:
-    Transform transform;
-
     ECSEntity() = default;
-
     bool operator==(const ECSEntity& other) const {
         return _ecs == other._ecs && _handle == other._handle;
     }

@@ -1,5 +1,7 @@
 #include "ecs.hpp"
 
+#include <okay/core/util/object_pool.hpp>
+
 namespace okay {
 
 ECSEntity ECS::createEntity() {
@@ -26,5 +28,15 @@ const ECS::EntityMeta& ECS::getEntityMeta(const ECSEntity& entity) const {
 bool ECS::isValidEntity(const ECSEntity& entity) const {
     return _entityMetas.valid(entity._handle) && entity._ecs == this;
 };
+
+void ECS::destroyEntity(ECSEntity& entity) {
+    EntityMeta& meta = getEntityMeta(entity);
+    for (auto& pool : _componentPools) {
+        pool->remove(entity._handle.index);
+    }
+    _entityMetas.destroy(entity._handle);
+    entity._ecs = nullptr;
+    entity._handle = ObjectPoolHandle::invalidHandle();
+}
 
 };  // namespace okay
