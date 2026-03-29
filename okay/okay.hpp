@@ -16,12 +16,21 @@
 #include <okay/core/asset/mesh/obj_loader.hpp>
 
 // okay/core/ecs
+#include <okay/core/ecs/builtins.hpp>
 #include <okay/core/ecs/ecs.hpp>
 #include <okay/core/ecs/ecstore.hpp>
 #include <okay/core/ecs/query.hpp>
 
 // okay/core/ecs/components
+#include <okay/core/ecs/components/camera_component.hpp>
+#include <okay/core/ecs/components/light_component.hpp>
 #include <okay/core/ecs/components/render_component.hpp>
+#include <okay/core/ecs/components/transform_component.hpp>
+
+// okay/core/ecs/systems
+#include <okay/core/ecs/systems/camera_system.hpp>
+#include <okay/core/ecs/systems/light_system.hpp>
+#include <okay/core/ecs/systems/renderer_system.hpp>
 
 // okay/core/engine
 #include <okay/core/engine/engine.hpp>

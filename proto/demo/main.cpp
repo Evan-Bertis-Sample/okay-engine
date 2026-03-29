@@ -1,4 +1,6 @@
+#include "okay/core/ecs/builtins.hpp"
 #include "okay/core/ecs/components/render_component.hpp"
+#include "okay/core/ecs/components/transform_component.hpp"
 #include "okay/core/ecs/query.hpp"
 #include "okay/core/renderer/render_world.hpp"
 
@@ -75,18 +77,11 @@ static void __gameInitialize() {
         renderer->materialRegistry().registerMaterial(shader, std::move(materialProperties));
 
     okay::ECS* ecs = okay::Engine.systems.getSystemChecked<okay::ECS>();
-    ecs->registerComponentType<okay::RenderComponent>();
-    ecs->registerComponentType<okay::Transform>();
+    okay::registerBuiltinComponentsAndSystems(*ecs);
+
     ecs->createEntity()
-        .addComponent<okay::Transform>(glm::vec3{0.0f, 0.0f, -5.0f}, glm::vec3{0.1f})
+        .addComponent<okay::TransformComponent>(glm::vec3{0.0f, 0.0f, -5.0f}, glm::vec3{0.1f})
         .addComponent<okay::RenderComponent>(teapot, material);
-
-    for (auto item : ecs->query<okay::query::Get<okay::Transform, okay::RenderComponent>>()) {
-        auto& [transform, renderComponent] = item.components;
-
-        renderer->world().addRenderEntity(
-            transform, renderComponent.material, renderComponent.mesh);
-    }
 }
 
 static void __gameUpdate() {

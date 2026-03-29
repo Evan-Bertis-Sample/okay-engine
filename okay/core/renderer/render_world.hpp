@@ -62,6 +62,12 @@ class Camera {
         float fov{45.0f};
         float near{0.1f};
         float far{1000.0f};
+
+        bool operator==(const Perspective& other) const {
+            return fov == other.fov && near == other.near && far == other.far;
+        }
+
+        bool operator!=(const Perspective& other) const { return !(*this == other); }
     };
 
     struct OrthographicConfig {
@@ -71,6 +77,13 @@ class Camera {
         float top{1.0f};
         float near{0.1f};
         float far{1000.0f};
+
+        bool operator==(const OrthographicConfig& other) const {
+            return left == other.left && right == other.right && bottom == other.bottom &&
+                   top == other.top && near == other.near && far == other.far;
+        }
+
+        bool operator!=(const OrthographicConfig& other) const { return !(*this == other); }
     };
 
     Transform transform{};
@@ -135,6 +148,14 @@ class Camera {
     glm::vec3 position() const { return transform.position; }
     glm::vec3 direction() const { return transform.rotation * glm::vec3(0, 0, -1); }
 
+    operator Transform() const { return transform; }
+    bool operator==(const Camera& other) const {
+        return transform == other.transform && _projectionType == other._projectionType &&
+               _config == other._config;
+    }
+
+    bool operator!=(const Camera& other) const { return !(*this == other); }
+
    private:
     ProjectionType _projectionType{ProjectionType::PERPSECTIVE};
     std::variant<Perspective, OrthographicConfig> _config{Perspective{}};
@@ -189,6 +210,13 @@ struct alignas(16) Light {
     void setPosition(glm::vec3 pos) { posType = glm::vec4(pos, posType.w); }
 
     static constexpr std::size_t MAX_LIGHTS = 16;
+
+    bool operator==(const Light& other) const {
+        return posType == other.posType && color == other.color && direction == other.direction &&
+               extra == other.extra;
+    }
+
+    bool operator!=(const Light& other) const { return !(*this == other); }
 };
 
 class RenderWorld;

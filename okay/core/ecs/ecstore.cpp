@@ -108,4 +108,17 @@ void EntityComponentStore::removeChild(const ECSEntity& parent, const ECSEntity&
     }
 }
 
+ECSEntity EntityComponentStore::getParent(const ECSEntity& entity) {
+    if (!isValidEntity(entity)) {
+        Engine.logger.error("Invalid entity");
+        return ECSEntity::invalid();
+    }
+    const EntityMeta& meta = getEntityMeta(entity);
+    if (meta.parent == ObjectPoolHandle::invalidHandle()) {
+        return ECSEntity::invalid();
+    }
+    const EntityMeta& parentMeta = _entityMetas.get(meta.parent);
+    return ECSEntity(this, meta.parent);
+};
+
 };  // namespace okay

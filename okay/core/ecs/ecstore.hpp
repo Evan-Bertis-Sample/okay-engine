@@ -106,6 +106,7 @@ class EntityComponentStore {
     void addChild(const ECSEntity& parent, const ECSEntity& child);
     bool isChildOf(const ECSEntity& parent, const ECSEntity& child) const;
     void removeChild(const ECSEntity& parent, const ECSEntity& child);
+    ECSEntity getParent(const ECSEntity& entity);
 
     std::size_t getEntityCount() const { return _entityMetas.size(); }
 
@@ -205,6 +206,14 @@ struct ECSEntity {
     bool hasComponent() const {
         return _ecs->hasComponent<T>(*this);
     }
+
+    ECSEntity createChild() const { return _ecs->createEntity(*this); }
+
+    ECSEntity getParent() const { return _ecs->getParent(*this); }
+    bool isChildOf(const ECSEntity& potentialParent) const {
+        return _ecs->isChildOf(potentialParent, *this);
+    }
+    bool isValid() const { return isValid(*this); }
 
    private:
     ECSEntity(EntityComponentStore* ecs, ObjectPoolHandle handle) : _handle(handle), _ecs(ecs) {}
