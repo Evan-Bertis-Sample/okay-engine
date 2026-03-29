@@ -16,6 +16,8 @@ namespace okay {
 class RendererSystem : public ECSSystem<query::Get<TransformComponent, MeshRendererComponent>> {
    public:
     void onEntityAdded(QueryT::Item& item) override {
+        Engine.logger.debug("RendererSystem: Entity {} added", item.entity.id());
+
         auto& [transform, render] = item.components;
         Renderer* renderer = Engine.systems.getSystemChecked<Renderer>();
         RenderEntity entity =
@@ -33,6 +35,8 @@ class RendererSystem : public ECSSystem<query::Get<TransformComponent, MeshRende
     };
 
     void onPreTick(QueryT::Item& item) override {
+        Engine.logger.debug("RendererSystem: Entity {} pre-tick", item.entity.id());
+
         auto& [transform, render] = item.components;
         Renderer* renderer = Engine.systems.getSystemChecked<Renderer>();
 

@@ -107,7 +107,7 @@ class EntityComponentStore {
     bool isChildOf(const ECSEntity& parent, const ECSEntity& child) const;
     void removeChild(const ECSEntity& parent, const ECSEntity& child);
     ECSEntity getParent(const ECSEntity& entity);
-
+    std::uint32_t getEntityID(const ECSEntity& entity) const;
     std::size_t getEntityCount() const { return _entityMetas.size(); }
 
     template <typename T>
@@ -133,6 +133,7 @@ class EntityComponentStore {
 
     struct EntityMeta {
         std::bitset<MAX_COMPONENTS> componentMask;
+        std::uint32_t id{0};
         ObjectPoolHandle parent{ObjectPoolHandle::invalidHandle()};
         ObjectPoolHandle firstChild{ObjectPoolHandle::invalidHandle()};
         ObjectPoolHandle previousSibling{ObjectPoolHandle::invalidHandle()};
@@ -161,6 +162,8 @@ class EntityComponentStore {
 
     ConstIterator begin() const { return _entityMetas.begin(); }
     ConstIterator end() const { return _entityMetas.end(); }
+
+    std::size_t _nextEntityID{1};
 };
 
 struct ECSEntity {
@@ -174,7 +177,6 @@ struct ECSEntity {
     bool operator==(const ECSEntity& other) const {
         return _ecs == other._ecs && _handle == other._handle;
     }
-
     bool operator!=(const ECSEntity& other) const { return !(*this == other); }
     bool operator<(const ECSEntity& other) const { return _handle < other._handle; }
     bool operator>(const ECSEntity& other) const { return _handle > other._handle; }
@@ -208,12 +210,13 @@ struct ECSEntity {
     }
 
     ECSEntity createChild() const { return _ecs->createEntity(*this); }
-
     ECSEntity getParent() const { return _ecs->getParent(*this); }
     bool isChildOf(const ECSEntity& potentialParent) const {
         return _ecs->isChildOf(potentialParent, *this);
     }
     bool isValid() const { return isValid(*this); }
+
+    std::uint32_t id() const { return _ecs->getEntityID(*this); }
 
    private:
     ECSEntity(EntityComponentStore* ecs, ObjectPoolHandle handle) : _handle(handle), _ecs(ecs) {}

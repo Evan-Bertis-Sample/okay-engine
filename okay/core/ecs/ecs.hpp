@@ -143,13 +143,31 @@ class ECS : public EntityComponentStore, public System<SystemScope::LEVEL> {
         }
     }
 
-    void tick() {
+    void initialize() override {
+        for (auto& system : _systems) {
+            system->systemInitialize(*this);
+        }
+    }
+
+    void shutdown() override {
+        for (auto& system : _systems) {
+            system->systemShutdown(*this);
+        }
+    }
+
+    void preTick() override {
         for (auto& system : _systems) {
             system->preTick(*this);
         }
+    }
+
+    void tick() override {
         for (auto& system : _systems) {
             system->tick(*this);
         }
+    }
+
+    void postTick() override {
         for (auto& system : _systems) {
             system->postTick(*this);
         }

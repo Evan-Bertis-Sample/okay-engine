@@ -5,7 +5,10 @@
 namespace okay {
 
 ECSEntity EntityComponentStore::createEntity() {
-    ObjectPoolHandle handle = _entityMetas.emplace();
+    EntityMeta meta{};
+    meta.id = _nextEntityID++;
+
+    ObjectPoolHandle handle = _entityMetas.emplace(meta);
 
     const std::size_t desiredCapacity =
         _reservedEntityCount * static_cast<std::size_t>(POOL_GROWTH_FACTOR);
@@ -35,6 +38,14 @@ const EntityComponentStore::EntityMeta& EntityComponentStore::getEntityMeta(
 bool EntityComponentStore::isValidEntity(const ECSEntity& entity) const {
     return _entityMetas.valid(entity._handle) && entity._ecs == this;
 };
+
+std::uint32_t EntityComponentStore::getEntityID(const ECSEntity& entity) const {
+    if (!isValidEntity(entity)) {
+        Engine.logger.error("Invalid entity");
+        return 0;
+    }
+    return getEntityMeta(entity).id;
+}
 
 void EntityComponentStore::destroyEntity(ECSEntity& entity) {
     EntityMeta& meta = getEntityMeta(entity);
