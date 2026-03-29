@@ -2,6 +2,7 @@
 #define __QUERY_H__
 
 #include <okay/core/ecs/ecstore.hpp>
+#include <okay/core/util/option.hpp>
 
 #include <bitset>
 #include <cstdint>
@@ -68,8 +69,8 @@ template <typename... GetComponents, typename... OptionalComponents>
 struct ECSQueryItemFromTuples<std::tuple<GetComponents...>, std::tuple<OptionalComponents...>> {
     struct Type {
         ECSEntity entity;
-        std::tuple<std::reference_wrapper<GetComponents>...> getComponents;
-        std::tuple<std::optional<std::reference_wrapper<OptionalComponents>>...> optionalComponents;
+        std::tuple<GetComponents&...> components;
+        std::tuple<Option<OptionalComponents&>...> optional;
     };
 };
 
@@ -104,19 +105,10 @@ struct ECSQuery {
                                std::tuple<GetComponents...>,
                                std::tuple<OptionalComponents...>) {
         return Item{.entity = std::move(entity),
-                    .getComponents = std::forward_as_tuple(
+                    .components = std::forward_as_tuple(
                         store.template getComponent<GetComponents>(entity).value().get()...),
-                    .optionalComponents = std::make_tuple(
-                        toStdOptional(store.template getComponent<OptionalComponents>(entity))...)};
-    }
-
-    template <typename T>
-    static std::optional<std::reference_wrapper<T>> toStdOptional(
-        Option<std::reference_wrapper<T>> value) {
-        if (!value) {
-            return std::nullopt;
-        }
-        return value.value();
+                    .optional = std::make_tuple(
+                        (store.template getComponent<OptionalComponents>(entity))...)};
     }
 
     inline static ECSBitmask _getBitmask{};

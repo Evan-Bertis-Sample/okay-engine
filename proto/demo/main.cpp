@@ -77,15 +77,14 @@ static void __gameInitialize() {
     okay::ECS* ecs = okay::Engine.systems.getSystemChecked<okay::ECS>();
     ecs->registerComponentType<okay::RenderComponent>();
     ecs->registerComponentType<okay::Transform>();
-    ecs->createEntity()
-        .addComponent<okay::Transform>()
-        .addComponent<okay::RenderComponent>(teapot, material);
+    ecs->createEntity().addComponent<okay::Transform>().addComponent<okay::RenderComponent>(
+        teapot, material);
 
     for (auto item : ecs->query<okay::query::Get<okay::Transform, okay::RenderComponent>>()) {
-        auto& [transform, renderComponent] = item.getComponents;
+        auto& [transform, renderComponent] = item.components;
 
         renderer->world().addRenderEntity(
-            transform, renderComponent.get().material, renderComponent.get().mesh);
+            transform, renderComponent.material, renderComponent.mesh);
     }
 }
 
