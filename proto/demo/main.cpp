@@ -1,3 +1,6 @@
+#include "okay/core/ecs/components/render_component.hpp"
+#include "okay/core/ecs/query.hpp"
+#include "okay/core/renderer/render_world.hpp"
 #include <okay/okay.hpp>
 
 #include <glm/glm.hpp>
@@ -74,13 +77,13 @@ static void __gameInitialize() {
     ecs->registerComponentType<okay::RenderComponent>();
     ecs->createEntity().addComponent<okay::RenderComponent>(teapot, material);
 
-    //     for (auto view : ecs->query<okay::RenderComponent>()) {
-    //         okay::RenderComponent& renderComponent =
-    //         std::get<okay::RenderComponent&>(view.components);
-    //
-    //         renderer->world().addRenderEntity(
-    //             view.entity.transform, renderComponent.material, renderComponent.mesh);
-    // }
+        for (auto view : ecs->query<okay::query::Get<okay::RenderComponent>>()) {
+            okay::RenderComponent& renderComponent =
+            std::get<okay::RenderComponent&>(view.components);
+    
+            renderer->world().addRenderEntity(
+                view.entity.transform, renderComponent.material, renderComponent.mesh);
+    }
 }
 
 static void __gameUpdate() {

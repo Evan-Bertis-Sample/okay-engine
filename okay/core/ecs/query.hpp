@@ -1,23 +1,25 @@
 #ifndef __QUERY_H__
 #define __QUERY_H__
 
-#include <okay/core/ecs/ecs.hpp>
+#include <okay/core/ecs/ecstore.hpp>
 
+#include <bitset>
 #include <cstdint>
 #include <functional>
 #include <optional>
 #include <stdexcept>
 #include <tuple>
 #include <type_traits>
+#include <utility>
 
 namespace okay {
 
-using ECSBitmask = std::bitset<ECS::MAX_COMPONENTS>;
+using ECSBitmask = std::bitset<EntityComponentStore::MAX_COMPONENTS>;
 
 enum class ECSQueryBitmaskType { Get, Exclude, Optional };
 
 template <typename T>
-concept TemplatedECSQueryish = requires(const ECS& ecs) {
+concept TemplatedECSQueryish = requires(const EntityComponentStore& ecs) {
     { T::bitmask(ecs) } -> std::same_as<ECSBitmask>;
     typename T::ComponentTypes;
     typename T::Specifier;
@@ -28,9 +30,9 @@ struct TemplatedECSQuery {
     using ComponentTypes = std::tuple<Components...>;
     using Specifier = std::integral_constant<ECSQueryBitmaskType, Type>;
 
-    static ECSBitmask bitmask(const ECS& ecs) {
-        ECSBitmask bitmask = 0;
-        ((bitmask |= (ECSBitmask(1) << ecs.getComponentID<Components>().value())), ...);
+    static ECSBitmask bitmask(const EntityComponentStore& store) {
+        ECSBitmask bitmask{};
+        ((bitmask.set(store.template getComponentID<Components>().value())), ...);
         return bitmask;
     }
 };
@@ -65,7 +67,7 @@ struct ECSQueryItemFromTuples;
 template <typename... GetComponents, typename... OptionalComponents>
 struct ECSQueryItemFromTuples<std::tuple<GetComponents...>, std::tuple<OptionalComponents...>> {
     struct Type {
-        ECSEntity& entity;
+        ECSEntity entity;
         std::tuple<std::reference_wrapper<GetComponents>...> getComponents;
         std::tuple<std::optional<std::reference_wrapper<OptionalComponents>>...> optionalComponents;
     };
@@ -78,30 +80,48 @@ struct ECSQuery {
     using Item = typename ECSQueryItemFromTuples<typename Get::ComponentTypes,
                                                  typename Optional::ComponentTypes>::Type;
 
-    static void initialize(const ECS& ecs) {
-        if (_initialized) {
-            return;
-        }
-
-        _getBitmask = Get::bitmask(ecs);
-        _excludeBitmask = Exclude::bitmask(ecs);
-        _optionalBitmask = Optional::bitmask(ecs);
-        _initialized = true;
+    static void initialize(const EntityComponentStore& store) {
+        _getBitmask = Get::bitmask(store);
+        _excludeBitmask = Exclude::bitmask(store);
+        _optionalBitmask = Optional::bitmask(store);
     }
 
-    static constexpr ECSBitmask matches(const ECSBitmask& bitmask) {
-        if (!_initialized) {
-            throw std::runtime_error("ECSQuery not initialized");
-        }
+    static bool matches(const ECSBitmask& bitmask) {
+        return (bitmask & _getBitmask) == _getBitmask && (bitmask & _excludeBitmask).none();
+    }
 
-        return (_getBitmask & ~_excludeBitmask) == (bitmask & ~_optionalBitmask);
+    static Item createItem(ECSEntity entity, EntityComponentStore& store) {
+        return createItemImpl(std::move(entity),
+                              store,
+                              typename Get::ComponentTypes{},
+                              typename Optional::ComponentTypes{});
     }
 
    private:
-    static ECSBitmask _getBitmask;
-    static ECSBitmask _excludeBitmask;
-    static ECSBitmask _optionalBitmask;
-    static bool _initialized;
+    template <typename... GetComponents, typename... OptionalComponents>
+    static Item createItemImpl(ECSEntity entity,
+                               EntityComponentStore& store,
+                               std::tuple<GetComponents...>,
+                               std::tuple<OptionalComponents...>) {
+        return Item{.entity = std::move(entity),
+                    .getComponents = std::forward_as_tuple(
+                        store.template getComponent<GetComponents>(entity).value().get()...),
+                    .optionalComponents = std::make_tuple(
+                        toStdOptional(store.template getComponent<OptionalComponents>(entity))...)};
+    }
+
+    template <typename T>
+    static std::optional<std::reference_wrapper<T>> toStdOptional(
+        Option<std::reference_wrapper<T>> value) {
+        if (!value) {
+            return std::nullopt;
+        }
+        return value.value();
+    }
+
+    inline static ECSBitmask _getBitmask{};
+    inline static ECSBitmask _excludeBitmask{};
+    inline static ECSBitmask _optionalBitmask{};
 };
 
 }  // namespace okay

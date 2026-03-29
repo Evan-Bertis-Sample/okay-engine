@@ -1,10 +1,10 @@
-#include "ecs.hpp"
+#include "ecstore.hpp"
 
 #include <okay/core/util/object_pool.hpp>
 
 namespace okay {
 
-ECSEntity ECS::createEntity() {
+ECSEntity EntityComponentStore::createEntity() {
     ObjectPoolHandle handle = _entityMetas.emplace();
 
     const std::size_t desiredCapacity =
@@ -17,15 +17,16 @@ ECSEntity ECS::createEntity() {
     return ECSEntity(this, handle);
 }
 
-ECS::EntityMeta& ECS::getEntityMeta(const ECSEntity& entity) {
+EntityComponentStore::EntityMeta& EntityComponentStore::getEntityMeta(const ECSEntity& entity) {
     return _entityMetas.get(entity._handle);
 }
 
-const ECS::EntityMeta& ECS::getEntityMeta(const ECSEntity& entity) const {
+const EntityComponentStore::EntityMeta& EntityComponentStore::getEntityMeta(
+    const ECSEntity& entity) const {
     return _entityMetas.get(entity._handle);
 }
 
-bool ECS::isValidEntity(const ECSEntity& entity) const {
+bool EntityComponentStore::isValidEntity(const ECSEntity& entity) const {
     return _entityMetas.valid(entity._handle) && entity._ecs == this;
 };
 
