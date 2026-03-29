@@ -26,9 +26,13 @@ concept TemplatedECSQueryish = requires(const EntityComponentStore& ecs) {
     typename T::Specifier;
 };
 
+template <typename... Ts>
+struct TypePack {};
+
 template <ECSQueryBitmaskType Type, typename... Components>
 struct TemplatedECSQuery {
     using ComponentTypes = std::tuple<Components...>;
+    using ComponentPack = TypePack<Components...>;
     using Specifier = std::integral_constant<ECSQueryBitmaskType, Type>;
 
     static ECSComponentMask bitmask(const EntityComponentStore& store) {
@@ -94,21 +98,21 @@ struct ECSQuery {
     static Item createItem(ECSEntity entity, EntityComponentStore& store) {
         return createItemImpl(std::move(entity),
                               store,
-                              typename Get::ComponentTypes{},
-                              typename Optional::ComponentTypes{});
+                              typename Get::ComponentPack{},
+                              typename Optional::ComponentPack{});
     }
 
    private:
     template <typename... GetComponents, typename... OptionalComponents>
     static Item createItemImpl(ECSEntity entity,
                                EntityComponentStore& store,
-                               std::tuple<GetComponents...>,
-                               std::tuple<OptionalComponents...>) {
+                               TypePack<GetComponents...>,
+                               TypePack<OptionalComponents...>) {
         return Item{.entity = std::move(entity),
                     .components = std::forward_as_tuple(
                         store.template getComponent<GetComponents>(entity).value().get()...),
                     .optional = std::make_tuple(
-                        (store.template getComponent<OptionalComponents>(entity))...)};
+                        store.template getComponent<OptionalComponents>(entity)...)};
     }
 
     inline static ECSComponentMask _getBitmask{};

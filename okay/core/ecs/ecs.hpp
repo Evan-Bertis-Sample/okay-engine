@@ -200,19 +200,19 @@ class ECSSystem : public IECSSystem {
     }
 
     void preTick(ECS& ecs) override {
-        for (auto& item : ecs.query<QueryArgs...>()) {
+        for (auto item : ecs.query<QueryArgs...>()) {
             onPreTick(item);
         }
     }
 
     void tick(ECS& ecs) override {
-        for (auto& item : ecs.query<QueryArgs...>()) {
+        for (auto item : ecs.query<QueryArgs...>()) {
             onTick(item);
         }
     }
 
     void postTick(ECS& ecs) override {
-        for (auto& item : ecs.query<QueryArgs...>()) {
+        for (auto item : ecs.query<QueryArgs...>()) {
             onPostTick(item);
         }
     }

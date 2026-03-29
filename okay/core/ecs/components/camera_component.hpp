@@ -8,7 +8,8 @@ namespace okay {
 
 struct CameraComponent {
     Camera camera;
-    CameraComponent(const Camera& camera = Camera{}) : camera(camera) {}
+    CameraComponent() {}
+    CameraComponent(const Camera& camera) : camera(camera) {}
 
     bool operator==(const CameraComponent& other) const { return camera == other.camera; }
     bool operator!=(const CameraComponent& other) const { return !(*this == other); }

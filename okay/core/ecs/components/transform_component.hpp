@@ -9,7 +9,11 @@ namespace okay {
 struct TransformComponent {
     Transform transform;
 
-    TransformComponent(const Transform& transform = Transform{}) : transform(transform) {}
+    TransformComponent(const glm::vec3& position = glm::vec3(0.0f),
+                       const glm::vec3& scale = glm::vec3(1.0f),
+                       const glm::quat& rotation = glm::quat())
+        : transform(position, scale, rotation) {}
+    TransformComponent(const Transform& transform) : transform(transform) {}
 
     glm::mat4 toMatrix() const { return transform.toMatrix(); }
     glm::vec3 localForward() const { return transform.rotation * glm::vec3(0, 0, -1); }
