@@ -12,25 +12,25 @@
 
 namespace okay {
 
-using ECSQueryBitmask = std::uint32_t;
+using ECSBitmask = std::bitset<ECS::MAX_COMPONENTS>;
 
 enum class ECSQueryBitmaskType { Get, Exclude, Optional };
 
 template <typename T>
-concept ECSQueryType = requires(const ECS& ecs) {
-    { T::bitmask(ecs) } -> std::same_as<ECSQueryBitmask>;
+concept TemplatedECSQueryish = requires(const ECS& ecs) {
+    { T::bitmask(ecs) } -> std::same_as<ECSBitmask>;
     typename T::ComponentTypes;
     typename T::Specifier;
 };
 
 template <ECSQueryBitmaskType Type, typename... Components>
-struct SimpleECSQuery {
+struct TemplatedECSQuery {
     using ComponentTypes = std::tuple<Components...>;
     using Specifier = std::integral_constant<ECSQueryBitmaskType, Type>;
 
-    static ECSQueryBitmask bitmask(const ECS& ecs) {
-        ECSQueryBitmask bitmask = 0;
-        ((bitmask |= (ECSQueryBitmask(1) << ecs.getComponentID<Components>().value())), ...);
+    static ECSBitmask bitmask(const ECS& ecs) {
+        ECSBitmask bitmask = 0;
+        ((bitmask |= (ECSBitmask(1) << ecs.getComponentID<Components>().value())), ...);
         return bitmask;
     }
 };
@@ -38,22 +38,24 @@ struct SimpleECSQuery {
 namespace query {
 
 template <typename... Components>
-using Get = SimpleECSQuery<ECSQueryBitmaskType::Get, Components...>;
+using Get = TemplatedECSQuery<ECSQueryBitmaskType::Get, Components...>;
 
 template <typename... Components>
-using Exclude = SimpleECSQuery<ECSQueryBitmaskType::Exclude, Components...>;
+using Exclude = TemplatedECSQuery<ECSQueryBitmaskType::Exclude, Components...>;
 
 template <typename... Components>
-using Optional = SimpleECSQuery<ECSQueryBitmaskType::Optional, Components...>;
+using Optional = TemplatedECSQuery<ECSQueryBitmaskType::Optional, Components...>;
 
 template <typename T>
-concept IsGetQuery = ECSQueryType<T> && T::Specifier::value == ECSQueryBitmaskType::Get;
+concept IsGetQuery = TemplatedECSQueryish<T> && T::Specifier::value == ECSQueryBitmaskType::Get;
 
 template <typename T>
-concept IsExcludeQuery = ECSQueryType<T> && T::Specifier::value == ECSQueryBitmaskType::Exclude;
+concept IsExcludeQuery =
+    TemplatedECSQueryish<T> && T::Specifier::value == ECSQueryBitmaskType::Exclude;
 
 template <typename T>
-concept IsOptionalQuery = ECSQueryType<T> && T::Specifier::value == ECSQueryBitmaskType::Optional;
+concept IsOptionalQuery =
+    TemplatedECSQueryish<T> && T::Specifier::value == ECSQueryBitmaskType::Optional;
 
 }  // namespace query
 
@@ -76,23 +78,30 @@ struct ECSQuery {
     using Item = typename ECSQueryItemFromTuples<typename Get::ComponentTypes,
                                                  typename Optional::ComponentTypes>::Type;
 
-   private:
-    constexpr ECSQueryBitmask& getBitmask(ECSQueryBitmaskType type) {
-        switch (type) {
-            case ECSQueryBitmaskType::Get:
-                return _getBitmask;
-            case ECSQueryBitmaskType::Exclude:
-                return _excludeBitmask;
-            case ECSQueryBitmaskType::Optional:
-                return _optionalBitmask;
+    static void initialize(const ECS& ecs) {
+        if (_initialized) {
+            return;
         }
 
-        throw std::runtime_error("Invalid ECSQueryBitmaskType");
+        _getBitmask = Get::bitmask(ecs);
+        _excludeBitmask = Exclude::bitmask(ecs);
+        _optionalBitmask = Optional::bitmask(ecs);
+        _initialized = true;
     }
 
-    ECSQueryBitmask _getBitmask{0};
-    ECSQueryBitmask _excludeBitmask{0};
-    ECSQueryBitmask _optionalBitmask{0};
+    static constexpr ECSBitmask matches(const ECSBitmask& bitmask) {
+        if (!_initialized) {
+            throw std::runtime_error("ECSQuery not initialized");
+        }
+
+        return (_getBitmask & ~_excludeBitmask) == (bitmask & ~_optionalBitmask);
+    }
+
+   private:
+    static ECSBitmask _getBitmask;
+    static ECSBitmask _excludeBitmask;
+    static ECSBitmask _optionalBitmask;
+    static bool _initialized;
 };
 
 }  // namespace okay

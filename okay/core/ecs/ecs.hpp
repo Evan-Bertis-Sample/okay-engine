@@ -82,6 +82,8 @@ class ComponentPool final : public IComponentPool {
 
 class ECS : public System<SystemScope::LEVEL> {
    public:
+    static constexpr std::size_t MAX_COMPONENTS = 32;
+
     ECS() = default;
 
     template <typename T>
@@ -115,7 +117,6 @@ class ECS : public System<SystemScope::LEVEL> {
     ECSSystemView<Components...> query();
 
    private:
-    static constexpr std::size_t MAX_COMPONENTS = 32;
     static constexpr int POOL_GROWTH_FACTOR = 2;
 
     struct ComponentInfo {
