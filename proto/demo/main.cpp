@@ -81,7 +81,7 @@ static void __gameInitialize() {
 
     ecs->createEntity()
         .addComponent<okay::TransformComponent>(glm::vec3{0.0f, 0.0f, -5.0f}, glm::vec3{0.1f})
-        .addComponent<okay::RenderComponent>(teapot, material);
+        .addComponent<okay::MeshRendererComponent>(teapot, material);
 }
 
 static void __gameUpdate() {

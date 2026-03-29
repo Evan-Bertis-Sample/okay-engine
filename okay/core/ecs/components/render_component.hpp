@@ -11,7 +11,7 @@
 
 namespace okay {
 
-struct RenderComponent {
+struct MeshRendererComponent {
    public:
     Mesh mesh{Mesh::none()};
     MaterialHandle material{MaterialHandle::none()};

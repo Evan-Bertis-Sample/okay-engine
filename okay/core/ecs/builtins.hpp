@@ -13,7 +13,7 @@ namespace okay {
 
 inline void registerBuiltinComponentsAndSystems(ECS& ecs) {
     ecs.registerComponentType<TransformComponent>();
-    ecs.registerComponentType<RenderComponent>();
+    ecs.registerComponentType<MeshRendererComponent>();
     ecs.registerComponentType<CameraComponent>();
     ecs.registerComponentType<LightComponent>();
 

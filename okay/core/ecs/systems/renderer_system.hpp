@@ -13,7 +13,7 @@
 
 namespace okay {
 
-class RendererSystem : public ECSSystem<query::Get<TransformComponent, RenderComponent>> {
+class RendererSystem : public ECSSystem<query::Get<TransformComponent, MeshRendererComponent>> {
    public:
     void onEntityAdded(QueryT::Item& item) override {
         auto& [transform, render] = item.components;
@@ -23,7 +23,8 @@ class RendererSystem : public ECSSystem<query::Get<TransformComponent, RenderCom
         render.renderEntity = entity;
 
         if (item.entity.getParent().isValid()) {
-            auto parentRenderComponent = item.entity.getParent().getComponent<RenderComponent>();
+            auto parentRenderComponent =
+                item.entity.getParent().getComponent<MeshRendererComponent>();
             if (parentRenderComponent.isSome()) {
                 renderer->world().addChild(parentRenderComponent.value().get().renderEntity,
                                            entity);
