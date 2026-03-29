@@ -30,7 +30,7 @@ bool EntityComponentStore::isValidEntity(const ECSEntity& entity) const {
     return _entityMetas.valid(entity._handle) && entity._ecs == this;
 };
 
-void ECS::destroyEntity(ECSEntity& entity) {
+void EntityComponentStore::destroyEntity(ECSEntity& entity) {
     EntityMeta& meta = getEntityMeta(entity);
     for (auto& pool : _componentPools) {
         pool->remove(entity._handle.index);

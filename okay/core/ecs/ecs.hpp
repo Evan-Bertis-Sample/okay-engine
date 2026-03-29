@@ -106,9 +106,9 @@ class ECS : public System<SystemScope::LEVEL> {
         ECS* _ecs;
     };
 
-    template <typename Query>
-    QueryRange<Query> query() {
-        return QueryRange<Query>(this);
+    template <typename... QueryArgs>
+    QueryRange<ECSQuery<QueryArgs...>> query() {
+        return QueryRange<ECSQuery<QueryArgs...>>(this);
     }
 
    private:
