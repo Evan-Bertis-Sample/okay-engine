@@ -77,7 +77,8 @@ static void __gameInitialize() {
     okay::ECS* ecs = okay::Engine.systems.getSystemChecked<okay::ECS>();
     ecs->registerComponentType<okay::RenderComponent>();
     ecs->registerComponentType<okay::Transform>();
-    ecs->createEntity().addComponent<okay::Transform>(glm::vec3{0.0f, 0.0f, -5.0f}, glm::vec3{0.1f})
+    ecs->createEntity()
+        .addComponent<okay::Transform>(glm::vec3{0.0f, 0.0f, -5.0f}, glm::vec3{0.1f})
         .addComponent<okay::RenderComponent>(teapot, material);
 
     for (auto item : ecs->query<okay::query::Get<okay::Transform, okay::RenderComponent>>()) {

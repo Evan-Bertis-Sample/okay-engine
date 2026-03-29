@@ -87,28 +87,26 @@ class EntityComponentStore {
 
     template <typename T>
     void registerComponentType();
-
     template <typename T, typename... Args>
     void addComponent(ECSEntity& entity, Args&&... args);
-
     template <typename T>
     void removeComponent(ECSEntity& entity);
-
     template <typename T>
     Option<std::reference_wrapper<T>> getComponent(ECSEntity& entity);
-
     template <typename T>
     Option<std::reference_wrapper<const T>> getComponent(const ECSEntity& entity) const;
-
     template <typename T, typename... Args>
     T& getOrAddComponent(ECSEntity& entity, Args&&... args);
-
     template <typename T>
     bool hasComponent(const ECSEntity& entity);
 
     ECSEntity createEntity();
+    ECSEntity createEntity(const ECSEntity& parent);
     bool isValidEntity(const ECSEntity& entity) const;
     void destroyEntity(ECSEntity& entity);
+    void addChild(const ECSEntity& parent, const ECSEntity& child);
+    bool isChildOf(const ECSEntity& parent, const ECSEntity& child) const;
+    void removeChild(const ECSEntity& parent, const ECSEntity& child);
 
     std::size_t getEntityCount() const { return _entityMetas.size(); }
 
@@ -135,7 +133,10 @@ class EntityComponentStore {
 
     struct EntityMeta {
         std::bitset<MAX_COMPONENTS> componentMask;
-        bool active{true};
+        ObjectPoolHandle parent{ObjectPoolHandle::invalidHandle()};
+        ObjectPoolHandle firstChild{ObjectPoolHandle::invalidHandle()};
+        ObjectPoolHandle previousSibling{ObjectPoolHandle::invalidHandle()};
+        ObjectPoolHandle nextSibling{ObjectPoolHandle::invalidHandle()};
     };
 
     template <typename T>
@@ -166,6 +167,11 @@ class EntityComponentStore {
 
 struct ECSEntity {
    public:
+    static constexpr ECSEntity invalid() { return ECSEntity(); }
+    static bool isValid(const ECSEntity& entity) {
+        return entity._ecs != nullptr && entity._handle != ObjectPoolHandle::invalidHandle();
+    }
+
     ECSEntity() = default;
     bool operator==(const ECSEntity& other) const {
         return _ecs == other._ecs && _handle == other._handle;

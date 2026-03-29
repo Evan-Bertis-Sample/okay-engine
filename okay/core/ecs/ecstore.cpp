@@ -17,6 +17,12 @@ ECSEntity EntityComponentStore::createEntity() {
     return ECSEntity(this, handle);
 }
 
+ECSEntity EntityComponentStore::createEntity(const ECSEntity& parent) {
+    ECSEntity entity = createEntity();
+    addChild(parent, entity);
+    return entity;
+}
+
 EntityComponentStore::EntityMeta& EntityComponentStore::getEntityMeta(const ECSEntity& entity) {
     return _entityMetas.get(entity._handle);
 }
@@ -38,6 +44,57 @@ void EntityComponentStore::destroyEntity(ECSEntity& entity) {
     _entityMetas.destroy(entity._handle);
     entity._ecs = nullptr;
     entity._handle = ObjectPoolHandle::invalidHandle();
+}
+
+void EntityComponentStore::addChild(const ECSEntity& parent, const ECSEntity& child) {
+    if (!isValidEntity(parent) || !isValidEntity(child)) {
+        Engine.logger.error("Invalid parent or child entity");
+        return;
+    }
+    EntityMeta& parentMeta = getEntityMeta(parent);
+    EntityMeta& childMeta = getEntityMeta(child);
+
+    childMeta.parent = parent._handle;
+
+    ObjectPoolHandle& siblingHead = parentMeta.firstChild;
+    while (siblingHead != ObjectPoolHandle::invalidHandle()) {
+        EntityMeta& siblingMeta = _entityMetas.get(siblingHead);
+        if (siblingMeta.nextSibling == ObjectPoolHandle::invalidHandle()) {
+            siblingMeta.nextSibling = child._handle;
+            childMeta.previousSibling = siblingHead;
+            return;
+        }
+        siblingHead = siblingMeta.nextSibling;
+    }
+}
+
+bool EntityComponentStore::isChildOf(const ECSEntity& parent, const ECSEntity& child) const {
+    if (!isValidEntity(parent) || !isValidEntity(child)) {
+        Engine.logger.error("Invalid parent or child entity");
+        return false;
+    }
+    const EntityMeta& childMeta = getEntityMeta(child);
+    return childMeta.parent == parent._handle;
+}
+
+void EntityComponentStore::removeChild(const ECSEntity& parent, const ECSEntity& child) {
+    if (!isValidEntity(parent) || !isValidEntity(child)) {
+        Engine.logger.error("Invalid parent or child entity");
+        return;
+    }
+    EntityMeta& parentMeta = getEntityMeta(parent);
+    EntityMeta& childMeta = getEntityMeta(child);
+
+    ObjectPoolHandle& siblingHead = parentMeta.firstChild;
+    while (siblingHead != ObjectPoolHandle::invalidHandle()) {
+        EntityMeta& siblingMeta = _entityMetas.get(siblingHead);
+        if (siblingMeta.nextSibling == child._handle) {
+            siblingMeta.nextSibling = childMeta.nextSibling;
+            childMeta.previousSibling = ObjectPoolHandle::invalidHandle();
+            return;
+        }
+        siblingHead = siblingMeta.nextSibling;
+    }
 }
 
 };  // namespace okay
