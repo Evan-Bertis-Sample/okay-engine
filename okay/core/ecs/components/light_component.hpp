@@ -8,10 +8,25 @@
 namespace okay {
 
 struct LightComponent {
-    Light light;
-    Option<std::size_t> lightID;
+    Light::Type type{Light::Type::POINT};
+    glm::vec3 color{1.0f, 1.0f, 1.0f};
+    float intensity{1.0f};
 
-    LightComponent(const Light& light = Light{}) : light(light) {}
+    struct PointLightOptions {
+        float radius{1.0f};
+    };
+
+    struct SpotLightOptions {
+        float radius{1.0f};
+        float angleRad{glm::radians(45.0f)};
+    };
+
+    union {
+        PointLightOptions pointOptions;
+        SpotLightOptions spotOptions;
+    };
+
+    Option<std::size_t> lightID;
 
     bool operator==(const LightComponent& other) const { return light == other.light; }
     bool operator!=(const LightComponent& other) const { return !(*this == other); }
