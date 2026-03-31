@@ -258,9 +258,7 @@ struct RenderEntity {
         Mesh mesh{};
 
         ~Properties();
-
         Properties* operator->() { return this; }
-
         const Properties* operator->() const { return this; }
 
        private:
@@ -279,13 +277,12 @@ struct RenderEntity {
         : _owner(owner), _renderItem(renderItem) {}
 
     bool operator==(const RenderEntity& other) const { return _renderItem == other._renderItem; }
-
     bool operator!=(const RenderEntity& other) const { return !(*this == other); }
-
     Properties operator*() const;
     Properties operator->() const;
 
     Properties prop() const { return **this; }
+    bool isValid() const { return _renderItem != RenderItemHandle::invalidHandle(); }
 
    private:
     RenderWorld* _owner{nullptr};

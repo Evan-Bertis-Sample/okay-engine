@@ -35,10 +35,15 @@ class RendererSystem : public ECSSystem<query::Get<TransformComponent, MeshRende
     };
 
     void onPreTick(QueryT::Item& item) override {
-        Engine.logger.debug("RendererSystem: Entity {} pre-tick", item.entity.id());
-
         auto& [transform, render] = item.components;
         Renderer* renderer = Engine.systems.getSystemChecked<Renderer>();
+
+        if (!render.renderEntity.isValid()) {
+            Engine.logger.error("RendererSystem: Entity {} has invalid render entity",
+                                item.entity.id());
+            Engine.shutdown();
+            return;
+        }
 
         // we do this to avoid temporaries from accessing
         // the fields directly, and resubmission of the dirty entity

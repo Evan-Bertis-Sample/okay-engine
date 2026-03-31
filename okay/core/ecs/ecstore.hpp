@@ -148,6 +148,7 @@ class EntityComponentStore {
 
     EntityMeta& getEntityMeta(const ECSEntity& entity);
     const EntityMeta& getEntityMeta(const ECSEntity& entity) const;
+    virtual void onComponentChange(ECSEntity& entity, EntityMeta& oldMeta) {}
 
     ObjectPool<EntityMeta> _entityMetas;
     std::unordered_map<ComponentInfo, std::size_t, ComponentInfoHash> _infoToPoolIndex;
@@ -292,11 +293,12 @@ void EntityComponentStore::addComponent(ECSEntity& entity, Args&&... args) {
         return;
     }
 
-    EntityMeta& meta = getEntityMeta(entity);
-    meta.componentMask.set(componentID.value(), true);
-
     auto& pool = getPool<T>();
     pool.emplaceAt(entity._handle.index, std::forward<Args>(args)...);
+    EntityMeta& meta = getEntityMeta(entity);
+    EntityMeta oldMeta = meta;
+    meta.componentMask.set(componentID.value(), true);
+    onComponentChange(entity, oldMeta);
 }
 
 template <typename T>
@@ -307,10 +309,12 @@ void EntityComponentStore::removeComponent(ECSEntity& entity) {
         return;
     }
 
-    EntityMeta& meta = getEntityMeta(entity);
-    meta.componentMask.set(componentID.value(), false);
-
     getPool<T>().remove(entity._handle.index);
+
+    EntityMeta& meta = getEntityMeta(entity);
+    EntityMeta oldMeta = meta;
+    meta.componentMask.set(componentID.value(), false);
+    onComponentChange(entity, oldMeta);
 }
 
 template <typename T>

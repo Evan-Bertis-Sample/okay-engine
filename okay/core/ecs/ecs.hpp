@@ -115,30 +115,12 @@ class ECS : public EntityComponentStore, public System<SystemScope::LEVEL> {
         return QueryRange<ECSQuery<QueryArgs...>>(this);
     }
 
-    // overrides for addComponent and removeComponent to trigger entityAdded and entityRemoved
-    // events
-    template <typename T, typename... Args>
-    void addComponent(ECSEntity& entity, Args&&... args) {
-        ECSComponentMask oldMask = getEntityMeta(entity).componentMask;
-        EntityComponentStore::addComponent<T>(entity, std::forward<Args>(args)...);
+    void onComponentChange(ECSEntity& entity, EntityMeta& oldMeta) override {
+        ECSComponentMask oldMask = oldMeta.componentMask;
         ECSComponentMask newMask = getEntityMeta(entity).componentMask;
         for (auto& system : _systems) {
             if (system->matches(*this, newMask) && !system->matches(*this, oldMask)) {
                 system->entityAdded(*this, entity);
-            }
-        }
-    }
-
-    template <typename T>
-    void removeComponent(ECSEntity& entity) {
-        ECSComponentMask oldMask = getEntityMeta(entity).componentMask;
-        EntityComponentStore::removeComponent<T>(entity);
-        ECSComponentMask newMask = getEntityMeta(entity).componentMask;
-        for (auto& system : _systems) {
-            if (system->matches(*this, newMask) && !system->matches(*this, oldMask)) {
-                system->entityAdded(*this, entity);
-            } else if (!system->matches(*this, newMask) && system->matches(*this, oldMask)) {
-                system->entityRemoved(*this, entity);
             }
         }
     }
