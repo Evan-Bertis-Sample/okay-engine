@@ -6,6 +6,8 @@ in vec3 v_color;
 in vec3 v_worldPos;
 in vec3 v_worldNormal;
 in vec2 v_uv;
+in vec3 v_tangent;
+in vec3 v_bitangent;
 
 out vec4 FragColor;
 
@@ -20,6 +22,7 @@ uniform float u_antialiasing;
 uniform float u_roughness;
 uniform float u_sheen;
 uniform float u_sheenTint;
+uniform float u_anisotropic;
 uniform float u_clearcoat;
 uniform float u_clearcoatGloss;
 
@@ -140,13 +143,13 @@ float GTR1(vec3 N, vec3 H, float a) {
 
 float schlickFresnel(vec3 V, vec3 H) {
     float F0 = 0.04f; // base reflectance
-    float F90 = 1.0 - F0; // max reflectance
+    float F90 = 1.0f; // max reflectance
     float cosTheta = max(dot(H, V), 0.0); // cosine of angle between view and half vector
 
     return mix(F0, F90, pow(1.0 - cosTheta, 5.0));
 }
 
-float G_GGX(vec3 V, vec3 N, float a) {
+float GGXG1(vec3 V, vec3 N, float a) {
     float a2 = a * a;
     float absDotNV = abs(dot(N, V));
 
@@ -162,13 +165,28 @@ float disneyClearcoat(vec3 N, vec3 V, vec3 H, vec3 L) {
 
     float clearcoatGloss = u_clearcoatGloss;
 
-    float alpha = mix(0.1, 0.001, clearcoatGloss);
-    float d = GTR1(N, H, alpha);
+    float d = GTR1(N, H, mix(0.1, 0.001, clearcoatGloss));
     float f = schlickFresnel(V, H);
-    float gl = G_GGX(L, N, 0.25f);
-    float gv = G_GGX(V, N, 0.25f);
+    float gl = GGXG1(L, N, 0.25f);
+    float gv = GGXG1(V, N, 0.25f);
 
     return NdotL * 0.25f * clearcoat * d * f * gl * gv;
+}
+
+
+// Specular BRDF
+
+float GTR2(vec3 N, vec3 H, float ax, float ay) {
+    const float PI = 3.1415926535897932384626433832795;
+    vec3 tangent = v_tangent;
+    vec3 bitangent = v_bitangent;
+    float dotHX2 = dot(H, tangent) * dot(H, tangent);
+    float dotHY2 = dot(H, bitangent) * dot(H, bitangent);
+    float cos2Theta = pow(max(dot(N, H), 0.0f), 2.0f);
+    float ax2 = ax * ax;
+    float ay2 = ay * ay;
+
+    return 1.0f / (PI * ax * ay * pow(dotHX2 / ax2 + dotHY2 / ay2 + cos2Theta, 2.0f));
 }
 
 void main() {
