@@ -10,6 +10,15 @@ namespace okay {
 
 class CameraSystem : public ECSSystem<query::Get<TransformComponent, CameraComponent>> {
    public:
+    void onPreTick(QueryT::Item& item) override {
+        auto& [transform, camera] = item.components;
+        Renderer* renderer = Engine.systems.getSystemChecked<Renderer>();
+
+        Camera& worldCamera = renderer->world().camera();
+        worldCamera.transform.position = transform.getWorldPosition(item.entity);
+        worldCamera.transform.rotation = transform.getWorldRotation(item.entity);
+        worldCamera.lens = camera.lens;
+    };
 };
 
 }  // namespace okay

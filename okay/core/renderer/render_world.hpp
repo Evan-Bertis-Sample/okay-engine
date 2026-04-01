@@ -58,19 +58,19 @@ class Camera {
    public:
     enum class ProjectionType { PERPSECTIVE, ORTHOGRAPHIC };
 
-    struct Perspective {
+    struct PerspectiveLens {
         float fov{45.0f};
         float near{0.1f};
         float far{1000.0f};
 
-        bool operator==(const Perspective& other) const {
+        bool operator==(const PerspectiveLens& other) const {
             return fov == other.fov && near == other.near && far == other.far;
         }
 
-        bool operator!=(const Perspective& other) const { return !(*this == other); }
+        bool operator!=(const PerspectiveLens& other) const { return !(*this == other); }
     };
 
-    struct OrthographicConfig {
+    struct OrthographicLens {
         float left{-1.0f};
         float right{1.0f};
         float bottom{-1.0f};
@@ -78,87 +78,44 @@ class Camera {
         float near{0.1f};
         float far{1000.0f};
 
-        bool operator==(const OrthographicConfig& other) const {
+        bool operator==(const OrthographicLens& other) const {
             return left == other.left && right == other.right && bottom == other.bottom &&
                    top == other.top && near == other.near && far == other.far;
         }
 
-        bool operator!=(const OrthographicConfig& other) const { return !(*this == other); }
+        bool operator!=(const OrthographicLens& other) const { return !(*this == other); }
     };
 
+    using Lens = std::variant<PerspectiveLens, OrthographicLens>;
+
     Transform transform{};
+    Lens lens{PerspectiveLens{}};
 
-    Camera() = default;
+    ProjectionType projectionType() const {
+        return std::holds_alternative<PerspectiveLens>(lens) ? ProjectionType::PERPSECTIVE
+                                                             : ProjectionType::ORTHOGRAPHIC;
+    }
 
-    template <typename T>
-        requires(std::is_same_v<T, Perspective> || std::is_same_v<T, OrthographicConfig>)
-    void setConfig(const T& config) {
-        if constexpr (std::is_same_v<T, Perspective>) {
-            _projectionType = ProjectionType::PERPSECTIVE;
+    glm::mat4 projectionMatrix(float aspectRatio) const {
+        if (projectionType() == ProjectionType::PERPSECTIVE) {
+            const PerspectiveLens& p = std::get<PerspectiveLens>(lens);
+            return glm::perspective(glm::radians(p.fov), aspectRatio, p.near, p.far);
         } else {
-            _projectionType = ProjectionType::ORTHOGRAPHIC;
-        }
-        _config = config;
-    }
-
-    template <typename T>
-        requires(std::is_same_v<T, Perspective> || std::is_same_v<T, OrthographicConfig>)
-    Option<T&> getConfig() {
-        if (auto* p = std::get_if<T>(&_config)) {
-            return *p;
-        }
-        return Option<T&>::none();
-    }
-
-    template <typename T>
-        requires(std::is_same_v<T, Perspective> || std::is_same_v<T, OrthographicConfig>)
-    Option<const T&> getConfig() const {
-        if (auto* p = std::get_if<T>(&_config)) {
-            return *p;
-        }
-        return Option<const T&>::none();
-    }
-
-    glm::mat4 projectionMatrix(float ratio) const {
-        if (_projectionType == ProjectionType::PERPSECTIVE) {
-            Perspective config = std::get<Perspective>(_config);
-            return glm::perspective(glm::radians(config.fov), ratio, config.near, config.far);
-        } else {
-            OrthographicConfig config = std::get<OrthographicConfig>(_config);
-            return glm::ortho(
-                config.left, config.right, config.bottom, config.top, config.near, config.far);
+            const OrthographicLens& o = std::get<OrthographicLens>(lens);
+            return glm::ortho(o.left, o.right, o.bottom, o.top, o.near, o.far);
         }
     }
 
     glm::mat4 viewMatrix() const { return glm::inverse(transform.toMatrix()); }
-
-    void lookAt(glm::vec3 center, glm::vec3 up = glm::vec3(0, 1, 0)) {
-        glm::vec3 eye = transform.position;
-        glm::vec3 f = glm::normalize(center - eye);       // desired forward (toward target)
-        glm::vec3 r = glm::normalize(glm::cross(f, up));  // right
-        glm::vec3 u = glm::cross(r, f);                   // corrected up
-
-        // Camera local axes in world space:
-        // +X = r, +Y = u, -Z = f  => +Z = -f
-        glm::mat3 worldRot(r, u, -f);  // columns
-
-        transform.rotation = glm::quat_cast(worldRot);
-    }
-
     glm::vec3 position() const { return transform.position; }
     glm::vec3 direction() const { return transform.rotation * glm::vec3(0, 0, -1); }
 
     operator Transform() const { return transform; }
     bool operator==(const Camera& other) const {
-        return transform == other.transform && _projectionType == other._projectionType &&
-               _config == other._config;
+        return transform == other.transform && lens == other.lens;
     }
 
     bool operator!=(const Camera& other) const { return !(*this == other); }
-
-   private:
-    ProjectionType _projectionType{ProjectionType::PERPSECTIVE};
-    std::variant<Perspective, OrthographicConfig> _config{Perspective{}};
 };
 
 struct alignas(16) Light {

@@ -27,15 +27,12 @@ struct TransformComponent {
         transform.rotation = glm::quat_cast(worldRot);
     }
 
-    bool operator==(const TransformComponent& other) const { return transform == other.transform; }
-    bool operator!=(const TransformComponent& other) const { return !(*this == other); }
-
     glm::mat4 getWorldMatrix(const ECSEntity& entity) const {
         glm::mat4 worldMatrix = transform.toMatrix();
         ECSEntity currentEntity = entity.getParent();
         while (currentEntity.isValid() && currentEntity.hasComponent<TransformComponent>()) {
             const TransformComponent& parentTransform =
-                currentEntity.getComponent<TransformComponent>().value().get();
+                currentEntity.getComponent<TransformComponent>().value();
             worldMatrix = parentTransform.transform.toMatrix() * worldMatrix;
             currentEntity = currentEntity.getParent();
         }
@@ -70,6 +67,20 @@ struct TransformComponent {
         glm::mat3 rotMatrix(worldMatrix);
         return glm::quat_cast(rotMatrix);  // extract rotation from world matrix
     }
+
+    void lookAt(const ECSEntity& entity, glm::vec3 target, glm::vec3 up = glm::vec3(0, 1, 0)) {
+        glm::vec3 worldPos = getWorldPosition(entity);
+        glm::vec3 direction = target - worldPos;
+        setLocalDirection(direction, up);
+    }
+
+    bool operator==(const TransformComponent& other) const { return transform == other.transform; }
+    bool operator!=(const TransformComponent& other) const { return !(*this == other); }
+
+    Transform& operator*() { return transform; }
+    const Transform& operator*() const { return transform; }
+    Transform* operator->() { return &transform; }
+    const Transform* operator->() const { return &transform; }
 };
 
 };  // namespace okay

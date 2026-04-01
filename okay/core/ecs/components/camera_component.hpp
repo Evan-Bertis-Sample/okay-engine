@@ -7,11 +7,18 @@
 namespace okay {
 
 struct CameraComponent {
-    Camera camera;
-    CameraComponent() {}
-    CameraComponent(const Camera& camera) : camera(camera) {}
+    Camera::Lens lens{Camera::PerspectiveLens{}};
 
-    bool operator==(const CameraComponent& other) const { return camera == other.camera; }
+    CameraComponent() {}
+    CameraComponent(const Camera::Lens& lens) : lens(lens) {}
+
+    Camera::ProjectionType projectionType() const {
+        return std::holds_alternative<Camera::PerspectiveLens>(lens)
+                   ? Camera::ProjectionType::PERPSECTIVE
+                   : Camera::ProjectionType::ORTHOGRAPHIC;
+    }
+
+    bool operator==(const CameraComponent& other) const { return lens == other.lens; }
     bool operator!=(const CameraComponent& other) const { return !(*this == other); }
 };
 

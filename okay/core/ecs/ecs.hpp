@@ -122,6 +122,10 @@ class ECS : public EntityComponentStore, public System<SystemScope::LEVEL> {
             if (system->matches(*this, newMask) && !system->matches(*this, oldMask)) {
                 system->entityAdded(*this, entity);
             }
+
+            if (!system->matches(*this, newMask) && system->matches(*this, oldMask)) {
+                system->entityRemoved(*this, entity);
+            }
         }
     }
 

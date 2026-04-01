@@ -110,9 +110,9 @@ struct ECSQuery {
                                TypePack<OptionalComponents...>) {
         return Item{.entity = std::move(entity),
                     .components = std::forward_as_tuple(
-                        store.template getComponent<GetComponents>(entity).value().get()...),
+                        store.template getComponent<GetComponents>(entity).value()...),
                     .optional = std::make_tuple(
-                        store.template getComponent<OptionalComponents>(entity)...)};
+                        store.template getComponent<OptionalComponents>(entity).value()...)};
     }
 
     inline static ECSComponentMask _getBitmask{};

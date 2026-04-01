@@ -28,8 +28,7 @@ class RendererSystem : public ECSSystem<query::Get<TransformComponent, MeshRende
             auto parentRenderComponent =
                 item.entity.getParent().getComponent<MeshRendererComponent>();
             if (parentRenderComponent.isSome()) {
-                renderer->world().addChild(parentRenderComponent.value().get().renderEntity,
-                                           entity);
+                renderer->world().addChild(parentRenderComponent.value().renderEntity, entity);
             }
         }
     };

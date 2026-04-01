@@ -1,9 +1,3 @@
-#include "okay/core/ecs/builtins.hpp"
-#include "okay/core/ecs/components/render_component.hpp"
-#include "okay/core/ecs/components/transform_component.hpp"
-#include "okay/core/ecs/query.hpp"
-#include "okay/core/renderer/render_world.hpp"
-
 #include <okay/okay.hpp>
 
 #include <glm/glm.hpp>
@@ -12,6 +6,10 @@
 static void __gameInitialize();
 static void __gameUpdate();
 static void __gameShutdown();
+
+static okay::ECSEntity s_teapot;
+static okay::ECSEntity s_light;
+static okay::ECSEntity s_camera;
 
 int main() {
     okay::SurfaceConfig surfaceConfig;
@@ -79,27 +77,34 @@ static void __gameInitialize() {
     okay::ECS* ecs = okay::Engine.systems.getSystemChecked<okay::ECS>();
     okay::registerBuiltinComponentsAndSystems(*ecs);
 
-    ecs->createEntity()
-        .addComponent<okay::TransformComponent>(glm::vec3{0.0f, 0.0f, -5.0f}, glm::vec3{0.1f})
-        .addComponent<okay::MeshRendererComponent>(teapot, material);
+    s_teapot =
+        ecs->createEntity()
+            .addComponent<okay::TransformComponent>(glm::vec3{0.0f, 0.0f, -5.0f}, glm::vec3{0.1f})
+            .addComponent<okay::MeshRendererComponent>(teapot, material);
 
-    ecs->createEntity()
-        .addComponent<okay::TransformComponent>(
-            glm::vec3{},
-            glm::vec3{0.1f},
-            glm::angleAxis(glm::radians(45.0f), glm::vec3{0.0f, 1.0f, 0.0f}))
-        .addComponent<okay::LightComponent>(
-            okay::LightComponent::directional(glm::vec3{0.9, 0.9, 0.85}));
+    s_light = ecs->createEntity()
+                  .addComponent<okay::TransformComponent>(
+                      glm::vec3{},
+                      glm::vec3{0.1f},
+                      glm::angleAxis(glm::radians(45.0f), glm::vec3{0.0f, 1.0f, 0.0f}))
+                  .addComponent<okay::LightComponent>(
+                      okay::LightComponent::directional(glm::vec3{0.9, 0.9, 0.85}));
+
+    s_camera = ecs->createEntity()
+                   .addComponent<okay::TransformComponent>(glm::vec3{0.0f, 0.0f, 5.0f})
+                   .addComponent<okay::CameraComponent>(
+                       okay::CameraComponent{okay::Camera::PerspectiveLens{45.0f, 0.1f, 100.0f}});
 }
 
 static void __gameUpdate() {
     // move the camera in a circle, always looking at the origin
-    okay::Renderer* renderer = okay::Engine.systems.getSystemChecked<okay::Renderer>();
     float theta = okay::Engine.time->timeSinceStartSec() * 0.05f * glm::pi<float>();
     glm::vec3 pos = glm::vec3(sin(theta) * 5.0f, 0.0f, cos(theta) * 5.0f);
     // rotation much look at origin
-    renderer->world().camera().transform.position = pos;
-    renderer->world().camera().lookAt(glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    auto cameraTransform = s_camera.getComponent<okay::TransformComponent>().value();
+    cameraTransform->position = pos;
+    cameraTransform.setLocalDirection(-pos);
+
 }
 
 static void __gameShutdown() {
