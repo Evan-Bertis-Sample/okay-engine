@@ -183,7 +183,7 @@ struct ECSEntity {
     bool operator>(const ECSEntity& other) const { return _handle > other._handle; }
 
     template <typename T>
-    Option<std::reference_wrapper<const T>> getComponent() const {
+    Option<std::reference_wrapper<T>> getComponent() {
         return _ecs->getComponent<T>(*this);
     }
 

@@ -101,10 +101,9 @@ static void __gameUpdate() {
     float theta = okay::Engine.time->timeSinceStartSec() * 0.05f * glm::pi<float>();
     glm::vec3 pos = glm::vec3(sin(theta) * 5.0f, 0.0f, cos(theta) * 5.0f);
     // rotation much look at origin
-    auto cameraTransform = s_camera.getComponent<okay::TransformComponent>().value();
+    auto &cameraTransform = s_camera.getComponent<okay::TransformComponent>().value();
     cameraTransform->position = pos;
     cameraTransform.setLocalDirection(-pos);
-
 }
 
 static void __gameShutdown() {

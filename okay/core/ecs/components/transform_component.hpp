@@ -31,6 +31,8 @@ struct TransformComponent {
         glm::mat4 worldMatrix = transform.toMatrix();
         ECSEntity currentEntity = entity.getParent();
         while (currentEntity.isValid() && currentEntity.hasComponent<TransformComponent>()) {
+            Engine.logger.debug("TransformComponent: Multiplying parent transform for entity {}",
+                                currentEntity.id());
             const TransformComponent& parentTransform =
                 currentEntity.getComponent<TransformComponent>().value();
             worldMatrix = parentTransform.transform.toMatrix() * worldMatrix;
