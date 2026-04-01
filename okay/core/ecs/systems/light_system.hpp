@@ -51,24 +51,25 @@ class LightSystem : public ECSSystem<query::Get<TransformComponent, LightCompone
     Light createLightFromComponent(ECSEntity& entity,
                                    const TransformComponent& transform,
                                    const LightComponent& light) {
-        switch (light.type) {
-            case Light::Type::DIRECTIONAL:
-                return Light::directional(transform.forward(entity), light.color, light.intensity);
-            case Light::Type::POINT:
-                return Light::point(transform.getWorldPosition(entity),
-                                    light.pointOptions.radius,
-                                    light.color,
-                                    light.intensity);
-            case Light::Type::SPOT:
-                return Light::spot(transform.getWorldPosition(entity),
-                                   transform.forward(entity),
-                                   light.spotOptions.radius,
-                                   light.spotOptions.angleRad,
-                                   light.color,
-                                   light.intensity);
-            default:
-                return Light::directional(transform.forward(entity), light.color, light.intensity);
+        glm::vec3 worldPosition = transform.getWorldPosition(entity);
+
+        if (std::holds_alternative<LightComponent::PointLightOptions>(light.options)) {
+            const auto& options = std::get<LightComponent::PointLightOptions>(light.options);
+            return Light::point(worldPosition, options.radius, light.color, light.intensity);
+        } else if (std::holds_alternative<LightComponent::SpotLightOptions>(light.options)) {
+            const auto& options = std::get<LightComponent::SpotLightOptions>(light.options);
+            return Light::spot(worldPosition,
+                               transform.forward(entity),
+                               options.radius,
+                               options.angleRad,
+                               light.color,
+                               light.intensity);
+        } else if (std::holds_alternative<LightComponent::DirectionalLightOptions>(light.options)) {
+            return Light::directional(transform.forward(entity), light.color, light.intensity);
         }
+
+        Engine.logger.error("LightSystem: Entity {} has invalid light options", entity.id());
+        return Light::point(worldPosition, 1.0f, light.color, light.intensity);
     }
 };
 

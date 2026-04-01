@@ -7,6 +7,10 @@
 
 namespace okay {
 
+// This class was introduced in okay-engine when it was
+// based on C++11. Since changing to C++20, the implementation
+// was switched to use std::optional, but the API was kept
+// the same to avoid having to change code in multiple places.
 template <typename T>
 class Option {
    public:
@@ -19,6 +23,15 @@ class Option {
     Option(Option&&) noexcept = default;
     Option& operator=(const Option&) = default;
     Option& operator=(Option&&) noexcept = default;
+    Option& operator=(T&& value) {
+        _value = std::forward<T>(value);
+        return *this;
+    }
+    Option& operator=(const T& value) {
+        _value = value;
+        return *this;
+    }
+
     ~Option() = default;
 
     operator bool() const { return _value.has_value(); }

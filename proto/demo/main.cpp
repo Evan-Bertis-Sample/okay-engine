@@ -82,6 +82,14 @@ static void __gameInitialize() {
     ecs->createEntity()
         .addComponent<okay::TransformComponent>(glm::vec3{0.0f, 0.0f, -5.0f}, glm::vec3{0.1f})
         .addComponent<okay::MeshRendererComponent>(teapot, material);
+
+    ecs->createEntity()
+        .addComponent<okay::TransformComponent>(
+            glm::vec3{},
+            glm::vec3{0.1f},
+            glm::angleAxis(glm::radians(45.0f), glm::vec3{0.0f, 1.0f, 0.0f}))
+        .addComponent<okay::LightComponent>(
+            okay::LightComponent::directional(glm::vec3{0.9, 0.9, 0.85}));
 }
 
 static void __gameUpdate() {
