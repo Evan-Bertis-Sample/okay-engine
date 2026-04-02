@@ -189,6 +189,45 @@ float GTR2(vec3 N, vec3 H, float ax, float ay) {
     return 1.0f / (PI * ax * ay * pow(dotHX2 / ax2 + dotHY2 / ay2 + cos2Theta, 2.0f));
 }
 
+float GGXG1(vec3 W, vec3 H, vec3 N, float ax, float ay) {
+    float dotHW = dot(H, W);
+    if (dotHW <= 0.0f) return 0.0f;
+
+    float absTanTheta = abs(tan(dot(W, N)));
+    if (isinf(absTanTheta)) return 0.0f;
+
+    vec3 tangent = v_tangent;
+    vec3 bitangent = v_bitangent;
+
+    float cos2Phi = dot(W, tangent) * dot(W, tangent) / (1.0f - dot(W, N) * dot(W, N));
+    float sin2Phi = dot(W, bitangent) * dot(W, bitangent) / (1.0f - dot(W, N) * dot(W, N));
+    float a = sqrt(cos2Phi * ax * ax + sin2Phi * ay * ay);
+    float a2Tan2Theta = pow(a * absTanTheta, 2.0f);
+
+    float lambda = 0.5f * (-1.0f + sqrt(1.0 + a2Tan2Theta));
+    return 1.0f / (1.0f + lambda);
+}
+
+vec3 calcDisneyBRDF(vec3 N, vec3 V, vec3 H, vec3 L) {
+    float dotNL = dot(N, L);
+    float dotNV = dot(N, V);
+    if (dotNL <= 0.0f || dotNV <= 0.0f) return vec3(0.0f);
+
+    float roughness = u_roughness;
+    float anisotropic = u_anisotropic;
+    float aspect = sqrt(1.0f - 0.9f * anisotropic);
+    float ax = roughness * roughness / aspect;
+    float ay = roughness * roughness * aspect;
+
+    float d = GTR2(N, H, ax, ay);
+    float gl = GGXG1(L, H, N, ax, ay);
+    float gv = GGXG1(V, H, N, ax, ay);
+
+    vec3 f = vec3(1.0); // to be replace with DisneyFresnel
+
+    return dotNL * d * gl * gv * f / (4.0f * dotNL * dotNV);
+}
+
 void main() {
     vec3 N = safeNormalize(v_worldNormal); // normal vector
     vec3 V = safeNormalize(u_cameraPosition - v_worldPos); // view vector
@@ -252,6 +291,20 @@ void main() {
         // diffuse
 
         // specular
+        float NdotL = max(dot(N, L), 0.0);
+        if (NdotL <= 0.0) continue;
+
+        // Diffuse
+        vec3 diffuse = NdotL * albedo * Lrgb;
+
+        // vec3 R = reflect(-L, N);
+        // float RdotV = max(dot(R, V), 0.0);
+        // vec3 specular = pow(RdotV, shininess) * Lrgb;
+        // specular *= att;
+
+        // vec3 specular = calcDisneyBRDF(N, V, H, L);
+
+        // colorOut += att * intensity * (diffuse + specular);
 
         colorOut += defaultLighting(N, L, Lrgb, albedo, V, shininess, intensity, att);
         colorOut += calcSheen(N, V, L, H);
