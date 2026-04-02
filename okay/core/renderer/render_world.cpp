@@ -124,24 +124,22 @@ void RenderWorld::rebuildTransforms() {
 }
 
 void RenderWorld::rebuildMaterials() {
-    // resort the _memoizedRenderItems based on the sort key of the render item
     std::sort(_memoizedRenderItems.begin(),
-              _memoizedRenderItems.end(),
+              _memoizedRenderItems.begin() + _activeRenderItems,
               [this](const RenderItemHandle& a, const RenderItemHandle& b) {
                   bool aValid = isValidEntity(a);
                   bool bValid = isValidEntity(b);
 
-                  // Invalid always goes after valid
                   if (aValid != bValid)
-                      return aValid;  // true < false → valid first
+                      return aValid;
 
-                  // Both invalid → keep order (return false)
                   if (!aValid)
                       return false;
 
-                  // Both valid → compare normally
                   return getRenderItem(a).sortKey < getRenderItem(b).sortKey;
               });
+
+    _needsMaterialRebuild = false;
 }
 
 void RenderWorld::handleDirtyMesh(RenderItemHandle dirtyEntity) {

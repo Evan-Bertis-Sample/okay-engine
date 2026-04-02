@@ -55,9 +55,7 @@ class BobSystem : public okay::ECSSystem<okay::query::Get<okay::TransformCompone
     }
 
     void onEntityRemoved(QueryT::Item& item) override {
-
-        okay::Engine.logger.debug("BobSystem: Entity {} removed", item.entity.id());
-
+        // okay::Engine.logger.debug("BobSystem: Entity {} removed", item.entity.id());
         auto& [transform, bob] = item.components;
         if (bob.positionTween) {
             bob.positionTween->kill();
@@ -180,15 +178,18 @@ static void __gameUpdate() {
     cameraTransform.lookAt(s_camera, glm::vec3{});
 
     okay::ECSEntity toDelete;
-    okay::ECS *ecs = okay::Engine.systems.getSystemChecked<okay::ECS>();
-    
-    for (auto entity : ecs->query<okay::query::Get<okay::TransformComponent,BobComponent>>()) {
+    okay::ECS* ecs = okay::Engine.systems.getSystemChecked<okay::ECS>();
+
+    for (auto entity : ecs->query<okay::query::Get<okay::TransformComponent, BobComponent>>()) {
         toDelete = entity.entity;
         break;
     }
 
     if (toDelete.isValid()) {
-        okay::Engine.logger.info("FPS: {} | Destroying entity {}, now {} entities", okay::Engine.time->fps(), toDelete.id(), ecs->getEntityCount());
+        okay::Engine.logger.info("FPS: {} | Destroying entity {}, now {} entities",
+                                 okay::Engine.time->fps(),
+                                 toDelete.id(),
+                                 ecs->getEntityCount());
         ecs->destroyEntity(toDelete);
     }
 }
