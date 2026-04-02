@@ -16,7 +16,7 @@ namespace okay {
 class RendererSystem : public ECSSystem<query::Get<TransformComponent, MeshRendererComponent>> {
    public:
     void onEntityAdded(QueryT::Item& item) override {
-        Engine.logger.debug("RendererSystem: Entity {} added", item.entity.id());
+        // Engine.logger.debug("RendererSystem: Entity {} added", item.entity.id());
 
         auto& [transform, render] = item.components;
         Renderer* renderer = Engine.systems.getSystemChecked<Renderer>();

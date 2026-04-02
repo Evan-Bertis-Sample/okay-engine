@@ -279,6 +279,7 @@ Option<std::size_t> EntityComponentStore::getComponentID() const {
     const ComponentInfo info = ComponentInfo::create<T>();
     auto it = _infoToPoolIndex.find(info);
     if (it == _infoToPoolIndex.end()) {
+        Engine.logger.error("Component {} not registered", typeid(T).name());
         return Option<std::size_t>::none();
     }
 
