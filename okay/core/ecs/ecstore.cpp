@@ -17,7 +17,10 @@ ECSEntity EntityComponentStore::createEntity() {
         pool->reserve(desiredCapacity);
     }
 
-    return ECSEntity(this, handle);
+    ECSEntity entity(this, handle);
+    onEntityAdded(entity);
+
+    return entity;
 }
 
 ECSEntity EntityComponentStore::createEntity(const ECSEntity& parent) {
@@ -59,6 +62,8 @@ void EntityComponentStore::destroyEntity(ECSEntity& entity) {
         destroyEntity(child);
         childHandle = childMeta.nextSibling;
     }
+
+    onEntityRemoved(entity);
 
     for (auto& pool : _componentPools) {
         pool->remove(entity._handle.index);

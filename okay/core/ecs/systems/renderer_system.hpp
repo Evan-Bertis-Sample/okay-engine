@@ -38,9 +38,9 @@ class RendererSystem : public ECSSystem<query::Get<TransformComponent, MeshRende
         Renderer* renderer = Engine.systems.getSystemChecked<Renderer>();
 
         if (!render.renderEntity.isValid()) {
-            Engine.logger.error("RendererSystem: Entity {} has invalid render entity",
-                                item.entity.id());
-            Engine.shutdown();
+            // Engine.logger.error("RendererSystem: Entity {} has invalid render entity",
+            //                     item.entity.id());
+            // Engine.shutdown();
             return;
         }
 
@@ -58,8 +58,7 @@ class RendererSystem : public ECSSystem<query::Get<TransformComponent, MeshRende
     void onEntityRemoved(QueryT::Item& item) override {
         auto& [transform, render] = item.components;
         Renderer* renderer = Engine.systems.getSystemChecked<Renderer>();
-
-        // TODO: implement remove entity in render world
+        renderer->world().removeRenderEntity(render.renderEntity);
     };
 };
 

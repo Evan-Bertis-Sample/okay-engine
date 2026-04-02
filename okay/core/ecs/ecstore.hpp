@@ -149,6 +149,8 @@ class EntityComponentStore {
     EntityMeta& getEntityMeta(const ECSEntity& entity);
     const EntityMeta& getEntityMeta(const ECSEntity& entity) const;
     virtual void onComponentChange(ECSEntity& entity, EntityMeta& oldMeta) {}
+    virtual void onEntityAdded(ECSEntity& entity) {}
+    virtual void onEntityRemoved(ECSEntity& entity) {}
 
     ObjectPool<EntityMeta> _entityMetas;
     std::unordered_map<ComponentInfo, std::size_t, ComponentInfoHash> _infoToPoolIndex;

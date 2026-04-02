@@ -239,7 +239,7 @@ struct RenderEntity {
     Properties operator->() const;
 
     Properties prop() const { return **this; }
-    bool isValid() const { return _renderItem != RenderItemHandle::invalidHandle(); }
+    bool isValid() const;
 
    private:
     RenderWorld* _owner{nullptr};
@@ -296,16 +296,23 @@ class RenderWorld {
             transform, material, mesh, RenderEntity(this, RenderItemHandle::invalidHandle()));
     }
 
-    const std::vector<RenderItemHandle>& getRenderItems();
+    const std::span<RenderItemHandle> getRenderItems();
     const RenderItem& getRenderItem(RenderItemHandle handle) const {
         return _renderItemPool.get(handle);
     }
 
     RenderItem& getRenderItem(RenderItemHandle handle) { return _renderItemPool.get(handle); }
-
     RenderEntity getRenderEntity(RenderItemHandle handle) { return RenderEntity(this, handle); }
-
     void updateEntity(RenderItemHandle renderItem, const RenderEntity::Properties&& properties);
+    void removeRenderEntity(RenderEntity entity) { removeRenderEntity(entity._renderItem); }
+    void removeRenderEntity(RenderItemHandle renderItem);
+    bool isValidEntity(const RenderItemHandle& renderItem) const {
+        return _renderItemPool.valid(renderItem);
+    }
+    bool isValidEntity(const RenderEntity& entity) const {
+        return _renderItemPool.valid(entity._renderItem);
+    }
+    std::size_t numRenderItems() const { return _activeRenderItems; }
 
     Failable addChild(RenderEntity parent, RenderEntity children);
     bool isChildOf(RenderEntity parent, RenderEntity child) const;
@@ -330,6 +337,7 @@ class RenderWorld {
     ObjectPool<RenderItem> _renderItemPool;
     std::vector<RenderItemHandle> _memoizedRenderItems;
     std::set<RenderItemHandle> _dirtyTransforms;
+    std::size_t _activeRenderItems{0};
 
     std::array<Light, Light::MAX_LIGHTS> _lights{};
     std::size_t _activeLights{0};

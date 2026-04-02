@@ -1,7 +1,9 @@
 
 #include "glm/gtc/random.hpp"
 #include "okay/core/ecs/components/transform_component.hpp"
+#include "okay/core/ecs/ecs.hpp"
 #include "okay/core/ecs/ecstore.hpp"
+#include "okay/core/ecs/query.hpp"
 #include "okay/core/engine/engine.hpp"
 #include "okay/core/tween/tween_easing.hpp"
 #include "okay/core/tween/tween_engine.hpp"
@@ -53,6 +55,9 @@ class BobSystem : public okay::ECSSystem<okay::query::Get<okay::TransformCompone
     }
 
     void onEntityRemoved(QueryT::Item& item) override {
+
+        okay::Engine.logger.debug("BobSystem: Entity {} removed", item.entity.id());
+
         auto& [transform, bob] = item.components;
         if (bob.positionTween) {
             bob.positionTween->kill();
@@ -173,6 +178,19 @@ static void __gameUpdate() {
     auto& cameraTransform = s_camera.getComponent<okay::TransformComponent>().value();
     cameraTransform->position = pos;
     cameraTransform.lookAt(s_camera, glm::vec3{});
+
+    okay::ECSEntity toDelete;
+    okay::ECS *ecs = okay::Engine.systems.getSystemChecked<okay::ECS>();
+    
+    for (auto entity : ecs->query<okay::query::Get<okay::TransformComponent,BobComponent>>()) {
+        toDelete = entity.entity;
+        break;
+    }
+
+    if (toDelete.isValid()) {
+        okay::Engine.logger.info("FPS: {} | Destroying entity {}, now {} entities", okay::Engine.time->fps(), toDelete.id(), ecs->getEntityCount());
+        ecs->destroyEntity(toDelete);
+    }
 }
 
 static void __gameShutdown() {

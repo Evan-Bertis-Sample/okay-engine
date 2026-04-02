@@ -43,9 +43,10 @@ class ScenePass : public IRenderPass {
         auto camPos = context.world.camera().position();
         auto camDir = context.world.camera().direction();
 
+        Engine.logger.info("Rendering {} render items", context.world.numRenderItems());
+
         for (const RenderItemHandle& handle : context.world.getRenderItems()) {
             RenderItem& item = context.world.getRenderItem(handle);
-
             if (item.mesh.isEmpty())
                 continue;
             if (item.material->isNone())

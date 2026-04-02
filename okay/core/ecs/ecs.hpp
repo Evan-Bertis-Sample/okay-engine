@@ -129,6 +129,22 @@ class ECS : public EntityComponentStore, public System<SystemScope::LEVEL> {
         }
     }
 
+    void onEntityAdded(ECSEntity& entity) override {
+        for (auto& system : _systems) {
+            if (system->matches(*this, getEntityMeta(entity).componentMask)) {
+                system->entityAdded(*this, entity);
+            }
+        }
+    }
+
+    void onEntityRemoved(ECSEntity& entity) override {
+        for (auto& system : _systems) {
+            if (system->matches(*this, getEntityMeta(entity).componentMask)) {
+                system->entityRemoved(*this, entity);
+            }
+        }
+    }
+
     void shutdown() override {
         for (auto& system : _systems) {
             system->systemShutdown(*this);

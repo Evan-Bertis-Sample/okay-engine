@@ -52,6 +52,11 @@ RenderEntity::Properties RenderEntity::operator->() const {
     return **this;
 }
 
+bool RenderEntity::isValid() const {
+    return _renderItem != RenderItemHandle::invalidHandle() && _owner != nullptr &&
+           _owner->isValidEntity(*this);
+}
+
 // OkayRenderWorld
 
 RenderWorld::ChildRange RenderWorld::children(RenderEntity parent) {
@@ -123,6 +128,18 @@ void RenderWorld::rebuildMaterials() {
     std::sort(_memoizedRenderItems.begin(),
               _memoizedRenderItems.end(),
               [this](const RenderItemHandle& a, const RenderItemHandle& b) {
+                  bool aValid = isValidEntity(a);
+                  bool bValid = isValidEntity(b);
+
+                  // Invalid always goes after valid
+                  if (aValid != bValid)
+                      return aValid;  // true < false → valid first
+
+                  // Both invalid → keep order (return false)
+                  if (!aValid)
+                      return false;
+
+                  // Both valid → compare normally
                   return getRenderItem(a).sortKey < getRenderItem(b).sortKey;
               });
 }
@@ -144,12 +161,12 @@ void RenderWorld::handleDirtyTransform(RenderItemHandle dirtyEntity) {
     _dirtyTransforms.insert(dirtyEntity);
 }
 
-const std::vector<RenderItemHandle>& RenderWorld::getRenderItems() {
+const std::span<RenderItemHandle> RenderWorld::getRenderItems() {
     if (_needsMaterialRebuild)
         rebuildMaterials();
     if (!_dirtyTransforms.empty())
         rebuildTransforms();
-    return _memoizedRenderItems;
+    return std::span<RenderItemHandle>(_memoizedRenderItems.data(), _activeRenderItems);
 }
 
 RenderEntity RenderWorld::addRenderEntity(const Transform& transform,
@@ -158,7 +175,13 @@ RenderEntity RenderWorld::addRenderEntity(const Transform& transform,
                                           RenderEntity parent) {
     RenderItemHandle handle = _renderItemPool.emplace(material, mesh);
     // add this handle to the _memozedRenderItems vector
-    _memoizedRenderItems.push_back(handle);
+    _activeRenderItems++;
+    if (_activeRenderItems > _memoizedRenderItems.size()) {
+        _memoizedRenderItems.push_back(handle);
+    } else {
+        _memoizedRenderItems[_activeRenderItems - 1] = handle;
+    }
+
     RenderItem& item = _renderItemPool.get(handle);
 
     item.transform = transform;
@@ -183,6 +206,54 @@ RenderEntity RenderWorld::addRenderEntity(const Transform& transform,
     handleDirtyMesh(handle);
 
     return entity;
+}
+
+void RenderWorld::removeRenderEntity(RenderItemHandle handle) {
+    if (!_renderItemPool.valid(handle))
+        return;
+
+    // Remove children first
+    while (true) {
+        RenderItemHandle child = _renderItemPool.get(handle).firstChild;
+        if (child == RenderItemHandle::invalidHandle())
+            break;
+        removeRenderEntity(child);
+    }
+
+    RenderItem& item = _renderItemPool.get(handle);
+    RenderItemHandle parent = item.parent;
+
+    // Unlink from parent sibling chain
+    if (parent != RenderItemHandle::invalidHandle()) {
+        RenderItem& parentItem = _renderItemPool.get(parent);
+        if (parentItem.firstChild == handle) {
+            parentItem.firstChild = item.nextSibling;
+        } else {
+            RenderItemHandle cur = parentItem.firstChild;
+            while (cur != RenderItemHandle::invalidHandle()) {
+                RenderItem& curItem = _renderItemPool.get(cur);
+                if (curItem.nextSibling == handle) {
+                    curItem.nextSibling = item.nextSibling;
+                    break;
+                }
+                cur = curItem.nextSibling;
+            }
+        }
+        handleDirtyTransform(parent);
+    }
+
+    _dirtyTransforms.erase(handle);
+
+    // Remove from dense active list by value, not handle.index
+    for (std::size_t i = 0; i < _activeRenderItems; ++i) {
+        if (_memoizedRenderItems[i] == handle) {
+            _memoizedRenderItems[i] = _memoizedRenderItems[_activeRenderItems - 1];
+            --_activeRenderItems;
+            break;
+        }
+    }
+
+    _renderItemPool.destroy(handle);
 }
 
 Failable RenderWorld::addChild(RenderEntity parent, RenderEntity children) {
