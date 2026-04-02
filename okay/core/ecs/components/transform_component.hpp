@@ -4,6 +4,10 @@
 #include <okay/core/ecs/ecs.hpp>
 #include <okay/core/renderer/render_world.hpp>
 
+#include <cmath>
+#include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
+
 namespace okay {
 
 struct TransformComponent {
@@ -16,23 +20,43 @@ struct TransformComponent {
     TransformComponent(const Transform& transform) : transform(transform) {}
 
     glm::mat4 toMatrix() const { return transform.toMatrix(); }
-    glm::vec3 localForward() const { return transform.rotation * glm::vec3(0, 0, -1); }
-    glm::vec3 localUp() const { return transform.rotation * glm::vec3(0, 1, 0); }
-    glm::vec3 localRight() const { return transform.rotation * glm::vec3(1, 0, 0); }
 
-    void setLocalDirection(glm::vec3 direction, glm::vec3 up = glm::vec3(0, 1, 0)) {
-        // create a lookAt matrix and extract the rotation from it
-        glm::mat4 lookAt = glm::lookAt(transform.position, transform.position + direction, up);
-        glm::mat3 worldRot = glm::inverse(glm::mat3(lookAt));
-        transform.rotation = glm::quat_cast(worldRot);
+    glm::vec3 localForward() const {
+        return glm::normalize(transform.rotation * glm::vec3(0.0f, 0.0f, -1.0f));
+    }
+
+    glm::vec3 localUp() const {
+        return glm::normalize(transform.rotation * glm::vec3(0.0f, 1.0f, 0.0f));
+    }
+
+    glm::vec3 localRight() const {
+        return glm::normalize(transform.rotation * glm::vec3(1.0f, 0.0f, 0.0f));
+    }
+
+    void setLocalDirection(glm::vec3 direction, glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f)) {
+        if (glm::length(direction) < 1e-8f) {
+            return;
+        }
+
+        glm::vec3 f = glm::normalize(direction);
+        glm::vec3 upNorm = glm::normalize(up);
+
+        if (std::abs(glm::dot(f, upNorm)) > 0.999f) {
+            upNorm = (std::abs(f.y) < 0.999f) ? glm::vec3(0.0f, 1.0f, 0.0f)
+                                              : glm::vec3(1.0f, 0.0f, 0.0f);
+        }
+
+        glm::vec3 r = glm::normalize(glm::cross(f, upNorm));
+        glm::vec3 u = glm::normalize(glm::cross(r, f));
+
+        transform.rotation = glm::quat_cast(glm::mat3(r, u, -f));
     }
 
     glm::mat4 getWorldMatrix(const ECSEntity& entity) const {
         glm::mat4 worldMatrix = transform.toMatrix();
         ECSEntity currentEntity = entity.getParent();
+
         while (currentEntity.isValid() && currentEntity.hasComponent<TransformComponent>()) {
-            Engine.logger.debug("TransformComponent: Multiplying parent transform for entity {}",
-                                currentEntity.id());
             const TransformComponent& parentTransform =
                 currentEntity.getComponent<TransformComponent>().value();
             worldMatrix = parentTransform.transform.toMatrix() * worldMatrix;
@@ -40,40 +64,78 @@ struct TransformComponent {
         }
 
         return worldMatrix;
-    };
+    }
 
     glm::vec3 forward(const ECSEntity& entity) const {
-        return getWorldMatrix(entity) * glm::vec4(0, 0, -1, 0);
+        return glm::normalize(getWorldRotation(entity) * glm::vec3(0.0f, 0.0f, -1.0f));
     }
+
     glm::vec3 up(const ECSEntity& entity) const {
-        return getWorldMatrix(entity) * glm::vec4(0, 1, 0, 0);
+        return glm::normalize(getWorldRotation(entity) * glm::vec3(0.0f, 1.0f, 0.0f));
     }
+
     glm::vec3 right(const ECSEntity& entity) const {
-        return getWorldMatrix(entity) * glm::vec4(1, 0, 0, 0);
+        return glm::normalize(getWorldRotation(entity) * glm::vec3(1.0f, 0.0f, 0.0f));
     }
 
     glm::vec3 getWorldPosition(const ECSEntity& entity) const {
         glm::mat4 worldMatrix = getWorldMatrix(entity);
-        return glm::vec3(worldMatrix[3]);  // extract translation from world matrix
+        return glm::vec3(worldMatrix[3]);
     }
 
     glm::vec3 getWorldScale(const ECSEntity& entity) const {
         glm::mat4 worldMatrix = getWorldMatrix(entity);
-        return glm::vec3(worldMatrix[0][0],
-                         worldMatrix[1][1],
-                         worldMatrix[2][2]);  // extract scale from world matrix
+        return glm::vec3(glm::length(glm::vec3(worldMatrix[0])),
+                         glm::length(glm::vec3(worldMatrix[1])),
+                         glm::length(glm::vec3(worldMatrix[2])));
     }
 
     glm::quat getWorldRotation(const ECSEntity& entity) const {
-        glm::mat4 worldMatrix = getWorldMatrix(entity);
-        glm::mat3 rotMatrix(worldMatrix);
-        return glm::quat_cast(rotMatrix);  // extract rotation from world matrix
+        glm::quat worldRotation = transform.rotation;
+        ECSEntity currentEntity = entity.getParent();
+
+        while (currentEntity.isValid() && currentEntity.hasComponent<TransformComponent>()) {
+            const TransformComponent& parentTransform =
+                currentEntity.getComponent<TransformComponent>().value();
+            worldRotation = parentTransform.transform.rotation * worldRotation;
+            currentEntity = currentEntity.getParent();
+        }
+
+        return glm::normalize(worldRotation);
     }
 
-    void lookAt(const ECSEntity& entity, glm::vec3 target, glm::vec3 up = glm::vec3(0, 1, 0)) {
+    void lookAt(const ECSEntity& entity,
+                glm::vec3 target,
+                glm::vec3 upDirection = glm::vec3(0.0f, 1.0f, 0.0f)) {
         glm::vec3 worldPos = getWorldPosition(entity);
         glm::vec3 direction = target - worldPos;
-        setLocalDirection(direction, up);
+
+        if (glm::length(direction) < 1e-8f) {
+            return;
+        }
+
+        glm::vec3 f = glm::normalize(direction);
+        glm::vec3 upNorm = glm::normalize(upDirection);
+
+        if (std::abs(glm::dot(f, upNorm)) > 0.999f) {
+            upNorm = (std::abs(f.y) < 0.999f) ? glm::vec3(0.0f, 1.0f, 0.0f)
+                                              : glm::vec3(1.0f, 0.0f, 0.0f);
+        }
+
+        glm::vec3 r = glm::normalize(glm::cross(f, upNorm));
+        glm::vec3 u = glm::normalize(glm::cross(r, f));
+        glm::quat desiredWorldRotation = glm::quat_cast(glm::mat3(r, u, -f));
+
+        ECSEntity parent = entity.getParent();
+        if (parent.isValid() && parent.hasComponent<TransformComponent>()) {
+            const TransformComponent& parentTransform =
+                parent.getComponent<TransformComponent>().value();
+            glm::quat parentWorldRotation = parentTransform.getWorldRotation(parent);
+            transform.rotation =
+                glm::normalize(glm::inverse(parentWorldRotation) * desiredWorldRotation);
+        } else {
+            transform.rotation = glm::normalize(desiredWorldRotation);
+        }
     }
 
     bool operator==(const TransformComponent& other) const { return transform == other.transform; }
@@ -85,6 +147,6 @@ struct TransformComponent {
     const Transform* operator->() const { return &transform; }
 };
 
-};  // namespace okay
+}  // namespace okay
 
 #endif  // __TRANSFORM_COMPONENT_H__
