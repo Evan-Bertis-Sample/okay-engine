@@ -31,6 +31,7 @@ struct LitMaterial : public SceneMaterialProperties, public OkayMaterialProperti
     UniformProperty<float, FixedString("u_anisotropic")> anisotropic{0.0f};
     UniformProperty<float, FixedString("u_clearcoat")> clearcoat{0.0f};
     UniformProperty<float, FixedString("u_clearcoatGloss")> clearcoatGloss{1.0f};
+    UniformProperty<float, FixedString("u_specular")> specular{0.5f};
 
     auto uniformRefs() {
         return std::tuple_cat(SceneMaterialProperties::uniformRefs(), std::tie(shininess, ambient, color, roughness, sheen, sheenTint, anisotropic, clearcoat, clearcoatGloss));

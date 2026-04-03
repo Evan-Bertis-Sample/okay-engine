@@ -25,6 +25,7 @@ uniform float u_sheenTint;
 uniform float u_anisotropic;
 uniform float u_clearcoat;
 uniform float u_clearcoatGloss;
+uniform float u_specular;
 
 
 struct Light {
@@ -208,6 +209,8 @@ float GGXG1(vec3 W, vec3 H, vec3 N, float ax, float ay) {
     return 1.0f / (1.0f + lambda);
 }
 
+vec3 calcDisneySpecTransmission(vec3 N, vec3 L, vec3 V, vec3 H, float ax, float ay, bool thin);
+
 vec3 calcDisneyBRDF(vec3 N, vec3 V, vec3 H, vec3 L) {
     float dotNL = dot(N, L);
     float dotNV = dot(N, V);
@@ -225,7 +228,71 @@ vec3 calcDisneyBRDF(vec3 N, vec3 V, vec3 H, vec3 L) {
 
     vec3 f = vec3(1.0); // to be replace with DisneyFresnel
 
-    return dotNL * d * gl * gv * f / (4.0f * dotNL * dotNV);
+    vec3 res =  dotNL * d * gl * gv * f / (4.0f * dotNL * dotNV);
+    res += calcDisneySpecTransmission(N, L, V, H, ax, ay, false);
+    return res;
+}
+
+// Specular BSDF
+
+float dielectric(float dotHV, float etaI, float etaT) {
+    float cosThetaI = clamp(dotHV, -1.0f, 1.0f);
+
+    if (cosThetaI <= 0.0f) {
+        float temp = etaI;
+        etaI = etaT;
+        etaT = temp;
+        cosThetaI = abs(cosThetaI);
+    }
+
+    float sinThetaI = sqrt(max(0.0f, 1.0f - cosThetaI * cosThetaI));
+    float sinThetaT = etaI / etaT * sinThetaI;
+
+    if (sinThetaT >= 1.0f) return 1.0f;
+    float cosThetaT = sqrt(max(0.0f, 1.0f - sinThetaT * sinThetaT));
+    float Rparl = ((etaT * cosThetaI) - (etaI * cosThetaT)) /
+                  ((etaT * cosThetaI) + (etaI * cosThetaT));
+    float Rperp = ((etaI * cosThetaI) - (etaT * cosThetaT)) /
+                  ((etaI * cosThetaI) + (etaT * cosThetaT));
+
+    return (Rparl * Rparl + Rperp * Rperp) / 2.0f;
+    
+}
+
+float thinTransmissionRoughness(float ior) {
+    float roughness = u_roughness;
+    return clamp((0.65f * ior - 0.35f) * roughness, 0.0f, 1.0f);
+}
+
+vec3 calcDisneySpecTransmission(vec3 N, vec3 L, vec3 V, vec3 H, float ax, float ay, bool thin) {
+    float dotNL = max(dot(N, L), 0.0);
+    if (dotNL <= 0.0) return vec3(0.0);
+    
+    float specular = u_specular;
+    float ior = (2.0f / (1.0f - sqrt(0.08f * specular))) - 1.0f;
+
+    float relativeIOR = dot(N, L) > 0.0f ? ior : 1.0f / ior;
+    float n2 = relativeIOR * relativeIOR;
+
+    float absDotNL = abs(dot(N, L));
+    float absDotNV = abs(dot(N, V));
+    float dotHL = dot(H, L);
+    float dotHV = dot(H, V);
+    float absDotHL = abs(dotHL);
+    float absDotHV = abs(dotHV);
+
+    float d = GTR2(N, H, ax, ay);
+    float gl = GGXG1(L, H, N, ax, ay);
+    float gv = GGXG1(V, H, N, ax, ay);
+
+    float f = dielectric(dotHV, 1.0f, 1.0f / relativeIOR);
+
+    vec3 color = thin ? sqrt(v_color) : v_color;
+    float c = (absDotHL * absDotHV) / (absDotNL * absDotNV);
+    float t = n2 / pow(dotHL + relativeIOR * dotHV, 2.0f);
+
+    return dotNL * color * c * t * (1.0f - f) * gl * gv * d;
+
 }
 
 void main() {
@@ -302,13 +369,12 @@ void main() {
         // vec3 specular = pow(RdotV, shininess) * Lrgb;
         // specular *= att;
 
-        // vec3 specular = calcDisneyBRDF(N, V, H, L);
+        vec3 specular = calcDisneyBRDF(N, V, H, L);
+        colorOut += att * intensity * (diffuse + specular);
 
-        // colorOut += att * intensity * (diffuse + specular);
-
-        colorOut += defaultLighting(N, L, Lrgb, albedo, V, shininess, intensity, att);
-        colorOut += calcSheen(N, V, L, H);
-        colorOut += disneyClearcoat(N, V, H, L);
+        // colorOut += defaultLighting(N, L, Lrgb, albedo, V, shininess, intensity, att);
+        // colorOut += calcSheen(N, V, L, H);
+        // colorOut += disneyClearcoat(N, V, H, L);
         
         // cel lighting
         // colorOut += celLighting(N, L, Lrgb, albedo, V, shininess, intensity, att);
