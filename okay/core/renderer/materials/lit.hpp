@@ -34,10 +34,10 @@ struct LitMaterial : public SceneMaterialProperties, public OkayMaterialProperti
     UniformProperty<float, FixedString("u_specular")> specular{0.5f};
 
     auto uniformRefs() {
-        return std::tuple_cat(SceneMaterialProperties::uniformRefs(), std::tie(shininess, ambient, color, roughness, sheen, sheenTint, anisotropic, clearcoat, clearcoatGloss));
+        return std::tuple_cat(SceneMaterialProperties::uniformRefs(), std::tie(shininess, ambient, color, antialiasing, roughness, sheen, sheenTint, anisotropic, clearcoat, clearcoatGloss, specular));
     }
     auto uniformRefs() const {
-        return std::tuple_cat(SceneMaterialProperties::uniformRefs(), std::tie(shininess, ambient, color, roughness, sheen, sheenTint, anisotropic, clearcoat, clearcoatGloss));
+        return std::tuple_cat(SceneMaterialProperties::uniformRefs(), std::tie(shininess, ambient, color, antialiasing, roughness, sheen, sheenTint, anisotropic, clearcoat, clearcoatGloss, specular));
     }
 
     auto uniformBlockRefs() {
