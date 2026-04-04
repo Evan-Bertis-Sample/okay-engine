@@ -2,6 +2,7 @@
 #define __MESH_H__
 
 #include <okay/core/renderer/gl.hpp>
+#include <okay/core/renderer/math_types.hpp>
 #include <okay/core/util/result.hpp>
 
 #include <glm/glm.hpp>
@@ -45,12 +46,17 @@ struct Mesh {
     std::size_t vertexCount{0};
     std::size_t indexOffset{0};
     std::size_t indexCount{0};
+    Bounds bounds{};
 
     Mesh() = default;
-    Mesh(std::size_t vOffset, std::size_t vCount, std::size_t iOffset, std::size_t iCount)
-        : vertexOffset(vOffset), vertexCount(vCount), indexOffset(iOffset), indexCount(iCount) {}
+    Mesh(std::size_t vOffset, std::size_t vCount, std::size_t iOffset, std::size_t iCount, Bounds b)
+        : vertexOffset(vOffset),
+          vertexCount(vCount),
+          indexOffset(iOffset),
+          indexCount(iCount),
+          bounds(b) {}
 
-    static Mesh none() { return Mesh(0, 0, 0, 0); }
+    static Mesh none() { return Mesh(0, 0, 0, 0, Bounds::none()); }
 
     bool isEmpty() { return indexCount == 0; }
 

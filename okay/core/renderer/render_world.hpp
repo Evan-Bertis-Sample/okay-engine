@@ -3,6 +3,7 @@
 
 #include "glm/ext/vector_float3.hpp"
 #include "glm/ext/vector_float4.hpp"
+#include "math_types.hpp"
 
 #include <okay/core/renderer/gl.hpp>
 #include <okay/core/renderer/material.hpp>
@@ -20,39 +21,6 @@
 #include <vector>
 
 namespace okay {
-
-struct Transform {
-    glm::vec3 position{0.0f, 0.0f, 0.0f};
-    glm::vec3 scale{1.0f, 1.0f, 1.0f};
-    glm::quat rotation{1.0f, 0.0f, 0.0f, 0.0f};
-
-    Transform(const glm::vec3& pos = glm::vec3(0.0f),
-              const glm::vec3& scl = glm::vec3(1.0f),
-              const glm::quat& rot = glm::quat())
-        : position(pos), scale(scl), rotation(rot) {}
-
-    // asignment, equality comparison overloads
-    Transform& operator=(const Transform& other) {
-        position = other.position;
-        scale = other.scale;
-        rotation = other.rotation;
-        return *this;
-    }
-
-    bool operator==(const Transform& other) const {
-        return position == other.position && scale == other.scale && rotation == other.rotation;
-    }
-
-    bool operator!=(const Transform& other) const { return !(*this == other); }
-
-    glm::mat4 toMatrix() const {
-        glm::mat4 mat(1.0f);
-        mat = glm::translate(mat, position);
-        mat *= glm::mat4_cast(rotation);
-        mat = glm::scale(mat, scale);
-        return mat;
-    }
-};
 
 class Camera {
    public:
@@ -109,6 +77,21 @@ class Camera {
     glm::mat4 viewMatrix() const { return glm::inverse(transform.toMatrix()); }
     glm::vec3 position() const { return transform.position; }
     glm::vec3 direction() const { return transform.rotation * glm::vec3(0, 0, -1); }
+
+    bool isInFrustum(const glm::vec3& pos, float aspectRatio) const {
+        glm::vec4 clip = projectionMatrix(aspectRatio) * viewMatrix() * glm::vec4(pos, 1.0f);
+
+        return clip.x >= -clip.w && clip.x <= clip.w && clip.y >= -clip.w && clip.y <= clip.w &&
+               clip.z >= -clip.w && clip.z <= clip.w;
+    }
+
+    bool isInFrustum(const Bounds& bounds, float aspectRatio) {
+        for (const glm::vec3& p : bounds.corners()) {
+            if (!isInFrustum(p, aspectRatio))
+                return false;
+        }
+        return true;
+    }
 
     operator Transform() const { return transform; }
     bool operator==(const Camera& other) const {

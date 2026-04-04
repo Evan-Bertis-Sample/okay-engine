@@ -17,6 +17,7 @@ Mesh MeshBuffer::addMesh(const MeshData& mesh) {
 
     m.indexOffset = _indices.size();
     m.indexCount = mesh.indices.size();
+    Bounds b = Bounds::none();
 
     // push the vertices of the mesh
     for (const MeshVertex& v : mesh.vertices) {
@@ -25,6 +26,7 @@ Mesh MeshBuffer::addMesh(const MeshData& mesh) {
         _bufferData.push_back(v.position.x);
         _bufferData.push_back(v.position.y);
         _bufferData.push_back(v.position.z);
+        b.extend(v.position);
         // normal
         _bufferData.push_back(v.normal.x);
         _bufferData.push_back(v.normal.y);

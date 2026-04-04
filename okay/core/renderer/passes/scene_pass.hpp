@@ -1,6 +1,8 @@
 #ifndef __SCENE_PASS_H__
 #define __SCENE_PASS_H__
 
+#include "okay/core/renderer/render_world.hpp"
+
 #include <okay/core/engine/engine.hpp>
 #include <okay/core/renderer/gl.hpp>
 #include <okay/core/renderer/materials/lit.hpp>
@@ -49,6 +51,11 @@ class ScenePass : public IRenderPass {
                 continue;
             if (item.material->isNone())
                 continue;
+
+            Camera& camera = context.world.camera();
+            if (!camera.isInFrustum(item.mesh.bounds.transform(item.worldMatrix), aspect)) {
+                continue;
+            }
 
             // Shader switch: bind program + per-frame stuff
             if (_materialIndex != item.material->id()) {
