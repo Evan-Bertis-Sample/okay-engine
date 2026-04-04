@@ -15,6 +15,10 @@ struct SceneMaterialProperties {
     UniformProperty<glm::vec3, FixedString("u_cameraPosition")> cameraPosition{};
     UniformProperty<glm::vec3, FixedString("u_cameraDirection")> cameraDirection{};
 
+    bool isTransparent{false};
+    bool recievesShadows{false};
+    bool castsShadows{false};
+
     auto uniformRefs() {
         return std::tie(modelMatrix, viewMatrix, projectionMatrix, cameraPosition, cameraDirection);
     }
@@ -27,6 +31,17 @@ struct SceneMaterialProperties {
 
     auto textureRefs() { return std::tie(); }
     auto textureRefs() const { return std::tie(); }
+
+    MaterialFlagCollection flags() {
+        MaterialFlagCollection flags;
+        if (isTransparent)
+            flags.addFlag(MaterialFlags::TRANSPARENT);
+        if (recievesShadows)
+            flags.addFlag(MaterialFlags::RECEIVE_SHADOWS);
+        if (castsShadows)
+            flags.addFlag(MaterialFlags::CAST_SHADOWS);
+        return flags;
+    }
 };
 
 struct UnlitMaterial : public SceneMaterialProperties,
@@ -49,6 +64,12 @@ struct UnlitMaterial : public SceneMaterialProperties,
     auto textureRefs() { return std::tie(albedo); }
 
     auto textureRefs() const { return std::tie(albedo); };
+
+    MaterialFlagCollection flags() {
+        MaterialFlagCollection flags = SceneMaterialProperties::flags();
+        flags.addFlag(MaterialFlags::UNLIT);
+        return flags;
+    }
 };
 
 };  // namespace okay

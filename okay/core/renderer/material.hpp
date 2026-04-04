@@ -16,10 +16,69 @@
 
 namespace okay {
 
+enum class MaterialFlags : std::uint32_t {
+    NONE = 0,
+    TRANSPARENT = 1 << 0,
+    DOUBLE_SIDED = 1 << 1,
+    UNLIT = 1 << 2,
+    CAST_SHADOWS = 1 << 3,
+    RECEIVE_SHADOWS = 1 << 4,
+    NORMAL_MAP = 1 << 5,
+};
+
+inline MaterialFlags operator|(MaterialFlags a, MaterialFlags b) {
+    return static_cast<MaterialFlags>(static_cast<std::uint32_t>(a) |
+                                      static_cast<std::uint32_t>(b));
+}
+
+inline MaterialFlags operator&(MaterialFlags a, MaterialFlags b) {
+    return static_cast<MaterialFlags>(static_cast<std::uint32_t>(a) &
+                                      static_cast<std::uint32_t>(b));
+}
+
+inline MaterialFlags& operator|=(MaterialFlags& a, MaterialFlags b) {
+    a = a | b;
+    return a;
+}
+
+struct MaterialFlagCollection {
+    std::uint32_t flags{static_cast<std::uint32_t>(MaterialFlags::NONE)};
+
+    MaterialFlagCollection() = default;
+    MaterialFlagCollection(MaterialFlags f) : flags(static_cast<std::uint32_t>(f)) {}
+    MaterialFlagCollection(std::uint32_t rawFlags) : flags(rawFlags) {}
+
+    static MaterialFlagCollection opaque() {
+        return MaterialFlagCollection(MaterialFlags::CAST_SHADOWS | MaterialFlags::RECEIVE_SHADOWS);
+    }
+
+    static MaterialFlagCollection transparent() {
+        return MaterialFlagCollection(MaterialFlags::TRANSPARENT | MaterialFlags::RECEIVE_SHADOWS);
+    }
+
+    static MaterialFlagCollection unlit() { return MaterialFlagCollection(MaterialFlags::UNLIT); }
+
+    static MaterialFlagCollection unlitTransparent() {
+        return MaterialFlagCollection(MaterialFlags::UNLIT | MaterialFlags::TRANSPARENT);
+    }
+
+    static MaterialFlagCollection doubleSided() {
+        return MaterialFlagCollection(MaterialFlags::DOUBLE_SIDED | MaterialFlags::CAST_SHADOWS |
+                                      MaterialFlags::RECEIVE_SHADOWS);
+    }
+
+    bool hasFlag(MaterialFlags f) const { return (flags & static_cast<std::uint32_t>(f)) != 0; }
+    MaterialFlagCollection& addFlag(MaterialFlags f) {
+        flags |= static_cast<std::uint32_t>(f);
+        return *this;
+    }
+};
+
 class IMaterialPropertyCollection {
    public:
     virtual Failable init(ShaderHandle shader) = 0;
     virtual Failable pass(ShaderHandle shader) = 0;
+    virtual MaterialFlagCollection flags() = 0;
 };
 
 class Material {
@@ -84,7 +143,7 @@ class Material {
 
     bool operator!=(const Material& other) const { return !(*this == other); }
 
-    std::unique_ptr<IMaterialPropertyCollection>& uniforms() { return _uniforms; }
+    std::unique_ptr<IMaterialPropertyCollection>& properties() { return _uniforms; }
 
    private:
     ShaderHandle _shader;
@@ -231,10 +290,14 @@ class OkayMaterialProperties : public IMaterialPropertyCollection {
         return anyErrors ? Failable::errorResult(errorMessages.str()) : Failable::ok({});
     }
 
+    MaterialFlagCollection flags() override {
+        auto& d = static_cast<Derived&>(*this);
+        return d.flags();
+    }
+
    private:
     bool _initialized{false};
 };
-
 };  // namespace okay
 
 #endif  // _MATERIAL_H__
