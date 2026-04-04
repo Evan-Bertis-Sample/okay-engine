@@ -105,10 +105,16 @@ static void __gameInitialize() {
     auto materialProprties = std::make_unique<okay::LitMaterial>();
     materialProprties->color.set(glm::vec4(1.0f, 1.0f, 0.0f, 1.0f));
     materialProprties->albedo = texture; 
-    // materialProprties->sheen.set(100.0f);
+    // materialProprties->sheen.set(1000.0f);
     // materialProprties->sheenTint.set(0.0f);
     // materialProprties->clearcoat.set(200.0f);
-    // materialProprties->clearcoatGloss.set(200.0f);
+    // materialProprties->clearcoatGloss.set(0.0f);
+    // materialProprties->roughness.set(1000.0f);
+    // materialProprties->anisotropic.set(1.0f);
+    // materialProprties->specular.set(50.0f);
+    // materialProprties->specularTint.set(0.0f);
+    // materialProprties->metallic.set(1.0f);
+    // materialProprties->flatness.set(1.0f);
     okay::OkayMaterialHandle sunMat = renderer->materialRegistry().registerMaterial(shader, std::move(materialProprties));
     g_teapot = renderer->world().addRenderEntity(
         okay::OkayTransform({0.0f, 0.0f, 0.0f}, {0.07f, 0.07f, 0.07f}),
