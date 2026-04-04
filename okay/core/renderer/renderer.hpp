@@ -14,8 +14,6 @@
 #include <okay/core/renderer/render_world.hpp>
 #include <okay/core/renderer/surface.hpp>
 #include <okay/core/util/singleton.hpp>
-
-#include <GLFW/glfw3.h>
 #include <cstdint>
 
 namespace okay {
@@ -56,7 +54,7 @@ class Renderer : public System<SystemScope::ENGINE> {
     uint32_t width() const { return _surfaceConfig.width; }
     uint32_t height() const { return _surfaceConfig.height; }
 
-    GLFWwindow* getSurfaceWindow() { return reinterpret_cast<GLFWwindow*>(_surface->getWindow()); }
+    void* getSurfaceWindow() { return _surface->getWindow(); }
 
    private:
     SurfaceConfig _surfaceConfig;

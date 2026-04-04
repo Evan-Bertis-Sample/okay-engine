@@ -127,9 +127,23 @@ set(IMGUI_SOURCES
   ${IMGUI_DIR}/imgui_draw.cpp
   ${IMGUI_DIR}/imgui_tables.cpp
   ${IMGUI_DIR}/imgui_widgets.cpp
-  ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp
   ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp
 )
+
+if(NOT DEFINED OKAY_PLATFORM)
+  if(WIN32)
+    set(OKAY_PLATFORM "windows")
+    list(APPEND IMGUI_SOURCES ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp)
+  elseif(UNIX AND NOT APPLE)
+    set(OKAY_PLATFORM "rpi")
+    list(APPEND IMGUI_SOURCES ${IMGUI_DIR}/backends/imgui_impl_null.cpp)
+  elseif(APPLE)
+    set(OKAY_PLATFORM "macos")
+    list(APPEND IMGUI_SOURCES ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp)
+  else()
+    message(FATAL_ERROR "Unsupported platform; set -DOKAY_PLATFORM=<name>")
+  endif()
+endif()
 
 add_library(imgui STATIC ${IMGUI_SOURCES})
 
@@ -141,7 +155,6 @@ list(APPEND OKAY_ENGINE_LIBRARIES imgui)
 # link glfw and OpenGL to imgui
 target_link_libraries(imgui
   PUBLIC
-  glfw
   OpenGL::GL
 )
 # define verbosity settings for Release Builds
