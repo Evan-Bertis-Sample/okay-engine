@@ -221,6 +221,8 @@ struct ECSEntity {
 
     std::uint32_t id() const { return _ecs->getEntityID(*this); }
 
+    void destroy() { _ecs->destroyEntity(*this); }
+
    private:
     ECSEntity(EntityComponentStore* ecs, ObjectPoolHandle handle) : _handle(handle), _ecs(ecs) {}
 

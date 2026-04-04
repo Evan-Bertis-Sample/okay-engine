@@ -80,9 +80,7 @@ int main() {
 static void __gameInitialize() {
     // Additional game initialization logic
     okay::Texture texture = okay::load::engineTexture("textures/uv_test.jpg");
-    okay::Mesh teapot = okay::mesh(
-        okay::load::engineMeshData("models/teapot.obj")
-    );
+    okay::Mesh teapot = okay::mesh(okay::load::engineMeshData("models/teapot.obj"));
 
     okay::Mesh cube = okay::mesh(okay::primitives::box().build());
     okay::ShaderHandle shader = okay::shaderHandle(okay::load::engineShader("shaders/lit"));
@@ -100,11 +98,11 @@ static void __gameInitialize() {
     ecs->addSystem(std::make_unique<BobSystem>());
 
     s_teapot =
-        ecs->createEntity()
+        okay::ecs::entity()
             .addComponent<okay::TransformComponent>(glm::vec3{0.0f, 0.0f, 0.0f}, glm::vec3{0.1f})
             .addComponent<okay::MeshRendererComponent>(teapot, material);
 
-    s_light = ecs->createEntity()
+    s_light = okay::ecs::entity()
                   .addComponent<okay::TransformComponent>(
                       glm::vec3{},
                       glm::vec3{0.1f},
@@ -112,21 +110,21 @@ static void __gameInitialize() {
                   .addComponent<okay::LightComponent>(
                       okay::LightComponent::directional(glm::vec3{0.9, 0.9, 0.85}));
 
-    s_camera = ecs->createEntity()
+    s_camera = okay::ecs::entity()
                    .addComponent<okay::TransformComponent>(glm::vec3{0.0f, 0.0f, 5.0f})
                    .addComponent<okay::CameraComponent>(
                        okay::CameraComponent{okay::Camera::PerspectiveLens{45.0f, 0.1f, 100.0f}});
 
     for (std::size_t i = 0; i < 1000; ++i) {
         glm::vec3 pos = glm::ballRand(50.0f);
-        okay::ECSEntity entity = ecs->createEntity()
+        okay::ECSEntity entity = okay::ecs::entity()
                                      .addComponent<okay::TransformComponent>(pos, glm::vec3{0.5f})
                                      .addComponent<okay::MeshRendererComponent>(cube, material)
                                      .addComponent<BobComponent>();
 
         for (std::size_t i = 0; i < 5; ++i) {
             pos = glm::ballRand(100.0f);
-            ecs->createEntity(entity)
+            okay::ecs::entity(entity)
                 .addComponent<okay::TransformComponent>(pos, glm::vec3{0.5f})
                 .addComponent<okay::MeshRendererComponent>(cube, material);
         }
@@ -143,9 +141,8 @@ static void __gameUpdate() {
     cameraTransform.lookAt(s_camera, glm::vec3{});
 
     okay::ECSEntity toDelete;
-    okay::ECS* ecs = okay::Engine.systems.getSystemChecked<okay::ECS>();
 
-    for (auto entity : ecs->query<okay::query::Get<okay::TransformComponent, BobComponent>>()) {
+    for (auto entity : okay::ecs::query<okay::query::Get<okay::TransformComponent, BobComponent>>()) {
         toDelete = entity.entity;
         break;
     }
@@ -154,8 +151,8 @@ static void __gameUpdate() {
         okay::Engine.logger.info("FPS: {} | Destroying entity {}, now {} entities",
                                  okay::Engine.time->fps(),
                                  toDelete.id(),
-                                 ecs->getEntityCount());
-        ecs->destroyEntity(toDelete);
+                                 okay::ecs::entityCount());
+        toDelete.destroy();
     }
 }
 

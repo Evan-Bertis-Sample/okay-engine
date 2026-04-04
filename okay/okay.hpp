@@ -19,6 +19,7 @@
 // okay/core/ecs
 #include <okay/core/ecs/builtins.hpp>
 #include <okay/core/ecs/ecs.hpp>
+#include <okay/core/ecs/ecs_util.hpp>
 #include <okay/core/ecs/ecstore.hpp>
 #include <okay/core/ecs/query.hpp>
 
