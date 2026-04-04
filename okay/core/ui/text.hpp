@@ -1,9 +1,9 @@
 #ifndef __TEXT_H__
 #define __TEXT_H__
 
-#include <okay/core/renderer/font.hpp>
 #include <okay/core/renderer/mesh.hpp>
 #include <okay/core/renderer/renderer.hpp>
+#include <okay/core/ui/font.hpp>
 
 #include <algorithm>
 #include <cmath>

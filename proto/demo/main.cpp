@@ -1,5 +1,6 @@
 
 #include "glm/gtc/random.hpp"
+#include "okay/core/asset/util.hpp"
 #include "okay/core/ecs/components/transform_component.hpp"
 #include "okay/core/ecs/ecs.hpp"
 #include "okay/core/ecs/ecstore.hpp"
@@ -93,37 +94,20 @@ int main() {
 static void __gameInitialize() {
     // Additional game initialization logic
     okay::Renderer* renderer = okay::Engine.systems.getSystemChecked<okay::Renderer>();
-    okay::AssetManager* assetManager = okay::Engine.systems.getSystemChecked<okay::AssetManager>();
-    auto teapotRes = assetManager->loadEngineAssetSync<okay::MeshData>("models/teapot.obj");
-    if (teapotRes.isError()) {
-        okay::Engine.logger.error("Failed to load mesh: {}", teapotRes.error());
-        return;
-    }
 
-    okay::TextureLoadSettings textureLoadSettings{.store = okay::TextureDataStore::mainStore()};
-    okay::Texture texture =
-        assetManager
-            ->loadEngineAssetSync<okay::Texture>("textures/uv_test.jpg", textureLoadSettings)
-            .value()
-            .asset;
-    okay::Mesh teapot = renderer->meshBuffer().addMesh(teapotRes.value().asset);
-
+    okay::Texture texture = okay::load::engineTexture("textures/uv_test.jpg");
+    okay::Mesh teapot = renderer->meshBuffer().addMesh(okay::load::engineMeshData("models/teapot.obj"));
     okay::Mesh cube = renderer->meshBuffer().addMesh(okay::primitives::box().build());
-
     okay::Failable res = renderer->meshBuffer().bindMeshData();
+
     if (res.isError()) {
         okay::Engine.logger.error("Failed to bind mesh data: {}", res.error());
         return;
     }
-
-    auto shaderLoadRes = assetManager->loadEngineAssetSync<okay::Shader>("shaders/lit");
-    if (shaderLoadRes.isError()) {
-        okay::Engine.logger.error("Failed to load shader: {}", shaderLoadRes.error());
-        return;
-    }
-
+    okay::Shader shaderLoadRes = okay::load::engineShader("shaders/lit");
     okay::ShaderHandle shader = renderer->materialRegistry().registerShader(
-        shaderLoadRes.value().asset.vertexShader, shaderLoadRes.value().asset.fragmentShader);
+        shaderLoadRes.vertexShader, shaderLoadRes.fragmentShader);
+
     auto materialProperties = std::make_unique<okay::LitMaterial>();
     materialProperties->color.set(glm::vec4(1.0f, 1.0f, 0.0f, 1.0f));
     materialProperties->albedo = texture;

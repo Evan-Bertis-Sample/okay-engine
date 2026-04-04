@@ -189,6 +189,23 @@ class Game {
     static const std::vector<OkaySystemDescriptor> REQUIRED_SYSTEMS;
 };
 
+template <typename T>
+struct SystemParameter {
+    T* system{nullptr};
+    SystemParameter(T* system) : system(system) {}
+
+    T* get() const {
+        if (system == nullptr) {
+            return Engine.systems.getSystemChecked<T>();
+        }
+
+        return system;
+    }
+
+    T& operator*() const { return get(); }
+    T* operator->() const { return get(); }
+};
+
 };  // namespace okay
 
 #endif  // __ENGINE_H__

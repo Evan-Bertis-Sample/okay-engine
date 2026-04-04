@@ -2,10 +2,10 @@
 #define __FONT_LOADER_H__
 
 #include <okay/core/asset/asset.hpp>
-#include <okay/core/renderer/font.hpp>
 #include <okay/core/renderer/material.hpp>
 #include <okay/core/renderer/texture.hpp>
 #include <okay/core/renderer/uniform.hpp>
+#include <okay/core/ui/font.hpp>
 #include <okay/core/util/option.hpp>
 #include <okay/core/util/result.hpp>
 

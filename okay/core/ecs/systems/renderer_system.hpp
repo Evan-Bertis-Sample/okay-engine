@@ -1,15 +1,14 @@
 #ifndef __RENDERER_SYSTEM_H__
 #define __RENDERER_SYSTEM_H__
 
-#include "okay/core/renderer/render_world.hpp"
-#include "okay/core/renderer/renderer.hpp"
-
 #include <okay/core/ecs/components/camera_component.hpp>
 #include <okay/core/ecs/components/light_component.hpp>
 #include <okay/core/ecs/components/render_component.hpp>
 #include <okay/core/ecs/components/transform_component.hpp>
 #include <okay/core/ecs/ecs.hpp>
 #include <okay/core/engine/engine.hpp>
+#include <okay/core/renderer/render_world.hpp>
+#include <okay/core/renderer/renderer.hpp>
 
 namespace okay {
 
