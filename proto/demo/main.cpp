@@ -96,7 +96,8 @@ static void __gameInitialize() {
     okay::Renderer* renderer = okay::Engine.systems.getSystemChecked<okay::Renderer>();
 
     okay::Texture texture = okay::load::engineTexture("textures/uv_test.jpg");
-    okay::Mesh teapot = renderer->meshBuffer().addMesh(okay::load::engineMeshData("models/teapot.obj"));
+    okay::Mesh teapot =
+        renderer->meshBuffer().addMesh(okay::load::engineMeshData("models/teapot.obj"));
     okay::Mesh cube = renderer->meshBuffer().addMesh(okay::primitives::box().build());
     okay::Failable res = renderer->meshBuffer().bindMeshData();
 
