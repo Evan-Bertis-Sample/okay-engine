@@ -5,6 +5,7 @@
 #include "okay/core/ecs/ecstore.hpp"
 #include "okay/core/ecs/query.hpp"
 #include "okay/core/engine/engine.hpp"
+#include "okay/core/renderer/primitive.hpp"
 #include "okay/core/tween/tween_easing.hpp"
 #include "okay/core/tween/tween_engine.hpp"
 
@@ -107,6 +108,11 @@ static void __gameInitialize() {
             .asset;
     okay::Mesh teapot = renderer->meshBuffer().addMesh(teapotRes.value().asset);
 
+    okay::Mesh cube = renderer->meshBuffer().addMesh(
+        okay::primitives::box().build()
+    );
+
+
     okay::Failable res = renderer->meshBuffer().bindMeshData();
     if (res.isError()) {
         okay::Engine.logger.error("Failed to bind mesh data: {}", res.error());
@@ -155,15 +161,15 @@ static void __gameInitialize() {
     for (std::size_t i = 0; i < 1000; ++i) {
         glm::vec3 pos = glm::ballRand(50.0f);
         okay::ECSEntity entity = ecs->createEntity()
-                                     .addComponent<okay::TransformComponent>(pos, glm::vec3{0.05f})
-                                     .addComponent<okay::MeshRendererComponent>(teapot, material)
+                                     .addComponent<okay::TransformComponent>(pos, glm::vec3{0.5f})
+                                     .addComponent<okay::MeshRendererComponent>(cube, material)
                                      .addComponent<BobComponent>();
 
         for (std::size_t i = 0; i < 5; ++i) {
             pos = glm::ballRand(100.0f);
             ecs->createEntity(entity)
                 .addComponent<okay::TransformComponent>(pos, glm::vec3{0.5f})
-                .addComponent<okay::MeshRendererComponent>(teapot, material);
+                .addComponent<okay::MeshRendererComponent>(cube, material);
         }
     }
 }
