@@ -108,10 +108,7 @@ static void __gameInitialize() {
             .asset;
     okay::Mesh teapot = renderer->meshBuffer().addMesh(teapotRes.value().asset);
 
-    okay::Mesh cube = renderer->meshBuffer().addMesh(
-        okay::primitives::box().build()
-    );
-
+    okay::Mesh cube = renderer->meshBuffer().addMesh(okay::primitives::box().build());
 
     okay::Failable res = renderer->meshBuffer().bindMeshData();
     if (res.isError()) {
