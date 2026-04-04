@@ -32,12 +32,15 @@ struct LitMaterial : public SceneMaterialProperties, public OkayMaterialProperti
     UniformProperty<float, FixedString("u_clearcoat")> clearcoat{0.0f};
     UniformProperty<float, FixedString("u_clearcoatGloss")> clearcoatGloss{1.0f};
     UniformProperty<float, FixedString("u_specular")> specular{0.5f};
+    UniformProperty<float, FixedString("u_specularTint")> specularTint{0.0f};
+    UniformProperty<float, FixedString("u_metallic")> metallic{0.0f};
+    UniformProperty<float, FixedString("u_flatness")> flatness{0.0f};
 
     auto uniformRefs() {
-        return std::tuple_cat(SceneMaterialProperties::uniformRefs(), std::tie(shininess, ambient, color, antialiasing, roughness, sheen, sheenTint, anisotropic, clearcoat, clearcoatGloss, specular));
+        return std::tuple_cat(SceneMaterialProperties::uniformRefs(), std::tie(shininess, ambient, color, antialiasing, roughness, sheen, sheenTint, anisotropic, clearcoat, clearcoatGloss, specular, specularTint, metallic, flatness));
     }
     auto uniformRefs() const {
-        return std::tuple_cat(SceneMaterialProperties::uniformRefs(), std::tie(shininess, ambient, color, antialiasing, roughness, sheen, sheenTint, anisotropic, clearcoat, clearcoatGloss, specular));
+        return std::tuple_cat(SceneMaterialProperties::uniformRefs(), std::tie(shininess, ambient, color, antialiasing, roughness, sheen, sheenTint, anisotropic, clearcoat, clearcoatGloss, specular, specularTint, metallic, flatness));
     }
 
     auto uniformBlockRefs() {

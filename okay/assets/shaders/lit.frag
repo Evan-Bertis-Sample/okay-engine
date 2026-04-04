@@ -26,6 +26,9 @@ uniform float u_anisotropic;
 uniform float u_clearcoat;
 uniform float u_clearcoatGloss;
 uniform float u_specular;
+uniform float u_specularTint;
+uniform float u_metallic;
+uniform float u_flatness;
 
 
 struct Light {
@@ -142,12 +145,18 @@ float GTR1(vec3 N, vec3 H, float a) {
     return (a2 - 1.0) / (PI * log2(a2) * (1.0 + (a2 - 1.0) * absDotNH * absDotNH));
 }
 
-float schlickFresnel(vec3 V, vec3 H) {
-    float F0 = 0.04f; // base reflectance
+float schlickFresnel(float F0, vec3 W, vec3 H) {
     float F90 = 1.0f; // max reflectance
-    float cosTheta = max(dot(H, V), 0.0); // cosine of angle between view and half vector
+    float cosTheta = max(dot(H, W), 0.0); // cosine of angle between view and half vector
 
     return mix(F0, F90, pow(1.0 - cosTheta, 5.0));
+}
+
+vec3 schlickFresnel(vec3 R0, vec3 W, vec3 H) {
+    vec3 R90 = vec3(1.0f);
+    float cosTheta = max(dot(H, W), 0.0); // cosine of angle between view and half vector
+
+    return mix(R0, R90, pow(1.0f - cosTheta, 5.0f));
 }
 
 float GGXG1(vec3 V, vec3 N, float a) {
@@ -167,7 +176,7 @@ float disneyClearcoat(vec3 N, vec3 V, vec3 H, vec3 L) {
     float clearcoatGloss = u_clearcoatGloss;
 
     float d = GTR1(N, H, mix(0.1, 0.001, clearcoatGloss));
-    float f = schlickFresnel(V, H);
+    float f = schlickFresnel(0.04f, V, H);
     float gl = GGXG1(L, N, 0.25f);
     float gv = GGXG1(V, N, 0.25f);
 
@@ -293,6 +302,61 @@ vec3 calcDisneySpecTransmission(vec3 N, vec3 L, vec3 V, vec3 H, float ax, float 
 
     return dotNL * color * c * t * (1.0f - f) * gl * gv * d;
 
+}
+
+float retroDiffuse(vec3 N, vec3 L, vec3 V, float fl, float fv) {
+    float roughness = u_roughness;
+    float rr = 2.0f * roughness * dot(L, V) * dot(L, V);
+    return rr * (fl + fv + fl * fv * (rr - 1.0f));
+}
+
+float calcDisneyDiffuse(vec3 N, vec3 L, vec3 H, vec3 V, bool thin) {
+    float dotNL = abs(dot(N, L));
+    float dotNV = abs(dot(N, V));
+
+    float fl = schlickFresnel(0.04f, L, H);
+    float fv = schlickFresnel(0.04f, V, H);
+
+    float hanrahanKrueger = 0.0f;
+    
+    float roughness = u_roughness;
+    float flatness = u_flatness;
+    if (thin && flatness > 0.0f) {
+        roughness = roughness * roughness;
+
+        float dotHL = dot(H, L);
+        float fss90 = dotHL * dotHL * roughness;
+        float fss = mix(1.0f, fss90, fl) * mix(1.0f, fss90, fv);
+
+        float ss = 1.25f * (fss * (1.0f / (dotNL + dotNV) - 0.5f) + 0.5f);
+        hanrahanKrueger = ss;
+    }
+
+    float lambert = 1.0f;
+    float retro = retroDiffuse(N, L, V, fl, fv);
+    float subsurfaceApprox = mix(lambert, hanrahanKrueger, thin ? flatness : 0.0f);
+    const float PI = 3.1415926535897932384626433832795;
+    return 1.0f / PI * (retro + subsurfaceApprox * (1.0f - 0.5f * fl) * (1.0f - 0.5f * fv));
+
+}
+
+vec3 disneyFresnel(vec3 N, vec3 L, vec3 H, vec3 V) {
+    float dotHV = abs(dot(H, V));
+
+    vec3 tint = calcTint();
+    float specular = u_specular;
+    float ior = (2.0f / (1.0f - sqrt(0.08f * specular))) - 1.0f;
+
+    float specularTint = u_specularTint;
+    float relativeIOR = dot(N, L) > 0.0f ? ior : 1.0f / ior;
+    vec3 R0 = pow((1.0f - relativeIOR) / (1.0f + relativeIOR), 2.0f) * mix(vec3(1.0f), tint, specularTint);
+    float metallic = u_metallic;
+    R0 = mix(R0, v_color, metallic);
+
+    float dielectricFresnel = dielectric(dotHV, 1.0f, specular);
+    vec3 metallicFresnel = schlickFresnel(R0, L, H);
+
+    return mix(vec3(dielectricFresnel), metallicFresnel, metallic);
 }
 
 void main() {
