@@ -134,7 +134,6 @@ Failable MeshBuffer::initVertexAttributes() {
 
 Failable MeshBuffer::bindMeshData() {
     if (!_dataOutofDate) {
-        Engine.logger.debug("Mesh data already bound");
         return Failable::ok({});
     }
 

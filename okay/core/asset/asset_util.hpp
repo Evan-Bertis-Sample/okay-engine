@@ -1,7 +1,5 @@
-#ifndef __UTIL_H__
-#define __UTIL_H__
-
-#include "okay/core/ui/font.hpp"
+#ifndef __ASSET_UTIL_H__
+#define __ASSET_UTIL_H__
 
 #include <okay/core/asset/asset.hpp>
 #include <okay/core/asset/generic/font_loader.hpp>
@@ -10,6 +8,7 @@
 #include <okay/core/asset/mesh/mesh_loader.hpp>
 #include <okay/core/engine/engine.hpp>
 #include <okay/core/renderer/mesh.hpp>
+#include <okay/core/ui/font.hpp>
 
 #include <filesystem>
 #include <typeinfo>
@@ -114,4 +113,4 @@ inline MeshData engineMeshData(const std::filesystem::path& path,
 
 }  // namespace okay
 
-#endif  // __UTIL_H__
+#endif  // __ASSET_UTIL_H__

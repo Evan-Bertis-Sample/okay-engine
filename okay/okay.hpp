@@ -5,7 +5,7 @@
 
 // okay/core/asset
 #include <okay/core/asset/asset.hpp>
-#include <okay/core/asset/util.hpp>
+#include <okay/core/asset/asset_util.hpp>
 
 // okay/core/asset/generic
 #include <okay/core/asset/generic/font_loader.hpp>
@@ -52,6 +52,7 @@
 #include <okay/core/renderer/render_target.hpp>
 #include <okay/core/renderer/render_world.hpp>
 #include <okay/core/renderer/renderer.hpp>
+#include <okay/core/renderer/renderer_util.hpp>
 #include <okay/core/renderer/shader.hpp>
 #include <okay/core/renderer/surface.hpp>
 #include <okay/core/renderer/texture.hpp>

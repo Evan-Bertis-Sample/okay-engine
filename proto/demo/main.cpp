@@ -1,18 +1,7 @@
-
-#include "glm/gtc/random.hpp"
-#include "okay/core/asset/util.hpp"
-#include "okay/core/ecs/components/transform_component.hpp"
-#include "okay/core/ecs/ecs.hpp"
-#include "okay/core/ecs/ecstore.hpp"
-#include "okay/core/ecs/query.hpp"
-#include "okay/core/engine/engine.hpp"
-#include "okay/core/renderer/primitive.hpp"
-#include "okay/core/tween/tween_easing.hpp"
-#include "okay/core/tween/tween_engine.hpp"
-
 #include <okay/okay.hpp>
 
 #include <glm/glm.hpp>
+#include <glm/gtc/random.hpp>
 #include <utility>
 
 static void __gameInitialize();
@@ -47,8 +36,6 @@ class BobSystem : public okay::ECSSystem<okay::query::Get<okay::TransformCompone
 
         bob.positionTween = okay::Tween<glm::vec3>::create(config);
         bob.positionTween->start();
-
-        // okay::Engine.logger.debug("BobSystem: Entity {} added", item.entity.id());
     }
 
     void onTick(QueryT::Item& item) override {
@@ -57,7 +44,6 @@ class BobSystem : public okay::ECSSystem<okay::query::Get<okay::TransformCompone
     }
 
     void onEntityRemoved(QueryT::Item& item) override {
-        // okay::Engine.logger.debug("BobSystem: Entity {} removed", item.entity.id());
         auto& [transform, bob] = item.components;
         if (bob.positionTween) {
             bob.positionTween->kill();
@@ -93,28 +79,19 @@ int main() {
 
 static void __gameInitialize() {
     // Additional game initialization logic
-    okay::Renderer* renderer = okay::Engine.systems.getSystemChecked<okay::Renderer>();
-
     okay::Texture texture = okay::load::engineTexture("textures/uv_test.jpg");
-    okay::Mesh teapot =
-        renderer->meshBuffer().addMesh(okay::load::engineMeshData("models/teapot.obj"));
-    okay::Mesh cube = renderer->meshBuffer().addMesh(okay::primitives::box().build());
-    okay::Failable res = renderer->meshBuffer().bindMeshData();
+    okay::Mesh teapot = okay::mesh(
+        okay::load::engineMeshData("models/teapot.obj")
+    );
 
-    if (res.isError()) {
-        okay::Engine.logger.error("Failed to bind mesh data: {}", res.error());
-        return;
-    }
-    okay::Shader shaderLoadRes = okay::load::engineShader("shaders/lit");
-    okay::ShaderHandle shader = renderer->materialRegistry().registerShader(
-        shaderLoadRes.vertexShader, shaderLoadRes.fragmentShader);
+    okay::Mesh cube = okay::mesh(okay::primitives::box().build());
+    okay::ShaderHandle shader = okay::shaderHandle(okay::load::engineShader("shaders/lit"));
 
     auto materialProperties = std::make_unique<okay::LitMaterial>();
     materialProperties->color.set(glm::vec4(1.0f, 1.0f, 0.0f, 1.0f));
     materialProperties->albedo = texture;
 
-    okay::MaterialHandle material =
-        renderer->materialRegistry().registerMaterial(shader, std::move(materialProperties));
+    okay::MaterialHandle material = okay::materialHandle(shader, std::move(materialProperties));
 
     okay::ECS* ecs = okay::Engine.systems.getSystemChecked<okay::ECS>();
     okay::registerBuiltinComponentsAndSystems(*ecs);
