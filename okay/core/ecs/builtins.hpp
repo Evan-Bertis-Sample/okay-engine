@@ -8,18 +8,19 @@
 #include <okay/core/ecs/systems/camera_system.hpp>
 #include <okay/core/ecs/systems/light_system.hpp>
 #include <okay/core/ecs/systems/renderer_system.hpp>
+#include <okay/core/engine/engine.hpp>
 
 namespace okay {
 
-inline void registerBuiltinComponentsAndSystems(ECS& ecs) {
-    ecs.registerComponentType<TransformComponent>();
-    ecs.registerComponentType<MeshRendererComponent>();
-    ecs.registerComponentType<CameraComponent>();
-    ecs.registerComponentType<LightComponent>();
+inline void registerBuiltinComponentsAndSystems(SystemParameter<ECS> ecs) {
+    ecs->registerComponentType<TransformComponent>();
+    ecs->registerComponentType<MeshRendererComponent>();
+    ecs->registerComponentType<CameraComponent>();
+    ecs->registerComponentType<LightComponent>();
 
-    ecs.addSystem(std::make_unique<RendererSystem>());
-    ecs.addSystem(std::make_unique<CameraSystem>());
-    ecs.addSystem(std::make_unique<LightSystem>());
+    ecs->addSystem(std::make_unique<RendererSystem>());
+    ecs->addSystem(std::make_unique<CameraSystem>());
+    ecs->addSystem(std::make_unique<LightSystem>());
 };
 
 }  // namespace okay

@@ -1,3 +1,5 @@
+#include "okay/core/ecs/ecs_util.hpp"
+
 #include <okay/okay.hpp>
 
 #include <glm/glm.hpp>
@@ -90,12 +92,9 @@ static void __gameInitialize() {
     materialProperties->albedo = texture;
 
     okay::MaterialHandle material = okay::materialHandle(shader, std::move(materialProperties));
-
-    okay::ECS* ecs = okay::Engine.systems.getSystemChecked<okay::ECS>();
-    okay::registerBuiltinComponentsAndSystems(*ecs);
-
-    ecs->registerComponentType<BobComponent>();
-    ecs->addSystem(std::make_unique<BobSystem>());
+    okay::ecs::registerBuiltins();
+    okay::ecs::registerComponent<BobComponent>();
+    okay::ecs::registerSystem(std::make_unique<BobSystem>());
 
     s_teapot =
         okay::ecs::entity()
@@ -142,7 +141,8 @@ static void __gameUpdate() {
 
     okay::ECSEntity toDelete;
 
-    for (auto entity : okay::ecs::query<okay::query::Get<okay::TransformComponent, BobComponent>>()) {
+    for (auto entity :
+         okay::ecs::query<okay::query::Get<okay::TransformComponent, BobComponent>>()) {
         toDelete = entity.entity;
         break;
     }
