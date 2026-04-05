@@ -8,6 +8,7 @@ in vec3 v_worldNormal;
 in vec2 v_uv;
 in vec3 v_tangent;
 in vec3 v_bitangent;
+in mat3 v_worldToTangent;
 
 out vec4 FragColor;
 
@@ -167,12 +168,13 @@ float GGXG1(vec3 V, vec3 N, float a) {
     return 2.0f / (1.0f + sqrt(a2 + (1.0 - a2) * absDotNV * absDotNV));
 }
 
-float disneyClearcoat(vec3 N, vec3 V, vec3 H, vec3 L) {
+float disneyClearcoat(vec3 N, vec3 V, vec3 H, vec3 L, out float fPdfW, out float rPdfW) {
     float NdotL = max(dot(N, L), 0.0f);
     if (NdotL <= 0.0) return 0.0f;
 
     float clearcoat = u_clearcoat;
     if (clearcoat <= 0.0f) return 0.0f;
+
 
     float clearcoatGloss = u_clearcoatGloss;
 
@@ -180,6 +182,11 @@ float disneyClearcoat(vec3 N, vec3 V, vec3 H, vec3 L) {
     float f = schlickFresnel(0.04f, V, H);
     float gl = GGXG1(L, N, 0.25f);
     float gv = GGXG1(V, N, 0.25f);
+
+    float absDotNL = abs(dot(N, L));
+    float absDotNV = abs(dot(N, V));
+    fPdfW = d / (4.0f * absDotNL);
+    rPdfW = d / (4.0f * absDotNV);
 
     return 0.25f * clearcoat * d * f * gl * gv;
 }
@@ -233,7 +240,10 @@ vec3 calcDisneySpecTransmission(vec3 N, vec3 L, vec3 V, vec3 H, float ax, float 
 
 vec3 disneyFresnel(vec3 N, vec3 L, vec3 H, vec3 V);
 
-vec3 calcDisneyBRDF(vec3 N, vec3 V, vec3 H, vec3 L) {
+vec3 calcDisneyBRDF(vec3 N, vec3 V, vec3 H, vec3 L, out float fPdf, out float rPdf) {
+    fPdf = 0.0f;
+    rPdf = 0.0f;
+    
     float dotNL = dot(N, L);
     float dotNV = dot(N, V);
     if (dotNL <= 0.0f || dotNV <= 0.0f) return vec3(0.0f);
@@ -249,8 +259,11 @@ vec3 calcDisneyBRDF(vec3 N, vec3 V, vec3 H, vec3 L) {
 
     vec3 f = disneyFresnel(N, L, H, V);
 
-    vec3 res = d * gl * gv * f / (4.0f * dotNL * dotNV);
-    return res;
+    // Bsdf::GgxVndfAnisotropicPdf(wi, wm, wo, ax, ay, fPdf, rPdf);
+    fPdf *= (1.0f / (4.0f * abs(dot(V, H))));
+    rPdf *= (1.0f / (4.0f * abs(dot(L, H))));
+
+    return d * gl * gv * f / (4.0f * dotNL * dotNV);
 }
 
 // Specular BSDF
@@ -368,11 +381,38 @@ vec3 disneyFresnel(vec3 N, vec3 L, vec3 H, vec3 V) {
     return mix(vec3(dielectricFresnel), metallicFresnel, metallic);
 }
 
-vec3 evaluateDisney(vec3 N, vec3 L, vec3 H, vec3 V, bool thin) {
+void calcLobePdfs(out float pSpecular, out float pDiffuse, out float pClearcoat, out float pSpecTrans) {
+    float metallicBRDF = u_metallic;
+    float specularBSDF = (1.0f - u_metallic) * u_specularTrans;
+    float dielectricBRDF = (1.0f - u_specularTrans) * (1.0f - u_metallic);
+
+    float specularWeight = metallicBRDF + dielectricBRDF;
+    float transmissionWeight = specularBSDF;
+    float diffuseWeight = dielectricBRDF;
+    float clearcoatWeight = 1.0f * clamp(u_clearcoat, 0.0f, 1.0f);
+
+    float norm = 1.0f / (specularWeight + transmissionWeight + diffuseWeight + clearcoatWeight);
+
+    pSpecular = specularWeight * norm;
+    pSpecTrans = transmissionWeight * norm;
+    pDiffuse = diffuseWeight * norm;
+    pClearcoat = clearcoatWeight * norm;
+}
+
+vec3 evaluateDisney(vec3 N, vec3 L, vec3 H, vec3 V, bool thin, out float forwardPdf, out float reversePdf) {
+    vec3 wo = normalize(V * v_worldToTangent);
+    vec3 wi = normalize(L * v_worldToTangent);
+    vec3 wm = normalize(wo + wi);
+    
     float dotNV = dot(N, V);
     float dotNL = dot(N, L);
 
     vec3 reflectance = vec3(0.0f);
+    forwardPdf = 0.0f;
+    reversePdf = 0.0f;
+
+    float pBRDF, pDiffuse, pClearcoat, pSpecTrans;
+    calcLobePdfs(pBRDF, pDiffuse, pClearcoat, pSpecTrans);
 
     vec3 baseColor = v_color;
     float metallic = u_metallic;
@@ -389,16 +429,27 @@ vec3 evaluateDisney(vec3 N, vec3 L, vec3 H, vec3 V, bool thin) {
     // clearcoat
     bool upperHemisphere = dotNL > 0.0f && dotNV > 0.0f;
     if (upperHemisphere && u_clearcoat > 0.0f) {
-        float clearcoat = disneyClearcoat(N, V, H, L);
+        float forwardClearcoatPdfW;
+        float reverseClearcoatPdfW;
+
+        float clearcoat = disneyClearcoat(N, V, H, L, forwardClearcoatPdfW, reverseClearcoatPdfW);
         reflectance += vec3(clearcoat);
+        forwardPdf += pClearcoat * forwardClearcoatPdfW;
+        reversePdf += pClearcoat * reverseClearcoatPdfW;
     }
 
+
     // diffuse
-    if (diffuseWeight > 0.0f) {
+    if (upperHemisphere && diffuseWeight > 0.0f) {
+        float forwardDiffusePdfW = abs(dot(N, wi));
+        float reverseDiffusePdfW = abs(dot(N, wo));
         float diffuse = calcDisneyDiffuse(N, L, H, V, thin);
         vec3 sheen = calcSheen(N, V, L, H);
 
         reflectance += diffuseWeight * (diffuse * baseColor + sheen);
+
+        forwardPdf += pDiffuse * forwardDiffusePdfW;
+        reversePdf += pDiffuse * reverseDiffusePdfW;
     }
 
     // transmission
@@ -410,12 +461,27 @@ vec3 evaluateDisney(vec3 N, vec3 L, vec3 H, vec3 V, bool thin) {
 
         vec3 transmission = calcDisneySpecTransmission(N, L, V, H, tax, tay, thin);
         reflectance += transWeight * transmission;
+
+        float forwardTransmissivePdfW;
+        float reverseTransmissivePdfW;
+        // Bsdf::GgxVndfAnisotropicPdf(wi, wm, wo, tax, tay, forwardTransmissivePdfW, reverseTransmissivePdfW);
+
+        float dotLH = dot(L, H);
+        float dotVH = dot(H, V);
+        float relativeIOR = dot(N, L) > 0.0f ? ior : 1.0f / ior;
+        forwardPdf += pSpecTrans * forwardTransmissivePdfW / (pow(dotLH + relativeIOR * dotVH, 2.0f));
+        reversePdf += pSpecTrans * reverseTransmissivePdfW / (pow(dotVH + relativeIOR * dotLH, 2.0f));
     }
 
     // specular
     if (upperHemisphere) {
-        vec3 specular = calcDisneyBRDF(N, V, H, L);
+        float forwardMetallicPdfW;
+        float reverseMetallicPdfW; 
+        vec3 specular = calcDisneyBRDF(N, V, H, L, forwardMetallicPdfW, reverseMetallicPdfW);
         reflectance += specular;
+
+        forwardPdf += pBRDF * forwardMetallicPdfW / (4.0f * abs(dot(V, H)));
+        reversePdf += pBRDF * reverseMetallicPdfW / (4.0f * abs(dot(L, H)));
     }
 
     reflectance = reflectance * abs(dotNL);
@@ -430,12 +496,9 @@ void main() {
     vec4 texAlbedo = texture(u_albedo, v_uv);
     vec3 albedo = clamp(texAlbedo.rgb * v_color, vec3(0.0), vec3(1.0));
     vec3 colorOut = u_ambient * albedo;
-    
 
     int count = int(meta.x + 0.5);
     int maxLights = min(count, 16);
-
-    float shininess = max(u_shininess, 1.0);
 
     for (int i = 0; i < 16; ++i) {
         if (i >= maxLights) break;
@@ -481,34 +544,10 @@ void main() {
             continue;
         }
         vec3 H = safeNormalize(V + L); // half vector
-        // default
 
-        // diffuse
-
-        // specular
-        // Diffuse
-        // vec3 diffuse = NdotL * albedo * Lrgb;
-
-        // vec3 R = reflect(-L, N);
-        // float RdotV = max(dot(R, V), 0.0);
-        // vec3 specular = pow(RdotV, shininess) * Lrgb;
-        // specular *= att;
-
-        // vec3 specular = calcDisneyBRDF(N, V, H, L);
-        // colorOut += att * intensity * (diffuse + specular);
-
-        // colorOut += defaultLighting(N, L, Lrgb, albedo, V, shininess, intensity, att);
-        // colorOut += calcSheen(N, V, L, H);
-        // colorOut += disneyClearcoat(N, V, H, L);
-
-        colorOut += evaluateDisney(N, L, H, V, false) * Lrgb * intensity * att;
-        
-        // cel lighting
-        // colorOut += celLighting(N, L, Lrgb, albedo, V, shininess, intensity, att);
+        float forwardPdf, reversePdf;
+        colorOut += evaluateDisney(N, L, H, V, false, forwardPdf, reversePdf) * Lrgb * intensity * att;
     }
-
-    // float viewDep = pow(1.0 - max(dot(N, V), 0.0), 5.0);
-    // colorOut += viewDep * 0.25;
 
     FragColor = vec4(colorOut, texAlbedo.a);
 }

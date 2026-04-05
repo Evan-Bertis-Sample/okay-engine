@@ -111,7 +111,7 @@ static void __gameInitialize() {
     // materialProprties->clearcoatGloss.set(0.0f);
     // materialProprties->roughness.set(1000.0f);
     // materialProprties->anisotropic.set(1.0f);
-    // materialProprties->specular.set(50.0f);
+    // materialProprties->specular.set(0.0f);
     // materialProprties->specularTint.set(0.0f);
     // materialProprties->metallic.set(1.0f);
     // materialProprties->flatness.set(1.0f);
@@ -126,8 +126,8 @@ static void __gameInitialize() {
     renderer->world().addLight(
         okay::OkayLight::directional(
             glm::vec3(-0.5f, -1, 0.5f), 
-            glm::vec3(1.0, 0.8745f, 0.1333f),
-            0.6f
+            glm::vec3(1.0, 1.0f, 1.0f), //(1.0, 0.8745f, 0.1333f)
+            2.0f
         )
     );
 
