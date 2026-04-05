@@ -76,7 +76,8 @@
 
 // okay/core/ui
 #include <okay/core/ui/font.hpp>
-#include <okay/core/ui/text.hpp>
+#include <okay/core/ui/text_layout.hpp>
+#include <okay/core/ui/text_mesh_builder.hpp>
 
 // okay/core/util
 #include <okay/core/util/dirty_set.hpp>
