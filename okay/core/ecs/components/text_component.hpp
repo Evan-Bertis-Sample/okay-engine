@@ -10,7 +10,6 @@
 #include <okay/core/renderer/render_world.hpp>
 #include <okay/core/renderer/renderer.hpp>
 #include <okay/core/ui/font.hpp>
-#include <okay/core/ui/text.hpp>
 
 #include <glm/glm.hpp>
 

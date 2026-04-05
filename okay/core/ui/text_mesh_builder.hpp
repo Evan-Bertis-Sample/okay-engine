@@ -1,6 +1,7 @@
 #ifndef __TEXT_MESH_BUILDER_H__
 #define __TEXT_MESH_BUILDER_H__
 
+#include <okay/core/engine/engine.hpp>
 #include <okay/core/renderer/mesh.hpp>
 #include <okay/core/ui/text_layout.hpp>
 
@@ -10,18 +11,12 @@
 
 namespace okay {
 
-struct TextMeshBuildOptions {
-    MeshBuffer& meshBuffer;
-    bool doubleSided{false};
-};
-
 class TextMeshBuilder {
    public:
     static Mesh build(std::string_view text,
                       const TextStyle& style,
-                      const TextMeshBuildOptions& options);
-
-    static Mesh build(const TextLayout& layout, const TextMeshBuildOptions& options);
+                      MeshBuffer& buffer,
+                      bool doubleSided);
 
    private:
     struct TextQuad {
@@ -37,6 +32,13 @@ class TextMeshBuilder {
                                          float baselineY,
                                          float layoutScale);
 };
+
+inline Mesh textMesh(std::string_view text,
+                     const TextStyle& style,
+                     bool doubleSided = false,
+                     SystemParameter<Renderer> renderer = nullptr) {
+    return TextMeshBuilder::build(text, style, renderer->meshBuffer(), doubleSided);
+}
 
 }  // namespace okay
 

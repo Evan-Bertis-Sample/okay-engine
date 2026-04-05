@@ -1,5 +1,7 @@
 #include "text_mesh_builder.hpp"
 
+#include <string_view>
+
 namespace okay {
 
 void TextMeshBuilder::appendQuadIndices(std::vector<std::uint32_t>& indices,
@@ -50,17 +52,14 @@ TextMeshBuilder::TextQuad TextMeshBuilder::generateQuadForGlyph(const FontManage
 
 Mesh TextMeshBuilder::build(std::string_view text,
                             const TextStyle& style,
-                            const TextMeshBuildOptions& options) {
-    const TextLayout layout(text, style);
-    return build(layout, options);
-}
-
-Mesh TextMeshBuilder::build(const TextLayout& layout, const TextMeshBuildOptions& options) {
+                            MeshBuffer& buffer,
+                            bool doubleSided) {
     FontManager& fontManager = FontManager::instance();
+    const TextLayout layout(text, style);
 
     MeshData meshData;
     meshData.vertices.reserve(layout.metrics().glyphCount * 4);
-    meshData.indices.reserve(layout.metrics().glyphCount * (options.doubleSided ? 12 : 6));
+    meshData.indices.reserve(layout.metrics().glyphCount * (doubleSided ? 12 : 6));
 
     std::size_t quadIndex = 0;
 
@@ -80,14 +79,14 @@ Mesh TextMeshBuilder::build(const TextLayout& layout, const TextMeshBuildOptions
             }
 
             appendQuadIndices(
-                meshData.indices, static_cast<std::uint32_t>(quadIndex * 4), options.doubleSided);
+                meshData.indices, static_cast<std::uint32_t>(quadIndex * 4), doubleSided);
 
             quadIndex++;
             baselineX += static_cast<float>(glyph.advance) * layout.metrics().layoutScale;
         }
     }
 
-    return options.meshBuffer.addMesh(meshData);
+    return buffer.addMesh(meshData);
 }
 
 }  // namespace okay

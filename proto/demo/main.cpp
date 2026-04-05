@@ -1,10 +1,12 @@
-#include "okay/core/ecs/ecs_util.hpp"
+#include "okay/core/ecs/components/render_component.hpp"
+#include "okay/core/ecs/components/transform_component.hpp"
 
 #include <okay/okay.hpp>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/random.hpp>
 #include <utility>
+
 
 static void __gameInitialize();
 static void __gameUpdate();
@@ -90,8 +92,20 @@ static void __gameInitialize() {
     auto materialProperties = std::make_unique<okay::LitMaterial>();
     materialProperties->color.set(glm::vec4(1.0f, 1.0f, 0.0f, 1.0f));
     materialProperties->albedo = texture;
-
     okay::MaterialHandle material = okay::materialHandle(shader, std::move(materialProperties));
+
+    okay::FontManager::FontHandle font = okay::load::engineFont("fonts/ARIAL.TTF");
+    okay::TextStyle style{.font = font,
+                          .horizontalAlignment = okay::TextStyle::HorizontalAlignment::Center,
+                          .verticalAlignment = okay::TextStyle::VerticalAlignment::Top};
+
+    okay::Mesh textMesh = okay::textMesh("Hello, world!\nHow are you?\n__private__", style, true);
+
+    auto textProperties = std::make_unique<okay::LitMaterial>();
+    textProperties->albedo = okay::FontManager::instance().getGlyphAtlas(font);
+    textProperties->isTransparent = true;
+    okay::MaterialHandle textMaterial = okay::materialHandle(shader, std::move(textProperties));
+
     okay::ecs::registerBuiltins();
     okay::ecs::registerComponent<BobComponent>();
     okay::ecs::registerSystem(std::make_unique<BobSystem>());
@@ -113,6 +127,10 @@ static void __gameInitialize() {
                    .addComponent<okay::TransformComponent>(glm::vec3{0.0f, 0.0f, 5.0f})
                    .addComponent<okay::CameraComponent>(
                        okay::CameraComponent{okay::Camera::PerspectiveLens{45.0f, 0.1f, 100.0f}});
+
+    okay::ecs::entity()
+        .addComponent<okay::TransformComponent>(glm::vec3{0.0f, 1.0f, 0.0f})
+        .addComponent<okay::MeshRendererComponent>(textMesh, textMaterial);
 
     for (std::size_t i = 0; i < 1000; ++i) {
         glm::vec3 pos = glm::ballRand(50.0f);
