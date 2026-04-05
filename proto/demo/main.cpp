@@ -7,7 +7,6 @@
 #include <glm/gtc/random.hpp>
 #include <utility>
 
-
 static void __gameInitialize();
 static void __gameUpdate();
 static void __gameShutdown();
@@ -99,7 +98,7 @@ static void __gameInitialize() {
                           .horizontalAlignment = okay::TextStyle::HorizontalAlignment::Center,
                           .verticalAlignment = okay::TextStyle::VerticalAlignment::Top};
 
-    okay::Mesh textMesh = okay::textMesh("Hello, world!\nHow are you?\n__private__", style, true);
+    okay::Mesh textMesh = okay::mesh(okay::textMesh("Hello, world!\nHow are you?\n__private__", style, true));
 
     auto textProperties = std::make_unique<okay::LitMaterial>();
     textProperties->albedo = okay::FontManager::instance().getGlyphAtlas(font);

@@ -50,10 +50,7 @@ TextMeshBuilder::TextQuad TextMeshBuilder::generateQuadForGlyph(const FontManage
     return quad;
 }
 
-Mesh TextMeshBuilder::build(std::string_view text,
-                            const TextStyle& style,
-                            MeshBuffer& buffer,
-                            bool doubleSided) {
+MeshData TextMeshBuilder::build(std::string_view text, const TextStyle& style, bool doubleSided) {
     FontManager& fontManager = FontManager::instance();
     const TextLayout layout(text, style);
 
@@ -86,7 +83,7 @@ Mesh TextMeshBuilder::build(std::string_view text,
         }
     }
 
-    return buffer.addMesh(meshData);
+    return meshData;
 }
 
 }  // namespace okay

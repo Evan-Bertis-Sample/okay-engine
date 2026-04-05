@@ -13,10 +13,7 @@ namespace okay {
 
 class TextMeshBuilder {
    public:
-    static Mesh build(std::string_view text,
-                      const TextStyle& style,
-                      MeshBuffer& buffer,
-                      bool doubleSided);
+    static MeshData build(std::string_view text, const TextStyle& style, bool doubleSided);
 
    private:
     struct TextQuad {
@@ -33,11 +30,8 @@ class TextMeshBuilder {
                                          float layoutScale);
 };
 
-inline Mesh textMesh(std::string_view text,
-                     const TextStyle& style,
-                     bool doubleSided = false,
-                     SystemParameter<Renderer> renderer = nullptr) {
-    return TextMeshBuilder::build(text, style, renderer->meshBuffer(), doubleSided);
+inline MeshData textMesh(std::string_view text, const TextStyle& style, bool doubleSided) {
+    return TextMeshBuilder::build(text, style, doubleSided);
 }
 
 }  // namespace okay
