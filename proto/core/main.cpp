@@ -105,15 +105,15 @@ static void __gameInitialize() {
     auto materialProprties = std::make_unique<okay::LitMaterial>();
     materialProprties->color.set(glm::vec4(1.0f, 1.0f, 0.0f, 1.0f));
     materialProprties->albedo = texture; 
-    // materialProprties->sheen.set(1000.0f);
-    // materialProprties->sheenTint.set(0.0f);
-    // materialProprties->clearcoat.set(200.0f);
-    // materialProprties->clearcoatGloss.set(0.0f);
-    // materialProprties->roughness.set(1000.0f);
-    // materialProprties->anisotropic.set(1.0f);
+    // materialProprties->sheen.set(100.0f);
+    // materialProprties->sheenTint.set(1.0f);
+    // materialProprties->clearcoat.set(1.0f);
+    // materialProprties->clearcoatGloss.set(1.0f);
+    // // materialProprties->roughness.set(1.0f);
+    // materialProprties->anisotropic.set(0.5f);
     // materialProprties->specular.set(0.0f);
     // materialProprties->specularTint.set(0.0f);
-    // materialProprties->metallic.set(1.0f);
+    // materialProprties->metallic.set(0.75f);
     // materialProprties->flatness.set(1.0f);
     okay::OkayMaterialHandle sunMat = renderer->materialRegistry().registerMaterial(shader, std::move(materialProprties));
     g_teapot = renderer->world().addRenderEntity(
@@ -150,6 +150,7 @@ static void __gameUpdate() {
     // move the camera in a circle, always looking at the origin
     okay::OkayRenderer* renderer = okay::Engine.systems.getSystemChecked<okay::OkayRenderer>();
     float theta = okay::Engine.time->timeSinceStartSec() * 0.05f * glm::pi<float>();
+    // float theta = 0.0f;
     glm::vec3 pos = glm::vec3(
         sin(theta) * 5.0f,
         0.0f,
@@ -164,6 +165,7 @@ static void __gameUpdate() {
     float r = 0.6f;
 
     glm::vec3 center = g_teapot->transform.position;
+    // g_teapot->transform.rotation = glm::angleAxis(t * 0.3f, glm::vec3(0.0f, 1.0f, 0.0f));
     glm::vec3 lightPos = glm::vec3(
         std::sin(angle) * r,
         0.0f,
