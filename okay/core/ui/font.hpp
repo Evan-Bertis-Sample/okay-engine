@@ -161,6 +161,8 @@ class FontManager {
 
     Texture getGlyphAtlas(FontHandle font) { return _glyphAtlases[font.id]; }
 
+    bool isLoadedFont(FontHandle font) { return font.id < _loadedFaces.size(); }
+
    private:
     constexpr static int ATLAS_W = 2048;
     constexpr static int ATLAS_H = 2048;

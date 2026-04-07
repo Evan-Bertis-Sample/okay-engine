@@ -18,6 +18,7 @@ struct SceneMaterialProperties {
     bool isTransparent{false};
     bool recievesShadows{false};
     bool castsShadows{false};
+    bool useProjectionMatrix{false};
 
     auto uniformRefs() {
         return std::tie(modelMatrix, viewMatrix, projectionMatrix, cameraPosition, cameraDirection);

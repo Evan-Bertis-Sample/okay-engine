@@ -1,10 +1,18 @@
 #ifndef __ELEMENT_H__
 #define __ELEMENT_H__
 
+#include <okay/core/asset/asset.hpp>
+#include <okay/core/asset/asset_util.hpp>
+#include <okay/core/renderer/material.hpp>
+#include <okay/core/renderer/materials/unlit.hpp>
+#include <okay/core/renderer/render_world.hpp>
 #include <okay/core/renderer/texture.hpp>
 #include <okay/core/ui/font.hpp>
+#include <okay/core/ui/text_layout.hpp>
+#include <okay/core/util/object_pool.hpp>
 #include <okay/core/util/option.hpp>
 
+#include <utility>
 #include <variant>
 
 namespace okay {
@@ -42,7 +50,7 @@ struct UIElement {
 
     // Content
     Option<std::string_view> text;
-    Option<FontManager::FontHandle> font;
+    Option<TextStyle> textStyle;
     glm::vec3 textColor{1.0f, 1.0f, 1.0f};
 
     // background
@@ -50,7 +58,54 @@ struct UIElement {
     glm::vec3 backgroundColor{0.0f, 0.0f, 0.0f};
 };
 
-struct UINode {};
+struct UINode {
+   public:
+    using ID = std::uint32_t;
+    ID id;
+
+    UIElement element;
+    std::span<const UINode> children;
+};
+
+struct UINodeHash {
+    std::size_t operator()(const UINode& node) const noexcept { return node.hash(); }
+};
+
+namespace children {
+
+template <size_t N>
+struct NodeArray {
+    std::array<UINode, N> nodes;
+
+    operator std::span<const UINode>() const {
+        return std::span<const UINode>(nodes.data(), nodes.size());
+    }
+};
+
+template <typename... Ts>
+auto multiple(Ts&&... nodes) {
+    return NodeArray<sizeof...(Ts)>{.nodes = {std::forward<Ts>(nodes)...}};
+}
+
+}  // namespace children
+
+class UI {
+   public:
+    UI(UINode root) : root{root} {}
+
+   private:
+    UINode root;
+
+    struct NodeRenderInfo {
+        RenderEntity renderEntity;
+        size::Fixed calculatedWidth;
+        size::Fixed calculatedHeight;
+        size::Fixed calculatedX;
+        size::Fixed calculatedY;
+    };
+
+    std::unordered_map<UINode::ID, NodeRenderInfo> _nodeRenderInfo;
+};
 
 };  // namespace okay
 
