@@ -95,14 +95,16 @@ static void __gameInitialize() {
 
     okay::FontManager::FontHandle font = okay::load::engineFont("fonts/ARIAL.TTF");
     okay::TextStyle style{.font = font,
+                          .targetFontHeight = 1.0f,
                           .horizontalAlignment = okay::TextStyle::HorizontalAlignment::Center,
                           .verticalAlignment = okay::TextStyle::VerticalAlignment::Top};
 
-    okay::Mesh textMesh = okay::mesh(okay::textMesh("Hello, world!\nHow are you?\n__private__", style, true));
+    okay::Mesh textMesh = okay::mesh(okay::textMesh("Hello, world!", style, true));
 
     auto textProperties = std::make_unique<okay::LitMaterial>();
     textProperties->albedo = okay::FontManager::instance().getGlyphAtlas(font);
     textProperties->isTransparent = true;
+    textProperties->color = glm::vec3(1.0);
     okay::MaterialHandle textMaterial = okay::materialHandle(shader, std::move(textProperties));
 
     okay::ecs::registerBuiltins();
@@ -128,7 +130,7 @@ static void __gameInitialize() {
                        okay::CameraComponent{okay::Camera::PerspectiveLens{45.0f, 0.1f, 100.0f}});
 
     okay::ecs::entity()
-        .addComponent<okay::TransformComponent>(glm::vec3{0.0f, 1.0f, 0.0f})
+        .addComponent<okay::TransformComponent>(glm::vec3{0.0f, 2.0f, 0.0f})
         .addComponent<okay::MeshRendererComponent>(textMesh, textMaterial);
 
     for (std::size_t i = 0; i < 1000; ++i) {
@@ -150,7 +152,8 @@ static void __gameInitialize() {
 static void __gameUpdate() {
     // move the camera in a circle, always looking at the origin
     float theta = okay::Engine.time->timeSinceStartSec() * 0.05f * glm::pi<float>();
-    glm::vec3 pos = glm::vec3(sin(theta) * 5.0f, 0.0f, cos(theta) * 5.0f);
+    const float distance = 10.0f;
+    glm::vec3 pos = glm::vec3(sin(theta) * distance, 1.0f, cos(theta) * distance);
     // rotation much look at origin
     auto& cameraTransform = s_camera.getComponent<okay::TransformComponent>().value();
     cameraTransform->position = pos;
