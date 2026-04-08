@@ -99,6 +99,10 @@ class FontManager {
     struct FontHandle {
        public:
         std::uint32_t id;
+
+        bool operator==(const FontHandle& other) const { return id == other.id; }
+        bool operator!=(const FontHandle& other) const { return !(*this == other); }
+        bool operator<(const FontHandle& other) const { return id < other.id; }
     };
 
     struct Glyph {

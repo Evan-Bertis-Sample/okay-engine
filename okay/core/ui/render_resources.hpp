@@ -73,7 +73,6 @@ class UIRenderResoruces {
         return Option<MaterialHandle>::none();
     };
 
-   private:
     static constexpr std::string_view UI_ELEMENT_SHADER = "shader/ui";
     static constexpr std::string_view WHITE_TEXTURE = "shader/white.jpg";
 
@@ -81,15 +80,41 @@ class UIRenderResoruces {
         FontManager::FontHandle font;
         glm::vec3 color;
         int atlasTextureWidth;
+
+        bool operator==(const TextMaterialKey& other) const {
+            return font == other.font && color == other.color &&
+                   atlasTextureWidth == other.atlasTextureWidth;
+        }
+
+        bool operator!=(const TextMaterialKey& other) const { return !(*this == other); }
+
+        bool operator<(const TextMaterialKey& other) const {
+            return font < other.font ||
+                   (font == other.font && glm::length(color) < glm::length(other.color)) ||
+                   (font == other.font && color == other.color &&
+                    atlasTextureWidth < other.atlasTextureWidth);
+        }
     };
 
     struct TextureMaterialKey {
         Texture texture;
         glm::vec3 color;
+
+        bool operator==(const TextureMaterialKey& other) const {
+            return texture == other.texture && color == other.color;
+        }
+
+        bool operator!=(const TextureMaterialKey& other) const { return !(*this == other); }
+
+        bool operator<(const TextureMaterialKey& other) const {
+            return texture < other.texture ||
+                   (texture == other.texture && glm::length(color) < glm::length(other.color));
+        }
     };
 
-    std::unordered_map<TextMaterialKey, MaterialHandle> _textMaterialCache;
-    std::unordered_map<TextureMaterialKey, MaterialHandle> _textureMaterialCache;
+   private:
+    std::map<TextMaterialKey, MaterialHandle> _textMaterialCache;
+    std::map<TextureMaterialKey, MaterialHandle> _textureMaterialCache;
 
     ShaderHandle _uiElementShader;
     Texture _whiteTexture;

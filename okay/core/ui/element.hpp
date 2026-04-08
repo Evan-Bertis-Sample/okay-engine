@@ -38,74 +38,59 @@ struct ElementMinMaxSize {
     std::variant<size::Percent, size::Fixed> value{size::Percent{0.0f}};
 };
 
-enum class UIPrimaryAxis { Horizontal, Vertical };
+enum class UIPrimaryAxis { Horizontal, Vertical, Parent };
+
+#define OKAY_WITH_PROPERTY(typeName, valueName, ...) \
+    typeName valueName{__VA_ARGS__};                 \
+    auto& valueName##Set(typeName value) {           \
+        (valueName) = value;                         \
+        return *this;                                \
+    }
 
 struct UIElement {
+   public:
     // Element positioning
-    ElementAxisSize width{size::Fit{}};
-    ElementAxisSize height{size::Fit{}};
-    ElementMinMaxSize minWidth{size::Percent{0.0f}};
-    ElementMinMaxSize minHeight{size::Percent{0.0f}};
-    UIPrimaryAxis axis{UIPrimaryAxis::Vertical};
+    OKAY_WITH_PROPERTY(ElementAxisSize, width, size::Fit{});
+    OKAY_WITH_PROPERTY(ElementAxisSize, height, size::Fit{});
+    OKAY_WITH_PROPERTY(ElementMinMaxSize, minWidth, size::Percent{1.0f});
+    OKAY_WITH_PROPERTY(ElementMinMaxSize, minHeight, size::Percent{1.0f});
+    OKAY_WITH_PROPERTY(UIPrimaryAxis, axis, UIPrimaryAxis::Parent);
 
     // Content
-    Option<std::string_view> text;
-    Option<TextStyle> textStyle;
-    glm::vec3 textColor{1.0f, 1.0f, 1.0f};
+    OKAY_WITH_PROPERTY(Option<std::string_view>, text);
+    OKAY_WITH_PROPERTY(Option<TextStyle>, textStyle);
+    OKAY_WITH_PROPERTY(glm::vec3, textColor, 1.0f, 1.0f, 1.0f);
 
     // background
-    Option<Texture> backgroundImage;
-    glm::vec3 backgroundColor{0.0f, 0.0f, 0.0f};
+    OKAY_WITH_PROPERTY(Option<Texture>, backgroundImage);
+    OKAY_WITH_PROPERTY(glm::vec3, backgroundColor, 0.0f, 0.0f, 0.0f);
+
+    std::span<const UIElement> children;
+
+    // Slate-style API
+    template <typename... Children>
+    UIElement operator()(Children&&... children) &&;
 };
 
-struct UINode {
-   public:
-    using ID = std::uint32_t;
-    ID id;
+namespace ui {
 
-    UIElement element;
-    std::span<const UINode> children;
-};
-
-struct UINodeHash {
-    std::size_t operator()(const UINode& node) const noexcept { return node.hash(); }
-};
-
-namespace children {
-
-template <size_t N>
-struct NodeArray {
-    std::array<UINode, N> nodes;
-
-    operator std::span<const UINode>() const {
-        return std::span<const UINode>(nodes.data(), nodes.size());
-    }
-};
-
-template <typename... Ts>
-auto multiple(Ts&&... nodes) {
-    return NodeArray<sizeof...(Ts)>{.nodes = {std::forward<Ts>(nodes)...}};
+inline UIElement flexbox() {
+    return UIElement{};
 }
 
-}  // namespace children
+inline UIElement text(std::string_view text, const TextStyle& style = TextStyle{}) {
+    return UIElement{.text = text};
+}
 
-class UI {
-   public:
-    UI(UINode root) : root{root} {}
+inline UIElement image(const Texture& texture) {
+    return UIElement{.backgroundImage = texture, .backgroundColor = glm::vec3(1.0f, 1.0f, 1.0f)};
+}
 
-   private:
-    UINode root;
+inline UIElement slot(UIPrimaryAxis axis = UIPrimaryAxis::Parent) {
+    return UIElement{.axis = axis};
+}
 
-    struct NodeRenderInfo {
-        RenderEntity renderEntity;
-        size::Fixed calculatedWidth;
-        size::Fixed calculatedHeight;
-        size::Fixed calculatedX;
-        size::Fixed calculatedY;
-    };
-
-    std::unordered_map<UINode::ID, NodeRenderInfo> _nodeRenderInfo;
-};
+};  // namespace ui
 
 };  // namespace okay
 

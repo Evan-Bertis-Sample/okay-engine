@@ -15,46 +15,6 @@ static okay::ECSEntity s_teapot;
 static okay::ECSEntity s_light;
 static okay::ECSEntity s_camera;
 
-struct BobComponent {
-   public:
-    std::shared_ptr<okay::Tween<glm::vec3>> positionTween;
-};
-
-class BobSystem : public okay::ECSSystem<okay::query::Get<okay::TransformComponent, BobComponent>> {
-   public:
-    void onEntityAdded(QueryT::Item& item) override {
-        auto& [transform, bob] = item.components;
-
-        glm::vec3 offset = glm::ballRand(10.0f);
-
-        okay::TweenConfig<glm::vec3> config = {
-            .start = transform->position,
-            .end = transform->position + offset,
-            .durationMs = 1000,
-            .easingFn = okay::easing::cubicInOut,
-            .numLoops = -1,
-            .inOutBack = true,
-            .prefixMs = glm::linearRand(0, 1000),
-        };
-
-        bob.positionTween = okay::Tween<glm::vec3>::create(config);
-        bob.positionTween->start();
-    }
-
-    void onTick(QueryT::Item& item) override {
-        auto& [transform, bob] = item.components;
-        transform->position = bob.positionTween->value();
-    }
-
-    void onEntityRemoved(QueryT::Item& item) override {
-        auto& [transform, bob] = item.components;
-        if (bob.positionTween) {
-            bob.positionTween->kill();
-            bob.positionTween = nullptr;
-        }
-    }
-};
-
 int main() {
     okay::SurfaceConfig surfaceConfig;
     surfaceConfig.width = 800;
@@ -108,8 +68,6 @@ static void __gameInitialize() {
     okay::MaterialHandle textMaterial = okay::materialHandle(shader, std::move(textProperties));
 
     okay::ecs::registerBuiltins();
-    okay::ecs::registerComponent<BobComponent>();
-    okay::ecs::registerSystem(std::make_unique<BobSystem>());
 
     s_teapot =
         okay::ecs::entity()
@@ -133,47 +91,25 @@ static void __gameInitialize() {
         .addComponent<okay::TransformComponent>(glm::vec3{0.0f, 2.0f, 0.0f})
         .addComponent<okay::MeshRendererComponent>(textMesh, textMaterial);
 
-    for (std::size_t i = 0; i < 1000; ++i) {
-        glm::vec3 pos = glm::ballRand(50.0f);
-        okay::ECSEntity entity = okay::ecs::entity()
-                                     .addComponent<okay::TransformComponent>(pos, glm::vec3{0.5f})
-                                     .addComponent<okay::MeshRendererComponent>(cube, material)
-                                     .addComponent<BobComponent>();
-
-        for (std::size_t i = 0; i < 5; ++i) {
-            pos = glm::ballRand(100.0f);
-            okay::ecs::entity(entity)
-                .addComponent<okay::TransformComponent>(pos, glm::vec3{0.5f})
-                .addComponent<okay::MeshRendererComponent>(cube, material);
-        }
-    }
+    // clang-format off
+    okay::ecs::entity()
+        .addComponent<okay::TransformComponent>(glm::vec3{0.0f, 0.0f, 0.0f})
+        .addComponent<okay::UIComponent>(
+            okay::ui::flexbox()
+                .backgroundColorSet(glm::vec3{1.0f, 1.0f, 1.0f})
+                .backgroundImageSet(okay::load::engineTexture("textures/uv_test.jpg"))
+                (
+                    okay::ui::text("Hello world!"),
+                    okay::ui::slot(okay::UIPrimaryAxis::Horizontal)(
+                        okay::ui::text("Left"),
+                        okay::ui::text("Right")
+                    )
+                )
+        );
+    //clang-format on
 }
 
 static void __gameUpdate() {
-    // move the camera in a circle, always looking at the origin
-    float theta = okay::Engine.time->timeSinceStartSec() * 0.05f * glm::pi<float>();
-    const float distance = 10.0f;
-    glm::vec3 pos = glm::vec3(sin(theta) * distance, 1.0f, cos(theta) * distance);
-    // rotation much look at origin
-    auto& cameraTransform = s_camera.getComponent<okay::TransformComponent>().value();
-    cameraTransform->position = pos;
-    cameraTransform.lookAt(s_camera, glm::vec3{});
-
-    okay::ECSEntity toDelete;
-
-    for (auto entity :
-         okay::ecs::query<okay::query::Get<okay::TransformComponent, BobComponent>>()) {
-        toDelete = entity.entity;
-        break;
-    }
-
-    if (toDelete.isValid()) {
-        okay::Engine.logger.info("FPS: {} | Destroying entity {}, now {} entities",
-                                 okay::Engine.time->fps(),
-                                 toDelete.id(),
-                                 okay::ecs::entityCount());
-        toDelete.destroy();
-    }
 }
 
 static void __gameShutdown() {

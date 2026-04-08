@@ -29,11 +29,13 @@
 #include <okay/core/ecs/components/render_component.hpp>
 #include <okay/core/ecs/components/text_component.hpp>
 #include <okay/core/ecs/components/transform_component.hpp>
+#include <okay/core/ecs/components/ui_component.hpp>
 
 // okay/core/ecs/systems
 #include <okay/core/ecs/systems/camera_system.hpp>
 #include <okay/core/ecs/systems/light_system.hpp>
 #include <okay/core/ecs/systems/renderer_system.hpp>
+#include <okay/core/ecs/systems/ui_system.hpp>
 
 // okay/core/engine
 #include <okay/core/engine/engine.hpp>
@@ -77,6 +79,7 @@
 // okay/core/ui
 #include <okay/core/ui/element.hpp>
 #include <okay/core/ui/font.hpp>
+#include <okay/core/ui/node.hpp>
 #include <okay/core/ui/render_resources.hpp>
 #include <okay/core/ui/text_layout.hpp>
 #include <okay/core/ui/text_mesh_builder.hpp>
