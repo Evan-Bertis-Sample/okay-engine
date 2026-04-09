@@ -180,3 +180,6 @@ build/
 
 # intellisense
 .clangd
+compile_commands.json
+
+.vscode/

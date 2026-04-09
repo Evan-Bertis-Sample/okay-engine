@@ -1,12 +1,12 @@
-#ifndef __I_OKAY_TWEEN_ENGINE_H__
-#define __I_OKAY_TWEEN_ENGINE_H__
+#ifndef __I_OKAY_TWEEN_H__
+#define __I_OKAY_TWEEN_H__
 
 namespace okay {
 
 /**
  * @brief Interface for OkayTween dependency injection
  */
-class IOkayTween {
+class ITween {
    public:
     virtual void start() = 0;
     virtual void tick() = 0;
@@ -16,9 +16,9 @@ class IOkayTween {
     virtual void kill() = 0;
     virtual bool isFinished() = 0;
     virtual void setIsTweening(bool isTweening) = 0;
-    virtual ~IOkayTween() = default;
+    virtual ~ITween() = default;
 };
 
-} // namespace okay
+}  // namespace okay
 
-#endif
+#endif  // __I_OKAY_TWEEN_H__

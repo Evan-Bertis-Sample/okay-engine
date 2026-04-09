@@ -1,5 +1,5 @@
-#ifndef __OKAY_SINGLETON_HPP__
-#define __OKAY_SINGLETON_HPP__
+#ifndef __SINGLETON_HPP__
+#define __SINGLETON_HPP__
 
 #include <type_traits>
 #include <utility>
@@ -31,4 +31,4 @@ class Singleton {
 
 }  // namespace okay
 
-#endif  // __OKAY_SINGLETON_HPP__
+#endif  // _SINGLETON_HPP__

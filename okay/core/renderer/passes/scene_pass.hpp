@@ -1,45 +1,44 @@
 #ifndef __SCENE_PASS_H__
 #define __SCENE_PASS_H__
 
-#include <memory>
-#include <okay/core/renderer/okay_gl.hpp>
-#include <okay/core/okay.hpp>
-#include <okay/core/renderer/okay_render_pipeline.hpp>
-#include <okay/core/renderer/okay_renderer.hpp>
-#include <okay/core/renderer/okay_uniform.hpp>
-#include <okay/core/renderer/materials/unlit.hpp>
+#include "okay/core/renderer/render_world.hpp"
+
+#include <okay/core/engine/engine.hpp>
+#include <okay/core/renderer/gl.hpp>
 #include <okay/core/renderer/materials/lit.hpp>
+#include <okay/core/renderer/materials/unlit.hpp>
+#include <okay/core/renderer/render_pipeline.hpp>
+#include <okay/core/renderer/renderer.hpp>
+#include <okay/core/renderer/uniform.hpp>
+
+#include <memory>
 
 namespace okay {
 
-class ScenePass : public IOkayRenderPass {
+class ScenePass : public IRenderPass {
    public:
-    ScenePass() {
-    }
+    ScenePass() {}
 
-    virtual const std::string_view name() const override {
-        return "ScenePass";
-    }
+    virtual const std::string_view name() const override { return "ScenePass"; }
 
-    virtual void initialize() override {
-    }
+    virtual void initialize() override {}
 
-    virtual void resize(int newWidth, int newHeight) override {
-    }
+    virtual void resize(int newWidth, int newHeight) override {}
 
-    virtual void render(const OkayRenderContext& context) override {
+    virtual void render(const RendererContext& context) override {
         GL_CHECK(glClearColor(0.113f, 0.008, 0.208, 1.0f));
         GL_CHECK(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
-        GL_CHECK(glEnable(GL_CULL_FACE));
-        GL_CHECK(glCullFace(GL_BACK));
+
         GL_CHECK(glEnable(GL_DEPTH_TEST));
         GL_CHECK(glEnable(GL_MULTISAMPLE));
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  
+        GL_CHECK(glCullFace(GL_BACK));
+        GL_CHECK(glEnable(GL_CULL_FACE));
+        GL_CHECK(glDisable(GL_BLEND));
+        GL_CHECK(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
         // glFrontFace(GL_CW);
 
-        _shaderIndex = OkayShader::invalidID();
-        _materialIndex = OkayMaterial::invalidID();
+        _shaderIndex = Shader::invalidID();
+        _materialIndex = Material::invalidID();
 
         float aspect = float(context.renderer.width()) / float(context.renderer.height());
         auto view = context.world.camera().viewMatrix();
@@ -48,20 +47,22 @@ class ScenePass : public IOkayRenderPass {
         auto camDir = context.world.camera().direction();
 
         for (const RenderItemHandle& handle : context.world.getRenderItems()) {
-            OkayRenderItem& item = context.world.getRenderItem(handle);
-
+            RenderItem& item = context.world.getRenderItem(handle);
             if (item.mesh.isEmpty())
                 continue;
             if (item.material->isNone())
                 continue;
+
+            Camera& camera = context.world.camera();
+            if (!camera.isInFrustum(item.mesh.bounds.transform(item.worldMatrix), aspect)) {
+                continue;
+            }
 
             // Shader switch: bind program + per-frame stuff
             if (_materialIndex != item.material->id()) {
                 handleMaterialSwitch(context, item, projection, view, camPos, camDir);
                 _materialIndex = item.material->id();
             }
-
-            _materialIndex = item.material->id();
 
             // Set per-object uniforms
             setPerObjectUniforms(item);
@@ -75,12 +76,14 @@ class ScenePass : public IOkayRenderPass {
         }
     }
 
-    void handleMaterialSwitch(const OkayRenderContext& context,
-                               OkayRenderItem& item,
-                               const glm::mat4& projection,
-                               const glm::mat4& view,
-                               const glm::vec3& camPos,
-                               const glm::vec3& camDir) {
+    void handleMaterialSwitch(const RendererContext& context,
+                              RenderItem& item,
+                              const glm::mat4& projection,
+                              const glm::mat4& view,
+                              const glm::vec3& camPos,
+                              const glm::vec3& camDir) {
+        applyMaterialFlags(item);
+
         if (_shaderIndex != item.material->shaderID()) {
             if (auto f = item.material->setShader(); f.isError()) {
                 Engine.logger.error("Failed to set shader : {}", f.error());
@@ -89,7 +92,7 @@ class ScenePass : public IOkayRenderPass {
             _shaderIndex = item.material->shaderID();
         }
 
-        auto& uniforms = item.material->uniforms();
+        auto& uniforms = item.material->properties();
 
         if (auto* unlit = dynamic_cast<okay::SceneMaterialProperties*>(uniforms.get())) {
             unlit->projectionMatrix.set(projection);
@@ -109,16 +112,36 @@ class ScenePass : public IOkayRenderPass {
         }
     }
 
-    void setPerObjectUniforms(OkayRenderItem& item) {
-        auto& uniforms = item.material->uniforms();
+    void setPerObjectUniforms(RenderItem& item) {
+        auto& uniforms = item.material->properties();
         if (auto* unlit = dynamic_cast<okay::SceneMaterialProperties*>(uniforms.get())) {
             unlit->modelMatrix.set(item.worldMatrix);
         }
     }
 
+    void applyMaterialFlags(RenderItem& item) {
+        auto& uniforms = item.material->properties();
+        MaterialFlagCollection flags = uniforms->flags();
+
+        if (flags.hasFlag(MaterialFlags::DOUBLE_SIDED)) {
+            GL_CHECK(glDisable(GL_CULL_FACE));
+        } else {
+            GL_CHECK(glEnable(GL_CULL_FACE));
+            GL_CHECK(glCullFace(GL_BACK));
+        }
+
+        if (flags.hasFlag(MaterialFlags::TRANSPARENT)) {
+            GL_CHECK(glEnable(GL_BLEND));
+            GL_CHECK(glDepthMask(GL_FALSE));
+        } else {
+            GL_CHECK(glDisable(GL_BLEND));
+            GL_CHECK(glDepthMask(GL_TRUE));
+        }
+    }
+
    private:
-    std::uint32_t _shaderIndex{OkayShader::invalidID()};
-    std::uint32_t _materialIndex{OkayMaterial::invalidID()};
+    std::uint32_t _shaderIndex{Shader::invalidID()};
+    std::uint32_t _materialIndex{Material::invalidID()};
 };
 
 };  // namespace okay

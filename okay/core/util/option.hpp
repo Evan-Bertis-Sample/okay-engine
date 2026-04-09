@@ -1,55 +1,123 @@
 #ifndef __OPTION_H__
 #define __OPTION_H__
 
+#include <functional>
+#include <optional>
+#include <stdexcept>
+#include <type_traits>
+#include <utility>
+
 namespace okay {
 
-/// @brief A class representing an optional vaLue, use for operations where you can fail, but don't
-/// really need to have the overhead of a detailed error message
-/// @tparam T The type of the value to return
+template <typename T>
+struct is_reference_wrapper : std::false_type {};
+
+template <typename U>
+struct is_reference_wrapper<std::reference_wrapper<U>> : std::true_type {};
+
+template <typename T>
+struct unwrap_reference_wrapper {
+    using type = T;
+};
+
+template <typename U>
+struct unwrap_reference_wrapper<std::reference_wrapper<U>> {
+    using type = U;
+};
+template <typename T>
+using option_value_return_t = std::
+    conditional_t<is_reference_wrapper<T>::value, typename unwrap_reference_wrapper<T>::type&, T>;
+
+template <typename T>
+using option_const_value_return_t =
+    std::conditional_t<is_reference_wrapper<T>::value,
+                       const typename unwrap_reference_wrapper<T>::type&,
+                       T>;
 template <typename T>
 class Option {
    public:
-    /// @brief Create an option with some value
-    /// @param value The value to place
-    /// @return An option with some value
-    static Option<T> some(T value) { return Option<T>(value); }
+    static Option<T> some(T value) { return Option<T>(std::move(value)); }
+    static Option<T> none() { return Option<T>(); }
 
-    /// @brief Create an option with no value
-    /// @return Return an option with no value
-    static constexpr Option<T> none() { return Option<T>(); }
+    Option() = default;
+    Option(const Option&) = default;
+    Option(Option&&) noexcept = default;
+    Option& operator=(const Option&) = default;
+    Option& operator=(Option&&) noexcept = default;
 
-    /// @brief Ctor
-    Option() : _hasValue(false), _value(T()) {}
-
-    /// @brief Equals operator
-    Option<T> operator=(const Option<T>& other) {
-        _value = other._value;
-        _hasValue = other._hasValue;
+    Option& operator=(T&& value) {
+        _value = std::forward<T>(value);
         return *this;
     }
 
-    /// @brief Cast to bool
-    operator bool() const { return _hasValue; }
+    Option& operator=(const T& value) {
+        _value = value;
+        return *this;
+    }
 
-    /// @brief Checks if a value is stored in the option
-    /// @return If there is a value in the option
-    bool isSome() const { return _hasValue; }
+    option_value_return_t<T> operator*() {
+        if (!_value.has_value()) {
+            throw std::runtime_error("Tried to dereference none Option");
+        }
+        return value();
+    }
 
-    /// @brief Checks if there is no value in the option
-    /// @return If there is no value in the option
-    bool isNone() const { return !_hasValue; }
+    option_const_value_return_t<T> operator*() const {
+        if (!_value.has_value()) {
+            throw std::runtime_error("Tried to dereference none Option");
+        }
+        return value();
+    }
 
-    /// @brief Gets the value in the option, does not perform any checks
-    /// @return The value in the option -- could be garbage if there is no value
-    T value() const { return _value; }
+    option_value_return_t<T> operator->() {
+        if (!_value.has_value()) {
+            throw std::runtime_error("Tried to dereference none Option");
+        }
+        return value();
+    }
+
+    option_const_value_return_t<T> operator->() const {
+        if (!_value.has_value()) {
+            throw std::runtime_error("Tried to dereference none Option");
+        }
+        return value();
+    }
+
+    operator bool() const { return _value.has_value(); }
+
+    bool isSome() const { return _value.has_value(); }
+    bool isNone() const { return !_value.has_value(); }
+
+    option_value_return_t<T> value() {
+        if (!_value.has_value()) {
+            throw std::runtime_error("Tried to access value of none Option");
+        }
+
+        if constexpr (is_reference_wrapper<T>::value) {
+            return _value->get();
+        } else {
+            return *_value;
+        }
+    }
+
+    option_const_value_return_t<T> value() const {
+        if (!_value.has_value()) {
+            throw std::runtime_error("Tried to access value of none Option");
+        }
+
+        if constexpr (is_reference_wrapper<T>::value) {
+            return _value->get();
+        } else {
+            return *_value;
+        }
+    }
 
    private:
-    T _value;
-    bool _hasValue;
+    std::optional<T> _value;
 
-    Option(T value) : _value(value), _hasValue(true) {}
+    explicit Option(T value) : _value(std::move(value)) {}
 };
 
 }  // namespace okay
 
-#endif  // __OPTION_H__
+#endif

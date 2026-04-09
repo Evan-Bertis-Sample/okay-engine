@@ -5,13 +5,15 @@
 using namespace okay;
 
 std::string StringUtils::ToLower(std::string s) {
-    for (char& c : s) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+    for (char& c : s)
+        c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
     return s;
 }
 
 std::string StringUtils::LTrim(std::string s) {
     std::size_t i = 0;
-    while (i < s.size() && std::isspace(static_cast<unsigned char>(s[i]))) ++i;
+    while (i < s.size() && std::isspace(static_cast<unsigned char>(s[i])))
+        ++i;
     s.erase(0, i);
     return s;
 }
@@ -26,12 +28,15 @@ std::vector<std::string_view> StringUtils::Split(std::string_view s, char delim,
 
     while (start <= s.size()) {
         std::size_t end = s.find(delim, start);
-        if (end == std::string_view::npos) end = s.size();
+        if (end == std::string_view::npos)
+            end = s.size();
 
         std::string_view part = s.substr(start, end - start);
-        if (keepEmpty || !part.empty()) out.push_back(part);
+        if (keepEmpty || !part.empty())
+            out.push_back(part);
 
-        if (end == s.size()) break;
+        if (end == s.size())
+            break;
         start = end + 1;
     }
 

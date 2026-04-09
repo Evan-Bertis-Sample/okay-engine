@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+cd "$REPO_ROOT"
+
+echo "[pre-commit] Generating okay/okay.hpp..."
+python scripts/generate_okay_header.py --repo-root "$REPO_ROOT"
+
+echo "[pre-commit] Formatting source files..."
+source scripts/format.sh
+
+echo "[pre-commit] Staging updates..."
+git add okay/okay.hpp
+git add okay
+git add scripts
+
+echo "[pre-commit] Done."
