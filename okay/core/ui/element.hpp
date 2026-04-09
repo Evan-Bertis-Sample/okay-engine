@@ -65,11 +65,13 @@ struct UIElement {
     OKAY_WITH_PROPERTY(Option<Texture>, backgroundImage);
     OKAY_WITH_PROPERTY(glm::vec3, backgroundColor, 0.0f, 0.0f, 0.0f);
 
-    std::span<const UIElement> children;
+    std::vector<UIElement> children;
 
     // Slate-style API
     template <typename... Children>
-    UIElement operator()(Children&&... children) &&;
+    UIElement operator()(Children&&... children) && {
+        return UIElement{std::forward<Children>(children)...};
+    }
 };
 
 namespace ui {
