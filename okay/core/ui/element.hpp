@@ -40,37 +40,44 @@ struct ElementMinMaxSize {
 
 enum class UIPrimaryAxis { Horizontal, Vertical, Parent };
 
-#define OKAY_WITH_PROPERTY(typeName, valueName, ...) \
-    typeName valueName{__VA_ARGS__};                 \
-    auto& valueName##Set(typeName value) {           \
-        (valueName) = value;                         \
-        return *this;                                \
+#define OKAY_UI_ELEMENT_PROPERTY(typeName, valueName, ...) \
+    typeName valueName{__VA_ARGS__};                       \
+    UIElement& valueName##Set(typeName value) {            \
+        (valueName) = value;                               \
+        return *this;                                      \
     }
 
 struct UIElement {
    public:
     // Element positioning
-    OKAY_WITH_PROPERTY(ElementAxisSize, width, size::Fit{});
-    OKAY_WITH_PROPERTY(ElementAxisSize, height, size::Fit{});
-    OKAY_WITH_PROPERTY(ElementMinMaxSize, minWidth, size::Percent{1.0f});
-    OKAY_WITH_PROPERTY(ElementMinMaxSize, minHeight, size::Percent{1.0f});
-    OKAY_WITH_PROPERTY(UIPrimaryAxis, axis, UIPrimaryAxis::Parent);
+    OKAY_UI_ELEMENT_PROPERTY(ElementAxisSize, width, size::Fit{});
+    OKAY_UI_ELEMENT_PROPERTY(ElementAxisSize, height, size::Fit{});
+    OKAY_UI_ELEMENT_PROPERTY(ElementMinMaxSize, minWidth, size::Percent{1.0f});
+    OKAY_UI_ELEMENT_PROPERTY(ElementMinMaxSize, minHeight, size::Percent{1.0f});
+    OKAY_UI_ELEMENT_PROPERTY(UIPrimaryAxis, axis, UIPrimaryAxis::Parent);
 
     // Content
-    OKAY_WITH_PROPERTY(Option<std::string_view>, text);
-    OKAY_WITH_PROPERTY(Option<TextStyle>, textStyle);
-    OKAY_WITH_PROPERTY(glm::vec3, textColor, 1.0f, 1.0f, 1.0f);
+    OKAY_UI_ELEMENT_PROPERTY(Option<std::string_view>, text);
+    OKAY_UI_ELEMENT_PROPERTY(Option<TextStyle>, textStyle);
+    OKAY_UI_ELEMENT_PROPERTY(glm::vec3, textColor, 1.0f, 1.0f, 1.0f);
 
     // background
-    OKAY_WITH_PROPERTY(Option<Texture>, backgroundImage);
-    OKAY_WITH_PROPERTY(glm::vec3, backgroundColor, 0.0f, 0.0f, 0.0f);
+    OKAY_UI_ELEMENT_PROPERTY(Option<Texture>, backgroundImage);
+    OKAY_UI_ELEMENT_PROPERTY(glm::vec3, backgroundColor, 0.0f, 0.0f, 0.0f);
 
     std::vector<UIElement> children;
 
     // Slate-style API
     template <typename... Children>
-    UIElement operator()(Children&&... children) && {
-        return UIElement{std::forward<Children>(children)...};
+    UIElement& operator()(Children&&... newChildren) & {
+        (children.push_back(std::forward<Children>(newChildren)), ...);
+        return *this;
+    }
+
+    template <typename... Children>
+    UIElement&& operator()(Children&&... newChildren) && {
+        (children.push_back(std::forward<Children>(newChildren)), ...);
+        return std::move(*this);
     }
 };
 

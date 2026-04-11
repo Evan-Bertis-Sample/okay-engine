@@ -1,6 +1,3 @@
-#include "okay/core/ecs/components/render_component.hpp"
-#include "okay/core/ecs/components/transform_component.hpp"
-
 #include <okay/okay.hpp>
 
 #include <glm/glm.hpp>

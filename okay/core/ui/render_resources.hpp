@@ -1,6 +1,8 @@
 #ifndef __RENDER_RESOURCES_H__
 #define __RENDER_RESOURCES_H__
 
+#include "okay/core/asset/generic/texture_loader.hpp"
+
 #include <okay/core/asset/asset.hpp>
 #include <okay/core/asset/asset_util.hpp>
 #include <okay/core/renderer/material.hpp>
@@ -122,7 +124,8 @@ class UIRenderResoruces {
     void loadResoruces() {
         AssetManager* am = Engine.systems.getSystemChecked<AssetManager>();
 
-        _whiteTexture = unwrapAssetResult(am->loadEngineAssetSync<Texture>(WHITE_TEXTURE));
+        _whiteTexture = unwrapAssetResult(
+            am->loadEngineAssetSync<Texture>(WHITE_TEXTURE, TextureLoadSettings{}));
 
         Renderer* renderer = Engine.systems.getSystemChecked<Renderer>();
         Shader shader = unwrapAssetResult(am->loadEngineAssetSync<Shader>(UI_ELEMENT_SHADER));
