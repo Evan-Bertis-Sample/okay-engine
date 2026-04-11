@@ -84,10 +84,6 @@ static void __gameInitialize() {
                    .addComponent<okay::CameraComponent>(
                        okay::CameraComponent{okay::Camera::PerspectiveLens{45.0f, 0.1f, 100.0f}});
 
-    okay::ecs::entity()
-        .addComponent<okay::TransformComponent>(glm::vec3{0.0f, 2.0f, 0.0f})
-        .addComponent<okay::MeshRendererComponent>(textMesh, textMaterial);
-
     // clang-format off
     okay::ecs::entity()
         .addComponent<okay::TransformComponent>(glm::vec3{0.0f, 0.0f, 0.0f})

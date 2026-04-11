@@ -2,14 +2,15 @@
 #define __UI_COMPONENT_H__
 
 #include <okay/core/ui/element.hpp>
+#include <okay/core/ui/node.hpp>
 
 namespace okay {
 
 struct UIComponent {
-    UIElement root;
+    UI ui;
 
     UIComponent() {}
-    UIComponent(UIElement root) : root{root} {}
+    UIComponent(UIElement root) : ui(root) {}
 };
 
 };  // namespace okay

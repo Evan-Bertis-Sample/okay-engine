@@ -17,7 +17,9 @@ class UISystem : public ECSSystem<query::Get<TransformComponent, UIComponent>> {
     };
 
     void onPreTick(QueryT::Item& item) override {
-
+        auto& [transform, ui] = item.components;
+        Renderer* renderer = Engine.systems.getSystemChecked<Renderer>();
+        ui.ui.render(transform->position, renderer);
     };
 
     void onEntityRemoved(QueryT::Item& item) override {};
