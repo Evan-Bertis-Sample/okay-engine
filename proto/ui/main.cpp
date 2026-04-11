@@ -86,7 +86,7 @@ static void __gameInitialize() {
 
     // clang-format off
     okay::ecs::entity()
-        .addComponent<okay::TransformComponent>(glm::vec3{0.0f, 0.0f, 0.0f})
+        .addComponent<okay::TransformComponent>(glm::vec3{0.0f, 0.0f, -5.0f})
         .addComponent<okay::UIComponent>(
             okay::ui::flexbox()
                 .backgroundColorSet(glm::vec3{1.0f, 1.0f, 1.0f})

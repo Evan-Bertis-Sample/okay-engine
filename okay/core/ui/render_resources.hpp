@@ -32,11 +32,17 @@ class UIRenderResoruces {
                 return Option<MaterialHandle>::some(_textMaterialCache.at(*key));
             }
 
+            TextStyle style;
+            if (element.textStyle.isSome()) {
+                style = element.textStyle.value();
+            } else {
+                style = defaultTextStyle();
+            }
+
             // create a material
             auto materialProperties = std::make_unique<UnlitMaterial>();
             materialProperties->color = element.textColor;
-            materialProperties->albedo =
-                FontManager::instance().getGlyphAtlas(element.textStyle.value().font);
+            materialProperties->albedo = FontManager::instance().getGlyphAtlas(style.font);
             materialProperties->isTransparent = true;
             materialProperties->useProjectionMatrix = false;
             materialProperties->castsShadows = false;
@@ -75,7 +81,7 @@ class UIRenderResoruces {
         return Option<MaterialHandle>::none();
     };
 
-    static constexpr std::string_view UI_ELEMENT_SHADER = "shaders/ui";
+    static constexpr std::string_view UI_ELEMENT_SHADER = "shaders/lit";
     static constexpr std::string_view WHITE_TEXTURE = "textures/white.jpg";
 
     struct TextMaterialKey {
@@ -117,7 +123,7 @@ class UIRenderResoruces {
     Mesh quadMesh() const { return _quadMesh; }
     Texture whiteTexture() const { return _whiteTexture; }
 
-    TextStyle defaultTextStyle() {
+    TextStyle defaultTextStyle() const {
         return TextStyle{
             .font = _defaultFont,
             .targetFontHeight = 32,
@@ -151,18 +157,24 @@ class UIRenderResoruces {
     }
 
     Option<TextMaterialKey> getTextMaterialKey(const UIElement& element) const {
-        if (!element.text.isSome() && !element.textStyle.isSome()) {
+        if (!element.text.isSome()) {
             return Option<TextMaterialKey>::none();
+        }
+
+        TextStyle style;
+        if (element.textStyle.isSome()) {
+            style = element.textStyle.value();
+        } else {
+            style = defaultTextStyle();
         }
 
         // compute the texture width
         // we will do this by bucketing the target height
         const float PX_PER_UNIT = 64.0f;  // number of pixels per unit of height
-        const int TARGET_WIDTH =
-            static_cast<int>(element.textStyle.value().targetFontHeight) * PX_PER_UNIT;
+        const int TARGET_WIDTH = static_cast<int>(style.targetFontHeight) * PX_PER_UNIT;
 
         TextMaterialKey key = {
-            .font = element.textStyle.value().font,
+            .font = style.font,
             .color = element.textColor,
             .atlasTextureWidth = static_cast<int>(TARGET_WIDTH),
         };

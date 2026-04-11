@@ -84,7 +84,7 @@ class UI {
                                 glm::vec2 size,
                                 SystemParameter<Renderer> renderer) {
         float z = 0.0f;
-        const float zIncrement = -0.001f;  // small increment to ensure correct layering
+        const float zIncrement = 0.001f;  // small increment to ensure correct layering
 
         NodeRenderInfo& renderInfo = getNodeRenderInfo(node);
         const UIElement& element = node.element;
@@ -103,7 +103,7 @@ class UI {
             z += zIncrement;
         }
 
-        if (element.text.isSome() && element.textStyle.isSome()) {
+        if (element.text.isSome()) {
             Engine.logger.debug("Creating render entity for UI element with text {}",
                                 element.text.value());
             // render text
@@ -115,8 +115,8 @@ class UI {
                 style = UIRenderResoruces::get().defaultTextStyle();
             }
 
-            MeshData textMeshData = TextMeshBuilder::build(
-                element.text.value(), element.textStyle.value(), element.doubleSided);
+            MeshData textMeshData =
+                TextMeshBuilder::build(element.text.value(), style, element.doubleSided);
             Mesh textMesh = renderer->meshBuffer().addMesh(textMeshData);
             RenderEntity entity =
                 renderer->world().addRenderEntity(glm::vec3(screenPosition, z), handle, textMesh);
