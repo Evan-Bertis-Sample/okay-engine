@@ -65,6 +65,8 @@ struct UIElement {
     OKAY_UI_ELEMENT_PROPERTY(Option<Texture>, backgroundImage);
     OKAY_UI_ELEMENT_PROPERTY(glm::vec3, backgroundColor, 0.0f, 0.0f, 0.0f);
 
+    OKAY_UI_ELEMENT_PROPERTY(bool, doubleSided, false);
+
     std::vector<UIElement> children;
 
     // Slate-style API

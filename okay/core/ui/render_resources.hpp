@@ -1,12 +1,12 @@
 #ifndef __RENDER_RESOURCES_H__
 #define __RENDER_RESOURCES_H__
 
-#include "okay/core/asset/generic/texture_loader.hpp"
-
 #include <okay/core/asset/asset.hpp>
 #include <okay/core/asset/asset_util.hpp>
+#include <okay/core/asset/generic/texture_loader.hpp>
 #include <okay/core/renderer/material.hpp>
 #include <okay/core/renderer/materials/unlit.hpp>
+#include <okay/core/renderer/primitive.hpp>
 #include <okay/core/renderer/render_world.hpp>
 #include <okay/core/renderer/texture.hpp>
 #include <okay/core/ui/element.hpp>
@@ -75,8 +75,8 @@ class UIRenderResoruces {
         return Option<MaterialHandle>::none();
     };
 
-    static constexpr std::string_view UI_ELEMENT_SHADER = "shader/ui";
-    static constexpr std::string_view WHITE_TEXTURE = "shader/white.jpg";
+    static constexpr std::string_view UI_ELEMENT_SHADER = "shaders/ui";
+    static constexpr std::string_view WHITE_TEXTURE = "textures/white.jpg";
 
     struct TextMaterialKey {
         FontManager::FontHandle font;
@@ -114,12 +114,24 @@ class UIRenderResoruces {
         }
     };
 
+    Mesh quadMesh() const { return _quadMesh; }
+    Texture whiteTexture() const { return _whiteTexture; }
+
+    TextStyle defaultTextStyle() {
+        return TextStyle{
+            .font = _defaultFont,
+            .targetFontHeight = 32,
+        };
+    }
+
    private:
     std::map<TextMaterialKey, MaterialHandle> _textMaterialCache;
     std::map<TextureMaterialKey, MaterialHandle> _textureMaterialCache;
 
     ShaderHandle _uiElementShader;
     Texture _whiteTexture;
+    Mesh _quadMesh;
+    FontManager::FontHandle _defaultFont;
 
     void loadResoruces() {
         AssetManager* am = Engine.systems.getSystemChecked<AssetManager>();
@@ -131,11 +143,15 @@ class UIRenderResoruces {
         Shader shader = unwrapAssetResult(am->loadEngineAssetSync<Shader>(UI_ELEMENT_SHADER));
         _uiElementShader =
             renderer->materialRegistry().registerShader(shader.vertexShader, shader.fragmentShader);
+
+        _quadMesh = renderer->meshBuffer().addMesh(primitives::rect().build());
+
+        _defaultFont = unwrapAssetResult(am->loadEngineAssetSync<FontManager::FontHandle>(
+            "fonts/ARIAL.TTF", FontLoadOptions{.width = 32, .height = 0}));
     }
 
     Option<TextMaterialKey> getTextMaterialKey(const UIElement& element) const {
-        if (!element.text.isSome() && !element.textStyle.isSome() &&
-            FontManager::instance().isLoadedFont(element.textStyle.value().font)) {
+        if (!element.text.isSome() && !element.textStyle.isSome()) {
             return Option<TextMaterialKey>::none();
         }
 
