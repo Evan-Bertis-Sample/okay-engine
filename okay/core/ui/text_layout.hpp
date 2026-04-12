@@ -8,6 +8,14 @@
 
 namespace okay {
 
+// NOTE:
+// All measurements defined in these structures have two meanings:
+// When constructing a TextMesh in world-space, they are defined in world units
+// When constructing text for a UIElement, they will be defined in pixels
+// For example, creating a mesh for a UIElement with a targetFontHeight of 16.0f
+// will result in a mesh that is 16 world units tall, but
+// when rendered in the UI, it will be scaled such that it appears 16 pixels tall on screen.
+
 struct TextStyle {
     enum class HorizontalAlignment { Left, Center, Right };
     enum class VerticalAlignment { Top, Middle, Bottom };
