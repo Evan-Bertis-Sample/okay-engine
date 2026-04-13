@@ -1,0 +1,366 @@
+#include "ui.hpp"
+
+#include "element.hpp"
+#include "render_resources.hpp"
+#include "text_mesh_builder.hpp"
+
+#include <okay/core/engine/engine.hpp>
+#include <okay/core/renderer/renderer.hpp>
+#include <okay/core/util/variant.hpp>
+
+#include <variant>
+
+namespace okay {
+
+void UILayout::layout(const Context& context) {
+    _layoutMap.clear();
+
+    LayoutRect rootFrame{
+        .pxPosition = glm::ivec2(0, 0),
+        .pxSize = context.screenSize,
+        .axis = UIPrimaryAxis::Vertical,
+        .resolvedSize = true,
+    };
+
+    LayoutRect& rootRect = getOrMakeRect(_root);
+    rootRect = rootFrame;
+
+    computeFixedSizes(_root, rootFrame);
+    computeFitSizes(_root, rootFrame);
+    computePositions(_root, rootFrame);
+}
+
+void UILayout::computeFixedSizes(UINode& node, LayoutRect parent) {
+    LayoutRect& rect = getOrMakeRect(node);
+    const UIElement& element = node.element;
+
+    UIPrimaryAxis resolvedAxis = element.axis == UIPrimaryAxis::Parent ? parent.axis : element.axis;
+    rect.axis = resolvedAxis;
+
+    // Root already has a frame; children get theirs from parent.
+    if (node.id != _root.id) {
+        rect.pxPosition = parent.pxPosition;
+    }
+
+    int minWidth = computeSize(element.minWidth, parent.pxSize.x);
+    int minHeight = computeSize(element.minHeight, parent.pxSize.y);
+
+    Option<int> width = computeElementSizeAlongAxis(node, UIPrimaryAxis::Horizontal, parent);
+    Option<int> height = computeElementSizeAlongAxis(node, UIPrimaryAxis::Vertical, parent);
+
+    if (width.isSome()) {
+        rect.pxSize.x = std::max(width.value(), minWidth);
+    }
+
+    if (height.isSome()) {
+        rect.pxSize.y = std::max(height.value(), minHeight);
+    }
+
+    // Root should keep full screen size unless explicitly overridden later.
+    if (node.id == _root.id) {
+        rect.pxSize = parent.pxSize;
+    }
+
+    for (UINode& child : node.children) {
+        computeFixedSizes(child, rect);
+    }
+}
+
+void UILayout::computeFitSizes(UINode& node, LayoutRect parent) {
+    LayoutRect& rect = getOrMakeRect(node);
+    const UIElement& element = node.element;
+
+    for (UINode& child : node.children) {
+        computeFitSizes(child, rect);
+    }
+
+    UIPrimaryAxis mainAxis = rect.axis;
+    UIPrimaryAxis crossAxis = (mainAxis == UIPrimaryAxis::Horizontal) ? UIPrimaryAxis::Vertical
+                                                                      : UIPrimaryAxis::Horizontal;
+
+    int leftPadding = element.leftPadding.pixels;
+    int rightPadding = element.rightPadding.pixels;
+    int topPadding = element.topPadding.pixels;
+    int bottomPadding = element.bottomPadding.pixels;
+    int childSpacing = element.childSpacing.pixels;
+
+    int horizontalPadding = leftPadding + rightPadding;
+    int verticalPadding = topPadding + bottomPadding;
+
+    int childCount = static_cast<int>(node.children.size());
+    int totalSpacing = childCount > 1 ? (childCount - 1) * childSpacing : 0;
+
+    int summedMain = 0;
+    int maxCross = 0;
+    int growChildren = 0;
+
+    for (UINode& child : node.children) {
+        LayoutRect& childRect = getOrMakeRect(child);
+
+        int childMain =
+            (mainAxis == UIPrimaryAxis::Horizontal) ? childRect.pxSize.x : childRect.pxSize.y;
+        int childCross =
+            (crossAxis == UIPrimaryAxis::Horizontal) ? childRect.pxSize.x : childRect.pxSize.y;
+
+        ElementSize mainSizeDecl = child.element.getSizeAlongAxis(mainAxis);
+        if (std::holds_alternative<size::Grow>(mainSizeDecl)) {
+            growChildren++;
+        } else {
+            summedMain += childMain;
+        }
+
+        maxCross = std::max(maxCross, childCross);
+    }
+
+    // Resolve this node's own fit-from-children size.
+    ElementSize widthDecl = element.width;
+    ElementSize heightDecl = element.height;
+
+    if (std::holds_alternative<size::Fit>(widthDecl)) {
+        if (mainAxis == UIPrimaryAxis::Horizontal) {
+            rect.pxSize.x = std::max(rect.pxSize.x, summedMain + totalSpacing + horizontalPadding);
+        } else {
+            rect.pxSize.x = std::max(rect.pxSize.x, maxCross + horizontalPadding);
+        }
+    }
+
+    if (std::holds_alternative<size::Fit>(heightDecl)) {
+        if (mainAxis == UIPrimaryAxis::Vertical) {
+            rect.pxSize.y = std::max(rect.pxSize.y, summedMain + totalSpacing + verticalPadding);
+        } else {
+            rect.pxSize.y = std::max(rect.pxSize.y, maxCross + verticalPadding);
+        }
+    }
+
+    // After fit is resolved, compute remaining space for grow children.
+    int contentMainSize = (mainAxis == UIPrimaryAxis::Horizontal)
+                              ? std::max(0, rect.pxSize.x - horizontalPadding)
+                              : std::max(0, rect.pxSize.y - verticalPadding);
+
+    int remainingMain = std::max(0, contentMainSize - summedMain - totalSpacing);
+    int growShare = (growChildren > 0) ? (remainingMain / growChildren) : 0;
+
+    for (UINode& child : node.children) {
+        LayoutRect& childRect = getOrMakeRect(child);
+        ElementSize mainSizeDecl = child.element.getSizeAlongAxis(mainAxis);
+
+        if (!std::holds_alternative<size::Grow>(mainSizeDecl)) {
+            continue;
+        }
+
+        if (mainAxis == UIPrimaryAxis::Horizontal) {
+            int minWidth = computeSize(child.element.minWidth, rect.pxSize.x);
+            childRect.pxSize.x = std::max(growShare, minWidth);
+        } else {
+            int minHeight = computeSize(child.element.minHeight, rect.pxSize.y);
+            childRect.pxSize.y = std::max(growShare, minHeight);
+        }
+    }
+}
+
+void UILayout::computePositions(UINode& node, LayoutRect parent) {
+    LayoutRect& rect = getOrMakeRect(node);
+    const UIElement& element = node.element;
+
+    UIPrimaryAxis mainAxis = rect.axis;
+    UIPrimaryAxis crossAxis = (mainAxis == UIPrimaryAxis::Horizontal) ? UIPrimaryAxis::Vertical
+                                                                      : UIPrimaryAxis::Horizontal;
+
+    int leftPadding = element.leftPadding.pixels;
+    int rightPadding = element.rightPadding.pixels;
+    int topPadding = element.topPadding.pixels;
+    int bottomPadding = element.bottomPadding.pixels;
+    int childSpacing = element.childSpacing.pixels;
+
+    int contentX = rect.pxPosition.x + leftPadding;
+    int contentY = rect.pxPosition.y + topPadding;
+
+    int contentWidth = std::max(0, rect.pxSize.x - leftPadding - rightPadding);
+    int contentHeight = std::max(0, rect.pxSize.y - topPadding - bottomPadding);
+
+    int cursor = 0;
+
+    for (UINode& child : node.children) {
+        LayoutRect& childRect = getOrMakeRect(child);
+
+        if (mainAxis == UIPrimaryAxis::Horizontal) {
+            childRect.pxPosition.x = contentX + cursor;
+            childRect.pxPosition.y = contentY;
+
+            // Stretch unresolved cross axis to content height.
+            if (childRect.pxSize.y == 0) {
+                int minHeight = computeSize(child.element.minHeight, rect.pxSize.y);
+                childRect.pxSize.y = std::max(contentHeight, minHeight);
+            }
+
+            cursor += childRect.pxSize.x + childSpacing;
+        } else {
+            childRect.pxPosition.x = contentX;
+            childRect.pxPosition.y = contentY + cursor;
+
+            // Stretch unresolved cross axis to content width.
+            if (childRect.pxSize.x == 0) {
+                int minWidth = computeSize(child.element.minWidth, rect.pxSize.x);
+                childRect.pxSize.x = std::max(contentWidth, minWidth);
+            }
+
+            cursor += childRect.pxSize.y + childSpacing;
+        }
+
+        computePositions(child, childRect);
+    }
+}
+
+Option<int> UILayout::computeElementSizeAlongAxis(const UINode& node,
+                                                  UIPrimaryAxis axis,
+                                                  LayoutRect frame) const {
+    const UIElement& element = node.element;
+    ElementSize size = element.getSizeAlongAxis(axis);
+
+    int parentSize = (axis == UIPrimaryAxis::Horizontal) ? frame.pxSize.x : frame.pxSize.y;
+
+    if (std::holds_alternative<size::Fixed>(size)) {
+        return std::get<size::Fixed>(size).pixels;
+    }
+
+    if (std::holds_alternative<size::Percent>(size)) {
+        float percent = std::get<size::Percent>(size).percent;
+        return static_cast<int>(percent * static_cast<float>(parentSize));
+    }
+
+    if (std::holds_alternative<size::Grow>(size)) {
+        return Option<int>::none();
+    }
+
+    if (std::holds_alternative<size::Fit>(size)) {
+        int resolved = 0;
+
+        if (element.text.isSome()) {
+            TextStyle style = element.textStyle.isSome()
+                                  ? element.textStyle.value()
+                                  : UIRenderResoruces::get().defaultTextStyle();
+
+            TextLayout layout(element.text.value(), style);
+            resolved = std::max(resolved,
+                                axis == UIPrimaryAxis::Horizontal ? (int)layout.metrics().width()
+                                                                  : (int)layout.metrics().height());
+        }
+
+        if (element.backgroundImage.isSome()) {
+            Texture texture = element.backgroundImage.value();
+            resolved = std::max(resolved,
+                                axis == UIPrimaryAxis::Horizontal ? (int)texture.getMeta().width
+                                                                  : (int)texture.getMeta().height);
+        }
+
+        // Only intrinsic leaf fit is resolved here.
+        // Container fit is resolved later from child rects.
+        if (resolved > 0 || node.children.empty()) {
+            return resolved;
+        }
+
+        return Option<int>::none();
+    }
+
+    return Option<int>::none();
+}
+
+// UI
+
+void UI::render(glm::vec2 screenPosition, SystemParameter<Renderer> renderer) {
+    UILayout::Context layoutContext{
+        .screenSize = glm::ivec2(renderer->width(), renderer->height()),
+    };
+    _layout.layout(layoutContext);
+    renderNode(_root, *renderer);
+}
+
+void UI::renderNode(const UINode& node, Renderer& renderer) {
+    NodeRenderInfo& renderInfo = getNodeRenderInfo(node);
+    if (!renderInfo.entityCreated) {
+        Engine.logger.debug("Creating render entities for UI node {}", node.id);
+        createNodeRenderEnties(node, renderer);
+    }
+
+    Option<LayoutRect> layout = _layout.getLayout(node);
+    if (!layout.isSome()) {
+        Engine.logger.warn("No layout found for UI node {}, skipping render", node.id);
+        return;
+    }
+
+    LayoutRect rect = layout.value();
+    glm::vec2 screenSize = glm::vec2(renderer.width(), renderer.height());
+
+    // map from pixels to screen space
+    glm::vec2 screenPosition = glm::vec2(rect.pxPosition) / screenSize * 2.0f - glm::vec2(1.0f);
+    glm::vec2 size = glm::vec2(rect.pxSize) / screenSize * 2.0f;
+
+    if (renderInfo.textureEntity.isValid()) {
+        RenderEntity::Properties props = renderInfo.textureEntity.prop();
+        props.transform.position = glm::vec3(screenPosition, props.transform.position.z);
+        props.transform.scale = glm::vec3(size, 1.0f);
+    }
+
+    if (renderInfo.textEntity.isValid()) {
+        RenderEntity::Properties props = renderInfo.textEntity.prop();
+        props.transform.position = glm::vec3(screenPosition, props.transform.position.z);
+        props.transform.scale = glm::vec3(size, 1.0f);
+    }
+
+    for (const UINode& child : node.children) {
+        renderNode(child, renderer);
+    }
+}
+
+void UI::createNodeRenderEnties(const UINode& node, Renderer& renderer) {
+    float z = 0.0f;
+    const float zIncrement = 0.001f;  // small increment to ensure correct layering
+
+    NodeRenderInfo& renderInfo = getNodeRenderInfo(node);
+    const UIElement& element = node.element;
+
+    if (element.backgroundImage.isSome()) {
+        Engine.logger.debug("Creating render entity for UI element with background image");
+        // render background image
+        Texture bgTexture = element.backgroundImage.value();
+        MaterialHandle handle = UIRenderResoruces::get().getMaterial(element).value();
+        Mesh bgMesh = UIRenderResoruces::get().quadMesh();
+
+        // Create the render entity
+        RenderEntity entity =
+            renderer.world().addRenderEntity(glm::vec3(1.0f, 1.0f, z), handle, bgMesh);
+
+        renderInfo.textureEntity = entity;
+
+        z += zIncrement;
+    }
+
+    if (element.text.isSome()) {
+        Engine.logger.debug("Creating render entity for UI element with text {}",
+                            element.text.value());
+        // render text
+        MaterialHandle handle = UIRenderResoruces::get().getMaterial(element).value();
+        TextStyle style;
+        if (element.textStyle.isSome()) {
+            style = element.textStyle.value();
+        } else {
+            style = UIRenderResoruces::get().defaultTextStyle();
+        }
+
+        MeshData textMeshData =
+            TextMeshBuilder::build(element.text.value(), style, element.doubleSided);
+        Mesh textMesh = renderer.meshBuffer().addMesh(textMeshData);
+
+        // Create the render entity, using a default position
+        RenderEntity entity =
+            renderer.world().addRenderEntity(glm::vec3(1.0f, 1.0f, z), handle, textMesh);
+
+        renderInfo.textEntity = entity;
+
+        z += zIncrement;
+    }
+
+    renderInfo.entityCreated = true;
+};
+
+}  // namespace okay

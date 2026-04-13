@@ -1,8 +1,7 @@
 #ifndef __UI_H__
 #define __UI_H__
 
-#include "render_resources.hpp"
-#include "text_mesh_builder.hpp"
+#include "element.hpp"
 
 #include <okay/core/engine/engine.hpp>
 #include <okay/core/engine/system.hpp>
@@ -26,108 +25,68 @@ struct UINode {
     std::vector<UINode> children;
 };
 
-namespace children {
-
-template <size_t N>
-struct NodeArray {
-    std::array<UINode, N> nodes;
-
-    operator std::span<const UINode>() const {
-        return std::span<const UINode>(nodes.data(), nodes.size());
-    }
+struct LayoutRect {
+    glm::ivec2 pxPosition{0, 0};
+    glm::ivec2 pxSize{0, 0};
+    UIPrimaryAxis axis{UIPrimaryAxis::Parent};
+    bool resolvedSize{false};
 };
 
-template <typename... Ts>
-auto multiple(Ts&&... nodes) {
-    return NodeArray<sizeof...(Ts)>{.nodes = {std::forward<Ts>(nodes)...}};
-}
+class UILayout {
+   public:
+    UILayout() = default;
+    UILayout(UINode root) : _root(root) {}
 
-}  // namespace children
+    struct Context {
+        glm::ivec2 screenSize;
+    };
+
+    void layout(const Context& context);
+
+    Option<LayoutRect> getLayout(const UINode& node) const {
+        if (!_layoutMap.contains(node.id)) {
+            return Option<LayoutRect>::none();
+        }
+        return _layoutMap.at(node.id);
+    };
+
+   private:
+    UINode _root;
+    std::unordered_map<UINode::ID, LayoutRect> _layoutMap;
+
+    void computeFixedSizes(UINode& node, LayoutRect frame);
+    void computeFitSizes(UINode& node, LayoutRect frame);
+    void computePositions(UINode& node, LayoutRect frame);
+
+    LayoutRect& getOrMakeRect(const UINode& node) {
+        if (!_layoutMap.contains(node.id)) {
+            _layoutMap[node.id] = LayoutRect{};
+        }
+        return _layoutMap[node.id];
+    }
+
+    int computeSize(ElementRealSize size, int parentSize) const {
+        if (std::holds_alternative<size::Percent>(size)) {
+            float percent = std::get<size::Percent>(size).percent;
+            return static_cast<int>(percent * (float)parentSize);
+        } else if (std::holds_alternative<size::Fixed>(size)) {
+            return std::get<size::Fixed>(size).pixels;
+        }
+        return 0;
+    }
+
+    Option<int> computeElementSizeAlongAxis(const UINode& node,
+                                            UIPrimaryAxis axis,
+                                            LayoutRect frame) const;
+};
 
 class UI {
    public:
     UI() = default;
-    UI(UIElement root) : _root{createNodeFromElement(root)} {}
+    UI(UIElement root) : _root{createNodeFromElement(root)}, _layout(_root) {}
 
    public:
-    void render(glm::vec2 screenPosition, SystemParameter<Renderer> renderer) {
-        renderNode(_root, screenPosition, glm::vec2(1.0f, 1.0f), renderer);
-    }
-
-    void renderNode(const UINode& node,
-                    glm::vec2 screenPosition,
-                    glm::vec2 size,
-                    SystemParameter<Renderer> renderer) {
-        NodeRenderInfo& renderInfo = getNodeRenderInfo(node);
-        if (!renderInfo.entityCreated) {
-            Engine.logger.debug("Creating render entities for UI node {}", node.id);
-            createNodeRenderEnties(node, screenPosition, size, renderer);
-        }
-
-        if (renderInfo.textureEntity.isValid()) {
-            RenderEntity::Properties props = renderInfo.textureEntity.prop();
-            props.transform.position = glm::vec3(screenPosition, props.transform.position.z);
-        }
-
-        if (renderInfo.textEntity.isValid()) {
-            RenderEntity::Properties props = renderInfo.textEntity.prop();
-            props.transform.position = glm::vec3(screenPosition, props.transform.position.z);
-        }
-
-        for (const UINode& child : node.children) {
-            renderNode(child, screenPosition, size, renderer);
-        }
-    }
-
-    void createNodeRenderEnties(const UINode& node,
-                                glm::vec2 screenPosition,
-                                glm::vec2 size,
-                                SystemParameter<Renderer> renderer) {
-        float z = 0.0f;
-        const float zIncrement = 0.001f;  // small increment to ensure correct layering
-
-        NodeRenderInfo& renderInfo = getNodeRenderInfo(node);
-        const UIElement& element = node.element;
-
-        if (element.backgroundImage.isSome()) {
-            Engine.logger.debug("Creating render entity for UI element with background image");
-            // render background image
-            Texture bgTexture = element.backgroundImage.value();
-            MaterialHandle handle = UIRenderResoruces::get().getMaterial(element).value();
-            Mesh bgMesh = UIRenderResoruces::get().quadMesh();
-            RenderEntity entity =
-                renderer->world().addRenderEntity(glm::vec3(screenPosition, z), handle, bgMesh);
-
-            renderInfo.textureEntity = entity;
-
-            z += zIncrement;
-        }
-
-        if (element.text.isSome()) {
-            Engine.logger.debug("Creating render entity for UI element with text {}",
-                                element.text.value());
-            // render text
-            MaterialHandle handle = UIRenderResoruces::get().getMaterial(element).value();
-            TextStyle style;
-            if (element.textStyle.isSome()) {
-                style = element.textStyle.value();
-            } else {
-                style = UIRenderResoruces::get().defaultTextStyle();
-            }
-
-            MeshData textMeshData =
-                TextMeshBuilder::build(element.text.value(), style, element.doubleSided);
-            Mesh textMesh = renderer->meshBuffer().addMesh(textMeshData);
-            RenderEntity entity =
-                renderer->world().addRenderEntity(glm::vec3(screenPosition, z), handle, textMesh);
-
-            renderInfo.textEntity = entity;
-
-            z += zIncrement;
-        }
-
-        renderInfo.entityCreated = true;
-    };
+    void render(glm::vec2 screenPosition, SystemParameter<Renderer> renderer = nullptr);
 
    private:
     UINode _root;
@@ -140,7 +99,6 @@ class UI {
     };
 
     UINode::ID createNodeIDFromElement(const UIElement& element) { return _nextNodeID++; }
-
     UINode createNodeFromElement(const UIElement& element) {
         UINode node;
         node.id = createNodeIDFromElement(element);
@@ -158,6 +116,10 @@ class UI {
         return _nodeRenderInfo[node.id];
     }
 
+    void renderNode(const UINode& node, Renderer& renderer);
+    void createNodeRenderEnties(const UINode& node, Renderer& renderer);
+
+    UILayout _layout;
     std::unordered_map<UINode::ID, NodeRenderInfo> _nodeRenderInfo;
 };
 

@@ -79,7 +79,6 @@
 // okay/core/ui
 #include <okay/core/ui/element.hpp>
 #include <okay/core/ui/font.hpp>
-#include <okay/core/ui/node.hpp>
 #include <okay/core/ui/render_resources.hpp>
 #include <okay/core/ui/text_layout.hpp>
 #include <okay/core/ui/text_mesh_builder.hpp>
@@ -95,5 +94,6 @@
 #include <okay/core/util/singleton.hpp>
 #include <okay/core/util/string.hpp>
 #include <okay/core/util/type.hpp>
+#include <okay/core/util/variant.hpp>
 
 #endif  // __OKAY_H__

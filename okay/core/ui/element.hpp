@@ -30,13 +30,8 @@ struct Fixed {
 
 };  // namespace size
 
-struct ElementAxisSize {
-    std::variant<size::Fit, size::Grow, size::Percent, size::Fixed> value{size::Fit{}};
-};
-
-struct ElementMinMaxSize {
-    std::variant<size::Percent, size::Fixed> value{size::Percent{0.0f}};
-};
+using ElementSize = std::variant<size::Fit, size::Grow, size::Percent, size::Fixed>;
+using ElementRealSize = std::variant<size::Percent, size::Fixed>;
 
 enum class UIPrimaryAxis { Horizontal, Vertical, Parent };
 
@@ -50,11 +45,20 @@ enum class UIPrimaryAxis { Horizontal, Vertical, Parent };
 struct UIElement {
    public:
     // Element positioning
-    OKAY_UI_ELEMENT_PROPERTY(ElementAxisSize, width, size::Fit{});
-    OKAY_UI_ELEMENT_PROPERTY(ElementAxisSize, height, size::Fit{});
-    OKAY_UI_ELEMENT_PROPERTY(ElementMinMaxSize, minWidth, size::Percent{1.0f});
-    OKAY_UI_ELEMENT_PROPERTY(ElementMinMaxSize, minHeight, size::Percent{1.0f});
+    OKAY_UI_ELEMENT_PROPERTY(ElementSize, width, size::Fit{});
+    OKAY_UI_ELEMENT_PROPERTY(ElementSize, height, size::Fit{});
+    OKAY_UI_ELEMENT_PROPERTY(ElementRealSize, minWidth, size::Percent{0.0f});
+    OKAY_UI_ELEMENT_PROPERTY(ElementRealSize, minHeight, size::Percent{0.0f});
     OKAY_UI_ELEMENT_PROPERTY(UIPrimaryAxis, axis, UIPrimaryAxis::Parent);
+
+    // Padding
+    OKAY_UI_ELEMENT_PROPERTY(size::Fixed, leftPadding, size::Fixed{0});
+    OKAY_UI_ELEMENT_PROPERTY(size::Fixed, rightPadding, size::Fixed{0});
+    OKAY_UI_ELEMENT_PROPERTY(size::Fixed, topPadding, size::Fixed{0});
+    OKAY_UI_ELEMENT_PROPERTY(size::Fixed, bottomPadding, size::Fixed{0});
+
+    // Child spacing
+    OKAY_UI_ELEMENT_PROPERTY(size::Fixed, childSpacing, size::Fixed{0});
 
     // Content
     OKAY_UI_ELEMENT_PROPERTY(Option<std::string_view>, text);
@@ -80,6 +84,10 @@ struct UIElement {
     UIElement&& operator()(Children&&... newChildren) && {
         (children.push_back(std::forward<Children>(newChildren)), ...);
         return std::move(*this);
+    }
+
+    ElementSize getSizeAlongAxis(UIPrimaryAxis axis) const {
+        return axis == UIPrimaryAxis::Horizontal ? width : height;
     }
 };
 
