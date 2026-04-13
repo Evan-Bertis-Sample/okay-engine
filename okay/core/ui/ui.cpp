@@ -368,6 +368,8 @@ void UI::createNodeRenderEnties(const UINode& node, Renderer& renderer) {
         MaterialHandle handle = UIRenderResoruces::get().getMaterial(element).value();
         TextStyle style = element.textStyle;
 
+        style.font = FontManager::instance().defaultFont();
+
         MeshData textMeshData =
             TextMeshBuilder::build(element.text.value(), style, element.doubleSided);
         Mesh textMesh = renderer.meshBuffer().addMesh(textMeshData);

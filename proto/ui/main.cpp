@@ -94,18 +94,12 @@ static void __gameInitialize() {
                     .backgroundImageSet(okay::load::engineTexture("textures/uv_test.jpg"))
                     (
                         okay::ui::text("Hello world!")
-                            .paddingSet(10),
+                            .textColorSet(glm::vec3(0.0f, 0.0f, 0.0f)),
                         okay::ui::slot(okay::UIPrimaryAxis::Horizontal)(
                             okay::ui::text("Left")
-                                .paddingSet(10)
-                                // .widthGrow()
-                                // .heightGrow()
-                                // .alignTextVertical(okay::TextStyle::VerticalAlignment::Middle),
-                            , okay::ui::text("Right")
-                                .paddingSet(10)
-                                // .widthGrow()
-                                // .heightGrow()
-                                // .alignTextVertical(okay::TextStyle::VerticalAlignment::Middle)
+                                .textColorSet(glm::vec3(1.0f, 0.0f, 0.0f)),
+                            okay::ui::text("Right")
+                                .textColorSet(glm::vec3(0.0f, 1.0f, 0.0f))
                         )
                     )
             )

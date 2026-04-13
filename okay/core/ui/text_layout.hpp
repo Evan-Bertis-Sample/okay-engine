@@ -23,7 +23,7 @@ struct TextStyle {
     FontManager::FontHandle font{FontManager::instance().defaultFont()};
 
     // Final height of the tallest line after scaling.
-    float targetFontHeight{1.0f};
+    float targetFontHeight{16.0f};
 
     // Extra spacing between lines, in glyph metric space, before scaling.
     float extraLineSpacingGlyph{0.0f};
