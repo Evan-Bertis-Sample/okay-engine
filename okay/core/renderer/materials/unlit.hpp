@@ -41,6 +41,8 @@ struct SceneMaterialProperties {
             flags.addFlag(MaterialFlags::RECEIVE_SHADOWS);
         if (castsShadows)
             flags.addFlag(MaterialFlags::CAST_SHADOWS);
+        if (!useProjectionMatrix)
+            flags.addFlag(MaterialFlags::SCREEN_SPACE);
         return flags;
     }
 };

@@ -2,7 +2,7 @@
 #define __UI_COMPONENT_H__
 
 #include <okay/core/ui/element.hpp>
-#include <okay/core/ui/node.hpp>
+#include <okay/core/ui/ui.hpp>
 
 namespace okay {
 

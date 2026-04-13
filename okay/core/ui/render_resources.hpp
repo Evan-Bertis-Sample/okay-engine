@@ -81,7 +81,7 @@ class UIRenderResoruces {
         return Option<MaterialHandle>::none();
     };
 
-    static constexpr std::string_view UI_ELEMENT_SHADER = "shaders/lit";
+    static constexpr std::string_view UI_ELEMENT_SHADER = "shaders/unlit";
     static constexpr std::string_view WHITE_TEXTURE = "textures/white.jpg";
 
     struct TextMaterialKey {
@@ -150,7 +150,8 @@ class UIRenderResoruces {
         _uiElementShader =
             renderer->materialRegistry().registerShader(shader.vertexShader, shader.fragmentShader);
 
-        _quadMesh = renderer->meshBuffer().addMesh(primitives::rect().build());
+        _quadMesh = renderer->meshBuffer().addMesh(
+            primitives::rect().sizeSet(glm::vec2(1.0f, 1.0f)).twoSidedSet(true).build());
 
         _defaultFont = unwrapAssetResult(am->loadEngineAssetSync<FontManager::FontHandle>(
             "fonts/ARIAL.TTF", FontLoadOptions{.width = 32, .height = 0}));

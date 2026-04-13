@@ -24,6 +24,7 @@ enum class MaterialFlags : std::uint32_t {
     CAST_SHADOWS = 1 << 3,
     RECEIVE_SHADOWS = 1 << 4,
     NORMAL_MAP = 1 << 5,
+    SCREEN_SPACE = 1 << 6
 };
 
 inline MaterialFlags operator|(MaterialFlags a, MaterialFlags b) {

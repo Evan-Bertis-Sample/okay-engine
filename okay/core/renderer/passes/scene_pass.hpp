@@ -1,6 +1,7 @@
 #ifndef __SCENE_PASS_H__
 #define __SCENE_PASS_H__
 
+#include "glm/ext/matrix_transform.hpp"
 #include "okay/core/renderer/render_world.hpp"
 
 #include <okay/core/engine/engine.hpp>
@@ -95,7 +96,11 @@ class ScenePass : public IRenderPass {
         auto& uniforms = item.material->properties();
 
         if (auto* unlit = dynamic_cast<okay::SceneMaterialProperties*>(uniforms.get())) {
-            unlit->projectionMatrix.set(projection);
+            if (item.material->properties()->flags().hasFlag(MaterialFlags::SCREEN_SPACE)) {
+                unlit->projectionMatrix.set(glm::identity<glm::mat4>());
+            } else {
+                unlit->projectionMatrix.set(projection);
+            }
             unlit->viewMatrix.set(view);
             unlit->cameraPosition.set(camPos);
             unlit->cameraDirection.set(camDir);

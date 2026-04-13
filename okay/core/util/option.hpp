@@ -116,7 +116,7 @@ class Option {
     }
 
    private:
-    option_internal_type<T> _value;
+    std::optional<T> _value;
 };
 
 }  // namespace okay
