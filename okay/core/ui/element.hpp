@@ -26,6 +26,9 @@ struct Percent {
 };
 struct Fixed {
     int pixels;
+
+    Fixed(int pixels) : pixels(pixels) {}
+    Fixed() : pixels(0) {}
 };
 
 };  // namespace size
@@ -62,7 +65,7 @@ struct UIElement {
 
     // Content
     OKAY_UI_ELEMENT_PROPERTY(Option<std::string_view>, text);
-    OKAY_UI_ELEMENT_PROPERTY(Option<TextStyle>, textStyle);
+    OKAY_UI_ELEMENT_PROPERTY(TextStyle, textStyle);
     OKAY_UI_ELEMENT_PROPERTY(glm::vec3, textColor, 1.0f, 1.0f, 1.0f);
 
     // background
@@ -88,6 +91,36 @@ struct UIElement {
 
     ElementSize getSizeAlongAxis(UIPrimaryAxis axis) const {
         return axis == UIPrimaryAxis::Horizontal ? width : height;
+    }
+
+    UIElement& paddingSet(size::Fixed padding) {
+        leftPadding = rightPadding = topPadding = bottomPadding = padding;
+        return *this;
+    }
+
+    UIElement& paddingSet(size::Fixed horizontal, size::Fixed vertical) {
+        leftPadding = rightPadding = horizontal;
+        topPadding = bottomPadding = vertical;
+        return *this;
+    }
+
+    UIElement& widthGrow() { return widthSet(size::Grow{}); }
+    UIElement& heightGrow() { return heightSet(size::Grow{}); }
+
+    UIElement& widthFit() { return widthSet(size::Fit{}); }
+    UIElement& heightFit() { return heightSet(size::Fit{}); }
+
+    UIElement& widthPercent(float percent) { return widthSet(size::Percent{percent}); }
+    UIElement& heightPercent(float percent) { return heightSet(size::Percent{percent}); }
+
+    UIElement& alignTextHorizontal(TextStyle::HorizontalAlignment alignment) {
+        textStyle.horizontalAlignment = alignment;
+        return *this;
+    }
+
+    UIElement& alignTextVertical(TextStyle::VerticalAlignment alignment) {
+        textStyle.verticalAlignment = alignment;
+        return *this;
     }
 };
 

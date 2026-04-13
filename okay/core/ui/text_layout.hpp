@@ -20,7 +20,7 @@ struct TextStyle {
     enum class HorizontalAlignment { Left, Center, Right };
     enum class VerticalAlignment { Top, Middle, Bottom };
 
-    FontManager::FontHandle font{};
+    FontManager::FontHandle font{FontManager::instance().defaultFont()};
 
     // Final height of the tallest line after scaling.
     float targetFontHeight{1.0f};

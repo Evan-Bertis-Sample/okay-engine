@@ -18,7 +18,7 @@ struct SceneMaterialProperties {
     bool isTransparent{false};
     bool recievesShadows{false};
     bool castsShadows{false};
-    bool useProjectionMatrix{false};
+    bool useScreenspaceCoords{false};
 
     auto uniformRefs() {
         return std::tie(modelMatrix, viewMatrix, projectionMatrix, cameraPosition, cameraDirection);
@@ -41,7 +41,7 @@ struct SceneMaterialProperties {
             flags.addFlag(MaterialFlags::RECEIVE_SHADOWS);
         if (castsShadows)
             flags.addFlag(MaterialFlags::CAST_SHADOWS);
-        if (!useProjectionMatrix)
+        if (useScreenspaceCoords)
             flags.addFlag(MaterialFlags::SCREEN_SPACE);
         return flags;
     }

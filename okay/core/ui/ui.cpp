@@ -6,6 +6,7 @@
 
 #include <okay/core/engine/engine.hpp>
 #include <okay/core/renderer/renderer.hpp>
+#include <okay/core/util/format.hpp>
 #include <okay/core/util/variant.hpp>
 
 #include <variant>
@@ -241,9 +242,7 @@ Option<int> UILayout::computeElementSizeAlongAxis(const UINode& node,
         int resolved = 0;
 
         if (element.text.isSome()) {
-            TextStyle style = element.textStyle.isSome()
-                                  ? element.textStyle.value()
-                                  : UIRenderResoruces::get().defaultTextStyle();
+            TextStyle style = element.textStyle;
 
             TextLayout layout(element.text.value(), style);
             resolved = std::max(resolved,
@@ -293,31 +292,46 @@ void UI::renderNode(const UINode& node, Renderer& renderer) {
         return;
     }
 
-    LayoutRect rect = layout.value();
-    glm::vec2 screenSize = glm::vec2(renderer.width(), renderer.height());
+    const LayoutRect rect = layout.value();
+    const glm::vec2 screenSize = glm::vec2(renderer.width(), renderer.height());
 
-    // map from pixels to screen space
-    glm::vec2 screenPosition = glm::vec2(rect.pxPosition) / screenSize * 2.0f - glm::vec2(1.0f);
-    glm::vec2 size = glm::vec2(rect.pxSize) / screenSize * 2.0f;
+    // Convert from top-left pixel coordinates to NDC.
+    auto pixelToNdc = [&](const glm::vec2& px) -> glm::vec2 {
+        return glm::vec2((px.x / screenSize.x) * 2.0f - 1.0f, 1.0f - (px.y / screenSize.y) * 2.0f);
+    };
+
+    // Number of NDC units per pixel.
+    const glm::vec2 pxToNdcScale = glm::vec2(2.0f / screenSize.x, 2.0f / screenSize.y);
 
     if (renderInfo.textureEntity.isValid()) {
+        // Background quad is centered at origin and has size 1x1 in mesh space.
+        // So place it at the center of the layout rect and scale by rect size in NDC.
+        const glm::vec2 rectCenterPx = glm::vec2(rect.pxPosition) + glm::vec2(rect.pxSize) * 0.5f;
+        const glm::vec2 rectCenterNdc = pixelToNdc(rectCenterPx);
+        const glm::vec2 rectSizeNdc = glm::vec2(rect.pxSize) * pxToNdcScale;
+
         RenderEntity::Properties props = renderInfo.textureEntity.prop();
-        props.transform.position = glm::vec3(screenPosition, props.transform.position.z);
-        props.transform.scale = glm::vec3(size, 1.0f);
+        props.transform.position = glm::vec3(rectCenterNdc, props.transform.position.z);
+        props.transform.scale = glm::vec3(rectSizeNdc, 1.0f);
+
+        // Engine.logger.debug("Rendering texture with transform {}", props.transform);
     }
 
     if (renderInfo.textEntity.isValid()) {
-        RenderEntity::Properties props = renderInfo.textEntity.prop();
-        props.transform.position = glm::vec3(screenPosition, props.transform.position.z);
-        props.transform.scale = glm::vec3(size, 1.0f);
-    }
+        // Text mesh units are already pixels.
+        // So the transform scale should only convert pixels -> NDC.
+        //
+        // The text mesh is positioned from the layout rect's top-left.
+        // If your TextMeshBuilder uses a different local origin, adjust this anchor.
+        const glm::vec2 textOriginPx = glm::vec2(rect.pxPosition);
+        const glm::vec2 textOriginNdc = pixelToNdc(textOriginPx);
 
-    Engine.logger.debug("Rendering UI node {} at screen position {} {} with size {} {}",
-                        node.id,
-                        screenPosition.x,
-                        screenPosition.y,
-                        size.x,
-                        size.y);
+        RenderEntity::Properties props = renderInfo.textEntity.prop();
+        props.transform.position = glm::vec3(textOriginNdc, props.transform.position.z);
+        props.transform.scale = glm::vec3(pxToNdcScale.x, pxToNdcScale.y, 1.0f);
+
+        // Engine.logger.debug("Rendering text with transform {}", props.transform);
+    }
 
     for (const UINode& child : node.children) {
         renderNode(child, renderer);
@@ -352,12 +366,7 @@ void UI::createNodeRenderEnties(const UINode& node, Renderer& renderer) {
                             element.text.value());
         // render text
         MaterialHandle handle = UIRenderResoruces::get().getMaterial(element).value();
-        TextStyle style;
-        if (element.textStyle.isSome()) {
-            style = element.textStyle.value();
-        } else {
-            style = UIRenderResoruces::get().defaultTextStyle();
-        }
+        TextStyle style = element.textStyle;
 
         MeshData textMeshData =
             TextMeshBuilder::build(element.text.value(), style, element.doubleSided);

@@ -88,16 +88,27 @@ static void __gameInitialize() {
     okay::ecs::entity()
         .addComponent<okay::TransformComponent>(glm::vec3{0.0f, 0.0f, 0.0f})
         .addComponent<okay::UIComponent>(
-            okay::ui::flexbox()
-                .backgroundColorSet(glm::vec3{1.0f, 1.0f, 1.0f})
-                .backgroundImageSet(okay::load::engineTexture("textures/uv_test.jpg"))
-                (
-                    okay::ui::text("Hello world!"),
-                    okay::ui::slot(okay::UIPrimaryAxis::Horizontal)(
-                        okay::ui::text("Left"),
-                        okay::ui::text("Right")
+            okay::ui::flexbox()(
+                okay::ui::flexbox()
+                    .backgroundColorSet(glm::vec3{1.0f, 1.0f, 1.0f})
+                    .backgroundImageSet(okay::load::engineTexture("textures/uv_test.jpg"))
+                    (
+                        okay::ui::text("Hello world!")
+                            .paddingSet(10),
+                        okay::ui::slot(okay::UIPrimaryAxis::Horizontal)(
+                            okay::ui::text("Left")
+                                .paddingSet(10)
+                                // .widthGrow()
+                                // .heightGrow()
+                                // .alignTextVertical(okay::TextStyle::VerticalAlignment::Middle),
+                            , okay::ui::text("Right")
+                                .paddingSet(10)
+                                // .widthGrow()
+                                // .heightGrow()
+                                // .alignTextVertical(okay::TextStyle::VerticalAlignment::Middle)
+                        )
                     )
-                )
+            )
         );
     //clang-format on
 }

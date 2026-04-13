@@ -32,19 +32,14 @@ class UIRenderResoruces {
                 return Option<MaterialHandle>::some(_textMaterialCache.at(*key));
             }
 
-            TextStyle style;
-            if (element.textStyle.isSome()) {
-                style = element.textStyle.value();
-            } else {
-                style = defaultTextStyle();
-            }
+            TextStyle style = element.textStyle;
 
             // create a material
             auto materialProperties = std::make_unique<UnlitMaterial>();
             materialProperties->color = element.textColor;
             materialProperties->albedo = FontManager::instance().getGlyphAtlas(style.font);
             materialProperties->isTransparent = true;
-            materialProperties->useProjectionMatrix = false;
+            materialProperties->useScreenspaceCoords = true;
             materialProperties->castsShadows = false;
             materialProperties->recievesShadows = false;
 
@@ -66,7 +61,7 @@ class UIRenderResoruces {
             materialProperties->color = element.backgroundColor;
             materialProperties->albedo = element.backgroundImage.value();
             materialProperties->isTransparent = true;
-            materialProperties->useProjectionMatrix = false;
+            materialProperties->useScreenspaceCoords = true;
             materialProperties->castsShadows = false;
             materialProperties->recievesShadows = false;
 
@@ -123,13 +118,6 @@ class UIRenderResoruces {
     Mesh quadMesh() const { return _quadMesh; }
     Texture whiteTexture() const { return _whiteTexture; }
 
-    TextStyle defaultTextStyle() const {
-        return TextStyle{
-            .font = _defaultFont,
-            .targetFontHeight = 32,
-        };
-    }
-
    private:
     std::map<TextMaterialKey, MaterialHandle> _textMaterialCache;
     std::map<TextureMaterialKey, MaterialHandle> _textureMaterialCache;
@@ -137,7 +125,6 @@ class UIRenderResoruces {
     ShaderHandle _uiElementShader;
     Texture _whiteTexture;
     Mesh _quadMesh;
-    FontManager::FontHandle _defaultFont;
 
     void loadResoruces() {
         AssetManager* am = Engine.systems.getSystemChecked<AssetManager>();
@@ -152,9 +139,6 @@ class UIRenderResoruces {
 
         _quadMesh = renderer->meshBuffer().addMesh(
             primitives::rect().sizeSet(glm::vec2(1.0f, 1.0f)).twoSidedSet(true).build());
-
-        _defaultFont = unwrapAssetResult(am->loadEngineAssetSync<FontManager::FontHandle>(
-            "fonts/ARIAL.TTF", FontLoadOptions{.width = 32, .height = 0}));
     }
 
     Option<TextMaterialKey> getTextMaterialKey(const UIElement& element) const {
@@ -162,13 +146,7 @@ class UIRenderResoruces {
             return Option<TextMaterialKey>::none();
         }
 
-        TextStyle style;
-        if (element.textStyle.isSome()) {
-            style = element.textStyle.value();
-        } else {
-            style = defaultTextStyle();
-        }
-
+        TextStyle style = element.textStyle;
         // compute the texture width
         // we will do this by bucketing the target height
         const float PX_PER_UNIT = 64.0f;  // number of pixels per unit of height

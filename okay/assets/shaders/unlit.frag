@@ -14,7 +14,7 @@ uniform sampler2D u_albedo;  // optional, can be ignored if not used
 
 void main()
 {
-   vec3 texture = texture(u_albedo, v_uv).rgb;
-   vec3 baseColor = v_color * texture;
-   FragColor = vec4(baseColor, 1.0);
+   vec4 texture = texture(u_albedo, v_uv).rgba;
+   vec3 baseColor = v_color * texture.rgb;
+   FragColor = vec4(baseColor, texture.a);
 }

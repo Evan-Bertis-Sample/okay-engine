@@ -14,7 +14,7 @@ struct Transform {
 
     Transform(const glm::vec3& pos = glm::vec3(0.0f),
               const glm::vec3& scl = glm::vec3(1.0f),
-              const glm::quat& rot = glm::quat())
+              const glm::quat& rot = glm::identity<glm::quat>())
         : position(pos), scale(scl), rotation(rot) {}
 
     // asignment, equality comparison overloads

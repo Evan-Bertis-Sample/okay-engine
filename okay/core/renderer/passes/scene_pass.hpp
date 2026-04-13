@@ -75,7 +75,7 @@ class ScenePass : public IRenderPass {
             if (f.isError())
                 Engine.logger.error("Failed to pass uniforms : {}", f.error());
 
-            Engine.logger.info("Drawing item with transform {}", item.transform);
+            // Engine.logger.info("Drawing item with transform {}", item.transform);
 
             context.renderer.meshBuffer().drawMesh(item.mesh);
         }
@@ -108,7 +108,6 @@ class ScenePass : public IRenderPass {
                 unlit->projectionMatrix.set(projection);
                 unlit->viewMatrix.set(view);
             }
-            unlit->viewMatrix.set(view);
             unlit->cameraPosition.set(camPos);
             unlit->cameraDirection.set(camDir);
         }
@@ -148,6 +147,12 @@ class ScenePass : public IRenderPass {
         } else {
             GL_CHECK(glDisable(GL_BLEND));
             GL_CHECK(glDepthMask(GL_TRUE));
+        }
+
+        if (flags.hasFlag(MaterialFlags::SCREEN_SPACE)) {
+            glDisable(GL_DEPTH_TEST);
+        } else {
+            glEnable(GL_DEPTH_TEST);
         }
     }
 
