@@ -63,7 +63,7 @@ class UIRenderResoruces {
 
             // create a material
             auto materialProperties = std::make_unique<UnlitMaterial>();
-            materialProperties->color = element.textColor;
+            materialProperties->color = element.backgroundColor;
             materialProperties->albedo = element.backgroundImage.value();
             materialProperties->isTransparent = true;
             materialProperties->useProjectionMatrix = false;

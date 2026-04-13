@@ -83,7 +83,7 @@ class UILayout {
 class UI {
    public:
     UI() = default;
-    UI(UIElement root) : _root{createNodeFromElement(root)}, _layout(_root) {}
+    UI(UIElement root);
 
    public:
     void render(glm::vec2 screenPosition, SystemParameter<Renderer> renderer = nullptr);

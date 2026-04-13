@@ -66,6 +66,11 @@ void UILayout::computeFixedSizes(UINode& node, LayoutRect parent) {
     }
 }
 
+UI::UI(UIElement root) {
+    _root = createNodeFromElement(root);
+    _layout = UILayout(_root);
+}
+
 void UILayout::computeFitSizes(UINode& node, LayoutRect parent) {
     LayoutRect& rect = getOrMakeRect(node);
     const UIElement& element = node.element;
@@ -306,6 +311,13 @@ void UI::renderNode(const UINode& node, Renderer& renderer) {
         props.transform.position = glm::vec3(screenPosition, props.transform.position.z);
         props.transform.scale = glm::vec3(size, 1.0f);
     }
+
+    Engine.logger.debug("Rendering UI node {} at screen position {} {} with size {} {}",
+                        node.id,
+                        screenPosition.x,
+                        screenPosition.y,
+                        size.x,
+                        size.y);
 
     for (const UINode& child : node.children) {
         renderNode(child, renderer);

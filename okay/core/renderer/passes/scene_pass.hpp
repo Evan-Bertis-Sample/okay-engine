@@ -29,7 +29,6 @@ class ScenePass : public IRenderPass {
     virtual void render(const RendererContext& context) override {
         GL_CHECK(glClearColor(0.113f, 0.008, 0.208, 1.0f));
         GL_CHECK(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
-
         GL_CHECK(glEnable(GL_DEPTH_TEST));
         GL_CHECK(glEnable(GL_MULTISAMPLE));
         GL_CHECK(glCullFace(GL_BACK));
@@ -55,7 +54,10 @@ class ScenePass : public IRenderPass {
                 continue;
 
             Camera& camera = context.world.camera();
-            if (!camera.isInFrustum(item.mesh.bounds.transform(item.worldMatrix), aspect)) {
+            bool isScreenSpace =
+                item.material->properties()->flags().hasFlag(MaterialFlags::SCREEN_SPACE);
+            if (!isScreenSpace &&
+                !camera.isInFrustum(item.mesh.bounds.transform(item.worldMatrix), aspect)) {
                 continue;
             }
 
@@ -72,6 +74,8 @@ class ScenePass : public IRenderPass {
             Failable f = item.material->passUniforms();
             if (f.isError())
                 Engine.logger.error("Failed to pass uniforms : {}", f.error());
+
+            Engine.logger.info("Drawing item with transform {}", item.transform);
 
             context.renderer.meshBuffer().drawMesh(item.mesh);
         }
@@ -94,12 +98,15 @@ class ScenePass : public IRenderPass {
         }
 
         auto& uniforms = item.material->properties();
+        MaterialFlagCollection flags = uniforms->flags();
 
         if (auto* unlit = dynamic_cast<okay::SceneMaterialProperties*>(uniforms.get())) {
-            if (item.material->properties()->flags().hasFlag(MaterialFlags::SCREEN_SPACE)) {
+            if (flags.hasFlag(MaterialFlags::SCREEN_SPACE)) {
                 unlit->projectionMatrix.set(glm::identity<glm::mat4>());
+                unlit->viewMatrix.set(glm::identity<glm::mat4>());
             } else {
                 unlit->projectionMatrix.set(projection);
+                unlit->viewMatrix.set(view);
             }
             unlit->viewMatrix.set(view);
             unlit->cameraPosition.set(camPos);
