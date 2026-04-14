@@ -192,8 +192,14 @@ class FontManager {
         FT_ULong charcode = FT_Get_First_Char(face, &gindex);
 
         while (gindex != 0) {
-            if (FT_Load_Glyph(face, gindex, FT_LOAD_RENDER)) {
-                // Failed to load glyph, skip it
+            // Load glyph without rendering (DEFAULT)
+            if (FT_Load_Glyph(face, gindex, FT_LOAD_DEFAULT)) {
+                charcode = FT_Get_Next_Char(face, charcode, &gindex);
+                continue;
+            }
+
+            // Render glyph via SDF render mode
+            if (FT_Render_Glyph(face->glyph, FT_RENDER_MODE_SDF)) {
                 charcode = FT_Get_Next_Char(face, charcode, &gindex);
                 continue;
             }
