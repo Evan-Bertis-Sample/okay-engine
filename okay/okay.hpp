@@ -32,6 +32,7 @@
 #include <okay/core/renderer/font.hpp>
 #include <okay/core/renderer/gl.hpp>
 #include <okay/core/renderer/gpu.hpp>
+#include <okay/core/renderer/imgui_impl.hpp>
 #include <okay/core/renderer/material.hpp>
 #include <okay/core/renderer/mesh.hpp>
 #include <okay/core/renderer/primitive.hpp>

@@ -4,9 +4,7 @@
 #include "okay/core/util/result.hpp"
 #include "render_pipeline.hpp"
 
-// #include <imgui.h>
-// #include <imgui_impl_glfw.h>
-// #include <imgui_impl_opengl3.h>
+#include <imgui.h>
 
 using namespace okay;
 
@@ -37,37 +35,34 @@ void Renderer::initialize() {
 
     Engine.logger.debug("Renderer initialized");
 
-    // if (_imguiEnabled) {
-    //     Engine.logger.info("Initializing ImGui");
-    //     // Setup Dear ImGui context
-    //     IMGUI_CHECKVERSION();
-    //     ImGui::CreateContext();
-    //     ImGuiIO& io = ImGui::GetIO();
-    //     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
-    //     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;   // Enable Gamepad Controls
-    //     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+    if (_imguiEnabled) {
+        Engine.logger.info("Initializing ImGui");
+        // Setup Dear ImGui context
+        IMGUI_CHECKVERSION();
+        ImGui::CreateContext();
+        ImGuiIO& io = ImGui::GetIO();
+        io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
+        io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;   // Enable Gamepad Controls
+        io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
-    //     auto win = getSurfaceWindow();
-    //     if (win == nullptr) {
-    //         Engine.logger.warn("No GLFW window available");
-    //         return;
-    //     }
-    //     ImGui_ImplGlfw_InitForOpenGL(win, true);  // Second param install_callback=true will install
-    //                                               // GLFW callbacks and chain to existing ones.
-    //     ImGui_ImplOpenGL3_Init();
-    //     _imguiInitialized = true;
-    // }
+        auto win = getSurfaceWindow();
+        if (win == nullptr) {
+            Engine.logger.warn("No GLFW window available");
+            return;
+        }
+        _imguiImpl->init(win, true);
+        _imguiInitialized = true;
+    }
 }
 
 void Renderer::postInitialize() {
 }
 
 void Renderer::preTick() {
-    // if (_imguiEnabled && _imguiInitialized) {
-    //     ImGui_ImplOpenGL3_NewFrame();
-    //     ImGui_ImplGlfw_NewFrame();
-    //     ImGui::NewFrame();
-    // }
+    if (_imguiEnabled && _imguiInitialized) {
+        _imguiImpl->newFrame();
+        ImGui::NewFrame();
+    }
 }
 
 void Renderer::tick() {
@@ -77,19 +72,18 @@ void Renderer::tick() {
 }
 
 void Renderer::postTick() {
-    // if (_imguiEnabled && _imguiInitialized) {
-    //     ImGui::Render();
-    //     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-    // }
+    if (_imguiEnabled && _imguiInitialized) {
+        ImGui::Render();
+        _imguiImpl->renderDrawData(ImGui::GetDrawData());
+    }
 
     _surface->swapBuffers();
 }
 
 void Renderer::shutdown() {
-    // if (_imguiInitialized) {
-    //     ImGui_ImplOpenGL3_Shutdown();
-    //     ImGui_ImplGlfw_Shutdown();
-    //     ImGui::DestroyContext();
-    // }
+    if (_imguiInitialized) {
+        _imguiImpl->shutdown();
+        ImGui::DestroyContext();
+    }
     _surface->destroy();
 }

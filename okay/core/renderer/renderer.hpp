@@ -1,6 +1,7 @@
 #ifndef __RENDERER_H__
 #define __RENDERER_H__
 
+#include "imgui_impl.hpp"
 #include "render_pipeline.hpp"
 #include "render_target.hpp"
 
@@ -14,6 +15,7 @@
 #include <okay/core/renderer/render_world.hpp>
 #include <okay/core/renderer/surface.hpp>
 #include <okay/core/util/singleton.hpp>
+
 #include <cstdint>
 
 namespace okay {
@@ -64,6 +66,7 @@ class Renderer : public System<SystemScope::ENGINE> {
     RenderTargetPool _renderTargetPool;
     MaterialRegistry _materialRegistry;
     std::unique_ptr<Surface> _surface;
+    std::unique_ptr<IMGUIImpl> _imguiImpl;
     bool _imguiEnabled{false};
     bool _imguiInitialized{false};
 };
