@@ -363,8 +363,6 @@ vec3 evaluateDisney(vec3 N, vec3 L, vec3 H, vec3 V, int thin) {
 
     // diffuse
     if (upperHemisphere && diffuseWeight > 0.0f) {
-        float forwardDiffusePdfW = abs(dot(N, L));
-        float reverseDiffusePdfW = abs(dot(N, V));
         float diffuse = calcDisneyDiffuse(N, L, H, V, thin);
         vec3 sheen = calcSheen(L, H);
 
@@ -451,10 +449,6 @@ void main() {
         }
         vec3 H = safeNormalize(V + L); // half vector
 
-        // float NdotL = max(dot(N, L), 0.0);
-        // colorOut += BRDF(L, V, N, v_tangent, v_bitangent, albedo) * NdotL * Lrgb * intensity * att;
-
-        float forwardPdf, reversePdf;
         colorOut += evaluateDisney(N, L, H, V, u_thin) * Lrgb * intensity * att;
     }
 
