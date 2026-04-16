@@ -103,7 +103,7 @@ Surface::Surface(Surface&&) noexcept = default;
 Surface& Surface::operator=(Surface&&) noexcept = default;
 
 void* Surface::getWindow() {
-    return nullptr;
+    return _impl->gbmSurf;
 }
 
 void Surface::initialize() {

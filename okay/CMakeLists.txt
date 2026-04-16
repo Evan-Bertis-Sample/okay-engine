@@ -107,10 +107,6 @@ add_subdirectory(${OKAY_VENDOR_DIR}/freetype)
 # append to engine libraries so it's linked in the final game
 list(APPEND OKAY_ENGINE_LIBRARIES freetype)
 
-# platform selection (creates INTERFACE target 'okay_platform')
-# set OKAY_PLATFORM to override autodetect (e.g., -DOKAY_PLATFORM=windows)
-add_subdirectory(${OKAY_ENGINE_DIR}/platform)
-
 # allow glm & glad, and stb to be included in the game
 target_include_directories(okay
   PUBLIC ${OKAY_VENDOR_DIR}/glm
@@ -127,7 +123,6 @@ set(IMGUI_SOURCES
   ${IMGUI_DIR}/imgui_draw.cpp
   ${IMGUI_DIR}/imgui_tables.cpp
   ${IMGUI_DIR}/imgui_widgets.cpp
-  ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp
   ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp
 )
 
@@ -141,9 +136,13 @@ list(APPEND OKAY_ENGINE_LIBRARIES imgui)
 # link glfw and OpenGL to imgui
 target_link_libraries(imgui
   PUBLIC
-  glfw
   OpenGL::GL
 )
+
+# platform selection (creates INTERFACE target 'okay_platform')
+# set OKAY_PLATFORM to override autodetect (e.g., -DOKAY_PLATFORM=windows)
+add_subdirectory(${OKAY_ENGINE_DIR}/platform)
+
 # define verbosity settings for Release Builds
 if(OKAY_BUILD_TYPE STREQUAL "Release")
   target_compile_definitions(okay PUBLIC -DOKAY_RELEASE)

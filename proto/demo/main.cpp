@@ -4,6 +4,7 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/random.hpp>
+#include <imgui.h>
 #include <utility>
 
 static void __gameInitialize();
@@ -62,7 +63,8 @@ int main() {
 
     okay::RendererSettings rendererSettings{
         .surfaceConfig = surfaceConfig,
-        .pipeline = okay::RenderPipeline::create(std::make_unique<okay::ScenePass>())};
+        .pipeline = okay::RenderPipeline::create(std::make_unique<okay::ScenePass>()),
+        .enableIMGUI = true};
 
     auto renderer = okay::Renderer::create(std::move(rendererSettings));
 
@@ -154,6 +156,10 @@ static void __gameUpdate() {
                                  okay::ecs::entityCount());
         toDelete.destroy();
     }
+    renderer->world().camera().transform.position = pos;
+    renderer->world().camera().lookAt(glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+    ImGui::ShowDemoWindow();
 }
 
 static void __gameShutdown() {
