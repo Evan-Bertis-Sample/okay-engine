@@ -11,10 +11,10 @@ uniform vec3 u_color;
 
 void main() {
     float distance = texture(u_albedo, v_uv).a;
-    float smoothing_factor = 0.05;
+    float smoothing_factor = fwidth(distance);
     float alpha = smoothstep(0.5 - smoothing_factor, 0.5 + smoothing_factor, distance);
 
-    if (alpha < smoothing_factor) {
+    if (alpha < 0.01) {
         discard;
     }
     
