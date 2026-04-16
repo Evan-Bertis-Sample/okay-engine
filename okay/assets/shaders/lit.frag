@@ -77,9 +77,9 @@ float spotConeFactor(vec3 L, vec3 spotDir, float angleRad) {
     return smoothstep(cosCutoff, cosCutoff + softBand, cosTheta);
 }
 
-vec3 calcTint() {
-    float luminance = dot(vec3(0.2126f, 0.7152f, 0.0722f), v_color); // 0.2126f, 0.7152f, 0.0722f
-    return (luminance > 0.0) ? v_color * (1.0 / luminance) : vec3(1.0);
+vec3 calcTint(vec3 baseColor) {
+    float luminance = dot(vec3(0.2126f, 0.7152f, 0.0722f), baseColor); // 0.2126f, 0.7152f, 0.0722f
+    return (luminance > 0.0) ? baseColor * (1.0 / luminance) : vec3(1.0);
 }
 
 // Fresnel equations
@@ -125,15 +125,15 @@ float dielectric(float cosThetaI, float etaI, float etaT) {
     
 }
 
-vec3 disneyFresnel(vec3 N, vec3 wi, vec3 wm, vec3 wo) {
+vec3 disneyFresnel(vec3 baseColor, vec3 N, vec3 wi, vec3 wm, vec3 wo) {
     float dotHV = abs(dot(wm, wo));
 
-    vec3 tint = calcTint();
+    vec3 tint = calcTint(baseColor);
     float ior = (2.0f / (1.0f - sqrt(0.08f * u_specular))) - 1.0f;
     float relativeIOR = dot(N, wi) > 0.0f ? ior : 1.0f / ior;
     
     vec3 R0 = schlickR0FromRelativeIOR(relativeIOR) * mix(vec3(1.0f), tint, u_specularTint);
-    R0 = mix(R0, v_color, u_metallic);
+    R0 = mix(R0, baseColor, u_metallic);
 
     float dielectricFresnel = dielectric(dotHV, 1.0f, ior);
     vec3 metallicFresnel = schlickFresnel(R0, dotHV);
@@ -191,11 +191,11 @@ float GGXG1(vec3 w, vec3 N, float ax, float ay) {
 
 // sheen
 
-vec3 calcSheen(vec3 wi, vec3 wm) {
+vec3 calcSheen(vec3 baseColor, vec3 wi, vec3 wm) {
     if (u_sheen <= 0.0f) return vec3(0.0f);
 
     float dotHL = dot(wm, wi);
-    vec3 tint = calcTint();
+    vec3 tint = calcTint(baseColor);
     vec3 sheenColor = mix(vec3(1.0), tint, u_sheenTint);
     return u_sheen * sheenColor * schlickWeight(dotHL);
 }
@@ -221,11 +221,7 @@ float disneyClearcoat(vec3 N, vec3 wo, vec3 wm, vec3 wi) {
 
 // Specular BRDF
 
-
-
-vec3 calcDisneySpecTransmission(vec3 N, vec3 wi, vec3 wo, vec3 wm, float ax, float ay, bool thin);
-
-vec3 calcDisneyBRDF(vec3 N, vec3 wo, vec3 wm, vec3 wi) {
+vec3 calcDisneyBRDF(vec3 baseColor, vec3 N, vec3 wo, vec3 wm, vec3 wi) {
     float dotNL = dot(N, wi);
     float dotNV = dot(N, wo);
     if (dotNL <= 0.0f || dotNV <= 0.0f) return vec3(0.0f);
@@ -237,7 +233,7 @@ vec3 calcDisneyBRDF(vec3 N, vec3 wo, vec3 wm, vec3 wi) {
     float gl = GGXG1(wi, N, ax, ay);
     float gv = GGXG1(wo, N, ax, ay);
 
-    vec3 f = disneyFresnel(N, wi, wm, wo);
+    vec3 f = disneyFresnel(baseColor, N, wi, wm, wo);
 
     return d * gl * gv * f / (4.0f * dotNL * dotNV);
 }
@@ -248,7 +244,7 @@ float thinTransmissionRoughness(float ior) {
     return clamp((0.65f * ior - 0.35f) * u_roughness, 0.0f, 1.0f);
 }
 
-vec3 calcDisneySpecTransmission(vec3 N, vec3 wi, vec3 wo, vec3 wm, float ax, float ay, int thin) {    
+vec3 calcDisneySpecTransmission(vec3 baseColor, vec3 N, vec3 wi, vec3 wo, vec3 wm, float ax, float ay, int thin) {    
     float ior = (2.0f / (1.0f - sqrt(0.08f * u_specular))) - 1.0f;
 
     float relativeIOR = dot(N, wi) > 0.0f ? ior : 1.0f / ior;
@@ -267,7 +263,7 @@ vec3 calcDisneySpecTransmission(vec3 N, vec3 wi, vec3 wo, vec3 wm, float ax, flo
 
     float f = dielectric(dotHV, 1.0f, 1.0f / relativeIOR);
 
-    vec3 color = thin > 0 ? sqrt(v_color) : v_color;
+    vec3 color = thin > 0 ? sqrt(baseColor) : baseColor;
     float c = (absDotHL * absDotHV) / max(1e-8f, absDotNL * absDotNV);
 
     float t = n2 / pow(dotHL + relativeIOR * dotHV, 2.0f);
@@ -316,7 +312,7 @@ float calcDisneyDiffuse(vec3 N, vec3 wi, vec3 wm, vec3 wo, int thin) {
 
 }
 
-vec3 evaluateDisney(vec3 N, vec3 wi, vec3 wm, vec3 wo, int thin) {    
+vec3 evaluateDisney(vec3 N, vec3 wi, vec3 wm, vec3 wo, vec3 baseColor, int thin) {    
     float dotNV = dot(N, wo);
     float dotNL = dot(N, wi);
 
@@ -342,9 +338,9 @@ vec3 evaluateDisney(vec3 N, vec3 wi, vec3 wm, vec3 wo, int thin) {
     // diffuse
     if (diffuseWeight > 0.0f) {
         float diffuse = calcDisneyDiffuse(N, wi, wm, wo, thin);
-        vec3 sheen = calcSheen(wi, wm);
+        vec3 sheen = calcSheen(baseColor, wi, wm);
 
-        reflectance += diffuseWeight * (diffuse * v_color + sheen);
+        reflectance += diffuseWeight * (diffuse * baseColor + sheen);
     }
 
     // transmission
@@ -354,13 +350,13 @@ vec3 evaluateDisney(vec3 N, vec3 wi, vec3 wm, vec3 wo, int thin) {
         float tax, tay;
         calcAnisotropicParams(rscaled, u_anisotropic, tax, tay);
 
-        vec3 transmission = calcDisneySpecTransmission(N, wi, wo, wm, tax, tay, thin);
+        vec3 transmission = calcDisneySpecTransmission(baseColor, N, wi, wo, wm, tax, tay, thin);
         reflectance += transWeight * transmission;
     }
 
     // specular
     if (upperHemisphere) {
-        vec3 specular = calcDisneyBRDF(N, wo, wm, wi);
+        vec3 specular = calcDisneyBRDF(baseColor, N, wo, wm, wi);
         reflectance += specular;
     }
 
@@ -369,14 +365,20 @@ vec3 evaluateDisney(vec3 N, vec3 wi, vec3 wm, vec3 wo, int thin) {
     return reflectance;
 }
 
+vec3 mon2lin(vec3 x)
+{
+    return vec3(pow(x.x, 2.2), pow(x.y, 2.2), pow(x.z, 2.2));
+}
+
 
 void main() {
     vec3 N = safeNormalize(v_worldNormal); // normal vector
     vec3 V = safeNormalize(u_cameraPosition - v_worldPos); // view vector
 
+    
     vec4 texAlbedo = texture(u_albedo, v_uv);
-    vec3 albedo = clamp(texAlbedo.rgb * v_color, vec3(0.0), vec3(1.0));
-    vec3 colorOut = u_ambient * albedo;
+    vec3 baseColor = mon2lin(texAlbedo.rgb) * v_color;
+    vec3 colorOut = u_ambient * baseColor;
     // vec3 colorOut;
 
     int count = int(meta.x + 0.5);
@@ -430,7 +432,7 @@ void main() {
         vec3 wi = safeNormalize(v_worldToTangent * L);
         vec3 wm = safeNormalize(wo + wi); // half vector
 
-        colorOut += evaluateDisney(vec3(0.0f, 1.0f, 0.0f), wi, wm, wo, u_thin) * Lrgb * intensity * att;
+        colorOut += evaluateDisney(vec3(0.0f, 1.0f, 0.0f), wi, wm, wo, baseColor, u_thin) * Lrgb * intensity * att;
     }
 
     FragColor = vec4(colorOut, texAlbedo.a);
