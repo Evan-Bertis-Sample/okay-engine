@@ -4,16 +4,18 @@
 #include <okay/core/ecs/ecs.hpp>
 #include <okay/core/renderer/material.hpp>
 #include <okay/core/renderer/mesh.hpp>
+#include <okay/core/renderer/render_world.hpp>
 #include <okay/core/renderer/renderer.hpp>
 
 #include <glm/glm.hpp>
 
 namespace okay {
 
-struct RenderComponent {
+struct MeshRendererComponent {
    public:
     Mesh mesh{Mesh::none()};
     MaterialHandle material{MaterialHandle::none()};
+    RenderEntity renderEntity;
 };
 
 }  // namespace okay

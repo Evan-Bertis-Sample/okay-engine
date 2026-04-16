@@ -188,6 +188,7 @@ class SystemManager {
    private:
     static std::array<SystemPool, SystemScope::SCOPE_COUNT> _pools;
 };
+
 };  // namespace okay
 
 #endif  // _SYSTEM_H__

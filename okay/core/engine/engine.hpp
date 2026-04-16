@@ -90,6 +90,16 @@ class Game {
                 break;
         }
 
+        // TODO: Make a level manager that handles transitioning between levels
+        // right now we are assuming one level, which is incorrect
+
+        SystemPool& levelPool = Engine.systems.getPool(SystemScope::LEVEL);
+        for (ISystem* system : levelPool) {
+            system->initialize();
+            if (!Engine.shouldRun())
+                break;
+        }
+
         _onInitialize();
 
         for (ISystem* system : enginePool) {
@@ -97,6 +107,10 @@ class Game {
         }
 
         for (ISystem* system : gamePool) {
+            system->postInitialize();
+        }
+
+        for (ISystem* system : levelPool) {
             system->postInitialize();
         }
 
@@ -110,6 +124,10 @@ class Game {
                 system->preTick();
             }
 
+            for (ISystem* system : levelPool) {
+                system->preTick();
+            }
+
             for (ISystem* system : enginePool) {
                 system->tick();
                 if (!Engine.shouldRun())
@@ -117,6 +135,12 @@ class Game {
             }
 
             for (ISystem* system : gamePool) {
+                system->tick();
+                if (!Engine.shouldRun())
+                    break;
+            }
+
+            for (ISystem* system : levelPool) {
                 system->tick();
                 if (!Engine.shouldRun())
                     break;
@@ -131,6 +155,11 @@ class Game {
             for (ISystem* system : gamePool) {
                 system->postTick();
             }
+
+            for (ISystem* system : levelPool) {
+                system->postTick();
+            }
+
             Engine.time->updateDeltaTime();
 
             Engine._frameCount++;
@@ -158,6 +187,23 @@ class Game {
     std::function<void()> _onShutdown;
 
     static const std::vector<OkaySystemDescriptor> REQUIRED_SYSTEMS;
+};
+
+template <typename T>
+struct SystemParameter {
+    T* system{nullptr};
+    SystemParameter(T* system) : system(system) {}
+
+    T* get() const {
+        if (system == nullptr) {
+            return Engine.systems.getSystemChecked<T>();
+        }
+
+        return system;
+    }
+
+    T& operator*() const { return get(); }
+    T* operator->() const { return get(); }
 };
 
 };  // namespace okay

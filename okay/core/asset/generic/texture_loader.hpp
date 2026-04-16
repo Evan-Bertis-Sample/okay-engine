@@ -16,6 +16,9 @@ namespace okay {
 
 struct TextureLoadSettings {
     std::shared_ptr<TextureDataStore> store;
+
+    TextureLoadSettings(std::shared_ptr<TextureDataStore> store) { this->store = store; }
+    TextureLoadSettings() { store = TextureDataStore::mainStore(); }
 };
 
 template <>

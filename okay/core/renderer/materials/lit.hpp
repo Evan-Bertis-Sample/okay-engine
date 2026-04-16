@@ -39,6 +39,11 @@ struct LitMaterial : public SceneMaterialProperties, public OkayMaterialProperti
 
     auto textureRefs() { return std::tie(albedo); }
     auto textureRefs() const { return std::tie(albedo); }
+
+    MaterialFlagCollection flags() {
+        MaterialFlagCollection flags = SceneMaterialProperties::flags();
+        return flags;
+    }
 };
 
 static_assert(sizeof(okay::Light) == 64, "OkayLight must be 64 bytes (4 vec4s)");

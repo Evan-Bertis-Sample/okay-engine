@@ -3,6 +3,7 @@
 
 #include "glm/ext/vector_float3.hpp"
 #include "glm/ext/vector_float4.hpp"
+#include "math_types.hpp"
 
 #include <okay/core/renderer/gl.hpp>
 #include <okay/core/renderer/material.hpp>
@@ -21,123 +22,83 @@
 
 namespace okay {
 
-struct Transform {
-    glm::vec3 position{0.0f, 0.0f, 0.0f};
-    glm::vec3 scale{1.0f, 1.0f, 1.0f};
-    glm::quat rotation{1.0f, 0.0f, 0.0f, 0.0f};
-
-    Transform(const glm::vec3& pos = glm::vec3(0.0f),
-              const glm::vec3& scl = glm::vec3(1.0f),
-              const glm::quat& rot = glm::quat())
-        : position(pos), scale(scl), rotation(rot) {}
-
-    // asignment, equality comparison overloads
-    Transform& operator=(const Transform& other) {
-        position = other.position;
-        scale = other.scale;
-        rotation = other.rotation;
-        return *this;
-    }
-
-    bool operator==(const Transform& other) const {
-        return position == other.position && scale == other.scale && rotation == other.rotation;
-    }
-
-    bool operator!=(const Transform& other) const { return !(*this == other); }
-
-    glm::mat4 toMatrix() const {
-        glm::mat4 mat(1.0f);
-        mat = glm::translate(mat, position);
-        mat *= glm::mat4_cast(rotation);
-        mat = glm::scale(mat, scale);
-        return mat;
-    }
-};
-
 class Camera {
    public:
     enum class ProjectionType { PERPSECTIVE, ORTHOGRAPHIC };
 
-    struct Perspective {
+    struct PerspectiveLens {
         float fov{45.0f};
         float near{0.1f};
         float far{1000.0f};
+
+        bool operator==(const PerspectiveLens& other) const {
+            return fov == other.fov && near == other.near && far == other.far;
+        }
+
+        bool operator!=(const PerspectiveLens& other) const { return !(*this == other); }
     };
 
-    struct OrthographicConfig {
+    struct OrthographicLens {
         float left{-1.0f};
         float right{1.0f};
         float bottom{-1.0f};
         float top{1.0f};
         float near{0.1f};
         float far{1000.0f};
+
+        bool operator==(const OrthographicLens& other) const {
+            return left == other.left && right == other.right && bottom == other.bottom &&
+                   top == other.top && near == other.near && far == other.far;
+        }
+
+        bool operator!=(const OrthographicLens& other) const { return !(*this == other); }
     };
 
+    using Lens = std::variant<PerspectiveLens, OrthographicLens>;
+
     Transform transform{};
+    Lens lens{PerspectiveLens{}};
 
-    Camera() = default;
+    ProjectionType projectionType() const {
+        return std::holds_alternative<PerspectiveLens>(lens) ? ProjectionType::PERPSECTIVE
+                                                             : ProjectionType::ORTHOGRAPHIC;
+    }
 
-    template <typename T>
-        requires(std::is_same_v<T, Perspective> || std::is_same_v<T, OrthographicConfig>)
-    void setConfig(const T& config) {
-        if constexpr (std::is_same_v<T, Perspective>) {
-            _projectionType = ProjectionType::PERPSECTIVE;
+    glm::mat4 projectionMatrix(float aspectRatio) const {
+        if (projectionType() == ProjectionType::PERPSECTIVE) {
+            const PerspectiveLens& p = std::get<PerspectiveLens>(lens);
+            return glm::perspective(glm::radians(p.fov), aspectRatio, p.near, p.far);
         } else {
-            _projectionType = ProjectionType::ORTHOGRAPHIC;
-        }
-        _config = config;
-    }
-
-    template <typename T>
-        requires(std::is_same_v<T, Perspective> || std::is_same_v<T, OrthographicConfig>)
-    Option<T&> getConfig() {
-        if (auto* p = std::get_if<T>(&_config)) {
-            return *p;
-        }
-        return Option<T&>::none();
-    }
-
-    template <typename T>
-        requires(std::is_same_v<T, Perspective> || std::is_same_v<T, OrthographicConfig>)
-    Option<const T&> getConfig() const {
-        if (auto* p = std::get_if<T>(&_config)) {
-            return *p;
-        }
-        return Option<const T&>::none();
-    }
-
-    glm::mat4 projectionMatrix(float ratio) const {
-        if (_projectionType == ProjectionType::PERPSECTIVE) {
-            Perspective config = std::get<Perspective>(_config);
-            return glm::perspective(glm::radians(config.fov), ratio, config.near, config.far);
-        } else {
-            OrthographicConfig config = std::get<OrthographicConfig>(_config);
-            return glm::ortho(
-                config.left, config.right, config.bottom, config.top, config.near, config.far);
+            const OrthographicLens& o = std::get<OrthographicLens>(lens);
+            return glm::ortho(o.left, o.right, o.bottom, o.top, o.near, o.far);
         }
     }
 
     glm::mat4 viewMatrix() const { return glm::inverse(transform.toMatrix()); }
-
-    void lookAt(glm::vec3 center, glm::vec3 up = glm::vec3(0, 1, 0)) {
-        glm::vec3 eye = transform.position;
-        glm::vec3 f = glm::normalize(center - eye);       // desired forward (toward target)
-        glm::vec3 r = glm::normalize(glm::cross(f, up));  // right
-        glm::vec3 u = glm::cross(r, f);                   // corrected up
-
-        // Camera local axes in world space:
-        // +X = r, +Y = u, -Z = f  => +Z = -f
-        glm::mat3 worldRot(r, u, -f);  // columns
-
-        transform.rotation = glm::quat_cast(worldRot);
-    }
-
     glm::vec3 position() const { return transform.position; }
     glm::vec3 direction() const { return transform.rotation * glm::vec3(0, 0, -1); }
 
-   private:
-    ProjectionType _projectionType{ProjectionType::PERPSECTIVE};
-    std::variant<Perspective, OrthographicConfig> _config{Perspective{}};
+    bool isInFrustum(const glm::vec3& pos, float aspectRatio) const {
+        glm::vec4 clip = projectionMatrix(aspectRatio) * viewMatrix() * glm::vec4(pos, 1.0f);
+
+        return clip.x >= -clip.w && clip.x <= clip.w && clip.y >= -clip.w && clip.y <= clip.w &&
+               clip.z >= -clip.w && clip.z <= clip.w;
+    }
+
+    bool isInFrustum(const Bounds& bounds, float aspectRatio) {
+        for (const glm::vec3& p : bounds.corners()) {
+            if (!isInFrustum(p, aspectRatio))
+                return false;
+        }
+        return true;
+    }
+
+    operator Transform() const { return transform; }
+    bool operator==(const Camera& other) const {
+        return transform == other.transform && lens == other.lens;
+    }
+
+    bool operator!=(const Camera& other) const { return !(*this == other); }
 };
 
 struct alignas(16) Light {
@@ -189,6 +150,13 @@ struct alignas(16) Light {
     void setPosition(glm::vec3 pos) { posType = glm::vec4(pos, posType.w); }
 
     static constexpr std::size_t MAX_LIGHTS = 16;
+
+    bool operator==(const Light& other) const {
+        return posType == other.posType && color == other.color && direction == other.direction &&
+               extra == other.extra;
+    }
+
+    bool operator!=(const Light& other) const { return !(*this == other); }
 };
 
 class RenderWorld;
@@ -230,9 +198,7 @@ struct RenderEntity {
         Mesh mesh{};
 
         ~Properties();
-
         Properties* operator->() { return this; }
-
         const Properties* operator->() const { return this; }
 
        private:
@@ -251,13 +217,12 @@ struct RenderEntity {
         : _owner(owner), _renderItem(renderItem) {}
 
     bool operator==(const RenderEntity& other) const { return _renderItem == other._renderItem; }
-
     bool operator!=(const RenderEntity& other) const { return !(*this == other); }
-
     Properties operator*() const;
     Properties operator->() const;
 
     Properties prop() const { return **this; }
+    bool isValid() const;
 
    private:
     RenderWorld* _owner{nullptr};
@@ -314,16 +279,23 @@ class RenderWorld {
             transform, material, mesh, RenderEntity(this, RenderItemHandle::invalidHandle()));
     }
 
-    const std::vector<RenderItemHandle>& getRenderItems();
+    const std::span<RenderItemHandle> getRenderItems();
     const RenderItem& getRenderItem(RenderItemHandle handle) const {
         return _renderItemPool.get(handle);
     }
 
     RenderItem& getRenderItem(RenderItemHandle handle) { return _renderItemPool.get(handle); }
-
     RenderEntity getRenderEntity(RenderItemHandle handle) { return RenderEntity(this, handle); }
-
     void updateEntity(RenderItemHandle renderItem, const RenderEntity::Properties&& properties);
+    void removeRenderEntity(RenderEntity entity) { removeRenderEntity(entity._renderItem); }
+    void removeRenderEntity(RenderItemHandle renderItem);
+    bool isValidEntity(const RenderItemHandle& renderItem) const {
+        return _renderItemPool.valid(renderItem);
+    }
+    bool isValidEntity(const RenderEntity& entity) const {
+        return _renderItemPool.valid(entity._renderItem);
+    }
+    std::size_t numRenderItems() const { return _activeRenderItems; }
 
     Failable addChild(RenderEntity parent, RenderEntity children);
     bool isChildOf(RenderEntity parent, RenderEntity child) const;
@@ -348,6 +320,7 @@ class RenderWorld {
     ObjectPool<RenderItem> _renderItemPool;
     std::vector<RenderItemHandle> _memoizedRenderItems;
     std::set<RenderItemHandle> _dirtyTransforms;
+    std::size_t _activeRenderItems{0};
 
     std::array<Light, Light::MAX_LIGHTS> _lights{};
     std::size_t _activeLights{0};

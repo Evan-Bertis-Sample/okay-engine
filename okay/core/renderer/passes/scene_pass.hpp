@@ -1,6 +1,8 @@
 #ifndef __SCENE_PASS_H__
 #define __SCENE_PASS_H__
 
+#include "okay/core/renderer/render_world.hpp"
+
 #include <okay/core/engine/engine.hpp>
 #include <okay/core/renderer/gl.hpp>
 #include <okay/core/renderer/materials/lit.hpp>
@@ -26,12 +28,13 @@ class ScenePass : public IRenderPass {
     virtual void render(const RendererContext& context) override {
         GL_CHECK(glClearColor(0.113f, 0.008, 0.208, 1.0f));
         GL_CHECK(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
-        GL_CHECK(glEnable(GL_CULL_FACE));
-        GL_CHECK(glCullFace(GL_BACK));
+
         GL_CHECK(glEnable(GL_DEPTH_TEST));
         GL_CHECK(glEnable(GL_MULTISAMPLE));
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        GL_CHECK(glCullFace(GL_BACK));
+        GL_CHECK(glEnable(GL_CULL_FACE));
+        GL_CHECK(glDisable(GL_BLEND));
+        GL_CHECK(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
         // glFrontFace(GL_CW);
 
         _shaderIndex = Shader::invalidID();
@@ -45,19 +48,21 @@ class ScenePass : public IRenderPass {
 
         for (const RenderItemHandle& handle : context.world.getRenderItems()) {
             RenderItem& item = context.world.getRenderItem(handle);
-
             if (item.mesh.isEmpty())
                 continue;
             if (item.material->isNone())
                 continue;
+
+            Camera& camera = context.world.camera();
+            if (!camera.isInFrustum(item.mesh.bounds.transform(item.worldMatrix), aspect)) {
+                continue;
+            }
 
             // Shader switch: bind program + per-frame stuff
             if (_materialIndex != item.material->id()) {
                 handleMaterialSwitch(context, item, projection, view, camPos, camDir);
                 _materialIndex = item.material->id();
             }
-
-            _materialIndex = item.material->id();
 
             // Set per-object uniforms
             setPerObjectUniforms(item);
@@ -77,6 +82,8 @@ class ScenePass : public IRenderPass {
                               const glm::mat4& view,
                               const glm::vec3& camPos,
                               const glm::vec3& camDir) {
+        applyMaterialFlags(item);
+
         if (_shaderIndex != item.material->shaderID()) {
             if (auto f = item.material->setShader(); f.isError()) {
                 Engine.logger.error("Failed to set shader : {}", f.error());
@@ -85,7 +92,7 @@ class ScenePass : public IRenderPass {
             _shaderIndex = item.material->shaderID();
         }
 
-        auto& uniforms = item.material->uniforms();
+        auto& uniforms = item.material->properties();
 
         if (auto* unlit = dynamic_cast<okay::SceneMaterialProperties*>(uniforms.get())) {
             unlit->projectionMatrix.set(projection);
@@ -106,9 +113,29 @@ class ScenePass : public IRenderPass {
     }
 
     void setPerObjectUniforms(RenderItem& item) {
-        auto& uniforms = item.material->uniforms();
+        auto& uniforms = item.material->properties();
         if (auto* unlit = dynamic_cast<okay::SceneMaterialProperties*>(uniforms.get())) {
             unlit->modelMatrix.set(item.worldMatrix);
+        }
+    }
+
+    void applyMaterialFlags(RenderItem& item) {
+        auto& uniforms = item.material->properties();
+        MaterialFlagCollection flags = uniforms->flags();
+
+        if (flags.hasFlag(MaterialFlags::DOUBLE_SIDED)) {
+            GL_CHECK(glDisable(GL_CULL_FACE));
+        } else {
+            GL_CHECK(glEnable(GL_CULL_FACE));
+            GL_CHECK(glCullFace(GL_BACK));
+        }
+
+        if (flags.hasFlag(MaterialFlags::TRANSPARENT)) {
+            GL_CHECK(glEnable(GL_BLEND));
+            GL_CHECK(glDepthMask(GL_FALSE));
+        } else {
+            GL_CHECK(glDisable(GL_BLEND));
+            GL_CHECK(glDepthMask(GL_TRUE));
         }
     }
 

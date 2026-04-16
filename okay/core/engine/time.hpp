@@ -34,6 +34,8 @@ class Time {
             std::chrono::duration_cast<std::chrono::milliseconds>(_lastTime - prevTime).count();
     }
 
+    float fps() const { return 1000.0f / static_cast<float>(_deltaTime); }
+
    private:
     TimePoint _lastTime;
     TimePoint _startOfProgram;

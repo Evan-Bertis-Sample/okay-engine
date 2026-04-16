@@ -66,6 +66,7 @@ void Renderer::preTick() {
 }
 
 void Renderer::tick() {
+    _meshBuffer.bindMeshData();
     _surface->pollEvents();
     RendererContext context{*this, _world, _renderTargetPool};
     _pipeline.render(context);

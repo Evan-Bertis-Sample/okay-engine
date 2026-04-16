@@ -92,11 +92,11 @@ class AssetManager : public System<SystemScope::ENGINE> {
 
         AssetIO assetIO;
 
-        static Load<T> EngineAsset(const std::filesystem::path& path) {
+        static Load<T> engineAsset(const std::filesystem::path& path) {
             return Load(std::filesystem::path(OKAY_ENGINE_ASSET_ROOT) / path);
         };
 
-        static Load<T> GameAsset(const std::filesystem::path& path) {
+        static Load<T> gameAsset(const std::filesystem::path& path) {
             return Load(std::filesystem::path(OKAY_GAME_ASSET_ROOT) / path);
         };
 
@@ -157,12 +157,12 @@ class AssetManager : public System<SystemScope::ENGINE> {
     template <typename T, typename AssetIO = DefaultAssetIO, typename... LoadOptions>
     Result<Asset<T>> loadEngineAssetSync(const std::filesystem::path& path,
                                          LoadOptions... options) {
-        return loadAssetSync(Load<T, AssetIO>::EngineAsset(path), options...);
+        return loadAssetSync(Load<T, AssetIO>::engineAsset(path), options...);
     }
 
     template <typename T, typename AssetIO = DefaultAssetIO, typename... LoadOptions>
     Result<Asset<T>> loadGameAssetSync(const std::filesystem::path& path, LoadOptions... options) {
-        return loadAssetSync(Load<T, AssetIO>::GameAsset(path), options...);
+        return loadAssetSync(Load<T, AssetIO>::gameAsset(path), options...);
     }
 
    private:

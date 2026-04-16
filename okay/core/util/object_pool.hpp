@@ -5,6 +5,7 @@
 #include <okay/core/engine/logger.hpp>
 
 #include <cstdint>
+#include <iterator>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -14,6 +15,11 @@ namespace okay {
 struct ObjectPoolHandle {
     std::uint32_t index{invalidIndex()};
     std::uint32_t generation{0};
+
+    ObjectPoolHandle() = default;
+    ObjectPoolHandle(std::uint32_t index) : index(index) {}
+    ObjectPoolHandle(std::uint32_t index, std::uint32_t generation)
+        : index(index), generation(generation) {}
 
     friend bool operator==(ObjectPoolHandle a, ObjectPoolHandle b) {
         return a.index == b.index && a.generation == b.generation;
@@ -33,6 +39,61 @@ struct ObjectPoolHandle {
 template <typename T>
 class ObjectPool final {
    public:
+    template <bool IsConst>
+    class IteratorBase {
+       private:
+        using PoolType = std::conditional_t<IsConst, const ObjectPool<T>, ObjectPool<T>>;
+
+       public:
+        using iterator_category = std::forward_iterator_tag;
+        using value_type = T;
+        using difference_type = std::ptrdiff_t;
+        using pointer = std::conditional_t<IsConst, const T*, T*>;
+        using reference = std::conditional_t<IsConst, const T&, T&>;
+
+        IteratorBase() = default;
+
+        IteratorBase(PoolType* pool, std::uint32_t index) : _pool(pool), _index(index) {
+            skipDead();
+        }
+
+        reference operator*() const { return _pool->_slots[_index].ref(); }
+
+        pointer operator->() const { return &_pool->_slots[_index].ref(); }
+
+        IteratorBase& operator++() {
+            ++_index;
+            skipDead();
+            return *this;
+        }
+
+        IteratorBase operator++(int) {
+            IteratorBase temp = *this;
+            ++(*this);
+            return temp;
+        }
+
+        bool operator==(const IteratorBase& other) const {
+            return _pool == other._pool && _index == other._index;
+        }
+
+        bool operator!=(const IteratorBase& other) const { return !(*this == other); }
+
+       private:
+        void skipDead() {
+            while (_pool != nullptr && _index < _pool->_slots.size() &&
+                   !_pool->_slots[_index].alive) {
+                ++_index;
+            }
+        }
+
+        PoolType* _pool{nullptr};
+        std::uint32_t _index{0};
+    };
+
+    using Iterator = IteratorBase<false>;
+    using ConstIterator = IteratorBase<true>;
+
     static constexpr std::uint32_t invalidIndex() { return ObjectPoolHandle::invalidIndex(); }
     static ObjectPoolHandle invalidHandle() { return ObjectPoolHandle::invalidHandle(); }
 
@@ -130,7 +191,14 @@ class ObjectPool final {
     std::size_t size() const { return _aliveCount; }
     std::size_t capacity() const { return _slots.size(); }
 
-    T& get(ObjectPoolHandle h) { return _slots[h.index].ref(); }
+    T& get(ObjectPoolHandle h) {
+        if (!valid(h)) {
+            Engine.logger.error("invalid handle");
+            return _slots[0].ref();
+        }
+
+        return _slots[h.index].ref();
+    }
 
     const T& get(ObjectPoolHandle h) const {
         if (!valid(h)) {
@@ -200,6 +268,16 @@ class ObjectPool final {
         }
 
         return _slots[index].generation;
+    }
+
+    Iterator begin() { return Iterator(this, 0); }
+
+    Iterator end() { return Iterator(this, static_cast<std::uint32_t>(_slots.size())); }
+
+    ConstIterator begin() const { return ConstIterator(this, 0); }
+
+    ConstIterator end() const {
+        return ConstIterator(this, static_cast<std::uint32_t>(_slots.size()));
     }
 
    private:

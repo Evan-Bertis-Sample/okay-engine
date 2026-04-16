@@ -6,7 +6,6 @@
 #include <okay/core/tween/tween_easing.hpp>
 #include <okay/core/tween/tween_engine.hpp>
 
-#include <cmath>
 #include <cstdint>
 #include <functional>
 #include <memory>
@@ -169,6 +168,10 @@ class Tween : public ITween, public std::enable_shared_from_this<Tween<T>> {
     void tick() {
         if (!_isTweening)
             return;
+
+        if (_easingFn == nullptr) {
+            Engine.logger.error("Easing function is null. Please provide a valid easing function.");
+        }
 
         if (_remainingPrefixMs > 0) {
             _remainingPrefixMs -= okay::Engine.time->deltaTimeMs();
