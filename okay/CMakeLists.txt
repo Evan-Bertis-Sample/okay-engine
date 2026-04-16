@@ -107,10 +107,6 @@ add_subdirectory(${OKAY_VENDOR_DIR}/freetype)
 # append to engine libraries so it's linked in the final game
 list(APPEND OKAY_ENGINE_LIBRARIES freetype)
 
-# platform selection (creates INTERFACE target 'okay_platform')
-# set OKAY_PLATFORM to override autodetect (e.g., -DOKAY_PLATFORM=windows)
-add_subdirectory(${OKAY_ENGINE_DIR}/platform)
-
 # allow glm & glad, and stb to be included in the game
 target_include_directories(okay
   PUBLIC ${OKAY_VENDOR_DIR}/glm
@@ -130,21 +126,6 @@ set(IMGUI_SOURCES
   ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp
 )
 
-if(NOT DEFINED OKAY_PLATFORM)
-  if(WIN32)
-    set(OKAY_PLATFORM "windows")
-    list(APPEND IMGUI_SOURCES ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp)
-  elseif(UNIX AND NOT APPLE)
-    set(OKAY_PLATFORM "rpi")
-    list(APPEND IMGUI_SOURCES ${IMGUI_DIR}/backends/imgui_impl_null.cpp)
-  elseif(APPLE)
-    set(OKAY_PLATFORM "macos")
-    list(APPEND IMGUI_SOURCES ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp)
-  else()
-    message(FATAL_ERROR "Unsupported platform; set -DOKAY_PLATFORM=<name>")
-  endif()
-endif()
-
 add_library(imgui STATIC ${IMGUI_SOURCES})
 
 # allow imgui to be included in the game
@@ -157,6 +138,11 @@ target_link_libraries(imgui
   PUBLIC
   OpenGL::GL
 )
+
+# platform selection (creates INTERFACE target 'okay_platform')
+# set OKAY_PLATFORM to override autodetect (e.g., -DOKAY_PLATFORM=windows)
+add_subdirectory(${OKAY_ENGINE_DIR}/platform)
+
 # define verbosity settings for Release Builds
 if(OKAY_BUILD_TYPE STREQUAL "Release")
   target_compile_definitions(okay PUBLIC -DOKAY_RELEASE)

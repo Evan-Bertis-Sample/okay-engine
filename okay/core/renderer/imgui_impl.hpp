@@ -8,6 +8,9 @@ namespace okay {
 
 class IMGUIImpl {
    public:
+    IMGUIImpl();
+    ~IMGUIImpl();
+
     void init(void* window, bool enableCallbacks);
     void newFrame();
     void renderDrawData(ImDrawData* drawData);

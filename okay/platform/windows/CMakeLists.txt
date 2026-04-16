@@ -29,6 +29,7 @@ target_link_libraries(okay_platform PUBLIC
   OpenGL::GL
   user32 gdi32 shell32 advapi32 ole32 uuid winmm imm32 version uxtheme setupapi bcrypt
   -static-libstdc++
+  imgui
 )
 
 # Force console subsystem on Windows

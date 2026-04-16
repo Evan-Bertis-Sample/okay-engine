@@ -21,6 +21,7 @@ target_link_libraries(okay_platform PRIVATE
     ${DRM_LIBRARIES}
     ${EGL_LIBRARIES}
     OpenGL::GL
+    imgui
 )
 
 target_compile_definitions(okay_platform PRIVATE __EGL_SURFACE_H__)

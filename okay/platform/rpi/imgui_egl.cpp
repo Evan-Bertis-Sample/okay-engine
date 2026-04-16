@@ -1,5 +1,6 @@
 #include <okay/core/renderer/imgui_impl.hpp>
 
+#include <EGL/egl.h>
 #include <imgui.h>
 #include <imgui_impl_egl.h>
 #include <imgui_impl_opengl3.h>
@@ -9,6 +10,12 @@ namespace okay {
 struct IMGUIImpl::Context {
     // nothing
 };
+
+IMGUIImpl::IMGUIImpl() : _context(std::make_unique<IMGUIImpl::Context>()) {
+}
+
+IMGUIImpl::~IMGUIImpl() {
+}
 
 void IMGUIImpl::init(void* window, bool enableCallbacks) {
     ImGui_ImplEGL_Init(window);

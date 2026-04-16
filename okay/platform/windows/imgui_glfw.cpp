@@ -1,17 +1,22 @@
 #include <okay/core/renderer/imgui_impl.hpp>
 
+#include <GLFW/glfw3.h>
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 
 namespace okay {
 
-struct IMGUIImpl::Context {
-    // nothing
-};
+struct IMGUIImpl::Context {};
+
+IMGUIImpl::IMGUIImpl() : _context(std::make_unique<IMGUIImpl::Context>()) {
+}
+
+IMGUIImpl::~IMGUIImpl() {
+}
 
 void IMGUIImpl::init(void* window, bool enableCallbacks) {
-    ImGui_ImplGlfw_InitForOpenGL(window, enableCallbacks);
+    ImGui_ImplGlfw_InitForOpenGL((GLFWwindow*)window, enableCallbacks);
     ImGui_ImplOpenGL3_Init();
 }
 
@@ -29,4 +34,4 @@ void IMGUIImpl::shutdown() {
     ImGui_ImplGlfw_Shutdown();
 }
 
-};  // namespace okay
+}  // namespace okay

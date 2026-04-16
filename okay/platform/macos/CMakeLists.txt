@@ -31,6 +31,7 @@ target_link_libraries(okay_platform PUBLIC
   "-framework Cocoa"
   "-framework IOKit"
   "-framework CoreVideo"
+  imgui
 )
 
 # Force console subsystem on Windows
