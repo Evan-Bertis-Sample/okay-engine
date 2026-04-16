@@ -35,7 +35,7 @@ void Renderer::initialize() {
 
     Engine.logger.debug("Renderer initialized");
 
-    if (_imguiEnabled) {
+    if (_imguiImpl->imguiSupported() && _imguiEnabled) {
         Engine.logger.info("Initializing ImGui");
         // Setup Dear ImGui context
         IMGUI_CHECKVERSION();
@@ -59,7 +59,7 @@ void Renderer::postInitialize() {
 }
 
 void Renderer::preTick() {
-    if (_imguiEnabled && _imguiInitialized) {
+    if (_imguiImpl->imguiSupported() && _imguiEnabled && _imguiInitialized) {
         _imguiImpl->newFrame();
         ImGui::NewFrame();
     }
@@ -72,7 +72,7 @@ void Renderer::tick() {
 }
 
 void Renderer::postTick() {
-    if (_imguiEnabled && _imguiInitialized) {
+    if (_imguiImpl->imguiSupported() && _imguiEnabled && _imguiInitialized) {
         ImGui::Render();
         _imguiImpl->renderDrawData(ImGui::GetDrawData());
     }
@@ -81,7 +81,7 @@ void Renderer::postTick() {
 }
 
 void Renderer::shutdown() {
-    if (_imguiInitialized) {
+    if (_imguiImpl->imguiSupported() && _imguiInitialized) {
         _imguiImpl->shutdown();
         ImGui::DestroyContext();
     }

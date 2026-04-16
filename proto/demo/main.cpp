@@ -1,6 +1,7 @@
 #include <okay/okay.hpp>
-#include <imgui.h>
+
 #include <glm/glm.hpp>
+#include <imgui.h>
 #include <utility>
 
 static void __gameInitialize();
@@ -16,8 +17,7 @@ int main() {
     okay::RendererSettings rendererSettings{
         .surfaceConfig = surfaceConfig,
         .pipeline = okay::RenderPipeline::create(std::make_unique<okay::ScenePass>()),
-        .enableIMGUI = true
-    };
+        .enableIMGUI = true};
 
     auto renderer = okay::Renderer::create(std::move(rendererSettings));
 

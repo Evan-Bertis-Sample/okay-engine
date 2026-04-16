@@ -15,6 +15,10 @@ IMGUIImpl::IMGUIImpl() : _context(std::make_unique<IMGUIImpl::Context>()) {
 IMGUIImpl::~IMGUIImpl() {
 }
 
+bool IMGUIImpl::imguiSupported() {
+    return true;
+}
+
 void IMGUIImpl::init(void* window, bool enableCallbacks) {
     ImGui_ImplGlfw_InitForOpenGL((GLFWwindow*)window, enableCallbacks);
     ImGui_ImplOpenGL3_Init();

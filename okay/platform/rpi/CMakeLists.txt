@@ -24,14 +24,6 @@ target_link_libraries(okay_platform PRIVATE
     imgui
 )
 
-# add the egl backend to imgui, and link to egl
-target_sources(imgui PRIVATE
-    ${OKAY_VENDOR_DIR}/imgui/backends/imgui_impl_egl.cpp
-)
-
-target_link_libraries(imgui PRIVATE
-    ${EGL_LIBRARIES}
-)
 
 target_compile_definitions(okay_platform PRIVATE __EGL_SURFACE_H__)
 

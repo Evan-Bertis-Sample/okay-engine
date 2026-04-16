@@ -11,6 +11,7 @@ class IMGUIImpl {
     IMGUIImpl();
     ~IMGUIImpl();
 
+    bool imguiSupported();
     void init(void* window, bool enableCallbacks);
     void newFrame();
     void renderDrawData(ImDrawData* drawData);
