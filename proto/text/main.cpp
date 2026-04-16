@@ -82,7 +82,7 @@ static void __gameInitialize() {
         return;
     }
 
-    auto shaderLoadRes = assetManager->loadEngineAssetSync<okay::Shader>("shaders/lit");
+    auto shaderLoadRes = assetManager->loadEngineAssetSync<okay::Shader>("shaders/text_sdf");
     if (shaderLoadRes.isError()) {
         okay::Engine.logger.error("Failed to load shader: {}", shaderLoadRes.error());
         return;
@@ -100,9 +100,9 @@ static void __gameInitialize() {
     auto textMaterial = std::make_unique<okay::LitMaterial>();
     textMaterial->color.set(glm::vec4(1.0f, 1.0f, 0.0f, 1.0f));
     textMaterial->albedo = okay::FontManager::instance().getGlyphAtlas(font);
+
     okay::MaterialHandle textMaterialHandle =
         renderer->materialRegistry().registerMaterial(shader, std::move(textMaterial));
-    
 
     okay::ECS* ecs = okay::Engine.systems.getSystemChecked<okay::ECS>();
     okay::registerBuiltinComponentsAndSystems(ecs);
