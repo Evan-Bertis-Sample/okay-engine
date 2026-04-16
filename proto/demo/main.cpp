@@ -1,5 +1,5 @@
 #include <okay/okay.hpp>
-
+#include <imgui.h>
 #include <glm/glm.hpp>
 #include <utility>
 
@@ -15,7 +15,9 @@ int main() {
 
     okay::RendererSettings rendererSettings{
         .surfaceConfig = surfaceConfig,
-        .pipeline = okay::RenderPipeline::create(std::make_unique<okay::ScenePass>())};
+        .pipeline = okay::RenderPipeline::create(std::make_unique<okay::ScenePass>()),
+        .enableIMGUI = true
+    };
 
     auto renderer = okay::Renderer::create(std::move(rendererSettings));
 
@@ -90,6 +92,8 @@ static void __gameUpdate() {
     // rotation much look at origin
     renderer->world().camera().transform.position = pos;
     renderer->world().camera().lookAt(glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+    ImGui::ShowDemoWindow();
 }
 
 static void __gameShutdown() {

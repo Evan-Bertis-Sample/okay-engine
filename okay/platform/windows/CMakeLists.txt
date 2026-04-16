@@ -23,6 +23,19 @@ target_include_directories(okay_platform PRIVATE
 
 target_compile_definitions(okay_platform PUBLIC __GLFW_SURFACE_H__)
 
+# add the glfw_backend of imgui to the imgui library
+target_sources(imgui PRIVATE
+  ${OKAY_VENDOR_DIR}/imgui/backends/imgui_impl_glfw.cpp
+)
+
+# link imgui with glfw
+target_link_libraries(imgui PRIVATE
+  glfw
+  OpenGL::GL
+  user32 gdi32 shell32 advapi32 ole32 uuid winmm imm32 version uxtheme setupapi bcrypt
+  -static-libstdc++
+)
+
 # link low-level deps INTO the platform lib
 target_link_libraries(okay_platform PUBLIC
   glfw
