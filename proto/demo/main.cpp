@@ -156,9 +156,6 @@ static void __gameUpdate() {
                                  okay::ecs::entityCount());
         toDelete.destroy();
     }
-    renderer->world().camera().transform.position = pos;
-    renderer->world().camera().lookAt(glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-
     ImGui::ShowDemoWindow();
 }
 
