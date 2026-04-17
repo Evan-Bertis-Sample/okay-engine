@@ -36,7 +36,7 @@ void main() {
     vec3 ref = vec3(0.0f, 1.0f, 0.0f);
     if (abs(dot(v_worldNormal, ref)) > 0.999) ref = vec3(1.0f, 0.0f, 0.0f);
     vec3 v_tangent = normalize(ref - dot(ref, v_worldNormal) * v_worldNormal);
-    vec3 v_bitangent = normalize(cross(v_tangent, v_worldNormal));
+    vec3 v_bitangent = normalize(cross(v_worldNormal, v_tangent));
 
     mat3 TBN = mat3(v_tangent, v_worldNormal, v_bitangent);
     v_worldToTangent = transpose(TBN);
