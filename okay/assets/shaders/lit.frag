@@ -314,7 +314,10 @@ float calcDisneyDiffuse(vec3 N, vec3 wi, vec3 wm, vec3 wo, int thin) {
 
 vec3 evaluateDisney(vec3 N, vec3 wi, vec3 wm, vec3 wo, vec3 baseColor, int thin) {    
     float dotNV = dot(N, wo);
-    float dotNL = dot(N, wi);
+    float dotNL = max(dot(N, wi), 0.0f);
+    if (dotNL <= 0.0f) return vec3(0.0f);
+
+    
 
     vec3 reflectance = vec3(0.0f);
 
@@ -378,6 +381,7 @@ void main() {
     
     vec4 texAlbedo = texture(u_albedo, v_uv);
     vec3 baseColor = mon2lin(texAlbedo.rgb) * v_color;
+    // vec3 baseColor = clamp(texAlbedo.rgb * v_color, vec3(0.0f), vec3(1.0f));
     vec3 colorOut = u_ambient * baseColor;
     // vec3 colorOut;
 
@@ -428,12 +432,16 @@ void main() {
             continue;
         }
 
+        vec3 nt = vec3(0.0f, 1.0f, 0.0f);
         vec3 wo = safeNormalize(v_worldToTangent * V);
         vec3 wi = safeNormalize(v_worldToTangent * L);
         vec3 wm = safeNormalize(wo + wi); // half vector
 
-        colorOut += evaluateDisney(vec3(0.0f, 1.0f, 0.0f), wi, wm, wo, baseColor, u_thin) * Lrgb * intensity * att;
+        colorOut += evaluateDisney(nt, wi, wm, wo, baseColor, u_thin) * Lrgb * intensity * att;
     }
+    float viewDep = pow(1.0 - max(dot(N, V), 0.0), 5.0);
+    colorOut += viewDep * 0.25;
 
     FragColor = vec4(colorOut, texAlbedo.a);
+
 }
