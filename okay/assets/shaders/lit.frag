@@ -17,21 +17,21 @@ uniform vec3 u_cameraPosition;
 uniform float u_ambient;     // e.g. 0.05
 uniform sampler2D u_albedo;  // optional, can be ignored if not used
 
-// Disney BRDF
-uniform float u_metallic; // 0 = dielectric, 1 = metallic
-uniform float u_specular; // incident specular amount (0 = matte, 1 = mirror-like)
-uniform float u_specularTint; // tints incident specular towards base color
-uniform float u_roughness; // surface roughness
-uniform float u_anisotropic; // controls the aspect ratio of the specular highlight (0 = isotropic, 1 = max anisotropic)
-uniform float u_sheen; // additional grazing component primary used for cloth
-uniform float u_sheenTint; // amount of tint sheen towards base color
-uniform float u_clearcoat; // another specular lobe
-uniform float u_clearcoatGloss; // controls clearcoat glossiness (0 = satin, 1 = gloss)
+/* Disney BSDF Parameters */
+// All params are in [0, 1]
 
-// Disney BSDF
-uniform float u_specularTrans;
-uniform float u_flatness;
-uniform int u_thin;
+uniform float u_metallic;       // 0 = dielectric, 1 = metallic
+uniform float u_specular;       // incident specular amount; remapped to IOR (0.5 -> IOR 1.5)
+uniform float u_specularTint;   // tints the dielectric F0 toward baseColor's hue
+uniform float u_roughness;      // surface roughness
+uniform float u_anisotropic;    // highlight stretch along tangent axes (0 = isotropic)
+uniform float u_sheen;          // grazing-angle componenet, primarily for cloth
+uniform float u_sheenTint;      // blends sheen color from white (0) toward baseColor (1)
+uniform float u_clearcoat;      // second specular layer on top (glossy, varnish look)
+uniform float u_clearcoatGloss; // controls clearcoat glossiness (0 = satin, 1 = mirror)
+uniform float u_specularTrans;  // transmission fraction (glass/translucency)
+uniform float u_flatness;       // blends in Hanrahan-Krueger subsurface for thin surfaces
+uniform int u_thin;             // 0 = solid, 1 = thin surface (leaves, paper)
 
 const float PI = 3.1415926535897932384626433832795;
 
@@ -46,6 +46,10 @@ layout(std140) uniform u_lights {
     vec4 meta;       // meta.x = lightCount
     Light lights[16];
 };
+
+/***************/
+/** Utilities **/
+/***************/
 
 vec3 safeNormalize(vec3 v) {
     float len2 = dot(v, v);
@@ -76,33 +80,50 @@ float spotConeFactor(vec3 L, vec3 spotDir, float angleRad) {
     return smoothstep(cosCutoff, cosCutoff + softBand, cosTheta);
 }
 
+// Normalizes baseColor to unit luminance, gives hue without brightness
 vec3 calcTint(vec3 baseColor) {
-    float luminance = dot(vec3(0.2126f, 0.7152f, 0.0722f), baseColor); // 0.2126f, 0.7152f, 0.0722f
+    // ITU-R BT.709 / sRGB luminance coefficients
+    float luminance = dot(vec3(0.2126f, 0.7152f, 0.0722f), baseColor);
     return (luminance > 0.0) ? baseColor * (1.0 / luminance) : vec3(1.0);
 }
 
-// Fresnel equations
+// moniter (sRGB space) to linear light
+vec3 mon2lin(vec3 x) {
+    return vec3(pow(x.x, 2.2), pow(x.y, 2.2), pow(x.z, 2.2));
+}
+
+
+/*************/
+/** Fresnel **/
+/*************/
+
 float schlickWeight(float u) {
     float m = clamp(1.0f - u, 0.0f, 1.0f);
     float m2 = m * m;
     return m * m2 * m2;
 }
 
+// Schlick's approximation (scalar): F0 + (1 - F0) * (1 - cosTheta)^5.
 float schlickFresnel(float r0, float radians) {
     return mix(r0, 1.0f, schlickWeight(radians));
 }
 
+// Schlick's approximation (vec3): used for colored F0 (metals).
 vec3 schlickFresnel(vec3 r0, float radians) {
     return r0 + (vec3(1.0f) - r0) * pow(1.0f - radians, 5.0f);
 }
 
+// F0 at normal incidence from an IOR ratio. IOR 1.5 -> F0 = 0.04.
 float schlickR0FromRelativeIOR(float eta) {
     return pow(eta - 1.0f, 2.0f) / pow(eta + 1.0f, 2.0f);
 }
 
+// Full dielectric Fresnel equations. Handles total internal reflection and
+// light coming from either side of the surface.
 float dielectric(float cosThetaI, float etaI, float etaT) {
     cosThetaI = clamp(cosThetaI, -1.0f, 1.0f);
 
+    // Light coming from the other side: swap IORs and use |cosThetaI|.
     if (cosThetaI <= 0.0f) {
         float temp = etaI;
         etaI = etaT;
@@ -110,6 +131,7 @@ float dielectric(float cosThetaI, float etaI, float etaT) {
         cosThetaI = abs(cosThetaI);
     }
 
+    // Snell's law: sin(thetaT) = (etaI / etaT) * sin(thetaI).
     float sinThetaI = sqrt(max(0.0f, 1.0f - cosThetaI * cosThetaI));
     float sinThetaT = etaI / etaT * sinThetaI;
 
@@ -124,10 +146,12 @@ float dielectric(float cosThetaI, float etaI, float etaT) {
     
 }
 
+// dielectric Fresnel and colored metallic Fresnel based on u_metallic.
 vec3 disneyFresnel(vec3 baseColor, vec3 N, vec3 wi, vec3 wm, vec3 wo) {
     float dotHV = abs(dot(wm, wo));
 
     vec3 tint = calcTint(baseColor);
+    // IOR remap: u_specular = 0.5 -> IOR 1.5
     float ior = (2.0f / (1.0f - sqrt(0.08f * u_specular))) - 1.0f;
     float relativeIOR = dot(N, wi) > 0.0f ? ior : 1.0f / ior;
     
@@ -140,12 +164,17 @@ vec3 disneyFresnel(vec3 baseColor, vec3 N, vec3 wi, vec3 wm, vec3 wo) {
     return mix(vec3(dielectricFresnel), metallicFresnel, u_metallic);
 }
 
+/***************************************************/
+/** Microfacet distributions and masking-shadowing */
+/***************************************************/
+
 void calcAnisotropicParams(float roughness, float anisotropic, out float ax, out float ay) {
     float aspect = sqrt(1.0f - 0.9f * anisotropic);
     ax = max(0.001f, roughness * roughness / aspect);
     ay = max(0.001f, roughness * roughness * aspect);
 }
 
+// Generalized Trowbridge-Reitz
 float GTR1(float absDotHL, float a) {
     if (a >= 1.0) return 1.0f / PI;
 
@@ -153,6 +182,8 @@ float GTR1(float absDotHL, float a) {
     return (a2 - 1.0) / (PI * log2(a2) * (1.0 + (a2 - 1.0) * absDotHL * absDotHL));
 }
 
+// Anisotropic GGX (GTR2). Returns the
+// density of microfacets oriented along wm.
 float GTR2(vec3 N, vec3 wm, float ax, float ay) {
     float dotHX2 = wm.x * wm.x;
     float dotHY2 = wm.z * wm.z;
@@ -163,6 +194,8 @@ float GTR2(vec3 N, vec3 wm, float ax, float ay) {
     return 1.0f / (PI * ax * ay * pow(dotHX2 / ax2 + dotHY2 / ay2 + cos2Theta, 2.0f));
 }
 
+// Smith G1 for isotropic GGX. Returns [0, 1]: fraction of microfacets visible
+// from direction w (masking-shadowing).
 float GGXG1(vec3 w, float a) {
     float a2 = a * a;
     float absDotNW = w.y;
@@ -170,6 +203,8 @@ float GGXG1(vec3 w, float a) {
     return 2.0f / (1.0f + sqrt(a2 + (1.0 - a2) * absDotNW * absDotNW));
 }
 
+// Smith G1 for anisotropic GGX. Projects w onto tangent axes to get an
+// effective roughness, then computes masking-shadowing.
 float GGXG1(vec3 w, vec3 N, float ax, float ay) {
     float cosTheta = dot(w, N);
     float sinTheta = sqrt(max(0.0f, 1.0f - cosTheta * cosTheta));
@@ -188,8 +223,11 @@ float GGXG1(vec3 w, vec3 N, float ax, float ay) {
     return 1.0f / (1.0f + lambda);
 }
 
-// sheen
+/***********/
+/** Sheen **/
+/***********/
 
+// Grazing-angle boost tinted toward baseColor.
 vec3 calcSheen(vec3 baseColor, vec3 wi, vec3 wm) {
     if (u_sheen <= 0.0f) return vec3(0.0f);
 
@@ -199,27 +237,60 @@ vec3 calcSheen(vec3 baseColor, vec3 wi, vec3 wm) {
     return u_sheen * sheenColor * schlickWeight(dotHL);
 }
 
-// clearcoat
+/*************/
+/** Diffuse **/
+/*************/
 
-float disneyClearcoat(vec3 N, vec3 wo, vec3 wm, vec3 wi) {
-    if (u_clearcoat <= 0.0f) return 0.0f;
+// Causes a bright silhouette outline on rough materials.
+float retroDiffuse(vec3 N, vec3 wi, vec3 wm, vec3 wo) {
+    float dotNL = abs(dot(N, wi));
+    float dotNV = abs(dot(N, wo));
+    float dotHL = abs(dot(wm, wi));
 
-    float absDotNH = abs(dot(N, wm));
-    float dotHV = dot(wm, wo);
+    float roughness = u_roughness * u_roughness;
 
-    float clearcoatGloss = u_clearcoatGloss;
-
-    float d = GTR1(absDotNH, mix(0.1, 0.001, clearcoatGloss));
-    float f = schlickFresnel(0.04f, dotHV);
-    float gl = GGXG1(wi, 0.25f);
-    float gv = GGXG1(wo, 0.25f);
-
-    return 0.25f * u_clearcoat * d * f * gl * gv;
+    float rr = 0.5f + 2.0f * dotHL * dotHL * roughness;
+    float fl = schlickWeight(dotNL);
+    float fv = schlickWeight(dotNV);
+    return rr * (fl + fv + fl * fv * (rr - 1.0f));
 }
 
+// Lambert + retro-reflection + optional Hanrahan-Krueger
+// subsurface approximation for thin materials.
+float calcDisneyDiffuse(vec3 N, vec3 wi, vec3 wm, vec3 wo) {
+    float dotNL = abs(dot(N, wi));
+    float dotNV = abs(dot(N, wo));
 
-// Specular BRDF
+    float fl = schlickWeight(dotNL);
+    float fv = schlickWeight(dotNV);
 
+    float hanrahanKrueger = 0.0f;
+
+    if (u_thin > 0 && u_flatness > 0.0f) {
+        float roughness = u_roughness * u_roughness;
+
+        float dotHL = dot(wm, wi);
+        float fss90 = dotHL * dotHL * roughness;
+        float fss = mix(1.0f, fss90, fl) * mix(1.0f, fss90, fv);
+
+        float ss = 1.25f * (fss * (1.0f / (dotNL + dotNV) - 0.5f) + 0.5f);
+        hanrahanKrueger = ss;
+    }
+
+    float lambert = 1.0f;
+    float retro = retroDiffuse(N, wi, wm, wo);
+    float subsurfaceApprox = mix(lambert, hanrahanKrueger, u_thin > 0 ? u_flatness : 0.0f);
+    return 1.0f / PI * (retro + subsurfaceApprox * (1.0f - 0.5f * fl) * (1.0f - 0.5f * fv));
+
+}
+
+/********************************/
+/** Specular BRDF (reflection) **/
+/********************************/
+
+// The main reflection lobe. Standard microfacet BRDF:
+//      f_r = (D * G * F) / (4 * N.L * N.V)
+// D = GGX distribution, G = Smith masking-shadowing, F = Disney Fresnel.
 vec3 calcDisneyBRDF(vec3 baseColor, vec3 N, vec3 wo, vec3 wm, vec3 wi) {
     float dotNL = dot(N, wi);
     float dotNV = dot(N, wo);
@@ -237,15 +308,20 @@ vec3 calcDisneyBRDF(vec3 baseColor, vec3 N, vec3 wo, vec3 wm, vec3 wi) {
     return d * gl * gv * f / (4.0f * dotNL * dotNV);
 }
 
-// Specular BSDF
+/**********************************/
+/** Specular BTDF (transmission) **/
+/**********************************/
 
+// Remaps roughness for thin-surface transmission based on IOR.
 float thinTransmissionRoughness(float ior) {
     return clamp((0.65f * ior - 0.35f) * u_roughness, 0.0f, 1.0f);
 }
 
-vec3 calcDisneySpecTransmission(vec3 baseColor, vec3 N, vec3 wi, vec3 wo, vec3 wm, float ax, float ay, int thin) {    
+// Specular transmission lobe
+vec3 calcDisneySpecTransmission(vec3 baseColor, vec3 N, vec3 wi, vec3 wo, vec3 wm, float ax, float ay) {    
     float ior = (2.0f / (1.0f - sqrt(0.08f * u_specular))) - 1.0f;
 
+    // Inverts ior based on the side it is coming from
     float relativeIOR = dot(N, wi) > 0.0f ? ior : 1.0f / ior;
     float n2 = relativeIOR * relativeIOR;
 
@@ -262,7 +338,7 @@ vec3 calcDisneySpecTransmission(vec3 baseColor, vec3 N, vec3 wi, vec3 wo, vec3 w
 
     float f = dielectric(dotHV, 1.0f, 1.0f / relativeIOR);
 
-    vec3 color = thin > 0 ? sqrt(baseColor) : baseColor;
+    vec3 color = u_thin > 0 ? sqrt(baseColor) : baseColor;
     float c = (absDotHL * absDotHV) / max(1e-8f, absDotNL * absDotNV);
 
     float t = n2 / pow(dotHL + relativeIOR * dotHV, 2.0f);
@@ -271,52 +347,35 @@ vec3 calcDisneySpecTransmission(vec3 baseColor, vec3 N, vec3 wi, vec3 wo, vec3 w
 
 }
 
-float retroDiffuse(vec3 N, vec3 wi, vec3 wm, vec3 wo) {
-    float dotNL = abs(dot(N, wi));
-    float dotNV = abs(dot(N, wo));
-    float dotHL = abs(dot(wm, wi));
+/***************/
+/** Clearcoat **/
+/***************/
 
-    float roughness = u_roughness * u_roughness;
+// Second specular layer on top of the base material
+float disneyClearcoat(vec3 N, vec3 wo, vec3 wm, vec3 wi) {
+    if (u_clearcoat <= 0.0f) return 0.0f;
 
-    float rr = 0.5f + 2.0f * dotHL * dotHL * roughness;
-    float fl = schlickWeight(dotNL);
-    float fv = schlickWeight(dotNV);
-    return rr * (fl + fv + fl * fv * (rr - 1.0f));
+    float absDotNH = abs(dot(N, wm));
+    float dotHV = dot(wm, wo);
+
+    float clearcoatGloss = u_clearcoatGloss;
+
+    float d = GTR1(absDotNH, mix(0.1, 0.001, clearcoatGloss));
+    float f = schlickFresnel(0.04f, dotHV);
+    float gl = GGXG1(wi, 0.25f);
+    float gv = GGXG1(wo, 0.25f);
+
+    return 0.25f * u_clearcoat * d * f * gl * gv;
 }
 
-float calcDisneyDiffuse(vec3 N, vec3 wi, vec3 wm, vec3 wo, int thin) {
-    float dotNL = abs(dot(N, wi));
-    float dotNV = abs(dot(N, wo));
+/*****************/
+/** Disney BSDF **/
+/*****************/
 
-    float fl = schlickWeight(dotNL);
-    float fv = schlickWeight(dotNV);
-
-    float hanrahanKrueger = 0.0f;
-
-    if (thin > 0 && u_flatness > 0.0f) {
-        float roughness = u_roughness * u_roughness;
-
-        float dotHL = dot(wm, wi);
-        float fss90 = dotHL * dotHL * roughness;
-        float fss = mix(1.0f, fss90, fl) * mix(1.0f, fss90, fv);
-
-        float ss = 1.25f * (fss * (1.0f / (dotNL + dotNV) - 0.5f) + 0.5f);
-        hanrahanKrueger = ss;
-    }
-
-    float lambert = 1.0f;
-    float retro = retroDiffuse(N, wi, wm, wo);
-    float subsurfaceApprox = mix(lambert, hanrahanKrueger, thin > 0 ? u_flatness : 0.0f);
-    return 1.0f / PI * (retro + subsurfaceApprox * (1.0f - 0.5f * fl) * (1.0f - 0.5f * fv));
-
-}
-
-vec3 evaluateDisney(vec3 N, vec3 wi, vec3 wm, vec3 wo, vec3 baseColor, int thin) {    
+vec3 evaluateDisney(vec3 N, vec3 wi, vec3 wm, vec3 wo, vec3 baseColor) {    
     float dotNV = dot(N, wo);
     float dotNL = max(dot(N, wi), 0.0f);
     if (dotNL <= 0.0f) return vec3(0.0f);
-
-    
 
     vec3 reflectance = vec3(0.0f);
 
@@ -336,10 +395,9 @@ vec3 evaluateDisney(vec3 N, vec3 wi, vec3 wm, vec3 wo, vec3 baseColor, int thin)
         reflectance += vec3(clearcoat);
     }
 
-
     // diffuse
     if (diffuseWeight > 0.0f) {
-        float diffuse = calcDisneyDiffuse(N, wi, wm, wo, thin);
+        float diffuse = calcDisneyDiffuse(N, wi, wm, wo);
         vec3 sheen = calcSheen(baseColor, wi, wm);
 
         reflectance += diffuseWeight * (diffuse * baseColor + sheen);
@@ -348,11 +406,11 @@ vec3 evaluateDisney(vec3 N, vec3 wi, vec3 wm, vec3 wo, vec3 baseColor, int thin)
     // transmission
     if (transWeight > 0.0f) {
         float ior = (2.0f / (1.0f - sqrt(0.08f * u_specular))) - 1.0f;
-        float rscaled = thin > 0 ? thinTransmissionRoughness(ior) : u_roughness;
+        float rscaled = u_thin > 0 ? thinTransmissionRoughness(ior) : u_roughness;
         float tax, tay;
         calcAnisotropicParams(rscaled, u_anisotropic, tax, tay);
 
-        vec3 transmission = calcDisneySpecTransmission(baseColor, N, wi, wo, wm, tax, tay, thin);
+        vec3 transmission = calcDisneySpecTransmission(baseColor, N, wi, wo, wm, tax, tay);
         reflectance += transWeight * transmission;
     }
 
@@ -367,11 +425,6 @@ vec3 evaluateDisney(vec3 N, vec3 wi, vec3 wm, vec3 wo, vec3 baseColor, int thin)
     return reflectance;
 }
 
-vec3 mon2lin(vec3 x)
-{
-    return vec3(pow(x.x, 2.2), pow(x.y, 2.2), pow(x.z, 2.2));
-}
-
 
 void main() {
     vec3 N = safeNormalize(v_worldNormal); // normal vector
@@ -380,9 +433,7 @@ void main() {
     
     vec4 texAlbedo = texture(u_albedo, v_uv);
     vec3 baseColor = mon2lin(texAlbedo.rgb) * v_color;
-    // vec3 baseColor = clamp(texAlbedo.rgb * v_color, vec3(0.0f), vec3(1.0f));
     vec3 colorOut = u_ambient * baseColor;
-    // vec3 colorOut;
 
     int count = int(meta.x + 0.5);
     int maxLights = min(count, 16);
@@ -436,10 +487,8 @@ void main() {
         vec3 wi = safeNormalize(v_worldToTangent * L);
         vec3 wm = safeNormalize(wo + wi); // half vector
 
-        colorOut += evaluateDisney(nt, wi, wm, wo, baseColor, u_thin) * Lrgb * intensity * att;
+        colorOut += evaluateDisney(nt, wi, wm, wo, baseColor) * Lrgb * intensity * att;
     }
-    float viewDep = pow(1.0 - max(dot(N, V), 0.0), 5.0);
-    colorOut += viewDep * 0.25;
 
     FragColor = vec4(colorOut, texAlbedo.a);
 
