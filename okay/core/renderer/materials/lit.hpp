@@ -26,7 +26,6 @@ struct LitMaterial : public SceneMaterialProperties, public OkayMaterialProperti
     UniformProperty<float, FixedString("u_ambient")> ambient{0.05f};
     TextureProperty<FixedString("u_albedo")> albedo;
     UniformProperty<glm::vec3, FixedString("u_color")> color{glm::vec3(1.0f)};
-    UniformProperty<float, FixedString("u_subsurface")> subsurface{0.0f};
     UniformProperty<float, FixedString("u_metallic")> metallic{0.0f};
     UniformProperty<float, FixedString("u_specular")> specular{0.5f};
     UniformProperty<float, FixedString("u_specularTint")> specularTint{0.0f};
@@ -41,10 +40,16 @@ struct LitMaterial : public SceneMaterialProperties, public OkayMaterialProperti
     UniformProperty<int, FixedString("u_thin")> thin{0};
 
     auto uniformRefs() {
-        return std::tuple_cat(SceneMaterialProperties::uniformRefs(), std::tie(ambient, color, subsurface, metallic, specular, specularTint, roughness, anisotropic, sheen, sheenTint, clearcoat, clearcoatGloss, specularTrans, flatness, thin));
+        return std::tuple_cat(SceneMaterialProperties::uniformRefs(), std::tie(
+            ambient, color, metallic, specular, specularTint, roughness, anisotropic, 
+            sheen, sheenTint, clearcoat, clearcoatGloss, specularTrans, flatness, thin
+        ));
     }
     auto uniformRefs() const {
-        return std::tuple_cat(SceneMaterialProperties::uniformRefs(), std::tie(ambient, color, subsurface, metallic, specular, specularTint, roughness, anisotropic, sheen, sheenTint, clearcoat, clearcoatGloss, specularTrans, flatness, thin));
+        return std::tuple_cat(SceneMaterialProperties::uniformRefs(), std::tie(
+            ambient, color, metallic, specular, specularTint, roughness, anisotropic, 
+            sheen, sheenTint, clearcoat, clearcoatGloss, specularTrans, flatness, thin
+        ));
     }
 
     auto uniformBlockRefs() { return std::tie(lights); }
