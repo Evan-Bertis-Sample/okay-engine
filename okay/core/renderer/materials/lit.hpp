@@ -41,6 +41,7 @@ struct LitMaterial : public SceneMaterialProperties, public OkayMaterialProperti
     UniformProperty<int, FixedString("u_thin")> thin{0};
 =======
     TextureProperty<FixedString("u_shadowMap")> shadowMap;
+    TextureProperty<FixedString("u_shadowMap")> shadowMap;
     UniformProperty<glm::vec3, FixedString("u_color")> color{};
 >>>>>>> 6c7a2b3 (added shadow-mapping pass 1)
 

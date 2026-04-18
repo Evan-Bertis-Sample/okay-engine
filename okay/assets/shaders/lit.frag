@@ -36,6 +36,7 @@ uniform int u_thin;             // 0 = solid, 1 = thin surface (leaves, paper)
 
 const float PI = 3.1415926535897932384626433832795;
 
+
 struct Light {
     vec4 posType;    // xyz = position (POINT/SPOT), w = type (0 dir, 1 point, 2 spot)
     vec4 color;      // rgb = color, w = intensity
