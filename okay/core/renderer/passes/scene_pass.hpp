@@ -21,7 +21,14 @@ class ScenePass : public IRenderPass {
 
     virtual const std::string_view name() const override { return "ScenePass"; }
 
-    virtual void initialize() override {}
+    virtual void initialize() override {
+        Shader depthMapShader = load::engineShader("shaders/depth_map");
+        auto depthMapProperties = std::make_unique<DepthMapMaterial>();
+        Renderer * r = Engine.systems.getSystemChecked<Renderer>();
+        ShaderHandle shader = r->materialRegistry().registerShader(depthMapShader.vertexShader,
+                                                                depthMapShader.fragmentShader);
+        _depthMapMaterial = r->materialRegistry().registerMaterial(shader, std::move(depthMapProperties));
+    }
 
     virtual void resize(int newWidth, int newHeight) override {}
 
@@ -46,6 +53,136 @@ class ScenePass : public IRenderPass {
         auto projection = context.world.camera().projectionMatrix(aspect);
         auto camPos = context.world.camera().position();
         auto camDir = context.world.camera().direction();
+
+
+        for (const Light& l : context.world.lights()) {
+            switch (l.type()) {
+                case Light::Type::POINT:
+                case Light::Type::SPOT:
+                    continue;
+                case Light::Type::DIRECTIONAL:
+                    glm::vec4 direction = l.direction;
+                    glm::vec4 color = l.color;
+
+                    // handle direction light -- add shadow mapping
+
+
+
+
+                    // Generating Depth Map
+                    unsigned int depthMapFBO;
+                    glGenFramebuffers(1, &depthMapFBO);  
+
+                    
+                    const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
+
+                    unsigned int depthMap;
+                    glGenTextures(1, &depthMap);
+                    glBindTexture(GL_TEXTURE_2D, depthMap);
+                    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 
+                                SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); 
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);  
+
+                    
+                    glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+                    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
+                    glDrawBuffer(GL_NONE);
+                    glReadBuffer(GL_NONE);
+                    glBindFramebuffer(GL_FRAMEBUFFER, 0); 
+
+                    float nearPlane = 7.5f, farPlane = 100.0f;
+                    
+
+                    // calculate frustum based on camera and give an area slightly larger than it, only when the camera goes outside the area
+                    glm::mat4 lightProjection = glm::ortho(100.0f, 100.0f, 100.0f, 100.0f, nearPlane, farPlane); 
+
+                    // use light position and direction
+                    glm::vec4 lightPos = l.posType;
+                    glm::vec4 lightDirection = l.direction;
+                    glm::mat4 lightView = glm::lookAt(glm::vec3(lightPos.x, lightPos.y, lightPos.z), 
+                                  glm::vec3(lightPos.x + lightDirection.x, lightPos.y + lightDirection.y, lightPos.z + lightDirection.z), 
+                                  glm::vec3( 0.0f, 1.0f,  0.0f));
+                    glm::mat4 lightSpaceMatrix = lightProjection * lightView; 
+                    
+                    if (DepthMapMaterial * depthMapProperties = dynamic_cast<DepthMapMaterial*>(_depthMapMaterial->properties().get())) {
+                        depthMapProperties->lightSpaceMatrix.set(lightSpaceMatrix);
+                    }
+                    _depthMapMaterial->setShader();
+                    
+                   
+                    // First pass, render to depth map
+                    for (const RenderItemHandle& handle : context.world.getRenderItems()) {
+                        RenderItem& item = context.world.getRenderItem(handle);
+                        if (item.mesh.isEmpty())
+                            continue;
+                        
+                        
+                        
+                        if (DepthMapMaterial * depthMapProperties = dynamic_cast<DepthMapMaterial*>(_depthMapMaterial->properties().get())) {
+                            depthMapProperties->modelMatrix.set(item.worldMatrix);
+                        }
+                        
+                        _depthMapMaterial->passUniforms();
+                        context.renderer.meshBuffer().drawMesh(item.mesh);
+                    }
+                    
+
+                    
+                    
+
+                    // Second pass, render scene with depth map
+                    for (const RenderItemHandle& handle : context.world.getRenderItems()) {
+
+                        // set material to depth map material and render to depth map
+                        
+                        RenderItem& item = context.world.getRenderItem(handle);
+                        if (item.mesh.isEmpty())
+                            continue;
+                        if (item.material->isNone())
+                            continue;
+                        item.material = _depthMapMaterial;
+
+                        
+                        item.material->passUniforms();
+                        context.renderer.meshBuffer().drawMesh(item.mesh);
+                    }
+
+                    break; // only render one directional light
+            }
+        }
+
+        for (const RenderItemHandle& handle : context.world.getRenderItems()) {
+            RenderItem& item = context.world.getRenderItem(handle);
+            if (item.mesh.isEmpty())
+                continue;
+            if (item.material->isNone())
+                continue;
+
+            Camera& camera = context.world.camera();
+            if (!camera.isInFrustum(item.mesh.bounds.transform(item.worldMatrix), aspect)) {
+                continue;
+            }
+
+            // Shader switch: bind program + per-frame stuff
+            if (_materialIndex != item.material->id()) {
+                handleMaterialSwitch(context, item, projection, view, camPos, camDir);
+                _materialIndex = item.material->id();
+            }
+
+            // Set per-object uniforms
+            setPerObjectUniforms(item);
+
+            // Now push uniforms for this draw (or only the ones you changed)
+            Failable f = item.material->passUniforms();
+            if (f.isError())
+                Engine.logger.error("Failed to pass uniforms : {}", f.error());
+
+            context.renderer.meshBuffer().drawMesh(item.mesh);
+        }
+
 
         for (const RenderItemHandle& handle : context.world.getRenderItems()) {
             RenderItem& item = context.world.getRenderItem(handle);
@@ -110,6 +247,8 @@ class ScenePass : public IRenderPass {
             for (auto l : context.world.lights()) {
                 block.lights[i++] = l;
             }
+
+             glBindFramebuffer(depthMapFBO, lit->shadowMap.get().getGLTextureID());
         }
     }
 

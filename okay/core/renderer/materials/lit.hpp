@@ -23,6 +23,7 @@ struct LitMaterial : public SceneMaterialProperties, public OkayMaterialProperti
     UniformProperty<float, FixedString("u_shininess")> shininess{8.0f};
     UniformProperty<float, FixedString("u_ambient")> ambient{0.05f};
     TextureProperty<FixedString("u_albedo")> albedo;
+    TextureProperty<FixedString("u_shadowMap")> shadowMap;
     UniformProperty<glm::vec3, FixedString("u_color")> color{};
 
     auto uniformRefs() {
