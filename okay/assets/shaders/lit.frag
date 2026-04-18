@@ -18,7 +18,6 @@ uniform float u_ambient;     // e.g. 0.05
 uniform sampler2D u_albedo;  // optional, can be ignored if not used
 
 // Disney BRDF
-uniform float u_subsurface; // controls diffuse shape with subsurface approx
 uniform float u_metallic; // 0 = dielectric, 1 = metallic
 uniform float u_specular; // incident specular amount (0 = matte, 1 = mirror-like)
 uniform float u_specularTint; // tints incident specular towards base color
