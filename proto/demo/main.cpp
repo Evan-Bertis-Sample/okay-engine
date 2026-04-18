@@ -1,4 +1,6 @@
 #include "okay/core/ecs/ecs_util.hpp"
+#include "okay/core/renderer/material.hpp"
+#include "okay/core/renderer/uniform.hpp"
 
 #include <okay/okay.hpp>
 
@@ -14,46 +16,6 @@ static void __gameShutdown();
 static okay::ECSEntity s_teapot;
 static okay::ECSEntity s_light;
 static okay::ECSEntity s_camera;
-
-struct BobComponent {
-   public:
-    std::shared_ptr<okay::Tween<glm::vec3>> positionTween;
-};
-
-class BobSystem : public okay::ECSSystem<okay::query::Get<okay::TransformComponent, BobComponent>> {
-   public:
-    void onEntityAdded(QueryT::Item& item) override {
-        auto& [transform, bob] = item.components;
-
-        glm::vec3 offset = glm::ballRand(10.0f);
-
-        okay::TweenConfig<glm::vec3> config = {
-            .start = transform->position,
-            .end = transform->position + offset,
-            .durationMs = 1000,
-            .easingFn = okay::easing::cubicInOut,
-            .numLoops = -1,
-            .inOutBack = true,
-            .prefixMs = glm::linearRand(0, 1000),
-        };
-
-        bob.positionTween = okay::Tween<glm::vec3>::create(config);
-        bob.positionTween->start();
-    }
-
-    void onTick(QueryT::Item& item) override {
-        auto& [transform, bob] = item.components;
-        transform->position = bob.positionTween->value();
-    }
-
-    void onEntityRemoved(QueryT::Item& item) override {
-        auto& [transform, bob] = item.components;
-        if (bob.positionTween) {
-            bob.positionTween->kill();
-            bob.positionTween = nullptr;
-        }
-    }
-};
 
 int main() {
     okay::SurfaceConfig surfaceConfig;
@@ -83,58 +45,48 @@ int main() {
 
 static void __gameInitialize() {
     // Additional game initialization logic
-    okay::Texture texture = okay::load::engineTexture("textures/uv_test.jpg");
-    okay::Mesh teapot = okay::mesh(okay::load::engineMeshData("models/teapot.obj"));
+    okay::Texture texture = okay::load::engineTexture("textures/red.jpg");
+    okay::Mesh object = okay::mesh(okay::load::engineMeshData("models/dragon.obj"));
 
     okay::Mesh cube = okay::mesh(okay::primitives::box().build());
     okay::ShaderHandle shader = okay::shaderHandle(okay::load::engineShader("shaders/lit"));
 
-    auto materialProperties = std::make_unique<okay::LitMaterial>();
-    materialProperties->color.set(glm::vec4(1.0f, 1.0f, 0.0f, 1.0f));
-    materialProperties->albedo = texture;
+    auto props = std::make_unique<okay::LitMaterial>();
+    props->color.set(glm::vec3(0.824, 0.118, 0.118)); 
+    props->albedo = texture;
+    props->roughness.set(0.75f);
+    props->clearcoat.set(0.75f);
+    okay::MaterialHandle material = okay::materialHandle(shader, std::move(props));
 
-    okay::MaterialHandle material = okay::materialHandle(shader, std::move(materialProperties));
     okay::ecs::registerBuiltins();
-    okay::ecs::registerComponent<BobComponent>();
-    okay::ecs::registerSystem(std::make_unique<BobSystem>());
-
-    s_teapot =
-        okay::ecs::entity()
-            .addComponent<okay::TransformComponent>(glm::vec3{0.0f, 0.0f, 0.0f}, glm::vec3{0.1f})
-            .addComponent<okay::MeshRendererComponent>(teapot, material);
 
     s_light = okay::ecs::entity()
                   .addComponent<okay::TransformComponent>(
                       glm::vec3{},
                       glm::vec3{0.1f},
-                      glm::angleAxis(glm::radians(45.0f), glm::vec3{0.0f, 1.0f, 0.0f}))
+                      glm::angleAxis(glm::radians(0.0f), glm::vec3{2.0f, 3.0f, 1.0f}))
                   .addComponent<okay::LightComponent>(
-                      okay::LightComponent::directional(glm::vec3{0.9, 0.9, 0.85}));
+                      okay::LightComponent::directional(glm::vec3{1, 1, 1}, 2.5f));
 
     s_camera = okay::ecs::entity()
                    .addComponent<okay::TransformComponent>(glm::vec3{0.0f, 0.0f, 5.0f})
                    .addComponent<okay::CameraComponent>(
                        okay::CameraComponent{okay::Camera::PerspectiveLens{45.0f, 0.1f, 100.0f}});
 
-    for (std::size_t i = 0; i < 1000; ++i) {
-        glm::vec3 pos = glm::ballRand(50.0f);
-        okay::ECSEntity entity = okay::ecs::entity()
-                                     .addComponent<okay::TransformComponent>(pos, glm::vec3{0.5f})
-                                     .addComponent<okay::MeshRendererComponent>(cube, material)
-                                     .addComponent<BobComponent>();
+    glm::vec3 pos1 = glm::vec3(0.0f, 0.0f, 0.0f);
+    okay::ecs::entity()
+        .addComponent<okay::TransformComponent>(
+            pos1,
+            glm::vec3{2.0f},
+            glm::angleAxis(glm::radians(120.0f), glm::vec3{0.0f, 1.0f, 0.0f}))
+        .addComponent<okay::MeshRendererComponent>(object, material);
 
-        for (std::size_t i = 0; i < 5; ++i) {
-            pos = glm::ballRand(100.0f);
-            okay::ecs::entity(entity)
-                .addComponent<okay::TransformComponent>(pos, glm::vec3{0.5f})
-                .addComponent<okay::MeshRendererComponent>(cube, material);
-        }
-    }
 }
 
 static void __gameUpdate() {
     // move the camera in a circle, always looking at the origin
     float theta = okay::Engine.time->timeSinceStartSec() * 0.05f * glm::pi<float>();
+    // float theta = 0.0f;
     glm::vec3 pos = glm::vec3(sin(theta) * 5.0f, 0.0f, cos(theta) * 5.0f);
     // rotation much look at origin
     auto& cameraTransform = s_camera.getComponent<okay::TransformComponent>().value();
@@ -142,12 +94,6 @@ static void __gameUpdate() {
     cameraTransform.lookAt(s_camera, glm::vec3{});
 
     okay::ECSEntity toDelete;
-
-    for (auto entity :
-         okay::ecs::query<okay::query::Get<okay::TransformComponent, BobComponent>>()) {
-        toDelete = entity.entity;
-        break;
-    }
 
     if (toDelete.isValid()) {
         okay::Engine.logger.info("FPS: {} | Destroying entity {}, now {} entities",
