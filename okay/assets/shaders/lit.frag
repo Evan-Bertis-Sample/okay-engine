@@ -16,6 +16,7 @@ uniform vec3 u_cameraPosition;
 uniform float u_shininess;   // e.g. 32.0
 uniform float u_ambient;     // e.g. 0.05
 uniform sampler2D u_albedo;  // optional, can be ignored if not used
+uniform sampler2D u_shadowMap; 
 
 struct Light {
     vec4 posType;    // xyz = position (POINT/SPOT), w = type (0 dir, 1 point, 2 spot)
