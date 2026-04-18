@@ -50,22 +50,7 @@ static void __gameInitialize() {
     materialProperties->albedo = texture;
     okay::MaterialHandle material = okay::materialHandle(shader, std::move(materialProperties));
 
-    okay::FontManager::FontHandle font = okay::load::engineFont("fonts/ARIAL.TTF");
-    okay::TextStyle style{.font = font,
-                          .targetFontHeight = 1.0f,
-                          .horizontalAlignment = okay::TextStyle::HorizontalAlignment::Center,
-                          .verticalAlignment = okay::TextStyle::VerticalAlignment::Top};
-
-    okay::Mesh textMesh = okay::mesh(okay::textMesh("Hello, world!", style, true));
-
-    auto textProperties = std::make_unique<okay::LitMaterial>();
-    textProperties->albedo = okay::FontManager::instance().getGlyphAtlas(font);
-    textProperties->isTransparent = true;
-    textProperties->color = glm::vec3(1.0);
-    okay::MaterialHandle textMaterial = okay::materialHandle(shader, std::move(textProperties));
-
     okay::ecs::registerBuiltins();
-
     s_teapot =
         okay::ecs::entity()
             .addComponent<okay::TransformComponent>(glm::vec3{0.0f, 0.0f, 0.0f}, glm::vec3{0.1f})
@@ -94,12 +79,18 @@ static void __gameInitialize() {
                     .backgroundImageSet(okay::load::engineTexture("textures/uv_test.jpg"))
                     (
                         okay::ui::text("Hello world!")
-                            .textColorSet(glm::vec3(0.0f, 0.0f, 0.0f)),
-                        okay::ui::slot(okay::UIPrimaryAxis::Horizontal)(
+                            .textColorSet(glm::vec3(0.0f, 0.0f, 0.0f))
+                            .widthGrow(),
+                        okay::ui::slot(okay::UIPrimaryAxis::Horizontal)
+                            .widthGrow()
+                        (
                             okay::ui::text("Left")
-                                .textColorSet(glm::vec3(1.0f, 0.0f, 0.0f)),
+                                .textColorSet(glm::vec3(1.0f, 0.0f, 0.0f))
+                                .widthGrow(),
                             okay::ui::text("Right")
-                                .textColorSet(glm::vec3(0.0f, 1.0f, 0.0f))
+                                .textColorSet(glm::vec3(0.0f, 0.0f, 0.0f))
+                                .alignTextVertical(okay::TextStyle::VerticalAlignment::Middle)
+                                .widthGrow()
                         )
                     )
             )

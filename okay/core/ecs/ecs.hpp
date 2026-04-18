@@ -172,7 +172,7 @@ class ECS : public EntityComponentStore, public System<SystemScope::LEVEL> {
     template <typename T>
     void addSystem(std::unique_ptr<T> system) {
         static_assert(std::derived_from<T, IECSSystem>, "T must derive from IECSSystem");
-        Engine.logger.info("Adding system: {}", typeid(T).name());
+        // Engine.logger.info("Adding system: {}", typeid(T).name());
         _systems.push_back(std::move(system));
         _systems.back()->systemInitialize(*this);
     }

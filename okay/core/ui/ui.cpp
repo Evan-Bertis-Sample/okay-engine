@@ -322,8 +322,30 @@ void UI::renderNode(const UINode& node, Renderer& renderer) {
         // So the transform scale should only convert pixels -> NDC.
         //
         // The text mesh is positioned from the layout rect's top-left.
-        // If your TextMeshBuilder uses a different local origin, adjust this anchor.
-        const glm::vec2 textOriginPx = glm::vec2(rect.pxPosition);
+        glm::vec2 textOriginPx = glm::vec2(rect.pxPosition);
+
+        switch (node.element.textStyle.verticalAlignment) {
+            case TextStyle::VerticalAlignment::Top:
+                break;
+            case TextStyle::VerticalAlignment::Middle:
+                textOriginPx.y += rect.pxSize.y * 0.5f;
+                break;
+            case TextStyle::VerticalAlignment::Bottom:
+                textOriginPx.y += rect.pxSize.y;
+                break;
+        }
+
+        switch (node.element.textStyle.horizontalAlignment) {
+            case TextStyle::HorizontalAlignment::Left:
+                break;
+            case TextStyle::HorizontalAlignment::Center:
+                textOriginPx.x += rect.pxSize.x * 0.5f;
+                break;
+            case TextStyle::HorizontalAlignment::Right:
+                textOriginPx.x += rect.pxSize.x;
+                break;
+        }
+
         const glm::vec2 textOriginNdc = pixelToNdc(textOriginPx);
 
         RenderEntity::Properties props = renderInfo.textEntity.prop();
