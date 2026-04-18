@@ -64,16 +64,12 @@ class ScenePass : public IRenderPass {
                     glm::vec4 direction = l.direction;
                     glm::vec4 color = l.color;
 
-                    // handle direction light -- add shadow mapping
-
-
-
+                    // handle direction light -- add shadow mappin
 
                     // Generating Depth Map
                     unsigned int depthMapFBO;
                     glGenFramebuffers(1, &depthMapFBO);  
 
-                    
                     const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
 
                     unsigned int depthMap;
@@ -129,7 +125,6 @@ class ScenePass : public IRenderPass {
                         context.renderer.meshBuffer().drawMesh(item.mesh);
                     }
                     
-
                     
                     
 
@@ -154,64 +149,64 @@ class ScenePass : public IRenderPass {
             }
         }
 
-        for (const RenderItemHandle& handle : context.world.getRenderItems()) {
-            RenderItem& item = context.world.getRenderItem(handle);
-            if (item.mesh.isEmpty())
-                continue;
-            if (item.material->isNone())
-                continue;
+        // for (const RenderItemHandle& handle : context.world.getRenderItems()) {
+        //     RenderItem& item = context.world.getRenderItem(handle);
+        //     if (item.mesh.isEmpty())
+        //         continue;
+        //     if (item.material->isNone())
+        //         continue;
 
-            Camera& camera = context.world.camera();
-            if (!camera.isInFrustum(item.mesh.bounds.transform(item.worldMatrix), aspect)) {
-                continue;
-            }
+        //     Camera& camera = context.world.camera();
+        //     if (!camera.isInFrustum(item.mesh.bounds.transform(item.worldMatrix), aspect)) {
+        //         continue;
+        //     }
 
-            // Shader switch: bind program + per-frame stuff
-            if (_materialIndex != item.material->id()) {
-                handleMaterialSwitch(context, item, projection, view, camPos, camDir);
-                _materialIndex = item.material->id();
-            }
+        //     // Shader switch: bind program + per-frame stuff
+        //     if (_materialIndex != item.material->id()) {
+        //         handleMaterialSwitch(context, item, projection, view, camPos, camDir);
+        //         _materialIndex = item.material->id();
+        //     }
 
-            // Set per-object uniforms
-            setPerObjectUniforms(item);
+        //     // Set per-object uniforms
+        //     setPerObjectUniforms(item);
 
-            // Now push uniforms for this draw (or only the ones you changed)
-            Failable f = item.material->passUniforms();
-            if (f.isError())
-                Engine.logger.error("Failed to pass uniforms : {}", f.error());
+        //     // Now push uniforms for this draw (or only the ones you changed)
+        //     Failable f = item.material->passUniforms();
+        //     if (f.isError())
+        //         Engine.logger.error("Failed to pass uniforms : {}", f.error());
 
-            context.renderer.meshBuffer().drawMesh(item.mesh);
-        }
+        //     context.renderer.meshBuffer().drawMesh(item.mesh);
+        // }
 
 
-        for (const RenderItemHandle& handle : context.world.getRenderItems()) {
-            RenderItem& item = context.world.getRenderItem(handle);
-            if (item.mesh.isEmpty())
-                continue;
-            if (item.material->isNone())
-                continue;
+        // for (const RenderItemHandle& handle : context.world.getRenderItems()) {
+        //     RenderItem& item = context.world.getRenderItem(handle);
+        //     if (item.mesh.isEmpty())
+        //         continue;
+        //     if (item.material->isNone())
+        //         continue;
 
-            Camera& camera = context.world.camera();
-            if (!camera.isInFrustum(item.mesh.bounds.transform(item.worldMatrix), aspect)) {
-                continue;
-            }
+        //     Camera& camera = context.world.camera();
+        //     if (!camera.isInFrustum(item.mesh.bounds.transform(item.worldMatrix), aspect)) {
+        //         continue;
+        //     }
 
-            // Shader switch: bind program + per-frame stuff
-            if (_materialIndex != item.material->id()) {
-                handleMaterialSwitch(context, item, projection, view, camPos, camDir);
-                _materialIndex = item.material->id();
-            }
+        //     // Shader switch: bind program + per-frame stuff
+        //     if (_materialIndex != item.material->id()) {
+        //         handleMaterialSwitch(context, item, projection, view, camPos, camDir);
+        //         _materialIndex = item.material->id();
+        //     }
 
-            // Set per-object uniforms
-            setPerObjectUniforms(item);
+        //     // Set per-object uniforms
+        //     setPerObjectUniforms(item);
 
-            // Now push uniforms for this draw (or only the ones you changed)
-            Failable f = item.material->passUniforms();
-            if (f.isError())
-                Engine.logger.error("Failed to pass uniforms : {}", f.error());
+        //     // Now push uniforms for this draw (or only the ones you changed)
+        //     Failable f = item.material->passUniforms();
+        //     if (f.isError())
+        //         Engine.logger.error("Failed to pass uniforms : {}", f.error());
 
-            context.renderer.meshBuffer().drawMesh(item.mesh);
-        }
+        //     context.renderer.meshBuffer().drawMesh(item.mesh);
+        // }
     }
 
     void handleMaterialSwitch(const RendererContext& context,
