@@ -16,6 +16,7 @@ uniform vec3 u_cameraPosition;
 /* Material */
 uniform float u_ambient;     // e.g. 0.05
 uniform sampler2D u_albedo;  // optional, can be ignored if not used
+uniform sampler2D u_shadowMap; 
 
 /* Disney BSDF Parameters */
 // All params are in [0, 1]
