@@ -38,8 +38,8 @@ struct LitMaterial : public SceneMaterialProperties, public OkayMaterialProperti
     auto uniformBlockRefs() { return std::tie(lights); }
     auto uniformBlockRefs() const { return std::tie(lights); }
 
-    auto textureRefs() { return std::tie(albedo); }
-    auto textureRefs() const { return std::tie(albedo); }
+    auto textureRefs() { return std::tie(albedo, shadowMap); }
+    auto textureRefs() const { return std::tie(albedo, shadowMap); }
 
     MaterialFlagCollection flags() {
         MaterialFlagCollection flags = SceneMaterialProperties::flags();
