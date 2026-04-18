@@ -25,9 +25,9 @@ uniform float u_specular;       // incident specular amount; remapped to IOR (0.
 uniform float u_specularTint;   // tints the dielectric F0 toward baseColor's hue
 uniform float u_roughness;      // surface roughness
 uniform float u_anisotropic;    // highlight stretch along tangent axes (0 = isotropic)
-uniform float u_sheen;          // grazing-angle componenet, primarily for cloth
+uniform float u_sheen;          // grazing-angle component, primarily for cloth
 uniform float u_sheenTint;      // blends sheen color from white (0) toward baseColor (1)
-uniform float u_clearcoat;      // second specular layer on top (glossy, varnish look)
+uniform float u_clearcoat;      // second specular layer (glossy, varnish look)
 uniform float u_clearcoatGloss; // controls clearcoat glossiness (0 = satin, 1 = mirror)
 uniform float u_specularTrans;  // transmission fraction (glass/translucency)
 uniform float u_flatness;       // blends in Hanrahan-Krueger subsurface for thin surfaces
