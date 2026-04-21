@@ -76,10 +76,6 @@ void UILayout::computeFitSizes(UINode& node, LayoutRect parent) {
     LayoutRect& rect = getOrMakeRect(node);
     const UIElement& element = node.element;
 
-    for (UINode& child : node.children) {
-        computeFitSizes(child, rect);
-    }
-
     UIPrimaryAxis mainAxis = rect.axis;
     UIPrimaryAxis crossAxis = (mainAxis == UIPrimaryAxis::Horizontal) ? UIPrimaryAxis::Vertical
                                                                       : UIPrimaryAxis::Horizontal;
@@ -92,6 +88,48 @@ void UILayout::computeFitSizes(UINode& node, LayoutRect parent) {
 
     int horizontalPadding = leftPadding + rightPadding;
     int verticalPadding = topPadding + bottomPadding;
+
+    int contentWidth = std::max(0, rect.pxSize.x - horizontalPadding);
+    int contentHeight = std::max(0, rect.pxSize.y - verticalPadding);
+
+    // First, resolve child cross-axis stretch before recursing.
+    // This is the key fix: a child container may need its cross-axis size
+    // in order to lay out its own children.
+    for (UINode& child : node.children) {
+        LayoutRect& childRect = getOrMakeRect(child);
+        ElementSize childCrossDecl = child.element.getSizeAlongAxis(crossAxis);
+
+        if (crossAxis == UIPrimaryAxis::Horizontal) {
+            if (childRect.pxSize.x == 0) {
+                if (std::holds_alternative<size::Grow>(childCrossDecl)) {
+                    int minWidth = computeSize(child.element.minWidth, rect.pxSize.x);
+                    childRect.pxSize.x = std::max(contentWidth, minWidth);
+                } else if (std::holds_alternative<size::Percent>(childCrossDecl)) {
+                    float percent = std::get<size::Percent>(childCrossDecl).percent;
+                    int minWidth = computeSize(child.element.minWidth, rect.pxSize.x);
+                    childRect.pxSize.x = std::max(
+                        static_cast<int>(percent * static_cast<float>(contentWidth)), minWidth);
+                }
+            }
+        } else {
+            if (childRect.pxSize.y == 0) {
+                if (std::holds_alternative<size::Grow>(childCrossDecl)) {
+                    int minHeight = computeSize(child.element.minHeight, rect.pxSize.y);
+                    childRect.pxSize.y = std::max(contentHeight, minHeight);
+                } else if (std::holds_alternative<size::Percent>(childCrossDecl)) {
+                    float percent = std::get<size::Percent>(childCrossDecl).percent;
+                    int minHeight = computeSize(child.element.minHeight, rect.pxSize.y);
+                    childRect.pxSize.y = std::max(
+                        static_cast<int>(percent * static_cast<float>(contentHeight)), minHeight);
+                }
+            }
+        }
+    }
+
+    // Now recurse, once children have enough size context to solve themselves.
+    for (UINode& child : node.children) {
+        computeFitSizes(child, rect);
+    }
 
     int childCount = static_cast<int>(node.children.size());
     int totalSpacing = childCount > 1 ? (childCount - 1) * childSpacing : 0;
@@ -108,8 +146,8 @@ void UILayout::computeFitSizes(UINode& node, LayoutRect parent) {
         int childCross =
             (crossAxis == UIPrimaryAxis::Horizontal) ? childRect.pxSize.x : childRect.pxSize.y;
 
-        ElementSize mainSizeDecl = child.element.getSizeAlongAxis(mainAxis);
-        if (std::holds_alternative<size::Grow>(mainSizeDecl)) {
+        ElementSize childMainDecl = child.element.getSizeAlongAxis(mainAxis);
+        if (std::holds_alternative<size::Grow>(childMainDecl)) {
             growChildren++;
         } else {
             summedMain += childMain;
@@ -138,19 +176,20 @@ void UILayout::computeFitSizes(UINode& node, LayoutRect parent) {
         }
     }
 
-    // After fit is resolved, compute remaining space for grow children.
-    int contentMainSize = (mainAxis == UIPrimaryAxis::Horizontal)
-                              ? std::max(0, rect.pxSize.x - horizontalPadding)
-                              : std::max(0, rect.pxSize.y - verticalPadding);
+    // Recompute content size in case fit sizing changed this node.
+    contentWidth = std::max(0, rect.pxSize.x - horizontalPadding);
+    contentHeight = std::max(0, rect.pxSize.y - verticalPadding);
 
+    // Distribute remaining space to grow children along the main axis.
+    int contentMainSize = (mainAxis == UIPrimaryAxis::Horizontal) ? contentWidth : contentHeight;
     int remainingMain = std::max(0, contentMainSize - summedMain - totalSpacing);
     int growShare = (growChildren > 0) ? (remainingMain / growChildren) : 0;
 
     for (UINode& child : node.children) {
         LayoutRect& childRect = getOrMakeRect(child);
-        ElementSize mainSizeDecl = child.element.getSizeAlongAxis(mainAxis);
+        ElementSize childMainDecl = child.element.getSizeAlongAxis(mainAxis);
 
-        if (!std::holds_alternative<size::Grow>(mainSizeDecl)) {
+        if (!std::holds_alternative<size::Grow>(childMainDecl)) {
             continue;
         }
 
@@ -269,6 +308,24 @@ Option<int> UILayout::computeElementSizeAlongAxis(const UINode& node,
     return Option<int>::none();
 }
 
+void UILayout::toString(std::stringstream& ss) const {
+    toString(ss, _root, 0);
+}
+
+void UILayout::toString(std::stringstream& ss, const UINode& node, int indent) const {
+    ss << std::string(indent, ' ') << node.id << ':';
+
+    LayoutRect rect = getRect(node);
+
+    ss << " pos=" << rect.pxPosition.x << ',' << rect.pxPosition.y;
+    ss << " size=" << rect.pxSize.x << ',' << rect.pxSize.y;
+
+    for (const UINode& child : node.children) {
+        ss << '\n';
+        toString(ss, child, indent + 2);
+    }
+}
+
 // UI
 
 void UI::render(glm::vec2 screenPosition, SystemParameter<Renderer> renderer) {
@@ -321,7 +378,12 @@ void UI::renderNode(const UINode& node, Renderer& renderer) {
         // Text mesh units are already pixels.
         // So the transform scale should only convert pixels -> NDC.
         //
-        // The text mesh is positioned from the layout rect's top-left.
+        // The origin of the text mesh
+        // is dependent upon the vertical and horizontal alignment of the text.
+        // For example, a top-left aligned text mesh has its origin at the top-left most vertex of
+        // the mesh A bottom-right aligned text mesh has its origin at the bottom-right most vertex
+        // of the mesh A center aligned text mesh has its origin at the center of the mesh
+
         glm::vec2 textOriginPx = glm::vec2(rect.pxPosition);
 
         switch (node.element.textStyle.verticalAlignment) {
@@ -390,7 +452,9 @@ void UI::createNodeRenderEnties(const UINode& node, Renderer& renderer) {
         MaterialHandle handle = UIRenderResoruces::get().getMaterial(element).value();
         TextStyle style = element.textStyle;
 
-        style.font = FontManager::instance().defaultFont();
+        if (!FontManager::instance().isLoadedFont(style.font)) {
+            style.font = FontManager::instance().defaultFont();
+        }
 
         MeshData textMeshData =
             TextMeshBuilder::build(element.text.value(), style, element.doubleSided);
