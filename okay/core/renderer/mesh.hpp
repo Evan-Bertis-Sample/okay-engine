@@ -92,10 +92,10 @@ class MeshBuffer {
     bool _dataOutofDate{true};
 
     struct BlockMeta {
-        std::size_t vOffset;
-        std::size_t vCount;
-        std::size_t iOffset;
-        std::size_t iCount;
+        std::size_t vertexOffset;
+        std::size_t vertexCount;
+        std::size_t indexOffset;
+        std::size_t indexCount;
         bool isFree = false;
     };
 

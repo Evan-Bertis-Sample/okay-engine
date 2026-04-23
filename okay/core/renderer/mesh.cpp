@@ -10,13 +10,19 @@ using namespace okay;
 
 Mesh MeshBuffer::addMesh(const MeshData& mesh) {
     Mesh m{};
+    BlockMeta bm{};
 
     // get the vertexOffset of the mesh
     m.vertexOffset = _bufferData.size() / MeshVertex::numFloats();
+    bm.vertexOffset = m.vertexOffset;
     m.vertexCount = mesh.vertices.size();
+    bm.vertexCount = m.vertexCount;
 
     m.indexOffset = _indices.size();
+    bm.indexOffset = m.indexOffset;
     m.indexCount = mesh.indices.size();
+    bm.indexCount = m.indexCount;
+
     Bounds b = Bounds::none();
 
     // push the vertices of the mesh
@@ -47,25 +53,21 @@ Mesh MeshBuffer::addMesh(const MeshData& mesh) {
 
     _dataOutofDate = true;
 
+    _blocks.push_back(bm);
+
     return m;
 }
 
 void MeshBuffer::removeMesh(const Mesh& mesh) {
     // update the indices that refer to vertices after this mesh -- their offset must be decremented
 
-    // from mesh.indexOffset + mesh.indexCount ... end
-    // decrement by mesh.vertexCount
-    for (std::size_t i = mesh.indexOffset + mesh.indexCount; i < _indices.size(); ++i) {
-        _indices[i] -= mesh.vertexCount;
-    }
+    for (auto& block : _blocks) {
+        if (block.vertexOffset == mesh.vertexOffset) {
+            block.isFree = true;
 
-    // remove the indices
-    _indices.erase(_indices.begin() + mesh.indexOffset,
-                   _indices.begin() + mesh.indexOffset + mesh.indexCount);
-    // remove the vertices
-    _bufferData.erase(_bufferData.begin() + mesh.vertexOffset * MeshVertex::numFloats(),
-                      _bufferData.begin() + mesh.vertexOffset * MeshVertex::numFloats() +
-                          mesh.vertexCount * MeshVertex::numFloats());
+            break;
+        }
+    }
 
     _dataOutofDate = true;
 }
