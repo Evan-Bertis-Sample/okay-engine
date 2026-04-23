@@ -9,7 +9,59 @@
 using namespace okay;
 
 Mesh MeshBuffer::addMesh(const MeshData& mesh) {
+    BlockMeta* blockPtr {};
+
+    for (auto& block : _blocks) {
+        if (block.isFree && block.vertexCount >= mesh.vertices.size() && block.indexCount >= mesh.indices.size()) {
+            block.isFree = false;
+            blockPtr = &block;
+            break;
+        }
+    }
+
     Mesh m{};
+
+    if (blockPtr != nullptr) {
+        m.vertexOffset = blockPtr->vertexOffset;
+        m.vertexCount = mesh.vertices.size();
+        m.indexOffset = blockPtr->indexOffset;
+        m.indexCount = mesh.indices.size();
+
+        float* ptr { getMeshPointer(m) };
+
+        for (const MeshVertex& v : mesh.vertices) {
+            *ptr = v.position.x;
+            ++ptr;
+            *ptr = v.position.y;
+            ++ptr;
+            *ptr = v.position.z;
+            ++ptr;
+            *ptr = v.normal.x;
+            ++ptr;
+            *ptr = v.normal.y;
+            ++ptr;
+            *ptr = v.normal.z;
+            ++ptr;
+            *ptr = v.color.x;
+            ++ptr;
+            *ptr = v.color.y;
+            ++ptr;
+            *ptr = v.color.z;
+            ++ptr;
+            *ptr = v.uv.x;
+            ++ptr;
+            *ptr = v.uv.y;
+        }
+
+        for (std::size_t i {}; i < m.indexCount; ++i) {
+            _indices[blockPtr->indexOffset + i] = mesh.indices[i] + m.vertexOffset;
+        }
+
+        _dataOutofDate = true;
+
+        return m;
+    }
+
     BlockMeta bm{};
 
     // get the vertexOffset of the mesh
@@ -59,12 +111,10 @@ Mesh MeshBuffer::addMesh(const MeshData& mesh) {
 }
 
 void MeshBuffer::removeMesh(const Mesh& mesh) {
-    // update the indices that refer to vertices after this mesh -- their offset must be decremented
-
+    // look for block to free
     for (auto& block : _blocks) {
         if (block.vertexOffset == mesh.vertexOffset) {
             block.isFree = true;
-
             break;
         }
     }
