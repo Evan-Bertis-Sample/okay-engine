@@ -71,7 +71,15 @@ void MeshBuffer::removeMesh(const Mesh& mesh) {
 }
 
 float* MeshBuffer::getMeshPointer(const Mesh& mesh) {
-    
+    std::size_t floatIndex { mesh.vertexOffset * MeshVertex::numFloats() };
+
+    if (floatIndex >= _bufferData.size()) {
+        Engine.logger.error("getMeshPointer out of bounds");
+
+        return nullptr;
+    }
+
+    return &_bufferData[floatIndex];
 }
 
 Failable MeshBuffer::initVertexAttributes() {
