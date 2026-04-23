@@ -70,6 +70,10 @@ void MeshBuffer::removeMesh(const Mesh& mesh) {
     _dataOutofDate = true;
 }
 
+float* MeshBuffer::getMeshPointer(const Mesh& mesh) {
+    
+}
+
 Failable MeshBuffer::initVertexAttributes() {
     if (_hasInitVertexAttributes)
         return Failable::ok({});

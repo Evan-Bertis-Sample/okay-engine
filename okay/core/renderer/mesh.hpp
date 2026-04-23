@@ -91,12 +91,23 @@ class MeshBuffer {
     bool _hasInitVertexAttributes{false};
     bool _dataOutofDate{true};
 
+    struct BlockMeta {
+        std::size_t vOffset;
+        std::size_t vCount;
+        std::size_t iOffset;
+        std::size_t iCount;
+        bool isFree = false;
+    };
+
+    std::vector<BlockMeta> _blocks;
+
    public:
     Failable initVertexAttributes();
 
     std::size_t size() const { return _indices.size(); }
     Mesh addMesh(const MeshData& model);
     void removeMesh(const Mesh& mesh);
+    float* getMeshPointer(const Mesh& mesh);
     Failable bindMeshData();
     void drawMesh(const Mesh& mesh);
 
