@@ -214,7 +214,7 @@ class OkayBuildOptions:
     
     @property
     def cmake_build_cmd(self) -> str:
-        cmd = ["cmake", "--build", str(self.build_dir), "--target", self.project_name]
+        cmd = ["cmake", "--build", str(self.build_dir), "--target", self.project_name, "--parallel", str(os.cpu_count())]
         return subprocess.list2cmdline(cmd)
 
     @property

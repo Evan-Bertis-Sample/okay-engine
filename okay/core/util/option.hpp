@@ -45,6 +45,9 @@ class Option {
     Option& operator=(const Option&) = default;
     Option& operator=(Option&&) noexcept = default;
 
+    Option(T&& value) : _value(std::forward<T>(value)) {}
+    Option(const T& value) : _value(value) {}
+
     Option& operator=(T&& value) {
         _value = std::forward<T>(value);
         return *this;
@@ -114,8 +117,6 @@ class Option {
 
    private:
     std::optional<T> _value;
-
-    explicit Option(T value) : _value(std::move(value)) {}
 };
 
 }  // namespace okay

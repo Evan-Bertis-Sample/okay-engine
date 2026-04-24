@@ -1,6 +1,7 @@
 #ifndef __SCENE_PASS_H__
 #define __SCENE_PASS_H__
 
+#include "glm/ext/matrix_transform.hpp"
 #include "okay/core/renderer/render_world.hpp"
 
 #include <okay/core/engine/engine.hpp>
@@ -28,7 +29,6 @@ class ScenePass : public IRenderPass {
     virtual void render(const RendererContext& context) override {
         GL_CHECK(glClearColor(0.113f, 0.008, 0.208, 1.0f));
         GL_CHECK(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
-
         GL_CHECK(glEnable(GL_DEPTH_TEST));
         GL_CHECK(glCullFace(GL_BACK));
         GL_CHECK(glEnable(GL_CULL_FACE));
@@ -40,6 +40,8 @@ class ScenePass : public IRenderPass {
 
         _shaderIndex = Shader::invalidID();
         _materialIndex = Material::invalidID();
+
+        _ndcProjectionPmatrix = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, 0.0f, 1.0f);
 
         float aspect = float(context.renderer.width()) / float(context.renderer.height());
         auto view = context.world.camera().viewMatrix();
@@ -55,7 +57,10 @@ class ScenePass : public IRenderPass {
                 continue;
 
             Camera& camera = context.world.camera();
-            if (!camera.isInFrustum(item.mesh.bounds.transform(item.worldMatrix), aspect)) {
+            bool isScreenSpace =
+                item.material->properties()->flags().hasFlag(MaterialFlags::SCREEN_SPACE);
+            if (!isScreenSpace &&
+                !camera.isInFrustum(item.mesh.bounds.transform(item.worldMatrix), aspect)) {
                 continue;
             }
 
@@ -72,6 +77,8 @@ class ScenePass : public IRenderPass {
             Failable f = item.material->passUniforms();
             if (f.isError())
                 Engine.logger.error("Failed to pass uniforms : {}", f.error());
+
+            // Engine.logger.info("Drawing item with transform {}", item.transform);
 
             context.renderer.meshBuffer().drawMesh(item.mesh);
         }
@@ -94,10 +101,16 @@ class ScenePass : public IRenderPass {
         }
 
         auto& uniforms = item.material->properties();
+        MaterialFlagCollection flags = uniforms->flags();
 
         if (auto* unlit = dynamic_cast<okay::SceneMaterialProperties*>(uniforms.get())) {
-            unlit->projectionMatrix.set(projection);
-            unlit->viewMatrix.set(view);
+            if (flags.hasFlag(MaterialFlags::SCREEN_SPACE)) {
+                unlit->projectionMatrix.set(_ndcProjectionPmatrix);
+                unlit->viewMatrix.set(glm::identity<glm::mat4>());
+            } else {
+                unlit->projectionMatrix.set(projection);
+                unlit->viewMatrix.set(view);
+            }
             unlit->cameraPosition.set(camPos);
             unlit->cameraDirection.set(camDir);
         }
@@ -138,11 +151,19 @@ class ScenePass : public IRenderPass {
             GL_CHECK(glDisable(GL_BLEND));
             GL_CHECK(glDepthMask(GL_TRUE));
         }
+
+        if (flags.hasFlag(MaterialFlags::SCREEN_SPACE)) {
+            glDisable(GL_DEPTH_TEST);
+        } else {
+            glEnable(GL_DEPTH_TEST);
+        }
     }
 
    private:
     std::uint32_t _shaderIndex{Shader::invalidID()};
     std::uint32_t _materialIndex{Material::invalidID()};
+
+    glm::mat4 _ndcProjectionPmatrix{};
 };
 
 };  // namespace okay

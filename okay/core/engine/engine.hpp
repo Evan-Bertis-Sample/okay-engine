@@ -213,7 +213,11 @@ struct SystemParameter {
         return system;
     }
 
-    T& operator*() const { return get(); }
+    T& operator*() const {
+        T& system = *get();
+        return system;
+    }
+
     T* operator->() const { return get(); }
 };
 

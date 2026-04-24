@@ -256,6 +256,10 @@ class Texture {
         return Failable::ok({});
     }
 
+    bool operator==(const Texture& other) const { return handle == other.handle; }
+    bool operator!=(const Texture& other) const { return !(*this == other); }
+    bool operator<(const Texture& other) const { return handle < other.handle; }
+
    private:
     GLuint _glTextureID{0};
 };

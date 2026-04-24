@@ -59,7 +59,7 @@ class Shader {
             Engine.logger.warn("Failed to find uniform location for '{}'", uniform);
             location = uni::inactiveLocation();
         } else {
-            Engine.logger.debug("Found uniform location for '{}': {}", uniform, location);
+            // Engine.logger.debug("Found uniform location for '{}': {}", uniform, location);
         }
 
         // add to map

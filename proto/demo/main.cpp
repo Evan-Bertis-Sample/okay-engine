@@ -1,7 +1,3 @@
-#include "okay/core/ecs/ecs_util.hpp"
-#include "okay/core/renderer/material.hpp"
-#include "okay/core/renderer/uniform.hpp"
-
 #include <okay/okay.hpp>
 
 #include <glm/glm.hpp>
@@ -51,12 +47,24 @@ static void __gameInitialize() {
     okay::Mesh cube = okay::mesh(okay::primitives::box().build());
     okay::ShaderHandle shader = okay::shaderHandle(okay::load::engineShader("shaders/lit"));
 
-    auto props = std::make_unique<okay::LitMaterial>();
-    props->color.set(glm::vec3(0.824, 0.118, 0.118)); 
-    props->albedo = texture;
-    props->roughness.set(0.75f);
-    props->clearcoat.set(0.75f);
-    okay::MaterialHandle material = okay::materialHandle(shader, std::move(props));
+    auto materialProperties = std::make_unique<okay::LitMaterial>();
+    materialProperties->color.set(glm::vec4(1.0f, 1.0f, 0.0f, 1.0f));
+    materialProperties->albedo = texture;
+    okay::MaterialHandle material = okay::materialHandle(shader, std::move(materialProperties));
+
+    okay::FontManager::FontHandle font = okay::load::engineFont("fonts/ARIAL.TTF");
+    okay::TextStyle style{.font = font,
+                          .targetFontHeight = 1.0f,
+                          .horizontalAlignment = okay::TextStyle::HorizontalAlignment::Center,
+                          .verticalAlignment = okay::TextStyle::VerticalAlignment::Top};
+
+    okay::Mesh textMesh = okay::mesh(okay::textMesh("Hello, world!", style, true));
+
+    auto textProperties = std::make_unique<okay::LitMaterial>();
+    textProperties->albedo = okay::FontManager::instance().getGlyphAtlas(font);
+    textProperties->isTransparent = true;
+    textProperties->color = glm::vec3(1.0);
+    okay::MaterialHandle textMaterial = okay::materialHandle(shader, std::move(textProperties));
 
     okay::ecs::registerBuiltins();
 
@@ -73,21 +81,31 @@ static void __gameInitialize() {
                    .addComponent<okay::CameraComponent>(
                        okay::CameraComponent{okay::Camera::PerspectiveLens{45.0f, 0.1f, 100.0f}});
 
-    glm::vec3 pos1 = glm::vec3(0.0f, 0.0f, 0.0f);
     okay::ecs::entity()
-        .addComponent<okay::TransformComponent>(
-            pos1,
-            glm::vec3{2.0f},
-            glm::angleAxis(glm::radians(120.0f), glm::vec3{0.0f, 1.0f, 0.0f}))
-        .addComponent<okay::MeshRendererComponent>(object, material);
+        .addComponent<okay::TransformComponent>(glm::vec3{0.0f, 2.0f, 0.0f})
+        .addComponent<okay::MeshRendererComponent>(textMesh, textMaterial);
 
+    for (std::size_t i = 0; i < 1000; ++i) {
+        glm::vec3 pos = glm::ballRand(50.0f);
+        okay::ECSEntity entity = okay::ecs::entity()
+                                     .addComponent<okay::TransformComponent>(pos, glm::vec3{0.5f})
+                                     .addComponent<okay::MeshRendererComponent>(cube, material)
+                                     .addComponent<BobComponent>();
+
+        for (std::size_t i = 0; i < 5; ++i) {
+            pos = glm::ballRand(100.0f);
+            okay::ecs::entity(entity)
+                .addComponent<okay::TransformComponent>(pos, glm::vec3{0.5f})
+                .addComponent<okay::MeshRendererComponent>(cube, material);
+        }
+    }
 }
 
 static void __gameUpdate() {
     // move the camera in a circle, always looking at the origin
     float theta = okay::Engine.time->timeSinceStartSec() * 0.05f * glm::pi<float>();
-    // float theta = 0.0f;
-    glm::vec3 pos = glm::vec3(sin(theta) * 5.0f, 0.0f, cos(theta) * 5.0f);
+    const float distance = 10.0f;
+    glm::vec3 pos = glm::vec3(sin(theta) * distance, 1.0f, cos(theta) * distance);
     // rotation much look at origin
     auto& cameraTransform = s_camera.getComponent<okay::TransformComponent>().value();
     cameraTransform->position = pos;

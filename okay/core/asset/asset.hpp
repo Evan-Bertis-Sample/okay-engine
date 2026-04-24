@@ -62,7 +62,7 @@ class FilesystemAssetIO final : public AssetIO {
     }
 };
 
-template <typename T, typename LoadOptions = void>
+template <typename T, typename LoadOptions = std::tuple<>>
 struct AssetLoader {
     static Result<T> loadAsset(const std::filesystem::path& path,
                                const AssetIO& assetIO,
