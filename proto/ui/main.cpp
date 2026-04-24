@@ -68,29 +68,36 @@ static void __gameInitialize() {
                    .addComponent<okay::TransformComponent>(glm::vec3{0.0f, 0.0f, 5.0f})
                    .addComponent<okay::CameraComponent>(
                        okay::CameraComponent{okay::Camera::PerspectiveLens{45.0f, 0.1f, 100.0f}});
-
+  
     // clang-format off
     okay::ecs::entity()
         .addComponent<okay::TransformComponent>(glm::vec3{0.0f, 0.0f, 0.0f})
         .addComponent<okay::UIComponent>(
             okay::ui::flexbox()(
                 okay::ui::flexbox()
-                    .backgroundColorSet(glm::vec3{1.0f, 1.0f, 1.0f})
+                    .backgroundColorSet(glm::vec4{1.0f, 1.0f, 1.0f, 1.0f})
                     .backgroundImageSet(okay::load::engineTexture("textures/uv_test.jpg"))
                     (
                         okay::ui::text("Hello world!")
                             .textColorSet(glm::vec3(0.0f, 0.0f, 0.0f))
-                            .widthGrow(),
+                            .widthGrow()
+                            .heightGrow()
+                            .backgroundColorSet(glm::vec4(1.0f, 0.0f, 1.0f, 1.0f))
+                        ,
                         okay::ui::slot(okay::UIPrimaryAxis::Horizontal)
                             .widthGrow()
+                            .heightGrow()
                         (
                             okay::ui::text("Left")
-                                .textColorSet(glm::vec3(1.0f, 0.0f, 0.0f))
-                                .widthGrow(),
+                                .textColorSet(glm::vec3(1.0f, 0.0f, 1.0f))
+                                .alignTextHorizontal(okay::TextStyle::HorizontalAlignment::Right)
+                                .widthGrow()
+                            ,
                             okay::ui::text("Right")
                                 .textColorSet(glm::vec3(0.0f, 0.0f, 0.0f))
                                 .alignTextVertical(okay::TextStyle::VerticalAlignment::Middle)
                                 .widthGrow()
+                                .heightGrow()
                         )
                     )
             )

@@ -61,11 +61,11 @@ class UIRenderResoruces {
             if (_textureMaterialCache.contains(*key)) {
                 return Option<MaterialHandle>::some(_textureMaterialCache.at(*key));
             }
-
             // create a material
             auto materialProperties = std::make_unique<UnlitMaterial>();
-            materialProperties->color = element.backgroundColor;
-            materialProperties->albedo = element.backgroundImage.value();
+            materialProperties->color = glm::vec3(
+                element.backgroundColor.r, element.backgroundColor.g, element.backgroundColor.b);
+            materialProperties->albedo = getElementTexture(element);
             materialProperties->isTransparent = true;
             materialProperties->useScreenspaceCoords = true;
             materialProperties->castsShadows = false;
@@ -109,7 +109,7 @@ class UIRenderResoruces {
 
     struct TextureMaterialKey {
         Texture texture;
-        glm::vec3 color;
+        glm::vec4 color;
 
         bool operator==(const TextureMaterialKey& other) const {
             return texture == other.texture && color == other.color;
@@ -170,14 +170,23 @@ class UIRenderResoruces {
     }
 
     Option<TextureMaterialKey> getTextureMaterialKey(const UIElement& element) const {
-        if (!element.backgroundImage.isSome()) {
+        if (element.backgroundColor.a < 0.0001f) {
             return Option<TextureMaterialKey>::none();
         }
+
         TextureMaterialKey key = {
-            .texture = element.backgroundImage.value(),
+            .texture = getElementTexture(element),
             .color = element.backgroundColor,
         };
         return Option<TextureMaterialKey>::some(key);
+    }
+
+    Texture getElementTexture(const UIElement& element) const {
+        if (element.backgroundImage.isSome()) {
+            return element.backgroundImage.value();
+        }
+
+        return _whiteTexture;
     }
 };
 

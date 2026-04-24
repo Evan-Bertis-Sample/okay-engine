@@ -17,4 +17,5 @@ void main()
    vec4 texture = texture(u_albedo, v_uv).rgba;
    vec3 baseColor = v_color * texture.rgb;
    FragColor = vec4(baseColor, texture.a);
+   // FragColor = vec4(v_uv.x, v_uv.y, 0.0, 1.0);
 }

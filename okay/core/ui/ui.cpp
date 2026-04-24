@@ -424,19 +424,15 @@ void UI::renderNode(const UINode& node, Renderer& renderer) {
 
 void UI::createNodeRenderEnties(const UINode& node, Renderer& renderer) {
     float z = 0.0f;
-    const float zIncrement = 0.001f;  // small increment to ensure correct layering
+    const float zIncrement = 0.001f;
 
     NodeRenderInfo& renderInfo = getNodeRenderInfo(node);
     const UIElement& element = node.element;
 
-    if (element.backgroundImage.isSome()) {
+    if (element.backgroundImage.isSome() || element.backgroundColor.a > 0.0f) {
         Engine.logger.debug("Creating render entity for UI element with background image");
-        // render background image
-        Texture bgTexture = element.backgroundImage.value();
         MaterialHandle handle = UIRenderResoruces::get().getMaterial(element).value();
         Mesh bgMesh = UIRenderResoruces::get().quadMesh();
-
-        // Create the render entity
         RenderEntity entity =
             renderer.world().addRenderEntity(glm::vec3(1.0f, 1.0f, z), handle, bgMesh);
 

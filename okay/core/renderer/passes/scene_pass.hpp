@@ -40,6 +40,8 @@ class ScenePass : public IRenderPass {
         _shaderIndex = Shader::invalidID();
         _materialIndex = Material::invalidID();
 
+        _ndcProjectionPmatrix = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, 0.0f, 1.0f);
+
         float aspect = float(context.renderer.width()) / float(context.renderer.height());
         auto view = context.world.camera().viewMatrix();
         auto projection = context.world.camera().projectionMatrix(aspect);
@@ -102,7 +104,7 @@ class ScenePass : public IRenderPass {
 
         if (auto* unlit = dynamic_cast<okay::SceneMaterialProperties*>(uniforms.get())) {
             if (flags.hasFlag(MaterialFlags::SCREEN_SPACE)) {
-                unlit->projectionMatrix.set(glm::identity<glm::mat4>());
+                unlit->projectionMatrix.set(_ndcProjectionPmatrix);
                 unlit->viewMatrix.set(glm::identity<glm::mat4>());
             } else {
                 unlit->projectionMatrix.set(projection);
@@ -159,6 +161,8 @@ class ScenePass : public IRenderPass {
    private:
     std::uint32_t _shaderIndex{Shader::invalidID()};
     std::uint32_t _materialIndex{Material::invalidID()};
+
+    glm::mat4 _ndcProjectionPmatrix{};
 };
 
 };  // namespace okay

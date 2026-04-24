@@ -70,7 +70,7 @@ struct UIElement {
 
     // background
     OKAY_UI_ELEMENT_PROPERTY(Option<Texture>, backgroundImage);
-    OKAY_UI_ELEMENT_PROPERTY(glm::vec3, backgroundColor, 0.0f, 0.0f, 0.0f);
+    OKAY_UI_ELEMENT_PROPERTY(glm::vec4, backgroundColor, 0.0f, 0.0f, 0.0f, 0.0f);
 
     OKAY_UI_ELEMENT_PROPERTY(bool, doubleSided, false);
 
@@ -135,7 +135,8 @@ inline UIElement text(std::string_view text, const TextStyle& style = TextStyle{
 }
 
 inline UIElement image(const Texture& texture) {
-    return UIElement{.backgroundImage = texture, .backgroundColor = glm::vec3(1.0f, 1.0f, 1.0f)};
+    return UIElement{.backgroundImage = texture,
+                     .backgroundColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f)};
 }
 
 inline UIElement slot(UIPrimaryAxis axis = UIPrimaryAxis::Parent) {
