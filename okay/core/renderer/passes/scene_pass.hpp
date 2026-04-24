@@ -30,11 +30,12 @@ class ScenePass : public IRenderPass {
         GL_CHECK(glClearColor(0.113f, 0.008, 0.208, 1.0f));
         GL_CHECK(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
         GL_CHECK(glEnable(GL_DEPTH_TEST));
-        GL_CHECK(glEnable(GL_MULTISAMPLE));
         GL_CHECK(glCullFace(GL_BACK));
         GL_CHECK(glEnable(GL_CULL_FACE));
         GL_CHECK(glDisable(GL_BLEND));
         GL_CHECK(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+        // doesn't need MSAA, but should if the platform can support it
+        glEnable(GL_MULTISAMPLE);
         // glFrontFace(GL_CW);
 
         _shaderIndex = Shader::invalidID();

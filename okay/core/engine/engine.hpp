@@ -6,6 +6,7 @@
 #include <okay/core/engine/time.hpp>
 
 #include <functional>
+#include <source_location>
 #include <utility>
 
 namespace okay {
@@ -20,14 +21,21 @@ class OkayEngine {
     OkayEngine() {}
     ~OkayEngine() {}
 
-    void shutdown() { _shouldRun = false; }
+    void shutdown(std::source_location loc = std::source_location::current()) {
+        _shouldRun = false;
+        _shutdownLoc = loc;
+    }
+
     bool shouldRun() { return _shouldRun; }
 
     std::size_t frameCount() const { return _frameCount; }
 
+    std::source_location shutdownLoc() const { return _shutdownLoc; }
+
    private:
     bool _shouldRun{true};
     std::size_t _frameCount{0};
+    std::source_location _shutdownLoc;
 
     friend class Game;
 };
@@ -177,6 +185,9 @@ class Game {
         for (ISystem* system : Engine.systems.getPool(SystemScope::LEVEL)) {
             system->shutdown();
         }
+
+        std::cout << "Shutdown location: " << Engine.shutdownLoc().file_name() << ":"
+                  << Engine.shutdownLoc().line() << std::endl;
 
         _onShutdown();
     }

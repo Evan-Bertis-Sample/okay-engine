@@ -1,10 +1,8 @@
-#include "okay/core/ecs/components/render_component.hpp"
-#include "okay/core/ecs/components/transform_component.hpp"
-
 #include <okay/okay.hpp>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/random.hpp>
+#include <imgui.h>
 #include <utility>
 
 static void __gameInitialize();
@@ -15,46 +13,6 @@ static okay::ECSEntity s_teapot;
 static okay::ECSEntity s_light;
 static okay::ECSEntity s_camera;
 
-struct BobComponent {
-   public:
-    std::shared_ptr<okay::Tween<glm::vec3>> positionTween;
-};
-
-class BobSystem : public okay::ECSSystem<okay::query::Get<okay::TransformComponent, BobComponent>> {
-   public:
-    void onEntityAdded(QueryT::Item& item) override {
-        auto& [transform, bob] = item.components;
-
-        glm::vec3 offset = glm::ballRand(10.0f);
-
-        okay::TweenConfig<glm::vec3> config = {
-            .start = transform->position,
-            .end = transform->position + offset,
-            .durationMs = 1000,
-            .easingFn = okay::easing::cubicInOut,
-            .numLoops = -1,
-            .inOutBack = true,
-            .prefixMs = glm::linearRand(0, 1000),
-        };
-
-        bob.positionTween = okay::Tween<glm::vec3>::create(config);
-        bob.positionTween->start();
-    }
-
-    void onTick(QueryT::Item& item) override {
-        auto& [transform, bob] = item.components;
-        transform->position = bob.positionTween->value();
-    }
-
-    void onEntityRemoved(QueryT::Item& item) override {
-        auto& [transform, bob] = item.components;
-        if (bob.positionTween) {
-            bob.positionTween->kill();
-            bob.positionTween = nullptr;
-        }
-    }
-};
-
 int main() {
     okay::SurfaceConfig surfaceConfig;
     surfaceConfig.width = 800;
@@ -63,7 +21,8 @@ int main() {
 
     okay::RendererSettings rendererSettings{
         .surfaceConfig = surfaceConfig,
-        .pipeline = okay::RenderPipeline::create(std::make_unique<okay::ScenePass>())};
+        .pipeline = okay::RenderPipeline::create(std::make_unique<okay::ScenePass>()),
+        .enableIMGUI = true};
 
     auto renderer = okay::Renderer::create(std::move(rendererSettings));
 
@@ -82,8 +41,8 @@ int main() {
 
 static void __gameInitialize() {
     // Additional game initialization logic
-    okay::Texture texture = okay::load::engineTexture("textures/uv_test.jpg");
-    okay::Mesh teapot = okay::mesh(okay::load::engineMeshData("models/teapot.obj"));
+    okay::Texture texture = okay::load::engineTexture("textures/red.jpg");
+    okay::Mesh object = okay::mesh(okay::load::engineMeshData("models/dragon.obj"));
 
     okay::Mesh cube = okay::mesh(okay::primitives::box().build());
     okay::ShaderHandle shader = okay::shaderHandle(okay::load::engineShader("shaders/lit"));
@@ -108,21 +67,14 @@ static void __gameInitialize() {
     okay::MaterialHandle textMaterial = okay::materialHandle(shader, std::move(textProperties));
 
     okay::ecs::registerBuiltins();
-    okay::ecs::registerComponent<BobComponent>();
-    okay::ecs::registerSystem(std::make_unique<BobSystem>());
-
-    s_teapot =
-        okay::ecs::entity()
-            .addComponent<okay::TransformComponent>(glm::vec3{0.0f, 0.0f, 0.0f}, glm::vec3{0.1f})
-            .addComponent<okay::MeshRendererComponent>(teapot, material);
 
     s_light = okay::ecs::entity()
                   .addComponent<okay::TransformComponent>(
                       glm::vec3{},
                       glm::vec3{0.1f},
-                      glm::angleAxis(glm::radians(45.0f), glm::vec3{0.0f, 1.0f, 0.0f}))
+                      glm::angleAxis(glm::radians(0.0f), glm::vec3{2.0f, 3.0f, 1.0f}))
                   .addComponent<okay::LightComponent>(
-                      okay::LightComponent::directional(glm::vec3{0.9, 0.9, 0.85}));
+                      okay::LightComponent::directional(glm::vec3{1, 1, 1}, 2.5f));
 
     s_camera = okay::ecs::entity()
                    .addComponent<okay::TransformComponent>(glm::vec3{0.0f, 0.0f, 5.0f})
@@ -161,12 +113,6 @@ static void __gameUpdate() {
 
     okay::ECSEntity toDelete;
 
-    for (auto entity :
-         okay::ecs::query<okay::query::Get<okay::TransformComponent, BobComponent>>()) {
-        toDelete = entity.entity;
-        break;
-    }
-
     if (toDelete.isValid()) {
         okay::Engine.logger.info("FPS: {} | Destroying entity {}, now {} entities",
                                  okay::Engine.time->fps(),
@@ -174,6 +120,7 @@ static void __gameUpdate() {
                                  okay::ecs::entityCount());
         toDelete.destroy();
     }
+    ImGui::ShowDemoWindow();
 }
 
 static void __gameShutdown() {

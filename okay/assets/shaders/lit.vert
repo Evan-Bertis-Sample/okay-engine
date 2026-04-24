@@ -21,6 +21,7 @@ out vec3 v_color;
 out vec3 v_worldPos;
 out vec3 v_worldNormal;
 out vec2 v_uv;
+out mat3 v_worldToTangent;
 
 void main() {
     vec4 worldPos4 = u_modelMatrix * vec4(a_pos, 1.0f);
@@ -32,5 +33,12 @@ void main() {
     v_uv = a_uv;
     v_color = u_color * a_color.rgb;
 
+    vec3 ref = vec3(0.0f, 1.0f, 0.0f);
+    if (abs(dot(v_worldNormal, ref)) > 0.999) ref = vec3(1.0f, 0.0f, 0.0f);
+    vec3 v_tangent = normalize(ref - dot(ref, v_worldNormal) * v_worldNormal);
+    vec3 v_bitangent = normalize(cross(v_worldNormal, v_tangent));
+
+    mat3 TBN = mat3(v_tangent, v_worldNormal, v_bitangent);
+    v_worldToTangent = transpose(TBN);
     gl_Position = u_projectionMatrix * u_viewMatrix * worldPos4;
 }

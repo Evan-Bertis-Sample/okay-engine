@@ -1,6 +1,7 @@
 #ifndef __RENDERER_H__
 #define __RENDERER_H__
 
+#include "imgui_impl.hpp"
 #include "render_pipeline.hpp"
 #include "render_target.hpp"
 
@@ -15,7 +16,6 @@
 #include <okay/core/renderer/surface.hpp>
 #include <okay/core/util/singleton.hpp>
 
-#include <GLFW/glfw3.h>
 #include <cstdint>
 
 namespace okay {
@@ -56,7 +56,7 @@ class Renderer : public System<SystemScope::ENGINE> {
     uint32_t width() const { return _surfaceConfig.width; }
     uint32_t height() const { return _surfaceConfig.height; }
 
-    GLFWwindow* getSurfaceWindow() { return reinterpret_cast<GLFWwindow*>(_surface->getWindow()); }
+    void* getSurfaceWindow() { return _surface->getWindow(); }
 
    private:
     SurfaceConfig _surfaceConfig;
@@ -66,6 +66,7 @@ class Renderer : public System<SystemScope::ENGINE> {
     RenderTargetPool _renderTargetPool;
     MaterialRegistry _materialRegistry;
     std::unique_ptr<Surface> _surface;
+    std::unique_ptr<IMGUIImpl> _imguiImpl;
     bool _imguiEnabled{false};
     bool _imguiInitialized{false};
 };

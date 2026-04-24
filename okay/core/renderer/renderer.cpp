@@ -5,8 +5,6 @@
 #include "render_pipeline.hpp"
 
 #include <imgui.h>
-#include <imgui_impl_glfw.h>
-#include <imgui_impl_opengl3.h>
 
 using namespace okay;
 
@@ -37,7 +35,7 @@ void Renderer::initialize() {
 
     Engine.logger.debug("Renderer initialized");
 
-    if (_imguiEnabled) {
+    if (_imguiImpl->imguiSupported() && _imguiEnabled) {
         Engine.logger.info("Initializing ImGui");
         // Setup Dear ImGui context
         IMGUI_CHECKVERSION();
@@ -52,9 +50,7 @@ void Renderer::initialize() {
             Engine.logger.warn("No GLFW window available");
             return;
         }
-        ImGui_ImplGlfw_InitForOpenGL(win, true);  // Second param install_callback=true will install
-                                                  // GLFW callbacks and chain to existing ones.
-        ImGui_ImplOpenGL3_Init();
+        _imguiImpl->init(win, true);
         _imguiInitialized = true;
     }
 }
@@ -63,9 +59,8 @@ void Renderer::postInitialize() {
 }
 
 void Renderer::preTick() {
-    if (_imguiEnabled && _imguiInitialized) {
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
+    if (_imguiImpl->imguiSupported() && _imguiEnabled && _imguiInitialized) {
+        _imguiImpl->newFrame();
         ImGui::NewFrame();
     }
 }
@@ -78,18 +73,17 @@ void Renderer::tick() {
 }
 
 void Renderer::postTick() {
-    if (_imguiEnabled && _imguiInitialized) {
+    if (_imguiImpl->imguiSupported() && _imguiEnabled && _imguiInitialized) {
         ImGui::Render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        _imguiImpl->renderDrawData(ImGui::GetDrawData());
     }
 
     _surface->swapBuffers();
 }
 
 void Renderer::shutdown() {
-    if (_imguiInitialized) {
-        ImGui_ImplOpenGL3_Shutdown();
-        ImGui_ImplGlfw_Shutdown();
+    if (_imguiImpl->imguiSupported() && _imguiInitialized) {
+        _imguiImpl->shutdown();
         ImGui::DestroyContext();
     }
     _surface->destroy();
