@@ -68,7 +68,7 @@ static void __gameInitialize() {
                    .addComponent<okay::TransformComponent>(glm::vec3{0.0f, 0.0f, 5.0f})
                    .addComponent<okay::CameraComponent>(
                        okay::CameraComponent{okay::Camera::PerspectiveLens{45.0f, 0.1f, 100.0f}});
-  
+
     // clang-format off
     okay::ecs::entity()
         .addComponent<okay::TransformComponent>(glm::vec3{0.0f, 0.0f, 0.0f})
@@ -76,7 +76,7 @@ static void __gameInitialize() {
             okay::ui::flexbox()(
                 okay::ui::flexbox()
                     .backgroundColorSet(glm::vec4{1.0f, 1.0f, 1.0f, 1.0f})
-                    .backgroundImageSet(okay::load::engineTexture("textures/uv_test.jpg"))
+                    .backgroundImageSet(okay::load::engineTexture("textures/white.jpg"))
                     (
                         okay::ui::text("Hello world!")
                             .textColorSet(glm::vec3(0.0f, 0.0f, 0.0f))

@@ -167,6 +167,7 @@ struct RenderItem {
     MaterialHandle material;
     Mesh mesh;
     Transform transform;
+    std::uint8_t renderLayer;
     std::uint64_t sortKey;
     glm::mat4 worldMatrix{1.0f};
 
@@ -177,6 +178,8 @@ struct RenderItem {
 
     RenderItem() = default;
     RenderItem(MaterialHandle mat, Mesh m);
+
+    void computeSortKey();
 
     // operator overloads for std::map
     bool operator<(const RenderItem& other) const { return sortKey < other.sortKey; }
@@ -196,6 +199,7 @@ struct RenderEntity {
         MaterialHandle material{};
         Transform transform{};
         Mesh mesh{};
+        std::uint8_t renderLayer{0};
 
         ~Properties();
         Properties* operator->() { return this; }

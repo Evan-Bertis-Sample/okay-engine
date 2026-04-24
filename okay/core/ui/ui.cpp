@@ -319,6 +319,14 @@ void UILayout::toString(std::stringstream& ss, const UINode& node, int indent) c
 
     ss << " pos=" << rect.pxPosition.x << ',' << rect.pxPosition.y;
     ss << " size=" << rect.pxSize.x << ',' << rect.pxSize.y;
+    if (node.element.text.isSome()) {
+        ss << " text='" << node.element.text.value() << "'";
+    }
+
+    if (node.element.backgroundColor.a > 0.0f) {
+        ss << " bg=" << node.element.backgroundColor.r << ',' << node.element.backgroundColor.g
+           << ',' << node.element.backgroundColor.b << ',' << node.element.backgroundColor.a;
+    }
 
     for (const UINode& child : node.children) {
         ss << '\n';
@@ -328,15 +336,24 @@ void UILayout::toString(std::stringstream& ss, const UINode& node, int indent) c
 
 // UI
 
+static bool hasPrintedLayout = false;
+
 void UI::render(glm::vec2 screenPosition, SystemParameter<Renderer> renderer) {
     UILayout::Context layoutContext{
         .screenSize = glm::ivec2(renderer->width(), renderer->height()),
     };
     _layout.layout(layoutContext);
     renderNode(_root, *renderer);
+
+    if (!hasPrintedLayout) {
+        std::stringstream ss;
+        _layout.toString(ss);
+        Engine.logger.debug("{}", ss.str());
+        hasPrintedLayout = true;
+    }
 }
 
-void UI::renderNode(const UINode& node, Renderer& renderer) {
+void UI::renderNode(const UINode& node, Renderer& renderer, int layerBase) {
     NodeRenderInfo& renderInfo = getNodeRenderInfo(node);
     if (!renderInfo.entityCreated) {
         Engine.logger.debug("Creating render entities for UI node {}", node.id);
@@ -368,10 +385,9 @@ void UI::renderNode(const UINode& node, Renderer& renderer) {
         const glm::vec2 rectSizeNdc = glm::vec2(rect.pxSize) * pxToNdcScale;
 
         RenderEntity::Properties props = renderInfo.textureEntity.prop();
-        props.transform.position = glm::vec3(rectCenterNdc, props.transform.position.z);
+        props.transform.position = glm::vec3(rectCenterNdc, 0.0f);
         props.transform.scale = glm::vec3(rectSizeNdc, 1.0f);
-
-        // Engine.logger.debug("Rendering texture with transform {}", props.transform);
+        props.renderLayer = layerBase + 0;
     }
 
     if (renderInfo.textEntity.isValid()) {
@@ -411,21 +427,17 @@ void UI::renderNode(const UINode& node, Renderer& renderer) {
         const glm::vec2 textOriginNdc = pixelToNdc(textOriginPx);
 
         RenderEntity::Properties props = renderInfo.textEntity.prop();
-        props.transform.position = glm::vec3(textOriginNdc, props.transform.position.z);
+        props.transform.position = glm::vec3(textOriginNdc, 0.0f);
         props.transform.scale = glm::vec3(pxToNdcScale.x, pxToNdcScale.y, 1.0f);
-
-        // Engine.logger.debug("Rendering text with transform {}", props.transform);
+        props.renderLayer = layerBase + 1;
     }
 
     for (const UINode& child : node.children) {
-        renderNode(child, renderer);
+        renderNode(child, renderer, layerBase + 2);
     }
 }
 
 void UI::createNodeRenderEnties(const UINode& node, Renderer& renderer) {
-    float z = 0.0f;
-    const float zIncrement = 0.001f;
-
     NodeRenderInfo& renderInfo = getNodeRenderInfo(node);
     const UIElement& element = node.element;
 
@@ -434,11 +446,9 @@ void UI::createNodeRenderEnties(const UINode& node, Renderer& renderer) {
         MaterialHandle handle = UIRenderResoruces::get().getMaterial(element).value();
         Mesh bgMesh = UIRenderResoruces::get().quadMesh();
         RenderEntity entity =
-            renderer.world().addRenderEntity(glm::vec3(1.0f, 1.0f, z), handle, bgMesh);
+            renderer.world().addRenderEntity(glm::vec3(1.0f, 1.0f, 0.0f), handle, bgMesh);
 
         renderInfo.textureEntity = entity;
-
-        z += zIncrement;
     }
 
     if (element.text.isSome()) {
@@ -458,11 +468,9 @@ void UI::createNodeRenderEnties(const UINode& node, Renderer& renderer) {
 
         // Create the render entity, using a default position
         RenderEntity entity =
-            renderer.world().addRenderEntity(glm::vec3(1.0f, 1.0f, z), handle, textMesh);
+            renderer.world().addRenderEntity(glm::vec3(1.0f, 1.0f, 0.0f), handle, textMesh);
 
         renderInfo.textEntity = entity;
-
-        z += zIncrement;
     }
 
     renderInfo.entityCreated = true;

@@ -122,7 +122,7 @@ class UI {
         return _nodeRenderInfo[node.id];
     }
 
-    void renderNode(const UINode& node, Renderer& renderer);
+    void renderNode(const UINode& node, Renderer& renderer, int depth = 0);
     void createNodeRenderEnties(const UINode& node, Renderer& renderer);
 
     UILayout _layout;

@@ -1,6 +1,7 @@
 #include "render_world.hpp"
 
 #include "glm/ext/matrix_transform.hpp"
+#include "material.hpp"
 
 #include <queue>
 
@@ -124,6 +125,12 @@ void RenderWorld::rebuildTransforms() {
 }
 
 void RenderWorld::rebuildMaterials() {
+    // recompute the sortKeys for every render item
+    for (int i = 0; i < _activeRenderItems; i++) {
+        RenderItem& item = _renderItemPool.get(_memoizedRenderItems[i]);
+        item.computeSortKey();
+    }
+
     std::sort(_memoizedRenderItems.begin(),
               _memoizedRenderItems.begin() + _activeRenderItems,
               [this](const RenderItemHandle& a, const RenderItemHandle& b) {
@@ -312,7 +319,7 @@ void RenderWorld::updateEntity(RenderItemHandle renderItem,
     RenderItem& item = _renderItemPool.get(renderItem);
 
     // check for changes and mark dirty as needed
-    if (item.material != properties.material) {
+    if (item.material != properties.material || item.renderLayer != properties.renderLayer) {
         item.material = properties.material;
         handleDirtyMaterial(renderItem);
     }
@@ -328,16 +335,36 @@ void RenderWorld::updateEntity(RenderItemHandle renderItem,
 
 // OkayRenderItem
 
+inline std::uint64_t getBits(std::uint64_t value, std::uint32_t start, std::uint32_t end) {
+    return (value >> start) & ((1 << (end - start)) - 1);
+}
+
 RenderItem::RenderItem(MaterialHandle mat, Mesh m) : material(mat), mesh(m) {
-    if (mat->isNone() || mesh.isEmpty()) {
+    computeSortKey();
+}
+
+void RenderItem::computeSortKey() {
+    if (material->isNone() || mesh.isEmpty()) {
         sortKey = std::numeric_limits<std::uint64_t>::max();
-    } else {
-        // 64 bit sort key
-        // highest bits are shader id
-        // lower bits are material id
-        // this has the effect such that when you sort by sort key, materials are sorted into shader
-        // buckets
-        sortKey = (static_cast<std::uint64_t>(mat->shaderID()) << 32) |
-                  static_cast<std::uint64_t>(mat->id());
+        return;
     }
+
+    bool opaque = !material->properties()->flags().hasFlag(MaterialFlags::TRANSPARENT);
+    std::uint64_t shaderID = material->shaderID() & ((1ULL << 27) - 1);
+    std::uint64_t materialID = material->id() & ((1ULL << 27) - 1);
+    std::uint64_t layer = static_cast<std::uint64_t>(this->renderLayer) & 0xFFULL;
+
+    // Layout (MSB → LSB):
+    // [63]       : opaque flag
+    // [62..36]   : shader id (27 bits)
+    // [35..9]    : material id (27 bits)
+    // [8..1]     : render layer (8 bits)
+    // [0]        : unused
+
+    sortKey = 0;
+
+    sortKey |= (static_cast<std::uint64_t>(opaque) << 63);
+    sortKey |= (shaderID << 36);
+    sortKey |= (materialID << 9);
+    sortKey |= (layer << 1);
 }

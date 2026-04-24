@@ -1,11 +1,12 @@
 #ifndef __LIT_H__
 #define __LIT_H__
 
+#include "glm/detail/qualifier.hpp"
+
 #include <okay/core/renderer/materials/unlit.hpp>
 #include <okay/core/renderer/render_world.hpp>
 #include <okay/core/renderer/uniform.hpp>
 #include <okay/core/util/type.hpp>
-#include "glm/detail/qualifier.hpp"
 
 #include <glm/glm.hpp>
 
@@ -40,16 +41,38 @@ struct LitMaterial : public SceneMaterialProperties, public OkayMaterialProperti
     UniformProperty<int, FixedString("u_thin")> thin{0};
 
     auto uniformRefs() {
-        return std::tuple_cat(SceneMaterialProperties::uniformRefs(), std::tie(
-            ambient, color, metallic, specular, specularTint, roughness, anisotropic, 
-            sheen, sheenTint, clearcoat, clearcoatGloss, specularTrans, flatness, thin
-        ));
+        return std::tuple_cat(SceneMaterialProperties::uniformRefs(),
+                              std::tie(ambient,
+                                       color,
+                                       metallic,
+                                       specular,
+                                       specularTint,
+                                       roughness,
+                                       anisotropic,
+                                       sheen,
+                                       sheenTint,
+                                       clearcoat,
+                                       clearcoatGloss,
+                                       specularTrans,
+                                       flatness,
+                                       thin));
     }
     auto uniformRefs() const {
-        return std::tuple_cat(SceneMaterialProperties::uniformRefs(), std::tie(
-            ambient, color, metallic, specular, specularTint, roughness, anisotropic, 
-            sheen, sheenTint, clearcoat, clearcoatGloss, specularTrans, flatness, thin
-        ));
+        return std::tuple_cat(SceneMaterialProperties::uniformRefs(),
+                              std::tie(ambient,
+                                       color,
+                                       metallic,
+                                       specular,
+                                       specularTint,
+                                       roughness,
+                                       anisotropic,
+                                       sheen,
+                                       sheenTint,
+                                       clearcoat,
+                                       clearcoatGloss,
+                                       specularTrans,
+                                       flatness,
+                                       thin));
     }
 
     auto uniformBlockRefs() { return std::tie(lights); }
