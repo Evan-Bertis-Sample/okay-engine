@@ -149,32 +149,24 @@ struct UIElement {
     std::vector<UIElement> children;
 
     // Slate-style API
-    template <typename... Children>
-    UIElement& operator()(Children&&... newChildren) & {
-        (children.push_back(std::forward<Children>(newChildren)), ...);
-        return *this;
-    }
 
     template <typename... Children>
     UIElement&& operator()(Children&&... newChildren) && {
-        (children.push_back(std::forward<Children>(newChildren)), ...);
+        (addChild(std::forward<Children>(newChildren)), ...);
         return std::move(*this);
     }
 
-    UIElement& operator()(UIElementGenerator generator) & {
-        for (UIElement element : generator) {
-            children.push_back(element);
-        }
-
-        return *this;
+    template <typename... Children>
+    UIElement&& operator()(Children&&... newChildren) & {
+        (addChild(std::forward<Children>(newChildren)), ...);
+        return std::move(*this);
     }
 
-    UIElement&& operator()(UIElementGenerator generator) && {
+    void addChild(UIElement child) { children.push_back(child); }
+    void addChild(UIElementGenerator generator) {
         for (UIElement element : generator) {
             children.push_back(element);
         }
-
-        return std::move(*this);
     }
 
     ElementSize getSizeAlongAxis(UIPrimaryAxis axis) const {

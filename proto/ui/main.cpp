@@ -97,7 +97,6 @@ static void __gameInitialize() {
                                 .alignTextHorizontal(okay::TextStyle::HorizontalAlignment::Right)
                                 .widthGrow()
                                 .backgroundColorSet(glm::vec4(0.0f, 1.0f, 0.0f, 1.0f))
-                                .paddingSet(20)
                             ,
                             okay::ui::text("Right")
                                 .textColorSet(glm::vec3(0.0f, 0.0f, 0.0f))
@@ -106,16 +105,22 @@ static void __gameInitialize() {
                                 .widthGrow()
                                 .heightGrow()
                                 .backgroundColorSet(glm::vec4(0.0f, 0.0f, 1.0f, 1.0f))
-                                .paddingSet(10) 
-                                .childSpacingSet(10)
                             (
-                                okay::ui::range(
-                                    10,
-                                    [](std::int32_t i) {
-                                        okay::Engine.logger.info("Range value changed: {}", i);
-                                        return okay::ui::text(
-                                            std::format("{}", i));
-                                    }
+                                okay::ui::slot(okay::UIPrimaryAxis::Vertical) 
+                                    .childSpacingSet(10)
+                                (
+                                    okay::ui::text("top")
+                                    ,
+                                    okay::ui::range(
+                                       10,
+                                       [](std::int32_t i) {
+                                           okay::Engine.logger.info("Range value changed: {}", i);
+                                           return okay::ui::text(
+                                               std::format("{}", i));
+                                       }
+                                    )
+                                    ,
+                                    okay::ui::text("bottom")   
                                 )
                             )
                         )
