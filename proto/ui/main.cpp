@@ -86,7 +86,7 @@ static void __gameInitialize() {
                             .backgroundColorSet(glm::vec4(1.0f, 0.0f, 1.0f, 1.0f))
                             .alignTextHorizontal(okay::TextStyle::HorizontalAlignment::Center)
                             .alignTextVertical(okay::TextStyle::VerticalAlignment::Middle)
-                            .paddingSet(10)
+                            .marginSet(10)
                         ,
                         okay::ui::growBox(okay::UIPrimaryAxis::Horizontal)
                         (
@@ -96,7 +96,6 @@ static void __gameInitialize() {
                                 .alignTextCenter()
                                 .marginSet(10)
                                 .widthGrow()
-
                             ,
                             okay::ui::growBox(okay::UIPrimaryAxis::Vertical)
                                 .backgroundColorSet(glm::vec4(0.0f, 0.0f, 1.0f, 1.0f))
