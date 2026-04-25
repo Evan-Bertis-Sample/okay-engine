@@ -49,7 +49,7 @@ class UIRenderResoruces {
         MaterialHandle handle = renderer->materialRegistry().registerMaterial(
             _uiElementShader, std::move(materialProperties));
 
-        Engine.logger.debug("Creating new material for UI element with background image");
+        // Engine.logger.debug("Creating new material for UI element with background image");
 
         _textureMaterialCache[*key] = handle;
         return Option<MaterialHandle>::some(handle);
@@ -61,7 +61,8 @@ class UIRenderResoruces {
         if (key.isNone())
             return Option<MaterialHandle>::none();
 
-        Engine.logger.debug("Getting material for UI element with text {}", element.text.value());
+        // Engine.logger.debug("Getting material for UI element with text {}",
+        // element.text.value());
 
         if (_textMaterialCache.contains(*key)) {
             return Option<MaterialHandle>::some(_textMaterialCache.at(*key));
@@ -82,8 +83,8 @@ class UIRenderResoruces {
         MaterialHandle handle = renderer->materialRegistry().registerMaterial(
             _uiElementShader, std::move(materialProperties));
 
-        Engine.logger.debug("Creating new material for UI element with text {}",
-                            element.text.value());
+        // Engine.logger.debug("Creating new material for UI element with text {}",
+        // element.text.value());
 
         _textMaterialCache[*key] = handle;
         return Option<MaterialHandle>::some(handle);
@@ -191,7 +192,7 @@ class UIRenderResoruces {
             return element.backgroundImage.value();
         }
 
-        Engine.logger.debug("Using white texture for UI element with no background image");
+        // Engine.logger.debug("Using white texture for UI element with no background image");
         return _whiteTexture;
     }
 };

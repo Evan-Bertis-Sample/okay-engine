@@ -109,9 +109,14 @@ static void __gameInitialize() {
                                 .paddingSet(10) 
                                 .childSpacingSet(10)
                             (
-                                okay::ui::text("1"),
-                                okay::ui::text("2"),
-                                okay::ui::text("3")
+                                okay::ui::range(
+                                    10,
+                                    [](std::int32_t i) {
+                                        okay::Engine.logger.info("Range value changed: {}", i);
+                                        return okay::ui::text(
+                                            std::format("{}", i));
+                                    }
+                                )
                             )
                         )
                     )

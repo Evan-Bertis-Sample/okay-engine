@@ -45,6 +45,78 @@ enum class UIPrimaryAxis { Horizontal, Vertical, Parent };
         return *this;                                      \
     }
 
+struct UIElement;
+
+struct UIElementGenerator {
+    struct Iterator {
+        std::int32_t current;
+        std::int32_t end;
+        std::int32_t increment;
+        std::function<UIElement(std::int32_t)> generator;
+
+        UIElement operator*() const;
+
+        Iterator& operator++() {
+            current += increment;
+            return *this;
+        }
+
+        bool operator!=(const Iterator& other) const { return current < other.current; }
+    };
+
+    UIElementGenerator(std::int32_t count, std::function<UIElement(std::int32_t)> generator)
+        : _start(0), _end(count), _increment(1), _generator(generator) {
+        validateRange();
+    }
+
+    UIElementGenerator(std::int32_t start,
+                       std::int32_t end,
+                       std::int32_t increment,
+                       std::function<UIElement(std::int32_t)> generator)
+        : _start(start), _end(end), _increment(increment), _generator(generator) {
+        validateRange();
+    }
+
+    void validateRange() {
+        // assert that you can actually reach the end
+        if ((_increment > 0 && _end < _start) || (_increment < 0 && _end > _start)) {
+            Engine.logger.error(
+                "UIElementGenerator::Unable to reach end | start={}, end={}, increment={}",
+                _start,
+                _end,
+                _increment);
+
+            // fix this
+            _end = _start;
+        }
+
+        // check you can take an integer number of steps
+        float steps = static_cast<float>(_end - _start) / static_cast<float>(_increment);
+        float iptr;
+        if (std::modf(steps, &iptr) != 0.0f) {
+            Engine.logger.error(
+                "UIELementGenerator::Unable to take integer number of steps | start={}, end={}, "
+                "increment={}",
+                _start,
+                _end,
+                _increment);
+
+            // rouund to the nearest amount of steps
+            _end = static_cast<std::int32_t>(std::round(steps) * _increment) + _start;
+        }
+    }
+
+    Iterator begin() { return Iterator{_start, _end, _increment, _generator}; }
+
+    Iterator end() { return Iterator{_end, _end, _increment, _generator}; }
+
+   private:
+    std::int32_t _start;
+    std::int32_t _end;
+    std::int32_t _increment;
+    std::function<UIElement(std::int32_t)> _generator;
+};
+
 struct UIElement {
    public:
     // Element positioning
@@ -64,7 +136,7 @@ struct UIElement {
     OKAY_UI_ELEMENT_PROPERTY(size::Fixed, childSpacing, size::Fixed{0});
 
     // Content
-    OKAY_UI_ELEMENT_PROPERTY(Option<std::string_view>, text);
+    OKAY_UI_ELEMENT_PROPERTY(Option<std::string>, text);
     OKAY_UI_ELEMENT_PROPERTY(TextStyle, textStyle);
     OKAY_UI_ELEMENT_PROPERTY(glm::vec3, textColor, 1.0f, 1.0f, 1.0f);
 
@@ -86,6 +158,22 @@ struct UIElement {
     template <typename... Children>
     UIElement&& operator()(Children&&... newChildren) && {
         (children.push_back(std::forward<Children>(newChildren)), ...);
+        return std::move(*this);
+    }
+
+    UIElement& operator()(UIElementGenerator generator) & {
+        for (UIElement element : generator) {
+            children.push_back(element);
+        }
+
+        return *this;
+    }
+
+    UIElement&& operator()(UIElementGenerator generator) && {
+        for (UIElement element : generator) {
+            children.push_back(element);
+        }
+
         return std::move(*this);
     }
 
@@ -137,7 +225,7 @@ inline UIElement flexbox() {
     return UIElement{};
 }
 
-inline UIElement text(std::string_view text, const TextStyle& style = TextStyle{}) {
+inline UIElement text(std::string text, const TextStyle& style = TextStyle{}) {
     return UIElement{.text = text};
 }
 
@@ -148,6 +236,18 @@ inline UIElement image(const Texture& texture) {
 
 inline UIElement slot(UIPrimaryAxis axis = UIPrimaryAxis::Parent) {
     return UIElement{.axis = axis};
+}
+
+inline UIElementGenerator range(std::int32_t count,
+                                std::function<UIElement(std::int32_t)> generator) {
+    return UIElementGenerator{count, generator};
+}
+
+inline UIElementGenerator range(std::int32_t start,
+                                std::int32_t end,
+                                std::int32_t increment,
+                                std::function<UIElement(std::int32_t)> generator) {
+    return UIElementGenerator{start, end, increment, generator};
 }
 
 };  // namespace ui

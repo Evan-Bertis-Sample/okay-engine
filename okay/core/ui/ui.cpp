@@ -356,7 +356,7 @@ void UI::render(glm::vec2 screenPosition, SystemParameter<Renderer> renderer) {
 void UI::renderNode(const UINode& node, Renderer& renderer, int layerBase) {
     NodeRenderInfo& renderInfo = getNodeRenderInfo(node);
     if (!renderInfo.entityCreated) {
-        Engine.logger.debug("Creating render entities for UI node {}", node.id);
+        // Engine.logger.debug("Creating render entities for UI node {}", node.id);
         createNodeRenderEnties(node, renderer);
     }
 
@@ -442,7 +442,7 @@ void UI::createNodeRenderEnties(const UINode& node, Renderer& renderer) {
     const UIElement& element = node.element;
 
     if (element.backgroundImage.isSome() || element.backgroundColor.a > 0.0f) {
-        Engine.logger.debug("Creating render entity for UI element with background image");
+        // Engine.logger.debug("Creating render entity for UI element with background image");
         MaterialHandle handle = UIRenderResoruces::get().getBackgroundMaterial(element).value();
         Mesh bgMesh = UIRenderResoruces::get().quadMesh();
         RenderEntity entity =
@@ -452,9 +452,8 @@ void UI::createNodeRenderEnties(const UINode& node, Renderer& renderer) {
     }
 
     if (element.text.isSome()) {
-        Engine.logger.debug("Creating render entity for UI element with text {}",
-                            element.text.value());
-        // render text
+        // Engine.logger.debug("Creating render entity for UI element with text
+        // element.text.value()); render text
         MaterialHandle handle = UIRenderResoruces::get().getTextMaterial(element).value();
         TextStyle style = element.textStyle;
 

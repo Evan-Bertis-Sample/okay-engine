@@ -26,8 +26,6 @@ struct AssetLoader<Texture, TextureLoadSettings> {
     static Result<Texture> loadAsset(const std::filesystem::path& path,
                                      const AssetIO& assetIO,
                                      const TextureLoadSettings& settings) {
-        Engine.logger.info("Loading texture: {}", path.string());
-
         std::shared_ptr<TextureDataStore> store = settings.store;
 
         // get the size of the image
