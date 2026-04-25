@@ -76,7 +76,7 @@ static void __gameInitialize() {
         .addComponent<okay::UIComponent>(
             okay::ui::flexbox()(
                 okay::ui::flexbox()
-                    .backgroundColorSet(glm::vec4{1.0f, 1.0f, 1.0f, 1.0f})
+                    .backgroundColorSet(glm::vec4{1.0f, 1.0f, 1.0f, 0.5f})
                     .backgroundImageSet(okay::load::engineTexture("textures/uv_test.jpg"))
                     (
                         okay::ui::text("Hello world!")
@@ -94,11 +94,13 @@ static void __gameInitialize() {
                                 .textColorSet(glm::vec3(1.0f, 0.0f, 1.0f))
                                 .backgroundColorSet(glm::vec4(0.0f, 1.0f, 0.0f, 1.0f))
                                 .alignTextCenter()
+                                .alignTextMiddle()
                                 .marginSet(10)
                                 .widthGrow()
+                                .paddingSet(20)
                             ,
                             okay::ui::growBox(okay::UIPrimaryAxis::Vertical)
-                                .backgroundColorSet(glm::vec4(0.0f, 0.0f, 1.0f, 1.0f))
+                                .backgroundColorSet(glm::vec4(0.0f, 0.0f, 1.0f, 0.2f))
                                 .borderRadiusSet(30)
                                 .borderWidthSet(10)
                             (

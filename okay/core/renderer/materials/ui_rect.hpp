@@ -9,7 +9,7 @@ namespace okay {
 
 struct UIRectMaterial : public SceneMaterialProperties,
                         public OkayMaterialProperties<UIRectMaterial> {
-    UniformProperty<glm::vec3, FixedString("u_color")> color{glm::vec3(1.0f)};
+    UniformProperty<glm::vec4, FixedString("u_color")> color{glm::vec4(1.0f)};
     TextureProperty<FixedString("u_albedo")> albedo;
 
     UniformProperty<glm::vec2, FixedString("u_borderRadius")> borderRadius{glm::vec2(0.0f)};

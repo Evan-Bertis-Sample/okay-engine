@@ -13,9 +13,9 @@ uniform mat4 u_viewMatrix;
 uniform mat4 u_projectionMatrix;
 uniform vec3 u_cameraPosition;
 uniform vec3 u_cameraDirection;
-uniform vec3 u_color;
+uniform vec4 u_color;
 
-out vec3 v_color;
+out vec4 v_color;
 out vec3 v_normal;
 out vec3 v_position;
 out vec2 v_uv;

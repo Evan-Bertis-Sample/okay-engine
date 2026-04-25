@@ -45,8 +45,7 @@ class UIRenderResoruces {
 
         // create a material
         auto materialProperties = std::make_unique<RectMaterial>();
-        materialProperties->color = glm::vec3(
-            element.backgroundColor.r, element.backgroundColor.g, element.backgroundColor.b);
+        materialProperties->color = element.backgroundColor;
         materialProperties->albedo = getElementTexture(element);
 
         materialProperties->borderColor = element.borderColor;
@@ -216,7 +215,7 @@ class UIRenderResoruces {
         // compute the texture width
         // we will do this by bucketing the target height
         const float PX_PER_UNIT = 64.0f;  // number of pixels per unit of height
-        const int TARGET_WIDTH = static_cast<int>(style.targetFontHeight) * PX_PER_UNIT;
+        const int TARGET_WIDTH = static_cast<int>(style.fontHeight) * PX_PER_UNIT;
 
         TextMaterialKey key = {
             .font = style.font,

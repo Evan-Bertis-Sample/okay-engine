@@ -23,7 +23,7 @@ struct TextStyle {
     FontManager::FontHandle font{FontManager::instance().defaultFont()};
 
     // Final height of the tallest line after scaling.
-    float targetFontHeight{16.0f};
+    float fontHeight{16.0f};
 
     // Extra spacing between lines, in glyph metric space, before scaling.
     float extraLineSpacingGlyph{0.0f};
@@ -64,8 +64,6 @@ struct TextLayoutMetrics {
     float layoutRight{0.0f};
     float layoutTop{0.0f};
     float layoutBottom{0.0f};
-
-    float layoutScale{1.0f};
 
     std::size_t lineCount{0};
     std::size_t glyphCount{0};

@@ -68,8 +68,7 @@ MeshData TextMeshBuilder::build(std::string_view text, const TextStyle& style, b
             const auto glyph = fontManager.getGlyph(
                 layout.style().font, static_cast<std::uint32_t>(static_cast<unsigned char>(c)));
 
-            const TextQuad quad =
-                generateQuadForGlyph(glyph, baselineX, baselineY, layout.metrics().layoutScale);
+            const TextQuad quad = generateQuadForGlyph(glyph, baselineX, baselineY, 1.0f);
 
             for (int i = 0; i < 4; ++i) {
                 meshData.vertices.push_back(quad.vertices[i]);
@@ -79,7 +78,7 @@ MeshData TextMeshBuilder::build(std::string_view text, const TextStyle& style, b
                 meshData.indices, static_cast<std::uint32_t>(quadIndex * 4), doubleSided);
 
             quadIndex++;
-            baselineX += static_cast<float>(glyph.advance) * layout.metrics().layoutScale;
+            baselineX += static_cast<float>(glyph.advance);
         }
     }
 

@@ -3,7 +3,7 @@ precision highp float;
 
 out vec4 FragColor;
 
-in vec3 v_color;
+in vec4 v_color;
 in vec3 v_normal;
 in vec3 v_position;
 in vec2 v_uv;
@@ -57,7 +57,7 @@ void main() {
    float shapeAlpha = 1.0f - smoothstep(0.0f, aa, dist);
 
    vec4 texColor = texture(u_albedo, v_uv);
-   vec4 fillColor = vec4(v_color, 1.0f) * texColor;
+   vec4 fillColor = v_color * texColor;
 
    vec2 safeRadius = max(radius, vec2(0.0001f));
    float borderDist = max(borderWidth.x / safeRadius.x, borderWidth.y / safeRadius.y);

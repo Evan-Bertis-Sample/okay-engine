@@ -17,7 +17,7 @@ float TextLayout::computeLayoutScale(float targetFontHeight, int maxLineHeightGl
         return 1.0f;
     if (maxLineHeightGlyph <= 0)
         return 1.0f;
-    return targetFontHeight / static_cast<float>(maxLineHeightGlyph);
+    return 1.0;
 }
 
 float TextLayout::computeAlignedLineStartX(TextStyle::HorizontalAlignment alignment,
@@ -102,13 +102,13 @@ TextLineLayout TextLayout::makeLineLayout(std::size_t lineIndex,
     line.lineDescentGlyph = raw.lineDescentGlyph;
     line.baselineY = baselineY;
 
-    const float scaledLineWidth = raw.lineWidthGlyph * _metrics.layoutScale;
+    const float scaledLineWidth = raw.lineWidthGlyph;
     const float startX = computeAlignedLineStartX(_style.horizontalAlignment, scaledLineWidth);
 
     line.layoutLeft = startX;
     line.layoutRight = startX + scaledLineWidth;
-    line.layoutTop = baselineY + static_cast<float>(raw.lineAscentGlyph) * _metrics.layoutScale;
-    line.layoutBottom = baselineY - static_cast<float>(raw.lineDescentGlyph) * _metrics.layoutScale;
+    line.layoutTop = baselineY + static_cast<float>(raw.lineAscentGlyph);
+    line.layoutBottom = baselineY - static_cast<float>(raw.lineDescentGlyph);
 
     return line;
 }
@@ -151,11 +151,9 @@ void TextLayout::measure() {
     if (!std::isfinite(bottomGlyph))
         bottomGlyph = 0.0f;
 
-    _metrics.layoutScale = computeLayoutScale(_style.targetFontHeight, _metrics.maxLineHeightGlyph);
-
-    const float unalignedTop = topGlyph * _metrics.layoutScale;
-    const float unalignedBottom = bottomGlyph * _metrics.layoutScale;
-    const float scaledWidestLineWidth = widestLineWidthGlyph * _metrics.layoutScale;
+    const float unalignedTop = topGlyph;
+    const float unalignedBottom = bottomGlyph;
+    const float scaledWidestLineWidth = widestLineWidthGlyph;
 
     _verticalAlignmentOffset =
         computeVerticalAlignmentOffset(_style.verticalAlignment, unalignedTop, unalignedBottom);
@@ -193,8 +191,7 @@ TextLayout::LineIterator& TextLayout::LineIterator::operator++() {
         return *this;
     }
 
-    _baselineY -=
-        raw.lineAdvanceGlyph(_layout->_style.extraLineSpacingGlyph) * _layout->_metrics.layoutScale;
+    _baselineY -= raw.lineAdvanceGlyph(_layout->_style.extraLineSpacingGlyph);
     _lineBegin = raw.nextLineBegin;
     _lineIndex++;
 
