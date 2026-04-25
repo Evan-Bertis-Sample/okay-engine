@@ -192,9 +192,11 @@ struct UIElement {
 
     UIElement& widthGrow() { return widthSet(size::Grow{}); }
     UIElement& heightGrow() { return heightSet(size::Grow{}); }
+    UIElement& grow() { return widthGrow().heightGrow(); }
 
     UIElement& widthFit() { return widthSet(size::Fit{}); }
     UIElement& heightFit() { return heightSet(size::Fit{}); }
+    UIElement& fit() { return widthFit().heightFit(); }
 
     UIElement& widthPercent(float percent) { return widthSet(size::Percent{percent}); }
     UIElement& heightPercent(float percent) { return heightSet(size::Percent{percent}); }
@@ -258,6 +260,10 @@ inline UIElementGenerator range(std::int32_t start,
                                 std::int32_t increment,
                                 std::function<UIElement(std::int32_t)> generator) {
     return UIElementGenerator{start, end, increment, generator};
+}
+
+inline UIElement growBox(UIPrimaryAxis axis = UIPrimaryAxis::Parent) {
+    return UIElement{.width = size::Grow{}, .height = size::Grow{}, .axis = axis};
 }
 
 };  // namespace ui

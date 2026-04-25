@@ -88,42 +88,42 @@ static void __gameInitialize() {
                             .alignTextVertical(okay::TextStyle::VerticalAlignment::Middle)
                             .paddingSet(10)
                         ,
-                        okay::ui::slot(okay::UIPrimaryAxis::Horizontal)
-                            .widthGrow()
-                            .heightGrow()
+                        okay::ui::growBox(okay::UIPrimaryAxis::Horizontal)
                         (
                             okay::ui::text("Left")
                                 .textColorSet(glm::vec3(1.0f, 0.0f, 1.0f))
-                                .alignTextHorizontal(okay::TextStyle::HorizontalAlignment::Right)
-                                .widthGrow()
                                 .backgroundColorSet(glm::vec4(0.0f, 1.0f, 0.0f, 1.0f))
-                            ,
-                            okay::ui::text("Right")
-                                .textColorSet(glm::vec3(0.0f, 0.0f, 0.0f))
-                                .alignTextVertical(okay::TextStyle::VerticalAlignment::Middle)
-                                .alignTextHorizontal(okay::TextStyle::HorizontalAlignment::Right)
+                                .alignTextCenter()
+                                .paddingSet(10)
                                 .widthGrow()
-                                .heightGrow()
+                            ,
+                            okay::ui::growBox(okay::UIPrimaryAxis::Vertical)
                                 .backgroundColorSet(glm::vec4(0.0f, 0.0f, 1.0f, 1.0f))
                                 .borderRadiusSet(30)
                                 .borderWidthSet(10)
                             (
-                                okay::ui::slot(okay::UIPrimaryAxis::Vertical) 
+                                okay::ui::growBox(okay::UIPrimaryAxis::Vertical) 
                                     .childSpacingSet(10)
                                 (
+                                    okay::ui::text("Right")
+                                        .textColorSet(glm::vec3(0.0f, 0.0f, 0.0f))
+                                        .alignTextRight()
+                                        .alignTextCenter()
+                                        .grow()
+                                    ,
                                     okay::ui::text("top")
                                     ,
                                     okay::ui::range(
-                                       10,
-                                       [](std::int32_t i) {
-                                           okay::Engine.logger.info("Range value changed: {}", i);
-                                           return okay::ui::text(
-                                               std::format("{}", i));
-                                       }
+                                        3,
+                                        [](std::int32_t i) {
+                                            return okay::ui::text(
+                                                std::format("{}", i));
+                                        }
                                     )
                                     ,
                                     okay::ui::text("bottom")   
                                 )
+                                
                             )
                         )
                     )
