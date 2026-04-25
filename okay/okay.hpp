@@ -64,6 +64,7 @@
 
 // okay/core/renderer/materials
 #include <okay/core/renderer/materials/lit.hpp>
+#include <okay/core/renderer/materials/ui_rect.hpp>
 #include <okay/core/renderer/materials/unlit.hpp>
 
 // okay/core/renderer/passes

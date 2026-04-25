@@ -5,6 +5,7 @@
 #include <okay/core/asset/asset_util.hpp>
 #include <okay/core/asset/generic/texture_loader.hpp>
 #include <okay/core/renderer/material.hpp>
+#include <okay/core/renderer/materials/ui_rect.hpp>
 #include <okay/core/renderer/materials/unlit.hpp>
 #include <okay/core/renderer/primitive.hpp>
 #include <okay/core/renderer/render_world.hpp>
@@ -15,10 +16,15 @@
 #include <okay/core/util/object_pool.hpp>
 #include <okay/core/util/option.hpp>
 
+#include <string_view>
+
 namespace okay {
 
 class UIRenderResoruces {
    public:
+    using BackgroundMaterial = UIRectMaterial;
+    using TextMaterial = UnlitMaterial;
+
     static UIRenderResoruces& get() {
         static UIRenderResoruces instance;
         return instance;
@@ -35,19 +41,32 @@ class UIRenderResoruces {
         if (_textureMaterialCache.contains(*key)) {
             return Option<MaterialHandle>::some(_textureMaterialCache.at(*key));
         }
+        Renderer* renderer = Engine.systems.getSystemChecked<Renderer>();
+
         // create a material
-        auto materialProperties = std::make_unique<UnlitMaterial>();
+        auto materialProperties = std::make_unique<BackgroundMaterial>();
         materialProperties->color = glm::vec3(
             element.backgroundColor.r, element.backgroundColor.g, element.backgroundColor.b);
         materialProperties->albedo = getElementTexture(element);
+
+        const glm::vec2 pxToNDCScale =
+            glm::vec2(2.0f / renderer->width(), 2.0f / renderer->height());
+
+        materialProperties->borderWidth =
+            pxToNDCScale * static_cast<float>(element.borderWidth.pixels);
+        materialProperties->borderRadius =
+            pxToNDCScale * static_cast<float>(element.borderRadius.pixels);
+
+        materialProperties->borderColor = element.borderColor;
+
+        // flags
         materialProperties->isTransparent = true;
         materialProperties->useScreenspaceCoords = true;
         materialProperties->castsShadows = false;
         materialProperties->recievesShadows = false;
 
-        Renderer* renderer = Engine.systems.getSystemChecked<Renderer>();
         MaterialHandle handle = renderer->materialRegistry().registerMaterial(
-            _uiElementShader, std::move(materialProperties));
+            _uiRectShader, std::move(materialProperties));
 
         // Engine.logger.debug("Creating new material for UI element with background image");
 
@@ -71,7 +90,7 @@ class UIRenderResoruces {
         TextStyle style = element.textStyle;
 
         // create a material
-        auto materialProperties = std::make_unique<UnlitMaterial>();
+        auto materialProperties = std::make_unique<TextMaterial>();
         materialProperties->color = element.textColor;
         materialProperties->albedo = FontManager::instance().getGlyphAtlas(style.font);
         materialProperties->isTransparent = true;
@@ -81,7 +100,7 @@ class UIRenderResoruces {
 
         Renderer* renderer = Engine.systems.getSystemChecked<Renderer>();
         MaterialHandle handle = renderer->materialRegistry().registerMaterial(
-            _uiElementShader, std::move(materialProperties));
+            _uiTextShader, std::move(materialProperties));
 
         // Engine.logger.debug("Creating new material for UI element with text {}",
         // element.text.value());
@@ -90,7 +109,8 @@ class UIRenderResoruces {
         return Option<MaterialHandle>::some(handle);
     };
 
-    static constexpr std::string_view UI_ELEMENT_SHADER = "shaders/unlit";
+    static constexpr std::string_view UI_TEXT_SHADER = "shaders/unlit";
+    static constexpr std::string_view UI_RECT_SHADER = "shaders/ui_rect";
     static constexpr std::string_view WHITE_TEXTURE = "textures/white.jpg";
 
     struct TextMaterialKey {
@@ -136,7 +156,9 @@ class UIRenderResoruces {
     std::map<TextMaterialKey, MaterialHandle> _textMaterialCache;
     std::map<TextureMaterialKey, MaterialHandle> _textureMaterialCache;
 
-    ShaderHandle _uiElementShader;
+    ShaderHandle _uiTextShader;
+    ShaderHandle _uiRectShader;
+
     Texture _whiteTexture;
     Mesh _quadMesh;
 
@@ -147,9 +169,13 @@ class UIRenderResoruces {
             am->loadEngineAssetSync<Texture>(WHITE_TEXTURE, TextureLoadSettings{}));
 
         Renderer* renderer = Engine.systems.getSystemChecked<Renderer>();
-        Shader shader = unwrapAssetResult(am->loadEngineAssetSync<Shader>(UI_ELEMENT_SHADER));
-        _uiElementShader =
-            renderer->materialRegistry().registerShader(shader.vertexShader, shader.fragmentShader);
+        Shader textShader = unwrapAssetResult(am->loadEngineAssetSync<Shader>(UI_TEXT_SHADER));
+        _uiTextShader = renderer->materialRegistry().registerShader(textShader.vertexShader,
+                                                                    textShader.fragmentShader);
+
+        Shader rectShader = unwrapAssetResult(am->loadEngineAssetSync<Shader>(UI_RECT_SHADER));
+        _uiRectShader = renderer->materialRegistry().registerShader(rectShader.vertexShader,
+                                                                    rectShader.fragmentShader);
 
         _quadMesh = renderer->meshBuffer().addMesh(
             primitives::rect().sizeSet(glm::vec2(1.0f, 1.0f)).twoSidedSet(true).build());

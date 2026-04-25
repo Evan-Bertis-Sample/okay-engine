@@ -144,6 +144,12 @@ struct UIElement {
     OKAY_UI_ELEMENT_PROPERTY(Option<Texture>, backgroundImage);
     OKAY_UI_ELEMENT_PROPERTY(glm::vec4, backgroundColor, 0.0f, 0.0f, 0.0f, 0.0f);
 
+    // border
+    OKAY_UI_ELEMENT_PROPERTY(size::Fixed, borderWidth, size::Fixed{0});
+    OKAY_UI_ELEMENT_PROPERTY(size::Fixed, borderRadius, size::Fixed{0});
+    OKAY_UI_ELEMENT_PROPERTY(glm::vec4, borderColor, 0.0f, 0.0f, 0.0f, 0.0f);
+
+    // rendering
     OKAY_UI_ELEMENT_PROPERTY(bool, doubleSided, false);
 
     std::vector<UIElement> children;
@@ -209,6 +215,18 @@ struct UIElement {
         alignTextVertical(vertical);
         return *this;
     }
+
+    UIElement& alignTextLeft() { return alignTextHorizontal(TextStyle::HorizontalAlignment::Left); }
+    UIElement& alignTextRight() {
+        return alignTextHorizontal(TextStyle::HorizontalAlignment::Right);
+    }
+    UIElement& alignTextCenter() {
+        return alignTextHorizontal(TextStyle::HorizontalAlignment::Center);
+    }
+
+    UIElement& alignTextTop() { return alignTextVertical(TextStyle::VerticalAlignment::Top); }
+    UIElement& alignTextMiddle() { return alignTextVertical(TextStyle::VerticalAlignment::Middle); }
+    UIElement& alignTextBottom() { return alignTextVertical(TextStyle::VerticalAlignment::Bottom); }
 };
 
 namespace ui {
