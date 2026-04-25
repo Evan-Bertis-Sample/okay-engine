@@ -132,6 +132,12 @@ struct UIElement {
     OKAY_UI_ELEMENT_PROPERTY(size::Fixed, topPadding, size::Fixed{0});
     OKAY_UI_ELEMENT_PROPERTY(size::Fixed, bottomPadding, size::Fixed{0});
 
+    // Margin
+    OKAY_UI_ELEMENT_PROPERTY(size::Fixed, leftMargin, size::Fixed{0});
+    OKAY_UI_ELEMENT_PROPERTY(size::Fixed, rightMargin, size::Fixed{0});
+    OKAY_UI_ELEMENT_PROPERTY(size::Fixed, topMargin, size::Fixed{0});
+    OKAY_UI_ELEMENT_PROPERTY(size::Fixed, bottomMargin, size::Fixed{0});
+
     // Child spacing
     OKAY_UI_ELEMENT_PROPERTY(size::Fixed, childSpacing, size::Fixed{0});
 
@@ -179,6 +185,17 @@ struct UIElement {
         return axis == UIPrimaryAxis::Horizontal ? width : height;
     }
 
+    UIElement& paddingSet(size::Fixed left,
+                          size::Fixed right,
+                          size::Fixed top,
+                          size::Fixed bottom) {
+        leftPadding = left;
+        rightPadding = right;
+        topPadding = top;
+        bottomPadding = bottom;
+        return *this;
+    }
+
     UIElement& paddingSet(size::Fixed padding) {
         leftPadding = rightPadding = topPadding = bottomPadding = padding;
         return *this;
@@ -187,6 +204,25 @@ struct UIElement {
     UIElement& paddingSet(size::Fixed horizontal, size::Fixed vertical) {
         leftPadding = rightPadding = horizontal;
         topPadding = bottomPadding = vertical;
+        return *this;
+    }
+
+    UIElement& marginSet(size::Fixed left, size::Fixed right, size::Fixed top, size::Fixed bottom) {
+        leftMargin = left;
+        rightMargin = right;
+        topMargin = top;
+        bottomMargin = bottom;
+        return *this;
+    }
+
+    UIElement& marginSet(size::Fixed margin) {
+        leftMargin = rightMargin = topMargin = bottomMargin = margin;
+        return *this;
+    }
+
+    UIElement& marginSet(size::Fixed horizontal, size::Fixed vertical) {
+        leftMargin = rightMargin = horizontal;
+        topMargin = bottomMargin = vertical;
         return *this;
     }
 

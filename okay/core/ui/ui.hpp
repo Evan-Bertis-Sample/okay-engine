@@ -79,6 +79,13 @@ class UILayout {
         return 0;
     }
 
+    int marginMainStart(const UIElement& element, UIPrimaryAxis axis) const;
+    int marginMainEnd(const UIElement& element, UIPrimaryAxis axis) const;
+    int marginCrossStart(const UIElement& element, UIPrimaryAxis axis) const;
+    int marginCrossEnd(const UIElement& element, UIPrimaryAxis axis) const;
+    int marginMainTotal(const UIElement& element, UIPrimaryAxis axis) const;
+    int marginCrossTotal(const UIElement& element, UIPrimaryAxis axis) const;
+
     Option<int> computeElementSizeAlongAxis(const UINode& node,
                                             UIPrimaryAxis axis,
                                             LayoutRect frame) const;

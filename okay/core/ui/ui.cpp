@@ -31,6 +31,32 @@ void UILayout::layout(const Context& context) {
     computePositions(_root, rootFrame);
 }
 
+int UILayout::marginMainStart(const UIElement& element, UIPrimaryAxis axis) const {
+    return axis == UIPrimaryAxis::Horizontal ? element.leftMargin.pixels : element.topMargin.pixels;
+}
+
+int UILayout::marginMainEnd(const UIElement& element, UIPrimaryAxis axis) const {
+    return axis == UIPrimaryAxis::Horizontal ? element.rightMargin.pixels
+                                             : element.bottomMargin.pixels;
+}
+
+int UILayout::marginCrossStart(const UIElement& element, UIPrimaryAxis axis) const {
+    return axis == UIPrimaryAxis::Horizontal ? element.topMargin.pixels : element.leftMargin.pixels;
+}
+
+int UILayout::marginCrossEnd(const UIElement& element, UIPrimaryAxis axis) const {
+    return axis == UIPrimaryAxis::Horizontal ? element.bottomMargin.pixels
+                                             : element.rightMargin.pixels;
+}
+
+int UILayout::marginMainTotal(const UIElement& element, UIPrimaryAxis axis) const {
+    return marginMainStart(element, axis) + marginMainEnd(element, axis);
+}
+
+int UILayout::marginCrossTotal(const UIElement& element, UIPrimaryAxis axis) const {
+    return marginCrossStart(element, axis) + marginCrossEnd(element, axis);
+}
+
 void UILayout::computeFixedSizes(UINode& node, LayoutRect parent) {
     LayoutRect& rect = getOrMakeRect(node);
     const UIElement& element = node.element;
@@ -103,24 +129,34 @@ void UILayout::computeFitSizes(UINode& node, LayoutRect parent) {
             if (childRect.pxSize.x == 0) {
                 if (std::holds_alternative<size::Grow>(childCrossDecl)) {
                     int minWidth = computeSize(child.element.minWidth, rect.pxSize.x);
-                    childRect.pxSize.x = std::max(contentWidth, minWidth);
+                    int childContentWidth =
+                        std::max(0, contentWidth - marginCrossTotal(child.element, mainAxis));
+                    childRect.pxSize.x = std::max(childContentWidth, minWidth);
                 } else if (std::holds_alternative<size::Percent>(childCrossDecl)) {
                     float percent = std::get<size::Percent>(childCrossDecl).percent;
                     int minWidth = computeSize(child.element.minWidth, rect.pxSize.x);
-                    childRect.pxSize.x = std::max(
-                        static_cast<int>(percent * static_cast<float>(contentWidth)), minWidth);
+                    int childContentWidth =
+                        std::max(0, contentWidth - marginCrossTotal(child.element, mainAxis));
+                    childRect.pxSize.x =
+                        std::max(static_cast<int>(percent * static_cast<float>(childContentWidth)),
+                                 minWidth);
                 }
             }
         } else {
             if (childRect.pxSize.y == 0) {
                 if (std::holds_alternative<size::Grow>(childCrossDecl)) {
                     int minHeight = computeSize(child.element.minHeight, rect.pxSize.y);
-                    childRect.pxSize.y = std::max(contentHeight, minHeight);
+                    int childContentHeight =
+                        std::max(0, contentHeight - marginCrossTotal(child.element, mainAxis));
+                    childRect.pxSize.y = std::max(childContentHeight, minHeight);
                 } else if (std::holds_alternative<size::Percent>(childCrossDecl)) {
                     float percent = std::get<size::Percent>(childCrossDecl).percent;
                     int minHeight = computeSize(child.element.minHeight, rect.pxSize.y);
-                    childRect.pxSize.y = std::max(
-                        static_cast<int>(percent * static_cast<float>(contentHeight)), minHeight);
+                    int childContentHeight =
+                        std::max(0, contentHeight - marginCrossTotal(child.element, mainAxis));
+                    childRect.pxSize.y =
+                        std::max(static_cast<int>(percent * static_cast<float>(childContentHeight)),
+                                 minHeight);
                 }
             }
         }
@@ -137,6 +173,7 @@ void UILayout::computeFitSizes(UINode& node, LayoutRect parent) {
     int summedMain = 0;
     int maxCross = 0;
     int growChildren = 0;
+    int growMargins = 0;
 
     for (UINode& child : node.children) {
         LayoutRect& childRect = getOrMakeRect(child);
@@ -146,9 +183,13 @@ void UILayout::computeFitSizes(UINode& node, LayoutRect parent) {
         int childCross =
             (crossAxis == UIPrimaryAxis::Horizontal) ? childRect.pxSize.x : childRect.pxSize.y;
 
+        childMain += marginMainTotal(child.element, mainAxis);
+        childCross += marginCrossTotal(child.element, mainAxis);
+
         ElementSize childMainDecl = child.element.getSizeAlongAxis(mainAxis);
         if (std::holds_alternative<size::Grow>(childMainDecl)) {
             growChildren++;
+            growMargins += marginMainTotal(child.element, mainAxis);
         } else {
             summedMain += childMain;
         }
@@ -182,7 +223,7 @@ void UILayout::computeFitSizes(UINode& node, LayoutRect parent) {
 
     // Distribute remaining space to grow children along the main axis.
     int contentMainSize = (mainAxis == UIPrimaryAxis::Horizontal) ? contentWidth : contentHeight;
-    int remainingMain = std::max(0, contentMainSize - summedMain - totalSpacing);
+    int remainingMain = std::max(0, contentMainSize - summedMain - growMargins - totalSpacing);
     int growShare = (growChildren > 0) ? (remainingMain / growChildren) : 0;
 
     for (UINode& child : node.children) {
@@ -228,28 +269,35 @@ void UILayout::computePositions(UINode& node, LayoutRect parent) {
     for (UINode& child : node.children) {
         LayoutRect& childRect = getOrMakeRect(child);
 
+        int mainStart = marginMainStart(child.element, mainAxis);
+        int mainEnd = marginMainEnd(child.element, mainAxis);
+        int crossStart = marginCrossStart(child.element, mainAxis);
+        int crossEnd = marginCrossEnd(child.element, mainAxis);
+
         if (mainAxis == UIPrimaryAxis::Horizontal) {
-            childRect.pxPosition.x = contentX + cursor;
-            childRect.pxPosition.y = contentY;
+            childRect.pxPosition.x = contentX + cursor + mainStart;
+            childRect.pxPosition.y = contentY + crossStart;
 
             // Stretch unresolved cross axis to content height.
             if (childRect.pxSize.y == 0) {
                 int minHeight = computeSize(child.element.minHeight, rect.pxSize.y);
-                childRect.pxSize.y = std::max(contentHeight, minHeight);
+                childRect.pxSize.y =
+                    std::max(std::max(0, contentHeight - crossStart - crossEnd), minHeight);
             }
 
-            cursor += childRect.pxSize.x + childSpacing;
+            cursor += mainStart + childRect.pxSize.x + mainEnd + childSpacing;
         } else {
-            childRect.pxPosition.x = contentX;
-            childRect.pxPosition.y = contentY + cursor;
+            childRect.pxPosition.x = contentX + crossStart;
+            childRect.pxPosition.y = contentY + cursor + mainStart;
 
             // Stretch unresolved cross axis to content width.
             if (childRect.pxSize.x == 0) {
                 int minWidth = computeSize(child.element.minWidth, rect.pxSize.x);
-                childRect.pxSize.x = std::max(contentWidth, minWidth);
+                childRect.pxSize.x =
+                    std::max(std::max(0, contentWidth - crossStart - crossEnd), minWidth);
             }
 
-            cursor += childRect.pxSize.y + childSpacing;
+            cursor += mainStart + childRect.pxSize.y + mainEnd + childSpacing;
         }
 
         computePositions(child, childRect);

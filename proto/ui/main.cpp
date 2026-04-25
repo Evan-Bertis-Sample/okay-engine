@@ -94,8 +94,9 @@ static void __gameInitialize() {
                                 .textColorSet(glm::vec3(1.0f, 0.0f, 1.0f))
                                 .backgroundColorSet(glm::vec4(0.0f, 1.0f, 0.0f, 1.0f))
                                 .alignTextCenter()
-                                .paddingSet(10)
+                                .marginSet(10)
                                 .widthGrow()
+
                             ,
                             okay::ui::growBox(okay::UIPrimaryAxis::Vertical)
                                 .backgroundColorSet(glm::vec4(0.0f, 0.0f, 1.0f, 1.0f))
