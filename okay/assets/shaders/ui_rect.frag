@@ -49,20 +49,18 @@ void main() {
 
    float dist = roundedRectSDF(v_uv, radius);
 
-   if (dist <= 0.0) {
-      FragColor = vec4(0.0, 1.0, 0.0, 1.0); // inside = green
-   } else {
-      FragColor = vec4(1.0, 0.0, 0.0, 1.0); // outside = red
+   if (dist >= 0.0) {
+       discard;
    }
 
-   // vec4 texColor = texture(u_albedo, v_uv);
-   // vec4 fillColor = vec4(v_color, 1.0f) * texColor;
+   vec4 texColor = texture(u_albedo, v_uv);
+   vec4 fillColor = vec4(v_color, 1.0f) * texColor;
 
-   //  // Convert border width into the same scaled distance space.
-   // vec2 safeRadius = max(radius, vec2(0.0001f));
-   // float borderDist = max(borderWidth.x / safeRadius.x, borderWidth.y / safeRadius.y);
+    // Convert border width into the same scaled distance space.
+   vec2 safeRadius = max(radius, vec2(0.0001f));
+   float borderDist = max(borderWidth.x / safeRadius.x, borderWidth.y / safeRadius.y);
 
-   // bool isBorder = borderDist > 0.0f && dist > -borderDist;
+   bool isBorder = borderDist > 0.0f && dist > -borderDist;
 
-   // FragColor = isBorder ? u_borderColor : fillColor;
+   FragColor = isBorder ? u_borderColor : fillColor;
 }

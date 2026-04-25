@@ -147,7 +147,7 @@ struct UIElement {
     // border
     OKAY_UI_ELEMENT_PROPERTY(size::Fixed, borderWidth, size::Fixed{0});
     OKAY_UI_ELEMENT_PROPERTY(size::Fixed, borderRadius, size::Fixed{0});
-    OKAY_UI_ELEMENT_PROPERTY(glm::vec4, borderColor, 0.0f, 0.0f, 0.0f, 0.0f);
+    OKAY_UI_ELEMENT_PROPERTY(glm::vec4, borderColor, 0.0f, 0.0f, 0.0f, 1.0f);
 
     // rendering
     OKAY_UI_ELEMENT_PROPERTY(bool, doubleSided, false);

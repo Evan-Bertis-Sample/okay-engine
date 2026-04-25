@@ -48,6 +48,7 @@ class UIRenderResoruces {
         materialProperties->color = glm::vec3(
             element.backgroundColor.r, element.backgroundColor.g, element.backgroundColor.b);
         materialProperties->albedo = getElementTexture(element);
+
         materialProperties->borderColor = element.borderColor;
 
         // flags
@@ -127,17 +128,50 @@ class UIRenderResoruces {
     struct RectMaterialKey {
         Texture texture;
         glm::vec4 color;
+        glm::vec2 borderRadius;
+        glm::vec2 borderWidth;
+        glm::vec4 borderColor;
 
-        bool operator==(const RectMaterialKey& other) const {
-            return texture == other.texture && color == other.color &&
-                   glm::length(color) == glm::length(other.color);
+        bool operator==(const RectMaterialKey& o) const {
+            return texture == o.texture && color == o.color && borderRadius == o.borderRadius &&
+                   borderWidth == o.borderWidth && borderColor == o.borderColor;
         }
 
-        bool operator!=(const RectMaterialKey& other) const { return !(*this == other); }
+        bool operator!=(const RectMaterialKey& o) const { return !(*this == o); }
 
-        bool operator<(const RectMaterialKey& other) const {
-            return texture < other.texture ||
-                   (texture == other.texture && glm::length(color) < glm::length(other.color));
+        bool operator<(const RectMaterialKey& o) const {
+            if (texture != o.texture)
+                return texture < o.texture;
+
+            if (color.r != o.color.r)
+                return color.r < o.color.r;
+            if (color.g != o.color.g)
+                return color.g < o.color.g;
+            if (color.b != o.color.b)
+                return color.b < o.color.b;
+            if (color.a != o.color.a)
+                return color.a < o.color.a;
+
+            if (borderRadius.x != o.borderRadius.x)
+                return borderRadius.x < o.borderRadius.x;
+            if (borderRadius.y != o.borderRadius.y)
+                return borderRadius.y < o.borderRadius.y;
+
+            if (borderWidth.x != o.borderWidth.x)
+                return borderWidth.x < o.borderWidth.x;
+            if (borderWidth.y != o.borderWidth.y)
+                return borderWidth.y < o.borderWidth.y;
+
+            if (borderColor.r != o.borderColor.r)
+                return borderColor.r < o.borderColor.r;
+            if (borderColor.g != o.borderColor.g)
+                return borderColor.g < o.borderColor.g;
+            if (borderColor.b != o.borderColor.b)
+                return borderColor.b < o.borderColor.b;
+            if (borderColor.a != o.borderColor.a)
+                return borderColor.a < o.borderColor.a;
+
+            return false;
         }
     };
 
@@ -201,6 +235,9 @@ class UIRenderResoruces {
         RectMaterialKey key = {
             .texture = getElementTexture(element),
             .color = element.backgroundColor,
+            .borderRadius = glm::vec2(element.borderRadius.pixels),
+            .borderWidth = glm::vec2(element.borderWidth.pixels),
+            .borderColor = element.borderColor,
         };
         return Option<RectMaterialKey>::some(key);
     }
