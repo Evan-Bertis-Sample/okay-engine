@@ -99,7 +99,7 @@ class UI {
     UINode::ID _nextNodeID{1};
 
     struct NodeRenderInfo {
-        RenderEntity textureEntity;
+        RenderEntity rectEntity;
         RenderEntity textEntity;
         bool entityCreated = false;
     };

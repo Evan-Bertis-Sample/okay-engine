@@ -105,7 +105,8 @@ static void __gameInitialize() {
                                 .widthGrow()
                                 .heightGrow()
                                 .backgroundColorSet(glm::vec4(0.0f, 0.0f, 1.0f, 1.0f))
-                                .borderRadiusSet(30)
+                                .borderRadiusSet(300)
+                                .borderWidthSet(100)
                             (
                                 okay::ui::slot(okay::UIPrimaryAxis::Vertical) 
                                     .childSpacingSet(10)

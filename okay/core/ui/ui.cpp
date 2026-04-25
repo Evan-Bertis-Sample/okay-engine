@@ -377,17 +377,29 @@ void UI::renderNode(const UINode& node, Renderer& renderer, int layerBase) {
     // Number of NDC units per pixel.
     const glm::vec2 pxToNdcScale = glm::vec2(2.0f / screenSize.x, 2.0f / screenSize.y);
 
-    if (renderInfo.textureEntity.isValid()) {
+    if (renderInfo.rectEntity.isValid()) {
         // Background quad is centered at origin and has size 1x1 in mesh space.
         // So place it at the center of the layout rect and scale by rect size in NDC.
         const glm::vec2 rectCenterPx = glm::vec2(rect.pxPosition) + glm::vec2(rect.pxSize) * 0.5f;
         const glm::vec2 rectCenterNdc = pixelToNdc(rectCenterPx);
         const glm::vec2 rectSizeNdc = glm::vec2(rect.pxSize) * pxToNdcScale;
 
-        RenderEntity::Properties props = renderInfo.textureEntity.prop();
+        RenderEntity::Properties props = renderInfo.rectEntity.prop();
         props.transform.position = glm::vec3(rectCenterNdc, 0.0f);
         props.transform.scale = glm::vec3(rectSizeNdc, 1.0f);
         props.renderLayer = layerBase + 0;
+
+        // update the material properties
+        const glm::vec2 pxToUV = glm::vec2(1.0f / rect.pxSize.x, 1.0f / rect.pxSize.y);
+
+        if (UIRenderResoruces::RectMaterial* props = dynamic_cast<UIRenderResoruces::RectMaterial*>(
+                renderInfo.rectEntity->material->properties().get())) {
+            props->borderRadius = pxToUV * static_cast<float>(node.element.borderRadius.pixels);
+            props->borderWidth = pxToUV * static_cast<float>(node.element.borderWidth.pixels);
+            props->borderColor = node.element.borderColor;
+        } else {
+            Engine.logger.warn("Unable to update rect material properties for UI node {}", node.id);
+        }
     }
 
     if (renderInfo.textEntity.isValid()) {
@@ -443,12 +455,12 @@ void UI::createNodeRenderEnties(const UINode& node, Renderer& renderer) {
 
     if (element.backgroundImage.isSome() || element.backgroundColor.a > 0.0f) {
         // Engine.logger.debug("Creating render entity for UI element with background image");
-        MaterialHandle handle = UIRenderResoruces::get().getBackgroundMaterial(element).value();
+        MaterialHandle handle = UIRenderResoruces::get().getRectMaterial(element).value();
         Mesh bgMesh = UIRenderResoruces::get().quadMesh();
         RenderEntity entity =
             renderer.world().addRenderEntity(glm::vec3(1.0f, 1.0f, 0.0f), handle, bgMesh);
 
-        renderInfo.textureEntity = entity;
+        renderInfo.rectEntity = entity;
     }
 
     if (element.text.isSome()) {

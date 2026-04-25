@@ -22,7 +22,7 @@ namespace okay {
 
 class UIRenderResoruces {
    public:
-    using BackgroundMaterial = UIRectMaterial;
+    using RectMaterial = UIRectMaterial;
     using TextMaterial = UnlitMaterial;
 
     static UIRenderResoruces& get() {
@@ -32,19 +32,19 @@ class UIRenderResoruces {
 
     UIRenderResoruces() { loadResoruces(); }
 
-    Option<MaterialHandle> getBackgroundMaterial(const UIElement& element) {
-        Option<TextureMaterialKey> key = getTextureMaterialKey(element);
+    Option<MaterialHandle> getRectMaterial(const UIElement& element) {
+        Option<RectMaterialKey> key = getRectMaterialKey(element);
 
         if (key.isNone())
             return Option<MaterialHandle>::none();
 
-        if (_textureMaterialCache.contains(*key)) {
-            return Option<MaterialHandle>::some(_textureMaterialCache.at(*key));
+        if (_rectMaterialCache.contains(*key)) {
+            return Option<MaterialHandle>::some(_rectMaterialCache.at(*key));
         }
         Renderer* renderer = Engine.systems.getSystemChecked<Renderer>();
 
         // create a material
-        auto materialProperties = std::make_unique<BackgroundMaterial>();
+        auto materialProperties = std::make_unique<RectMaterial>();
         materialProperties->color = glm::vec3(
             element.backgroundColor.r, element.backgroundColor.g, element.backgroundColor.b);
         materialProperties->albedo = getElementTexture(element);
@@ -70,7 +70,7 @@ class UIRenderResoruces {
 
         // Engine.logger.debug("Creating new material for UI element with background image");
 
-        _textureMaterialCache[*key] = handle;
+        _rectMaterialCache[*key] = handle;
         return Option<MaterialHandle>::some(handle);
     };
 
@@ -133,17 +133,22 @@ class UIRenderResoruces {
         }
     };
 
-    struct TextureMaterialKey {
+    struct RectMaterialKey {
         Texture texture;
         glm::vec4 color;
+        glm::vec2 borderRadius;
+        glm::vec2 borderWidth;
+        glm::vec4 borderColor;
 
-        bool operator==(const TextureMaterialKey& other) const {
-            return texture == other.texture && color == other.color;
+        bool operator==(const RectMaterialKey& other) const {
+            return texture == other.texture && color == other.color &&
+                   borderRadius == other.borderRadius && borderWidth == other.borderWidth &&
+                   borderColor == other.borderColor;
         }
 
-        bool operator!=(const TextureMaterialKey& other) const { return !(*this == other); }
+        bool operator!=(const RectMaterialKey& other) const { return !(*this == other); }
 
-        bool operator<(const TextureMaterialKey& other) const {
+        bool operator<(const RectMaterialKey& other) const {
             return texture < other.texture ||
                    (texture == other.texture && glm::length(color) < glm::length(other.color));
         }
@@ -154,7 +159,7 @@ class UIRenderResoruces {
 
    private:
     std::map<TextMaterialKey, MaterialHandle> _textMaterialCache;
-    std::map<TextureMaterialKey, MaterialHandle> _textureMaterialCache;
+    std::map<RectMaterialKey, MaterialHandle> _rectMaterialCache;
 
     ShaderHandle _uiTextShader;
     ShaderHandle _uiRectShader;
@@ -201,16 +206,19 @@ class UIRenderResoruces {
         return Option<TextMaterialKey>::some(key);
     }
 
-    Option<TextureMaterialKey> getTextureMaterialKey(const UIElement& element) const {
+    Option<RectMaterialKey> getRectMaterialKey(const UIElement& element) const {
         if (element.backgroundColor.a < 0.0001f) {
-            return Option<TextureMaterialKey>::none();
+            return Option<RectMaterialKey>::none();
         }
 
-        TextureMaterialKey key = {
+        RectMaterialKey key = {
             .texture = getElementTexture(element),
             .color = element.backgroundColor,
+            .borderRadius = glm::vec2(element.borderRadius.pixels),
+            .borderWidth = glm::vec2(element.borderWidth.pixels),
+            .borderColor = element.borderColor,
         };
-        return Option<TextureMaterialKey>::some(key);
+        return Option<RectMaterialKey>::some(key);
     }
 
     Texture getElementTexture(const UIElement& element) const {
