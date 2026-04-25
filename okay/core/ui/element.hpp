@@ -122,6 +122,13 @@ struct UIElement {
         textStyle.verticalAlignment = alignment;
         return *this;
     }
+
+    UIElement& alignment(TextStyle::HorizontalAlignment horizontal,
+                         TextStyle::VerticalAlignment vertical) {
+        alignTextHorizontal(horizontal);
+        alignTextVertical(vertical);
+        return *this;
+    }
 };
 
 namespace ui {

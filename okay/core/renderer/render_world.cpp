@@ -147,11 +147,6 @@ void RenderWorld::rebuildMaterials() {
                   return getRenderItem(a).sortKey < getRenderItem(b).sortKey;
               });
 
-    for (int i = 0; i < _activeRenderItems; i++) {
-        RenderItem& item = _renderItemPool.get(_memoizedRenderItems[i]);
-        Engine.logger.debug("Render Item {} render layer: {}", i, item.renderLayer);
-    }
-
     _needsMaterialRebuild = false;
 }
 
