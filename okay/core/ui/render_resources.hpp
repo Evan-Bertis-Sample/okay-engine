@@ -26,62 +26,67 @@ class UIRenderResoruces {
 
     UIRenderResoruces() { loadResoruces(); }
 
-    Option<MaterialHandle> getMaterial(const UIElement& element) {
-        if (Option<TextMaterialKey> key = getTextMaterialKey(element)) {
-            Engine.logger.debug("Getting material for UI element with text {}",
-                                element.text.value());
+    Option<MaterialHandle> getBackgroundMaterial(const UIElement& element) {
+        Option<TextureMaterialKey> key = getTextureMaterialKey(element);
 
-            if (_textMaterialCache.contains(*key)) {
-                return Option<MaterialHandle>::some(_textMaterialCache.at(*key));
-            }
+        if (key.isNone())
+            return Option<MaterialHandle>::none();
 
-            TextStyle style = element.textStyle;
+        if (_textureMaterialCache.contains(*key)) {
+            return Option<MaterialHandle>::some(_textureMaterialCache.at(*key));
+        }
+        // create a material
+        auto materialProperties = std::make_unique<UnlitMaterial>();
+        materialProperties->color = glm::vec3(
+            element.backgroundColor.r, element.backgroundColor.g, element.backgroundColor.b);
+        materialProperties->albedo = getElementTexture(element);
+        materialProperties->isTransparent = true;
+        materialProperties->useScreenspaceCoords = true;
+        materialProperties->castsShadows = false;
+        materialProperties->recievesShadows = false;
 
-            // create a material
-            auto materialProperties = std::make_unique<UnlitMaterial>();
-            materialProperties->color = element.textColor;
-            materialProperties->albedo = FontManager::instance().getGlyphAtlas(style.font);
-            materialProperties->isTransparent = true;
-            materialProperties->useScreenspaceCoords = true;
-            materialProperties->castsShadows = false;
-            materialProperties->recievesShadows = false;
+        Renderer* renderer = Engine.systems.getSystemChecked<Renderer>();
+        MaterialHandle handle = renderer->materialRegistry().registerMaterial(
+            _uiElementShader, std::move(materialProperties));
 
-            Renderer* renderer = Engine.systems.getSystemChecked<Renderer>();
-            MaterialHandle handle = renderer->materialRegistry().registerMaterial(
-                _uiElementShader, std::move(materialProperties));
+        Engine.logger.debug("Creating new material for UI element with background image");
 
-            Engine.logger.debug("Creating new material for UI element with text {}",
-                                element.text.value());
+        _textureMaterialCache[*key] = handle;
+        return Option<MaterialHandle>::some(handle);
+    };
 
-            _textMaterialCache[*key] = handle;
-            return Option<MaterialHandle>::some(handle);
+    Option<MaterialHandle> getTextMaterial(const UIElement& element) {
+        Option<TextMaterialKey> key = getTextMaterialKey(element);
+
+        if (key.isNone())
+            return Option<MaterialHandle>::none();
+
+        Engine.logger.debug("Getting material for UI element with text {}", element.text.value());
+
+        if (_textMaterialCache.contains(*key)) {
+            return Option<MaterialHandle>::some(_textMaterialCache.at(*key));
         }
 
-        if (Option<TextureMaterialKey> key = getTextureMaterialKey(element)) {
-            if (_textureMaterialCache.contains(*key)) {
-                return Option<MaterialHandle>::some(_textureMaterialCache.at(*key));
-            }
-            // create a material
-            auto materialProperties = std::make_unique<UnlitMaterial>();
-            materialProperties->color = glm::vec3(
-                element.backgroundColor.r, element.backgroundColor.g, element.backgroundColor.b);
-            materialProperties->albedo = getElementTexture(element);
-            materialProperties->isTransparent = true;
-            materialProperties->useScreenspaceCoords = true;
-            materialProperties->castsShadows = false;
-            materialProperties->recievesShadows = false;
+        TextStyle style = element.textStyle;
 
-            Renderer* renderer = Engine.systems.getSystemChecked<Renderer>();
-            MaterialHandle handle = renderer->materialRegistry().registerMaterial(
-                _uiElementShader, std::move(materialProperties));
+        // create a material
+        auto materialProperties = std::make_unique<UnlitMaterial>();
+        materialProperties->color = element.textColor;
+        materialProperties->albedo = FontManager::instance().getGlyphAtlas(style.font);
+        materialProperties->isTransparent = true;
+        materialProperties->useScreenspaceCoords = true;
+        materialProperties->castsShadows = false;
+        materialProperties->recievesShadows = false;
 
-            Engine.logger.debug("Creating new material for UI element with background image");
+        Renderer* renderer = Engine.systems.getSystemChecked<Renderer>();
+        MaterialHandle handle = renderer->materialRegistry().registerMaterial(
+            _uiElementShader, std::move(materialProperties));
 
-            _textureMaterialCache[*key] = handle;
-            return Option<MaterialHandle>::some(handle);
-        }
+        Engine.logger.debug("Creating new material for UI element with text {}",
+                            element.text.value());
 
-        return Option<MaterialHandle>::none();
+        _textMaterialCache[*key] = handle;
+        return Option<MaterialHandle>::some(handle);
     };
 
     static constexpr std::string_view UI_ELEMENT_SHADER = "shaders/unlit";
@@ -186,6 +191,7 @@ class UIRenderResoruces {
             return element.backgroundImage.value();
         }
 
+        Engine.logger.debug("Using white texture for UI element with no background image");
         return _whiteTexture;
     }
 };

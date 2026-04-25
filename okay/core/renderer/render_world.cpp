@@ -46,6 +46,7 @@ RenderEntity::Properties RenderEntity::operator*() const {
     p.material = item.material;
     p.mesh = item.mesh;
     p.transform = item.transform;
+    p.renderLayer = item.renderLayer;
     return p;
 }
 
@@ -145,6 +146,11 @@ void RenderWorld::rebuildMaterials() {
 
                   return getRenderItem(a).sortKey < getRenderItem(b).sortKey;
               });
+
+    for (int i = 0; i < _activeRenderItems; i++) {
+        RenderItem& item = _renderItemPool.get(_memoizedRenderItems[i]);
+        Engine.logger.debug("Render Item {} render layer: {}", i, item.renderLayer);
+    }
 
     _needsMaterialRebuild = false;
 }
@@ -321,6 +327,7 @@ void RenderWorld::updateEntity(RenderItemHandle renderItem,
     // check for changes and mark dirty as needed
     if (item.material != properties.material || item.renderLayer != properties.renderLayer) {
         item.material = properties.material;
+        item.renderLayer = properties.renderLayer;
         handleDirtyMaterial(renderItem);
     }
     if (item.mesh != properties.mesh) {
@@ -350,21 +357,22 @@ void RenderItem::computeSortKey() {
     }
 
     bool opaque = !material->properties()->flags().hasFlag(MaterialFlags::TRANSPARENT);
-    std::uint64_t shaderID = material->shaderID() & ((1ULL << 27) - 1);
-    std::uint64_t materialID = material->id() & ((1ULL << 27) - 1);
+
+    std::uint64_t transparentBit = opaque ? 0ULL : 1ULL;
     std::uint64_t layer = static_cast<std::uint64_t>(this->renderLayer) & 0xFFULL;
+    std::uint64_t shaderID = material->shaderID() & ((1ULL << 27) - 1ULL);
+    std::uint64_t materialID = material->id() & ((1ULL << 27) - 1ULL);
 
     // Layout (MSB → LSB):
-    // [63]       : opaque flag
-    // [62..36]   : shader id (27 bits)
-    // [35..9]    : material id (27 bits)
-    // [8..1]     : render layer (8 bits)
-    // [0]        : unused
+    // [63]     transparentBit   opaque = 0, transparent = 1
+    // [62..55] renderLayer      lower layer = earlier
+    // [54..28] shaderID
+    // [27..1]  materialID
+    // [0]      unused
 
     sortKey = 0;
-
-    sortKey |= (static_cast<std::uint64_t>(opaque) << 63);
-    sortKey |= (shaderID << 36);
-    sortKey |= (materialID << 9);
-    sortKey |= (layer << 1);
+    sortKey |= transparentBit << 63;
+    sortKey |= layer << 55;
+    sortKey |= shaderID << 28;
+    sortKey |= materialID << 1;
 }

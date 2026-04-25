@@ -443,7 +443,7 @@ void UI::createNodeRenderEnties(const UINode& node, Renderer& renderer) {
 
     if (element.backgroundImage.isSome() || element.backgroundColor.a > 0.0f) {
         Engine.logger.debug("Creating render entity for UI element with background image");
-        MaterialHandle handle = UIRenderResoruces::get().getMaterial(element).value();
+        MaterialHandle handle = UIRenderResoruces::get().getBackgroundMaterial(element).value();
         Mesh bgMesh = UIRenderResoruces::get().quadMesh();
         RenderEntity entity =
             renderer.world().addRenderEntity(glm::vec3(1.0f, 1.0f, 0.0f), handle, bgMesh);
@@ -455,7 +455,7 @@ void UI::createNodeRenderEnties(const UINode& node, Renderer& renderer) {
         Engine.logger.debug("Creating render entity for UI element with text {}",
                             element.text.value());
         // render text
-        MaterialHandle handle = UIRenderResoruces::get().getMaterial(element).value();
+        MaterialHandle handle = UIRenderResoruces::get().getTextMaterial(element).value();
         TextStyle style = element.textStyle;
 
         if (!FontManager::instance().isLoadedFont(style.font)) {

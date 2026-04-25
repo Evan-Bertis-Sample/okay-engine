@@ -4,6 +4,8 @@
 #include <glm/gtc/random.hpp>
 #include <utility>
 
+#include <thread>
+
 static void __gameInitialize();
 static void __gameUpdate();
 static void __gameShutdown();
@@ -76,29 +78,30 @@ static void __gameInitialize() {
             okay::ui::flexbox()(
                 okay::ui::flexbox()
                     .backgroundColorSet(glm::vec4{1.0f, 1.0f, 1.0f, 1.0f})
-                    .backgroundImageSet(okay::load::engineTexture("textures/white.jpg"))
+                    // .backgroundImageSet(okay::load::engineTexture("textures/uv_test.jpg"))
                     (
                         okay::ui::text("Hello world!")
                             .textColorSet(glm::vec3(0.0f, 0.0f, 0.0f))
                             .widthGrow()
                             .heightGrow()
                             .backgroundColorSet(glm::vec4(1.0f, 0.0f, 1.0f, 1.0f))
-                        ,
-                        okay::ui::slot(okay::UIPrimaryAxis::Horizontal)
-                            .widthGrow()
-                            .heightGrow()
-                        (
-                            okay::ui::text("Left")
-                                .textColorSet(glm::vec3(1.0f, 0.0f, 1.0f))
-                                .alignTextHorizontal(okay::TextStyle::HorizontalAlignment::Right)
-                                .widthGrow()
-                            ,
-                            okay::ui::text("Right")
-                                .textColorSet(glm::vec3(0.0f, 0.0f, 0.0f))
-                                .alignTextVertical(okay::TextStyle::VerticalAlignment::Middle)
-                                .widthGrow()
-                                .heightGrow()
-                        )
+                        // ,
+                        // okay::ui::slot(okay::UIPrimaryAxis::Horizontal)
+                        //     .widthGrow()
+                        //     .heightGrow()
+                        // (
+                        //     okay::ui::text("Left")
+                        //         .textColorSet(glm::vec3(1.0f, 0.0f, 1.0f))
+                        //         .alignTextHorizontal(okay::TextStyle::HorizontalAlignment::Right)
+                        //         .widthGrow()
+                        //         .backgroundColorSet(glm::vec4(0.0f, 1.0f, 0.0f, 1.0f))
+                        //     ,
+                        //     okay::ui::text("Right")
+                        //         .textColorSet(glm::vec3(0.0f, 0.0f, 0.0f))
+                        //         .alignTextVertical(okay::TextStyle::VerticalAlignment::Middle)
+                        //         .widthGrow()
+                        //         .heightGrow()
+                        // )
                     )
             )
         );
