@@ -336,21 +336,12 @@ void UILayout::toString(std::stringstream& ss, const UINode& node, int indent) c
 
 // UI
 
-static bool hasPrintedLayout = false;
-
 void UI::render(glm::vec2 screenPosition, SystemParameter<Renderer> renderer) {
     UILayout::Context layoutContext{
         .screenSize = glm::ivec2(renderer->width(), renderer->height()),
     };
     _layout.layout(layoutContext);
     renderNode(_root, *renderer);
-
-    if (!hasPrintedLayout) {
-        std::stringstream ss;
-        _layout.toString(ss);
-        Engine.logger.debug("{}", ss.str());
-        hasPrintedLayout = true;
-    }
 }
 
 void UI::renderNode(const UINode& node, Renderer& renderer, int layerBase) {

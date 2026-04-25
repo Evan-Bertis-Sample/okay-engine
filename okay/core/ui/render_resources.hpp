@@ -48,15 +48,6 @@ class UIRenderResoruces {
         materialProperties->color = glm::vec3(
             element.backgroundColor.r, element.backgroundColor.g, element.backgroundColor.b);
         materialProperties->albedo = getElementTexture(element);
-
-        const glm::vec2 pxToNDCScale =
-            glm::vec2(2.0f / renderer->width(), 2.0f / renderer->height());
-
-        materialProperties->borderWidth =
-            pxToNDCScale * static_cast<float>(element.borderWidth.pixels);
-        materialProperties->borderRadius =
-            pxToNDCScale * static_cast<float>(element.borderRadius.pixels);
-
         materialProperties->borderColor = element.borderColor;
 
         // flags
@@ -136,14 +127,10 @@ class UIRenderResoruces {
     struct RectMaterialKey {
         Texture texture;
         glm::vec4 color;
-        glm::vec2 borderRadius;
-        glm::vec2 borderWidth;
-        glm::vec4 borderColor;
 
         bool operator==(const RectMaterialKey& other) const {
             return texture == other.texture && color == other.color &&
-                   borderRadius == other.borderRadius && borderWidth == other.borderWidth &&
-                   borderColor == other.borderColor;
+                   glm::length(color) == glm::length(other.color);
         }
 
         bool operator!=(const RectMaterialKey& other) const { return !(*this == other); }
@@ -214,9 +201,6 @@ class UIRenderResoruces {
         RectMaterialKey key = {
             .texture = getElementTexture(element),
             .color = element.backgroundColor,
-            .borderRadius = glm::vec2(element.borderRadius.pixels),
-            .borderWidth = glm::vec2(element.borderWidth.pixels),
-            .borderColor = element.borderColor,
         };
         return Option<RectMaterialKey>::some(key);
     }

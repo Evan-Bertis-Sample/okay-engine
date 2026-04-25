@@ -47,8 +47,8 @@ struct SceneMaterialProperties {
     }
 };
 
-struct UnlitMaterial : public SceneMaterialProperties,
-                       public OkayMaterialProperties<UnlitMaterial> {
+struct UnlitMaterial final : public SceneMaterialProperties,
+                             public OkayMaterialProperties<UnlitMaterial> {
     UniformProperty<glm::vec3, FixedString("u_color")> color{};
     TextureProperty<FixedString("u_albedo")> albedo;
 

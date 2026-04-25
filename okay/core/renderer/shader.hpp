@@ -103,6 +103,8 @@ class Shader {
         UniformInfo& info = _uniforms[uniform];
         info.location = location;
         info.value = value;
+
+        // Engine.logger.debug("Setting uniform '{}': {}", uniform, location);
         uni::set(location, value);
 
         return Failable::ok({});
