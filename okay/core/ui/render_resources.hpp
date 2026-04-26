@@ -45,9 +45,14 @@ class UIRenderResoruces {
 
         // create a material
         auto materialProperties = std::make_unique<RectMaterial>();
+        Engine.logger.debug(
+            "Setting background color to ({}, {}, {}, {}) for UI element with background image",
+            element.backgroundColor.r,
+            element.backgroundColor.g,
+            element.backgroundColor.b,
+            element.backgroundColor.a);
         materialProperties->color = element.backgroundColor;
         materialProperties->albedo = getElementTexture(element);
-
         materialProperties->borderColor = element.borderColor;
 
         // flags

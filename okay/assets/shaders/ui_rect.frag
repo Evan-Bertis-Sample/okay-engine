@@ -70,7 +70,7 @@ void main() {
       float innerEdge = -borderDist;
 
         // 1 near the outer edge, 0 past the inner edge.
-      borderMask = 1.0f - smoothstep(innerEdge - aa, innerEdge + aa, dist);
+      borderMask = smoothstep(innerEdge - aa, innerEdge + aa, dist);
    }
 
    vec4 color = mix(fillColor, u_borderColor, borderMask);
