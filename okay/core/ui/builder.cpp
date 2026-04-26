@@ -11,15 +11,15 @@ static glm::vec4 scaleMaintainA(glm::vec4 vec, float s) {
 }
 
 UIStyle::UIStyle() {
-    const glm::vec4 black = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+    const glm::vec4 white = glm::vec4(1.0f);
 
-    text = UIElement().textColorSet(scaleMaintainA(black, 0.8)).textSizeSet(12.0f);
+    text = UIElement().textColorSet(scaleMaintainA(white, 0.3)).textSizeSet(12.0f);
 
-    h1 = UIElement().textColorSet(scaleMaintainA(black, 0.95)).textSizeSet(24.0f);
+    h1 = UIElement().textColorSet(scaleMaintainA(white, 0.1)).textSizeSet(24.0f);
 
-    h2 = UIElement().textColorSet(scaleMaintainA(black, 0.9)).textSizeSet(18.0f);
+    h2 = UIElement().textColorSet(scaleMaintainA(white, 0.2)).textSizeSet(18.0f);
 
-    h3 = UIElement().textColorSet(scaleMaintainA(black, 0.9)).textSizeSet(14.0f);
+    h3 = UIElement().textColorSet(scaleMaintainA(white, 0.2)).textSizeSet(14.0f);
 };
 
 void UIStyle::setMainFont(const FontManager::FontHandle& font) {
