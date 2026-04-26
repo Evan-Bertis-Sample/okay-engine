@@ -19,8 +19,7 @@ int main() {
     surfaceConfig.height = 480;
     okay::Surface surface(surfaceConfig);
 
-    okay::RendererSettings rendererSettings{
-        .surfaceConfig = surfaceConfig,
+    okay::RendererSettings rendererSettings{.surfaceConfig = surfaceConfig,
         .pipeline = okay::RenderPipeline::create(std::make_unique<okay::ScenePass>()),
         .enableIMGUI = true};
 
@@ -28,9 +27,9 @@ int main() {
 
     okay::Game::create()
         .addSystems(std::move(renderer),
-                    std::make_unique<okay::AssetManager>(),
-                    std::make_unique<okay::ECS>(),
-                    std::make_unique<okay::TweenEngine>())
+            std::make_unique<okay::AssetManager>(),
+            std::make_unique<okay::ECS>(),
+            std::make_unique<okay::TweenEngine>())
         .onInitialize(__gameInitialize)
         .onUpdate(__gameUpdate)
         .onShutdown(__gameShutdown)
@@ -54,9 +53,9 @@ static void __gameInitialize() {
 
     okay::FontManager::FontHandle font = okay::load::engineFont("fonts/ARIAL.TTF");
     okay::TextStyle style{.font = font,
-                          .fontHeight = 1.0f,
-                          .horizontalAlignment = okay::TextStyle::HorizontalAlignment::Center,
-                          .verticalAlignment = okay::TextStyle::VerticalAlignment::Top};
+        .fontHeight = 1.0f,
+        .horizontalAlignment = okay::TextStyle::HorizontalAlignment::Center,
+        .verticalAlignment = okay::TextStyle::VerticalAlignment::Top};
 
     okay::Mesh textMesh = okay::mesh(okay::textMesh("Hello, world!", style, true));
 
@@ -69,8 +68,7 @@ static void __gameInitialize() {
     okay::ecs::registerBuiltins();
 
     s_light = okay::ecs::entity()
-                  .addComponent<okay::TransformComponent>(
-                      glm::vec3{},
+                  .addComponent<okay::TransformComponent>(glm::vec3{},
                       glm::vec3{0.1f},
                       glm::angleAxis(glm::radians(0.0f), glm::vec3{2.0f, 3.0f, 1.0f}))
                   .addComponent<okay::LightComponent>(
@@ -115,9 +113,9 @@ static void __gameUpdate() {
 
     if (toDelete.isValid()) {
         okay::Engine.logger.info("FPS: {} | Destroying entity {}, now {} entities",
-                                 okay::Engine.time->fps(),
-                                 toDelete.id(),
-                                 okay::ecs::entityCount());
+            okay::Engine.time->fps(),
+            toDelete.id(),
+            okay::ecs::entityCount());
         toDelete.destroy();
     }
     ImGui::ShowDemoWindow();
