@@ -18,8 +18,12 @@ struct CameraComponent {
                    : Camera::ProjectionType::ORTHOGRAPHIC;
     }
 
-    bool operator==(const CameraComponent& other) const { return lens == other.lens; }
-    bool operator!=(const CameraComponent& other) const { return !(*this == other); }
+    bool operator==(const CameraComponent& other) const {
+        return lens == other.lens;
+    }
+    bool operator!=(const CameraComponent& other) const {
+        return !(*this == other);
+    }
 };
 
 }  // namespace okay

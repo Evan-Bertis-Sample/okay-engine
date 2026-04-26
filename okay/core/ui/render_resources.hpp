@@ -30,7 +30,9 @@ class UIRenderResoruces {
         return instance;
     }
 
-    UIRenderResoruces() { loadResoruces(); }
+    UIRenderResoruces() {
+        loadResoruces();
+    }
 
     Option<MaterialHandle> getRectMaterial(const UIElement& element) {
         Option<RectMaterialKey> key = getRectMaterialKey(element);
@@ -119,13 +121,15 @@ class UIRenderResoruces {
                    atlasTextureWidth == other.atlasTextureWidth;
         }
 
-        bool operator!=(const TextMaterialKey& other) const { return !(*this == other); }
+        bool operator!=(const TextMaterialKey& other) const {
+            return !(*this == other);
+        }
 
         bool operator<(const TextMaterialKey& other) const {
             return font < other.font ||
                    (font == other.font && glm::length(color) < glm::length(other.color)) ||
                    (font == other.font && color == other.color &&
-                    atlasTextureWidth < other.atlasTextureWidth);
+                       atlasTextureWidth < other.atlasTextureWidth);
         }
     };
 
@@ -141,7 +145,9 @@ class UIRenderResoruces {
                    borderWidth == o.borderWidth && borderColor == o.borderColor;
         }
 
-        bool operator!=(const RectMaterialKey& o) const { return !(*this == o); }
+        bool operator!=(const RectMaterialKey& o) const {
+            return !(*this == o);
+        }
 
         bool operator<(const RectMaterialKey& o) const {
             if (texture != o.texture)
@@ -179,8 +185,12 @@ class UIRenderResoruces {
         }
     };
 
-    Mesh quadMesh() const { return _quadMesh; }
-    Texture whiteTexture() const { return _whiteTexture; }
+    Mesh quadMesh() const {
+        return _quadMesh;
+    }
+    Texture whiteTexture() const {
+        return _whiteTexture;
+    }
 
    private:
     std::map<TextMaterialKey, MaterialHandle> _textMaterialCache;
@@ -200,12 +210,12 @@ class UIRenderResoruces {
 
         Renderer* renderer = Engine.systems.getSystemChecked<Renderer>();
         Shader textShader = unwrapAssetResult(am->loadEngineAssetSync<Shader>(UI_TEXT_SHADER));
-        _uiTextShader = renderer->materialRegistry().registerShader(textShader.vertexShader,
-                                                                    textShader.fragmentShader);
+        _uiTextShader = renderer->materialRegistry().registerShader(
+            textShader.vertexShader, textShader.fragmentShader);
 
         Shader rectShader = unwrapAssetResult(am->loadEngineAssetSync<Shader>(UI_RECT_SHADER));
-        _uiRectShader = renderer->materialRegistry().registerShader(rectShader.vertexShader,
-                                                                    rectShader.fragmentShader);
+        _uiRectShader = renderer->materialRegistry().registerShader(
+            rectShader.vertexShader, rectShader.fragmentShader);
 
         _quadMesh = renderer->meshBuffer().addMesh(
             primitives::rect().sizeSet(glm::vec2(1.0f, 1.0f)).twoSidedSet(true).build());

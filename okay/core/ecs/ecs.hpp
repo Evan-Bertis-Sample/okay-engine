@@ -70,7 +70,9 @@ class ECS : public EntityComponentStore, public System<SystemScope::LEVEL> {
             return _ecs == other._ecs && _index == other._index;
         }
 
-        bool operator!=(const EntityIterator& other) const { return !(*this == other); }
+        bool operator!=(const EntityIterator& other) const {
+            return !(*this == other);
+        }
 
        private:
         void skipInvalid() {
@@ -97,13 +99,17 @@ class ECS : public EntityComponentStore, public System<SystemScope::LEVEL> {
     template <typename Query>
     class QueryRange {
        public:
-        explicit QueryRange(ECS* ecs) : _ecs(ecs) { Query::initialize(*_ecs); }
+        explicit QueryRange(ECS* ecs) : _ecs(ecs) {
+            Query::initialize(*_ecs);
+        }
 
-        EntityIterator<Query> begin() { return EntityIterator<Query>(_ecs, 0); }
+        EntityIterator<Query> begin() {
+            return EntityIterator<Query>(_ecs, 0);
+        }
 
         EntityIterator<Query> end() {
-            return EntityIterator<Query>(_ecs,
-                                         static_cast<std::uint32_t>(_ecs->_entityMetas.capacity()));
+            return EntityIterator<Query>(
+                _ecs, static_cast<std::uint32_t>(_ecs->_entityMetas.capacity()));
         }
 
        private:

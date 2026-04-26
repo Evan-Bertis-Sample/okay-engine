@@ -61,7 +61,9 @@ struct UIElementGenerator {
             return *this;
         }
 
-        bool operator!=(const Iterator& other) const { return current < other.current; }
+        bool operator!=(const Iterator& other) const {
+            return current < other.current;
+        }
     };
 
     UIElementGenerator(std::int32_t count, std::function<UIElement(std::int32_t)> generator)
@@ -70,9 +72,9 @@ struct UIElementGenerator {
     }
 
     UIElementGenerator(std::int32_t start,
-                       std::int32_t end,
-                       std::int32_t increment,
-                       std::function<UIElement(std::int32_t)> generator)
+        std::int32_t end,
+        std::int32_t increment,
+        std::function<UIElement(std::int32_t)> generator)
         : _start(start), _end(end), _increment(increment), _generator(generator) {
         validateRange();
     }
@@ -106,9 +108,13 @@ struct UIElementGenerator {
         }
     }
 
-    Iterator begin() { return Iterator{_start, _end, _increment, _generator}; }
+    Iterator begin() {
+        return Iterator{_start, _end, _increment, _generator};
+    }
 
-    Iterator end() { return Iterator{_end, _end, _increment, _generator}; }
+    Iterator end() {
+        return Iterator{_end, _end, _increment, _generator};
+    }
 
    private:
     std::int32_t _start;
@@ -174,7 +180,9 @@ struct UIElement {
         return std::move(*this);
     }
 
-    void addChild(UIElement child) { children.push_back(child); }
+    void addChild(UIElement child) {
+        children.push_back(child);
+    }
     void addChild(UIElementGenerator generator) {
         for (UIElement element : generator) {
             children.push_back(element);
@@ -185,10 +193,8 @@ struct UIElement {
         return axis == UIPrimaryAxis::Horizontal ? width : height;
     }
 
-    UIElement& paddingSet(size::Fixed left,
-                          size::Fixed right,
-                          size::Fixed top,
-                          size::Fixed bottom) {
+    UIElement& paddingSet(
+        size::Fixed left, size::Fixed right, size::Fixed top, size::Fixed bottom) {
         leftPadding = left;
         rightPadding = right;
         topPadding = top;
@@ -226,16 +232,32 @@ struct UIElement {
         return *this;
     }
 
-    UIElement& widthGrow() { return widthSet(size::Grow{}); }
-    UIElement& heightGrow() { return heightSet(size::Grow{}); }
-    UIElement& grow() { return widthGrow().heightGrow(); }
+    UIElement& widthGrow() {
+        return widthSet(size::Grow{});
+    }
+    UIElement& heightGrow() {
+        return heightSet(size::Grow{});
+    }
+    UIElement& grow() {
+        return widthGrow().heightGrow();
+    }
 
-    UIElement& widthFit() { return widthSet(size::Fit{}); }
-    UIElement& heightFit() { return heightSet(size::Fit{}); }
-    UIElement& fit() { return widthFit().heightFit(); }
+    UIElement& widthFit() {
+        return widthSet(size::Fit{});
+    }
+    UIElement& heightFit() {
+        return heightSet(size::Fit{});
+    }
+    UIElement& fit() {
+        return widthFit().heightFit();
+    }
 
-    UIElement& widthPercent(float percent) { return widthSet(size::Percent{percent}); }
-    UIElement& heightPercent(float percent) { return heightSet(size::Percent{percent}); }
+    UIElement& widthPercent(float percent) {
+        return widthSet(size::Percent{percent});
+    }
+    UIElement& heightPercent(float percent) {
+        return heightSet(size::Percent{percent});
+    }
 
     UIElement& alignTextHorizontal(TextStyle::HorizontalAlignment alignment) {
         textStyle.horizontalAlignment = alignment;
@@ -247,14 +269,16 @@ struct UIElement {
         return *this;
     }
 
-    UIElement& alignment(TextStyle::HorizontalAlignment horizontal,
-                         TextStyle::VerticalAlignment vertical) {
+    UIElement& alignment(
+        TextStyle::HorizontalAlignment horizontal, TextStyle::VerticalAlignment vertical) {
         alignTextHorizontal(horizontal);
         alignTextVertical(vertical);
         return *this;
     }
 
-    UIElement& alignTextLeft() { return alignTextHorizontal(TextStyle::HorizontalAlignment::Left); }
+    UIElement& alignTextLeft() {
+        return alignTextHorizontal(TextStyle::HorizontalAlignment::Left);
+    }
     UIElement& alignTextRight() {
         return alignTextHorizontal(TextStyle::HorizontalAlignment::Right);
     }
@@ -262,9 +286,15 @@ struct UIElement {
         return alignTextHorizontal(TextStyle::HorizontalAlignment::Center);
     }
 
-    UIElement& alignTextTop() { return alignTextVertical(TextStyle::VerticalAlignment::Top); }
-    UIElement& alignTextMiddle() { return alignTextVertical(TextStyle::VerticalAlignment::Middle); }
-    UIElement& alignTextBottom() { return alignTextVertical(TextStyle::VerticalAlignment::Bottom); }
+    UIElement& alignTextTop() {
+        return alignTextVertical(TextStyle::VerticalAlignment::Top);
+    }
+    UIElement& alignTextMiddle() {
+        return alignTextVertical(TextStyle::VerticalAlignment::Middle);
+    }
+    UIElement& alignTextBottom() {
+        return alignTextVertical(TextStyle::VerticalAlignment::Bottom);
+    }
 
     UIElement& textSizeSet(float size) {
         textStyle.fontHeight = size;

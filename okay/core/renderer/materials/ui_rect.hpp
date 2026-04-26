@@ -20,24 +20,30 @@ struct UIRectMaterial : public SceneMaterialProperties,
     UniformProperty<glm::vec2, FixedString("u_clipSpaceBR")> clipSpaceBR{glm::vec2(1.0f, -1.0f)};
 
     auto uniformRefs() const {
-        return std::tuple_cat(
-            SceneMaterialProperties::uniformRefs(),
+        return std::tuple_cat(SceneMaterialProperties::uniformRefs(),
             std::tie(color, borderRadius, borderWidth, borderColor, clipSpaceTL, clipSpaceBR));
     }
 
     auto uniformRefs() {
-        return std::tuple_cat(
-            SceneMaterialProperties::uniformRefs(),
+        return std::tuple_cat(SceneMaterialProperties::uniformRefs(),
             std::tie(color, borderRadius, borderWidth, borderColor, clipSpaceTL, clipSpaceBR));
     }
 
-    auto uniformBlockRefs() { return std::tie(); }
+    auto uniformBlockRefs() {
+        return std::tie();
+    }
 
-    auto uniformBlockRefs() const { return std::tie(); }
+    auto uniformBlockRefs() const {
+        return std::tie();
+    }
 
-    auto textureRefs() { return std::tie(albedo); }
+    auto textureRefs() {
+        return std::tie(albedo);
+    }
 
-    auto textureRefs() const { return std::tie(albedo); };
+    auto textureRefs() const {
+        return std::tie(albedo);
+    };
 
     MaterialFlagCollection flags() {
         MaterialFlagCollection flags = SceneMaterialProperties::flags();

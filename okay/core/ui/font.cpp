@@ -14,8 +14,8 @@ FontManager::FontManager() {
     }
 };
 
-Option<FontHandle> FontManager::loadFont(const std::string& fontPath,
-                                         const FontLoadOptions& options) {
+Option<FontHandle> FontManager::loadFont(
+    const std::string& fontPath, const FontLoadOptions& options) {
     if (_fontFaces.find(fontPath) != _fontFaces.end()) {
         return Option<FontHandle>::some(FontHandle{_fontFaces[fontPath]});
     }
@@ -122,8 +122,8 @@ FontManager::FontHandle FontManager::defaultFont() {
         Engine.logger.debug("Loading default font");
         AssetManager* am = Engine.systems.getSystemChecked<AssetManager>();
         _defaultFont = Option<FontHandle>::some(
-            unwrapAssetResult(am->loadEngineAssetSync<FontManager::FontHandle>("fonts/ARIAL.ttf",
-                                                                               FontLoadOptions{})));
+            unwrapAssetResult(am->loadEngineAssetSync<FontManager::FontHandle>(
+                "fonts/ARIAL.ttf", FontLoadOptions{})));
     }
     return _defaultFont.value();
 }

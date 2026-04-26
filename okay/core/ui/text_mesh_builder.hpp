@@ -20,14 +20,11 @@ class TextMeshBuilder {
         MeshVertex vertices[4];
     };
 
-    static void appendQuadIndices(std::vector<std::uint32_t>& indices,
-                                  std::uint32_t baseVertex,
-                                  bool doubleSided);
+    static void appendQuadIndices(
+        std::vector<std::uint32_t>& indices, std::uint32_t baseVertex, bool doubleSided);
 
-    static TextQuad generateQuadForGlyph(const FontManager::Glyph& glyph,
-                                         float baselineX,
-                                         float baselineY,
-                                         float layoutScale);
+    static TextQuad generateQuadForGlyph(
+        const FontManager::Glyph& glyph, float baselineX, float baselineY, float layoutScale);
 };
 
 inline MeshData textMesh(std::string_view text, const TextStyle& style, bool doubleSided) {

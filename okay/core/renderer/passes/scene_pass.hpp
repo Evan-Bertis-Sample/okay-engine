@@ -20,7 +20,9 @@ class ScenePass : public IRenderPass {
    public:
     ScenePass() {}
 
-    virtual const std::string_view name() const override { return "ScenePass"; }
+    virtual const std::string_view name() const override {
+        return "ScenePass";
+    }
 
     virtual void initialize() override {}
 
@@ -85,11 +87,11 @@ class ScenePass : public IRenderPass {
     }
 
     void handleMaterialSwitch(const RendererContext& context,
-                              RenderItem& item,
-                              const glm::mat4& projection,
-                              const glm::mat4& view,
-                              const glm::vec3& camPos,
-                              const glm::vec3& camDir) {
+        RenderItem& item,
+        const glm::mat4& projection,
+        const glm::mat4& view,
+        const glm::vec3& camPos,
+        const glm::vec3& camDir) {
         applyMaterialFlags(item);
 
         if (_shaderIndex != item.material->shaderID()) {

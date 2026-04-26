@@ -139,7 +139,7 @@ void UILayout::computeFitSizes(UINode& node, LayoutRect parent) {
                         std::max(0, contentWidth - marginCrossTotal(child.element, mainAxis));
                     childRect.pxSize.x =
                         std::max(static_cast<int>(percent * static_cast<float>(childContentWidth)),
-                                 minWidth);
+                            minWidth);
                 }
             }
         } else {
@@ -156,7 +156,7 @@ void UILayout::computeFitSizes(UINode& node, LayoutRect parent) {
                         std::max(0, contentHeight - marginCrossTotal(child.element, mainAxis));
                     childRect.pxSize.y =
                         std::max(static_cast<int>(percent * static_cast<float>(childContentHeight)),
-                                 minHeight);
+                            minHeight);
                 }
             }
         }
@@ -304,9 +304,8 @@ void UILayout::computePositions(UINode& node, LayoutRect parent) {
     }
 }
 
-Option<int> UILayout::computeElementSizeAlongAxis(const UINode& node,
-                                                  UIPrimaryAxis axis,
-                                                  LayoutRect frame) const {
+Option<int> UILayout::computeElementSizeAlongAxis(
+    const UINode& node, UIPrimaryAxis axis, LayoutRect frame) const {
     const UIElement& element = node.element;
     ElementSize size = element.getSizeAlongAxis(axis);
 
@@ -333,15 +332,15 @@ Option<int> UILayout::computeElementSizeAlongAxis(const UINode& node,
 
             TextLayout layout(element.text.value(), style);
             resolved = std::max(resolved,
-                                axis == UIPrimaryAxis::Horizontal ? (int)layout.metrics().width()
-                                                                  : (int)layout.metrics().height());
+                axis == UIPrimaryAxis::Horizontal ? (int)layout.metrics().width()
+                                                  : (int)layout.metrics().height());
         }
 
         if (element.backgroundImage.isSome()) {
             Texture texture = element.backgroundImage.value();
             resolved = std::max(resolved,
-                                axis == UIPrimaryAxis::Horizontal ? (int)texture.getMeta().width
-                                                                  : (int)texture.getMeta().height);
+                axis == UIPrimaryAxis::Horizontal ? (int)texture.getMeta().width
+                                                  : (int)texture.getMeta().height);
         }
 
         // Only intrinsic leaf fit is resolved here.

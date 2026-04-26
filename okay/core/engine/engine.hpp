@@ -26,11 +26,17 @@ class OkayEngine {
         _shutdownLoc = loc;
     }
 
-    bool shouldRun() { return _shouldRun; }
+    bool shouldRun() {
+        return _shouldRun;
+    }
 
-    std::size_t frameCount() const { return _frameCount; }
+    std::size_t frameCount() const {
+        return _frameCount;
+    }
 
-    std::source_location shutdownLoc() const { return _shutdownLoc; }
+    std::source_location shutdownLoc() const {
+        return _shutdownLoc;
+    }
 
    private:
     bool _shouldRun{true};
@@ -44,7 +50,9 @@ extern OkayEngine Engine;
 
 class Game {
    public:
-    static Game create() { return Game(); }
+    static Game create() {
+        return Game();
+    }
 
     // ...variadic function that takes in std::unique_ptr<OkaySystem<T>> for each system type
     template <typename... Systems>
@@ -218,7 +226,9 @@ struct SystemParameter {
         return system;
     }
 
-    T* operator->() const { return get(); }
+    T* operator->() const {
+        return get();
+    }
 };
 
 };  // namespace okay

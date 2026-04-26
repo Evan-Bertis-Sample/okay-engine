@@ -17,15 +17,21 @@ class Time {
         _deltaTime = 0;
     }
 
-    std::uint32_t deltaTimeMs() const { return _deltaTime; }
-    float deltaTimeSec() const { return static_cast<float>(_deltaTime) / 1000.0f; }
+    std::uint32_t deltaTimeMs() const {
+        return _deltaTime;
+    }
+    float deltaTimeSec() const {
+        return static_cast<float>(_deltaTime) / 1000.0f;
+    }
 
     std::uint32_t timeSinceStartMs() const {
-        return std::chrono::duration_cast<std::chrono::milliseconds>(HighResClock::now() -
-                                                                     _startOfProgram)
+        return std::chrono::duration_cast<std::chrono::milliseconds>(
+            HighResClock::now() - _startOfProgram)
             .count();
     }
-    float timeSinceStartSec() const { return static_cast<float>(timeSinceStartMs()) / 1000.0f; }
+    float timeSinceStartSec() const {
+        return static_cast<float>(timeSinceStartMs()) / 1000.0f;
+    }
 
     void updateDeltaTime() {
         TimePoint prevTime = _lastTime;
@@ -34,7 +40,9 @@ class Time {
             std::chrono::duration_cast<std::chrono::milliseconds>(_lastTime - prevTime).count();
     }
 
-    float fps() const { return 1000.0f / static_cast<float>(_deltaTime); }
+    float fps() const {
+        return 1000.0f / static_cast<float>(_deltaTime);
+    }
 
    private:
     TimePoint _lastTime;

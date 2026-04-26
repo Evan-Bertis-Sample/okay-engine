@@ -48,9 +48,8 @@ class LightSystem : public ECSSystem<query::Get<TransformComponent, LightCompone
     };
 
    private:
-    Light createLightFromComponent(ECSEntity& entity,
-                                   const TransformComponent& transform,
-                                   const LightComponent& light) {
+    Light createLightFromComponent(
+        ECSEntity& entity, const TransformComponent& transform, const LightComponent& light) {
         glm::vec3 worldPosition = transform.getWorldPosition(entity);
 
         if (std::holds_alternative<LightComponent::PointLightOptions>(light.options)) {
@@ -59,11 +58,11 @@ class LightSystem : public ECSSystem<query::Get<TransformComponent, LightCompone
         } else if (std::holds_alternative<LightComponent::SpotLightOptions>(light.options)) {
             const auto& options = std::get<LightComponent::SpotLightOptions>(light.options);
             return Light::spot(worldPosition,
-                               transform.forward(entity),
-                               options.radius,
-                               options.angleRad,
-                               light.color,
-                               light.intensity);
+                transform.forward(entity),
+                options.radius,
+                options.angleRad,
+                light.color,
+                light.intensity);
         } else if (std::holds_alternative<LightComponent::DirectionalLightOptions>(light.options)) {
             return Light::directional(transform.forward(entity), light.color, light.intensity);
         }

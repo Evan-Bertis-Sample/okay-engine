@@ -35,7 +35,9 @@ class Camera {
             return fov == other.fov && near == other.near && far == other.far;
         }
 
-        bool operator!=(const PerspectiveLens& other) const { return !(*this == other); }
+        bool operator!=(const PerspectiveLens& other) const {
+            return !(*this == other);
+        }
     };
 
     struct OrthographicLens {
@@ -51,7 +53,9 @@ class Camera {
                    top == other.top && near == other.near && far == other.far;
         }
 
-        bool operator!=(const OrthographicLens& other) const { return !(*this == other); }
+        bool operator!=(const OrthographicLens& other) const {
+            return !(*this == other);
+        }
     };
 
     using Lens = std::variant<PerspectiveLens, OrthographicLens>;
@@ -74,9 +78,15 @@ class Camera {
         }
     }
 
-    glm::mat4 viewMatrix() const { return glm::inverse(transform.toMatrix()); }
-    glm::vec3 position() const { return transform.position; }
-    glm::vec3 direction() const { return transform.rotation * glm::vec3(0, 0, -1); }
+    glm::mat4 viewMatrix() const {
+        return glm::inverse(transform.toMatrix());
+    }
+    glm::vec3 position() const {
+        return transform.position;
+    }
+    glm::vec3 direction() const {
+        return transform.rotation * glm::vec3(0, 0, -1);
+    }
 
     bool isInFrustum(const glm::vec3& pos, float aspectRatio) const {
         glm::vec4 clip = projectionMatrix(aspectRatio) * viewMatrix() * glm::vec4(pos, 1.0f);
@@ -93,12 +103,16 @@ class Camera {
         return true;
     }
 
-    operator Transform() const { return transform; }
+    operator Transform() const {
+        return transform;
+    }
     bool operator==(const Camera& other) const {
         return transform == other.transform && lens == other.lens;
     }
 
-    bool operator!=(const Camera& other) const { return !(*this == other); }
+    bool operator!=(const Camera& other) const {
+        return !(*this == other);
+    }
 };
 
 struct alignas(16) Light {
@@ -132,11 +146,11 @@ struct alignas(16) Light {
     }
 
     static Light spot(glm::vec3 pos,
-                      glm::vec3 dir,
-                      float radius,
-                      float angleRad,
-                      glm::vec3 rgb,
-                      float intensity = 1.0f) {
+        glm::vec3 dir,
+        float radius,
+        float angleRad,
+        glm::vec3 rgb,
+        float intensity = 1.0f) {
         Light l{};
         l.posType = glm::vec4(pos, Type::SPOT);
         l.color = glm::vec4(rgb, intensity);
@@ -145,9 +159,13 @@ struct alignas(16) Light {
         return l;
     }
 
-    Type type() const { return static_cast<Type>((int)posType.w); }
+    Type type() const {
+        return static_cast<Type>((int)posType.w);
+    }
 
-    void setPosition(glm::vec3 pos) { posType = glm::vec4(pos, posType.w); }
+    void setPosition(glm::vec3 pos) {
+        posType = glm::vec4(pos, posType.w);
+    }
 
     static constexpr std::size_t MAX_LIGHTS = 16;
 
@@ -156,7 +174,9 @@ struct alignas(16) Light {
                extra == other.extra;
     }
 
-    bool operator!=(const Light& other) const { return !(*this == other); }
+    bool operator!=(const Light& other) const {
+        return !(*this == other);
+    }
 };
 
 class RenderWorld;
@@ -182,12 +202,24 @@ struct RenderItem {
     void computeSortKey();
 
     // operator overloads for std::map
-    bool operator<(const RenderItem& other) const { return sortKey < other.sortKey; }
-    bool operator>(const RenderItem& other) const { return sortKey > other.sortKey; }
-    bool operator==(const RenderItem& other) const { return sortKey == other.sortKey; }
-    bool operator!=(const RenderItem& other) const { return !(*this == other); }
-    bool operator<=(const RenderItem& other) const { return sortKey <= other.sortKey; }
-    bool operator>=(const RenderItem& other) const { return sortKey >= other.sortKey; }
+    bool operator<(const RenderItem& other) const {
+        return sortKey < other.sortKey;
+    }
+    bool operator>(const RenderItem& other) const {
+        return sortKey > other.sortKey;
+    }
+    bool operator==(const RenderItem& other) const {
+        return sortKey == other.sortKey;
+    }
+    bool operator!=(const RenderItem& other) const {
+        return !(*this == other);
+    }
+    bool operator<=(const RenderItem& other) const {
+        return sortKey <= other.sortKey;
+    }
+    bool operator>=(const RenderItem& other) const {
+        return sortKey >= other.sortKey;
+    }
 };
 
 struct RenderEntity {
@@ -202,8 +234,12 @@ struct RenderEntity {
         std::uint8_t renderLayer{0};
 
         ~Properties();
-        Properties* operator->() { return this; }
-        const Properties* operator->() const { return this; }
+        Properties* operator->() {
+            return this;
+        }
+        const Properties* operator->() const {
+            return this;
+        }
 
        private:
         RenderItemHandle _renderItem{RenderItemHandle::invalidHandle()};
@@ -220,12 +256,18 @@ struct RenderEntity {
     RenderEntity(RenderWorld* owner, RenderItemHandle renderItem)
         : _owner(owner), _renderItem(renderItem) {}
 
-    bool operator==(const RenderEntity& other) const { return _renderItem == other._renderItem; }
-    bool operator!=(const RenderEntity& other) const { return !(*this == other); }
+    bool operator==(const RenderEntity& other) const {
+        return _renderItem == other._renderItem;
+    }
+    bool operator!=(const RenderEntity& other) const {
+        return !(*this == other);
+    }
     Properties operator*() const;
     Properties operator->() const;
 
-    Properties prop() const { return **this; }
+    Properties prop() const {
+        return **this;
+    }
     bool isValid() const;
 
    private:
@@ -260,25 +302,30 @@ class RenderWorld {
         ChildIterator b;
         ChildIterator e;
 
-        ChildIterator begin() const { return b; }
-        ChildIterator end() const { return e; }
+        ChildIterator begin() const {
+            return b;
+        }
+        ChildIterator end() const {
+            return e;
+        }
 
         ChildRange(ChildIterator b, ChildIterator e) : b(b), e(e) {}
     };
 
-    Camera& camera() { return _camera; }
+    Camera& camera() {
+        return _camera;
+    }
 
     ChildRange children(RenderEntity parent);
     const ChildRange children(RenderEntity parent) const;
 
     RenderEntity addRenderEntity(const Transform& transform,
-                                 const MaterialHandle& material,
-                                 const Mesh& mesh,
-                                 RenderEntity parent);
+        const MaterialHandle& material,
+        const Mesh& mesh,
+        RenderEntity parent);
 
-    RenderEntity addRenderEntity(const Transform& transform,
-                                 const MaterialHandle& material,
-                                 const Mesh& mesh) {
+    RenderEntity addRenderEntity(
+        const Transform& transform, const MaterialHandle& material, const Mesh& mesh) {
         return addRenderEntity(
             transform, material, mesh, RenderEntity(this, RenderItemHandle::invalidHandle()));
     }
@@ -288,10 +335,16 @@ class RenderWorld {
         return _renderItemPool.get(handle);
     }
 
-    RenderItem& getRenderItem(RenderItemHandle handle) { return _renderItemPool.get(handle); }
-    RenderEntity getRenderEntity(RenderItemHandle handle) { return RenderEntity(this, handle); }
+    RenderItem& getRenderItem(RenderItemHandle handle) {
+        return _renderItemPool.get(handle);
+    }
+    RenderEntity getRenderEntity(RenderItemHandle handle) {
+        return RenderEntity(this, handle);
+    }
     void updateEntity(RenderItemHandle renderItem, const RenderEntity::Properties&& properties);
-    void removeRenderEntity(RenderEntity entity) { removeRenderEntity(entity._renderItem); }
+    void removeRenderEntity(RenderEntity entity) {
+        removeRenderEntity(entity._renderItem);
+    }
     void removeRenderEntity(RenderItemHandle renderItem);
     bool isValidEntity(const RenderItemHandle& renderItem) const {
         return _renderItemPool.valid(renderItem);
@@ -299,7 +352,9 @@ class RenderWorld {
     bool isValidEntity(const RenderEntity& entity) const {
         return _renderItemPool.valid(entity._renderItem);
     }
-    std::size_t numRenderItems() const { return _activeRenderItems; }
+    std::size_t numRenderItems() const {
+        return _activeRenderItems;
+    }
 
     Failable addChild(RenderEntity parent, RenderEntity children);
     bool isChildOf(RenderEntity parent, RenderEntity child) const;
@@ -318,7 +373,9 @@ class RenderWorld {
         _lights[index] = _lights[--_activeLights];
     }
 
-    Light& getLight(std::size_t index) { return _lights[index]; }
+    Light& getLight(std::size_t index) {
+        return _lights[index];
+    }
 
    private:
     ObjectPool<RenderItem> _renderItemPool;

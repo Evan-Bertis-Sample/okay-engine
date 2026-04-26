@@ -18,10 +18,16 @@ class FontAtlas {
 
     FontAtlas(int w, int h) : _width(w), _height(h), _pixels((size_t)w * (size_t)h * 4, 0) {}
 
-    int width() const { return _width; }
-    int height() const { return _height; }
+    int width() const {
+        return _width;
+    }
+    int height() const {
+        return _height;
+    }
 
-    const std::vector<std::uint8_t>& pixels() const { return _pixels; }
+    const std::vector<std::uint8_t>& pixels() const {
+        return _pixels;
+    }
 
     bool addGlyph(const FT_Bitmap& bm, int& outX, int& outY) {
         const int gw = (int)bm.width;
@@ -100,9 +106,15 @@ class FontManager {
        public:
         std::uint32_t id;
 
-        bool operator==(const FontHandle& other) const { return id == other.id; }
-        bool operator!=(const FontHandle& other) const { return !(*this == other); }
-        bool operator<(const FontHandle& other) const { return id < other.id; }
+        bool operator==(const FontHandle& other) const {
+            return id == other.id;
+        }
+        bool operator!=(const FontHandle& other) const {
+            return !(*this == other);
+        }
+        bool operator<(const FontHandle& other) const {
+            return id < other.id;
+        }
     };
 
     struct Glyph {
@@ -128,15 +140,21 @@ class FontManager {
 
     FontManager();
 
-    ~FontManager() { FT_Done_FreeType(_ftLibrary); }
+    ~FontManager() {
+        FT_Done_FreeType(_ftLibrary);
+    }
 
     Option<FontHandle> loadFont(const std::string& fontPath, const FontLoadOptions& options = {});
 
     Glyph getGlyph(FontHandle font, std::uint32_t codepoint);
 
-    Texture getGlyphAtlas(FontHandle font) { return _glyphAtlases[font.id]; }
+    Texture getGlyphAtlas(FontHandle font) {
+        return _glyphAtlases[font.id];
+    }
 
-    bool isLoadedFont(FontHandle font) { return font.id < _loadedFaces.size(); }
+    bool isLoadedFont(FontHandle font) {
+        return font.id < _loadedFaces.size();
+    }
 
     FontHandle defaultFont();
 

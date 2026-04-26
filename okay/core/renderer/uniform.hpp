@@ -166,11 +166,19 @@ struct UniformProperty {
     UniformProperty() {}
     UniformProperty(const T& value) : _value(value) {}
 
-    constexpr std::string_view nameView() const { return nameV.sv(); }
-    constexpr std::string name() const { return std::string(nameV.sv()); }
+    constexpr std::string_view nameView() const {
+        return nameV.sv();
+    }
+    constexpr std::string name() const {
+        return std::string(nameV.sv());
+    }
 
-    void set(const T& v) { _value = v; }
-    const T& get() const { return _value; }
+    void set(const T& v) {
+        _value = v;
+    }
+    const T& get() const {
+        return _value;
+    }
 
     bool operator==(const UniformProperty& other) const {
         return _value == other._value && nameView() == other.nameView();
@@ -203,19 +211,31 @@ class BlockProperty {
         ++_version;
         return _value;
     }
-    const TBlock& get() const { return _value; }
+    const TBlock& get() const {
+        return _value;
+    }
 
-    std::uint32_t version() const { return _version; }
+    std::uint32_t version() const {
+        return _version;
+    }
 
     // Stable identity for manager caching
-    const void* identity() const { return this; }
+    const void* identity() const {
+        return this;
+    }
 
     // Optional binding point hint for the manager (defaults to invalid)
-    void setBindingPoint(GLuint bindingPoint) { _bindingHint = bindingPoint; }
-    GLuint bindingPointHint() const { return _bindingHint; }
+    void setBindingPoint(GLuint bindingPoint) {
+        _bindingHint = bindingPoint;
+    }
+    GLuint bindingPointHint() const {
+        return _bindingHint;
+    }
 
    private:
-    static constexpr GLuint invalidBinding() { return 0xFFFFFFFFu; }
+    static constexpr GLuint invalidBinding() {
+        return 0xFFFFFFFFu;
+    }
 
     TBlock _value{};
     std::uint32_t _version{1};
@@ -233,8 +253,12 @@ class TextureProperty {
     TextureProperty(const Texture& tex, const Texture::TextureParameters& params = {})
         : _value(tex), _params(params) {}
 
-    constexpr std::string_view nameView() const { return nameV.sv(); }
-    constexpr std::string name() const { return std::string(nameV.sv()); }
+    constexpr std::string_view nameView() const {
+        return nameV.sv();
+    }
+    constexpr std::string name() const {
+        return std::string(nameV.sv());
+    }
 
     void set(const Texture& tex) {
         _value = tex;
@@ -244,18 +268,28 @@ class TextureProperty {
         ++_version;
         return _value;
     }
-    const Texture& get() const { return _value; }
+    const Texture& get() const {
+        return _value;
+    }
 
     void setParams(const Texture::TextureParameters& p) {
         _params = p;
         ++_version;
     }
-    const Texture::TextureParameters& params() const { return _params; }
+    const Texture::TextureParameters& params() const {
+        return _params;
+    }
 
-    void setUnit(GLuint unit) { _unit = unit; }
-    GLuint unit() const { return _unit; }
+    void setUnit(GLuint unit) {
+        _unit = unit;
+    }
+    GLuint unit() const {
+        return _unit;
+    }
 
-    std::uint32_t version() const { return _version; }
+    std::uint32_t version() const {
+        return _version;
+    }
 
     TextureProperty& operator=(const Texture& tex) {
         set(tex);

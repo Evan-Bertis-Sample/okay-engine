@@ -34,9 +34,15 @@ class Result {
 
     Result() : _value(std::nullopt), _errorMessage("") {}
 
-    operator bool() const { return _value.has_value(); }
-    bool isError() const { return !_value.has_value(); }
-    const std::string& error() const { return _errorMessage; }
+    operator bool() const {
+        return _value.has_value();
+    }
+    bool isError() const {
+        return !_value.has_value();
+    }
+    const std::string& error() const {
+        return _errorMessage;
+    }
 
     T value() const
         requires(std::is_copy_constructible_v<T>)
@@ -50,13 +56,17 @@ class Result {
         requires(!std::is_copy_constructible_v<T>)
     {
         static_assert(dependent_false_v<T>,
-                      "Result<T>::value() requires T to be copyable. "
-                      "For move-only T (e.g., std::unique_ptr), use valueRef() or take().");
+            "Result<T>::value() requires T to be copyable. "
+            "For move-only T (e.g., std::unique_ptr), use valueRef() or take().");
         return T{};
     }
 
-    T& valueRef() { return *_value; }
-    const T& valueRef() const { return *_value; }
+    T& valueRef() {
+        return *_value;
+    }
+    const T& valueRef() const {
+        return *_value;
+    }
 
     T take() {
         T out = std::move(*_value);
@@ -65,10 +75,18 @@ class Result {
         return out;
     }
 
-    T& operator*() { return valueRef(); }
-    const T& operator*() const { return valueRef(); }
-    T* operator->() { return &valueRef(); }
-    const T* operator->() const { return &valueRef(); }
+    T& operator*() {
+        return valueRef();
+    }
+    const T& operator*() const {
+        return valueRef();
+    }
+    T* operator->() {
+        return &valueRef();
+    }
+    const T* operator->() const {
+        return &valueRef();
+    }
 
     Result(const Result& other)
         requires(std::is_copy_constructible_v<T>)
@@ -190,9 +208,8 @@ Result<U> catchResult(Result<U>&& r, F&& handler)
         requires(F&& fn, const std::string& e) { std::invoke(std::forward<F>(fn), e); })
 {
     if (!r) {
-        if constexpr (requires(F&& fn, const std::string& e) {
-                          std::invoke(std::forward<F>(fn), e);
-                      }) {
+        if constexpr (requires(
+                          F&& fn, const std::string& e) { std::invoke(std::forward<F>(fn), e); }) {
             std::invoke(std::forward<F>(handler), r.error());
         } else {
             std::invoke(std::forward<F>(handler));
@@ -210,9 +227,15 @@ struct DeferredResultFn {
     using FnType = std::decay_t<F>;
     FnType fn;
 
-    decltype(auto) operator()() & { return std::invoke(fn); }
-    decltype(auto) operator()() const& { return std::invoke(fn); }
-    decltype(auto) operator()() && { return std::invoke(std::move(fn)); }
+    decltype(auto) operator()() & {
+        return std::invoke(fn);
+    }
+    decltype(auto) operator()() const& {
+        return std::invoke(fn);
+    }
+    decltype(auto) operator()() && {
+        return std::invoke(std::move(fn));
+    }
 };
 
 // Deduction: store a decayed callable.
@@ -221,7 +244,10 @@ auto defer(F&& f) -> DeferredResultFn<F> {
     return DeferredResultFn<F>{std::forward<F>(f)};
 }
 
-#define DEFER(expr) defer([&]() { return (expr); })
+#define DEFER(expr)    \
+    defer([&]() {      \
+        return (expr); \
+    })
 
 template <class T>
 concept DeferredResultFnLike =

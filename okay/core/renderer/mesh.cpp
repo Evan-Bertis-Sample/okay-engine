@@ -60,12 +60,12 @@ void MeshBuffer::removeMesh(const Mesh& mesh) {
     }
 
     // remove the indices
-    _indices.erase(_indices.begin() + mesh.indexOffset,
-                   _indices.begin() + mesh.indexOffset + mesh.indexCount);
+    _indices.erase(
+        _indices.begin() + mesh.indexOffset, _indices.begin() + mesh.indexOffset + mesh.indexCount);
     // remove the vertices
     _bufferData.erase(_bufferData.begin() + mesh.vertexOffset * MeshVertex::numFloats(),
-                      _bufferData.begin() + mesh.vertexOffset * MeshVertex::numFloats() +
-                          mesh.vertexCount * MeshVertex::numFloats());
+        _bufferData.begin() + mesh.vertexOffset * MeshVertex::numFloats() +
+            mesh.vertexCount * MeshVertex::numFloats());
 
     _dataOutofDate = true;
 }
@@ -89,35 +89,35 @@ Failable MeshBuffer::initVertexAttributes() {
 
     GL_CHECK(glEnableVertexAttribArray(0));
     GL_CHECK(glVertexAttribPointer(0,
-                                   3,
-                                   GL_FLOAT,
-                                   GL_FALSE,
-                                   MeshVertex::stride(),
-                                   reinterpret_cast<void*>(0 * sizeof(float))));
+        3,
+        GL_FLOAT,
+        GL_FALSE,
+        MeshVertex::stride(),
+        reinterpret_cast<void*>(0 * sizeof(float))));
 
     GL_CHECK(glEnableVertexAttribArray(1));
     GL_CHECK(glVertexAttribPointer(1,
-                                   3,
-                                   GL_FLOAT,
-                                   GL_FALSE,
-                                   MeshVertex::stride(),
-                                   reinterpret_cast<void*>(3 * sizeof(float))));
+        3,
+        GL_FLOAT,
+        GL_FALSE,
+        MeshVertex::stride(),
+        reinterpret_cast<void*>(3 * sizeof(float))));
 
     GL_CHECK(glEnableVertexAttribArray(2));
     GL_CHECK(glVertexAttribPointer(2,
-                                   3,
-                                   GL_FLOAT,
-                                   GL_FALSE,
-                                   MeshVertex::stride(),
-                                   reinterpret_cast<void*>(6 * sizeof(float))));
+        3,
+        GL_FLOAT,
+        GL_FALSE,
+        MeshVertex::stride(),
+        reinterpret_cast<void*>(6 * sizeof(float))));
 
     GL_CHECK(glEnableVertexAttribArray(3));
     GL_CHECK(glVertexAttribPointer(3,
-                                   2,
-                                   GL_FLOAT,
-                                   GL_FALSE,
-                                   MeshVertex::stride(),
-                                   reinterpret_cast<void*>(9 * sizeof(float))));
+        2,
+        GL_FLOAT,
+        GL_FALSE,
+        MeshVertex::stride(),
+        reinterpret_cast<void*>(9 * sizeof(float))));
 
     GL_CHECK(glBindVertexArray(0));
     GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, 0));
@@ -159,9 +159,9 @@ Failable MeshBuffer::bindMeshData() {
 
     GL_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ebo));
     GL_CHECK(glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-                          _indices.size() * sizeof(GLuint),
-                          _indices.data(),
-                          GL_STATIC_DRAW));
+        _indices.size() * sizeof(GLuint),
+        _indices.data(),
+        GL_STATIC_DRAW));
 
     GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, 0));
 

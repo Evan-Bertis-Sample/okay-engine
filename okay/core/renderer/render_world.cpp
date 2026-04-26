@@ -64,11 +64,11 @@ bool RenderEntity::isValid() const {
 RenderWorld::ChildRange RenderWorld::children(RenderEntity parent) {
     if (!_renderItemPool.valid(parent._renderItem)) {
         return ChildRange(ChildIterator(*this, RenderItemHandle::invalidHandle()),
-                          ChildIterator(*this, RenderItemHandle::invalidHandle()));
+            ChildIterator(*this, RenderItemHandle::invalidHandle()));
     }
     const RenderItem& p = _renderItemPool.get(parent._renderItem);
     return ChildRange(ChildIterator(*this, p.firstChild),
-                      ChildIterator(*this, RenderItemHandle::invalidHandle()));
+        ChildIterator(*this, RenderItemHandle::invalidHandle()));
 }
 
 const RenderWorld::ChildRange RenderWorld::children(RenderEntity parent) const {
@@ -133,19 +133,19 @@ void RenderWorld::rebuildMaterials() {
     }
 
     std::sort(_memoizedRenderItems.begin(),
-              _memoizedRenderItems.begin() + _activeRenderItems,
-              [this](const RenderItemHandle& a, const RenderItemHandle& b) {
-                  bool aValid = isValidEntity(a);
-                  bool bValid = isValidEntity(b);
+        _memoizedRenderItems.begin() + _activeRenderItems,
+        [this](const RenderItemHandle& a, const RenderItemHandle& b) {
+            bool aValid = isValidEntity(a);
+            bool bValid = isValidEntity(b);
 
-                  if (aValid != bValid)
-                      return aValid;
+            if (aValid != bValid)
+                return aValid;
 
-                  if (!aValid)
-                      return false;
+            if (!aValid)
+                return false;
 
-                  return getRenderItem(a).sortKey < getRenderItem(b).sortKey;
-              });
+            return getRenderItem(a).sortKey < getRenderItem(b).sortKey;
+        });
 
     _needsMaterialRebuild = false;
 }
@@ -176,9 +176,9 @@ const std::span<RenderItemHandle> RenderWorld::getRenderItems() {
 }
 
 RenderEntity RenderWorld::addRenderEntity(const Transform& transform,
-                                          const MaterialHandle& material,
-                                          const Mesh& mesh,
-                                          RenderEntity parent) {
+    const MaterialHandle& material,
+    const Mesh& mesh,
+    RenderEntity parent) {
     RenderItemHandle handle = _renderItemPool.emplace(material, mesh);
     // add this handle to the _memozedRenderItems vector
     _activeRenderItems++;
@@ -311,8 +311,8 @@ bool RenderWorld::isChildOf(RenderEntity parent, RenderEntity child) const {
     return false;
 }
 
-void RenderWorld::updateEntity(RenderItemHandle renderItem,
-                               const RenderEntity::Properties&& properties) {
+void RenderWorld::updateEntity(
+    RenderItemHandle renderItem, const RenderEntity::Properties&& properties) {
     if (!_renderItemPool.valid(renderItem)) {
         return;
     }

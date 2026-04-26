@@ -16,8 +16,8 @@ namespace okay {
 template <>
 struct AssetLoader<FontManager::FontHandle, FontLoadOptions> {
     static Result<FontManager::FontHandle> loadAsset(const std::filesystem::path& path,
-                                                     const AssetIO& assetIO,
-                                                     const FontLoadOptions& settings) {
+        const AssetIO& assetIO,
+        const FontLoadOptions& settings) {
         Engine.logger.info("Loading font: {}", path.string());
 
         FontManager& fontManager = FontManager::instance();
@@ -26,8 +26,8 @@ struct AssetLoader<FontManager::FontHandle, FontLoadOptions> {
         if (handleOpt.isSome()) {
             return Result<FontManager::FontHandle>::ok(handleOpt.value());
         } else {
-            return Result<FontManager::FontHandle>::errorResult("Failed to load font: " +
-                                                                path.string());
+            return Result<FontManager::FontHandle>::errorResult(
+                "Failed to load font: " + path.string());
         }
     }
 };

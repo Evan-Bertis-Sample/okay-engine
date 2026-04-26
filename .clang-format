@@ -1,18 +1,28 @@
-# .clang-format
 BasedOnStyle: Google
 IndentWidth: 4
+ContinuationIndentWidth: 4
 ColumnLimit: 100
+
 DerivePointerAlignment: false
 PointerAlignment: Left
 SortIncludes: CaseSensitive
 
-AllowShortFunctionsOnASingleLine: InlineOnly
+BreakStringLiterals: false
+
+AllowShortFunctionsOnASingleLine: Empty
 AllowShortIfStatementsOnASingleLine: Never
 AllowShortLoopsOnASingleLine: false
 AllowShortBlocksOnASingleLine: Never
+AllowShortLambdasOnASingleLine: Empty
 
 BinPackParameters: false
 BinPackArguments: false
+AlignAfterOpenBracket: DontAlign
+
+PenaltyBreakBeforeFirstCallParameter: 100
+PenaltyBreakScopeResolution: 1000000
+PenaltyExcessCharacter: 1000000
+PenaltyReturnTypeOnItsOwnLine: 1000
 
 IncludeBlocks: Regroup
 IncludeCategories:

@@ -20,8 +20,8 @@ float TextLayout::computeLayoutScale(float targetFontHeight, int maxLineHeightGl
     return 1.0;
 }
 
-float TextLayout::computeAlignedLineStartX(TextStyle::HorizontalAlignment alignment,
-                                           float scaledLineWidth) {
+float TextLayout::computeAlignedLineStartX(
+    TextStyle::HorizontalAlignment alignment, float scaledLineWidth) {
     switch (alignment) {
         case TextStyle::HorizontalAlignment::Left:
             return 0.0f;
@@ -33,9 +33,8 @@ float TextLayout::computeAlignedLineStartX(TextStyle::HorizontalAlignment alignm
     return 0.0f;
 }
 
-float TextLayout::computeVerticalAlignmentOffset(TextStyle::VerticalAlignment alignment,
-                                                 float layoutTop,
-                                                 float layoutBottom) {
+float TextLayout::computeVerticalAlignmentOffset(
+    TextStyle::VerticalAlignment alignment, float layoutTop, float layoutBottom) {
     switch (alignment) {
         case TextStyle::VerticalAlignment::Top:
             return -layoutTop;
@@ -91,9 +90,8 @@ TextLayout::RawLineMetrics TextLayout::measureRawLine(std::size_t lineBegin) con
     return raw;
 }
 
-TextLineLayout TextLayout::makeLineLayout(std::size_t lineIndex,
-                                          const RawLineMetrics& raw,
-                                          float baselineY) const {
+TextLineLayout TextLayout::makeLineLayout(
+    std::size_t lineIndex, const RawLineMetrics& raw, float baselineY) const {
     TextLineLayout line{};
     line.lineIndex = lineIndex;
     line.text = raw.text;

@@ -67,7 +67,9 @@ class UILayout {
         return _layoutMap[node.id];
     }
 
-    LayoutRect getRect(const UINode& node) const { return _layoutMap.at(node.id); }
+    LayoutRect getRect(const UINode& node) const {
+        return _layoutMap.at(node.id);
+    }
 
     int computeSize(ElementRealSize size, int parentSize) const {
         if (std::holds_alternative<size::Percent>(size)) {
@@ -86,9 +88,8 @@ class UILayout {
     int marginMainTotal(const UIElement& element, UIPrimaryAxis axis) const;
     int marginCrossTotal(const UIElement& element, UIPrimaryAxis axis) const;
 
-    Option<int> computeElementSizeAlongAxis(const UINode& node,
-                                            UIPrimaryAxis axis,
-                                            LayoutRect frame) const;
+    Option<int> computeElementSizeAlongAxis(
+        const UINode& node, UIPrimaryAxis axis, LayoutRect frame) const;
 
     void toString(std::stringstream& ss, const UINode& node, int indent = 0) const;
 };
@@ -111,7 +112,9 @@ class UI {
         bool entityCreated = false;
     };
 
-    UINode::ID createNodeIDFromElement(const UIElement& element) { return _nextNodeID++; }
+    UINode::ID createNodeIDFromElement(const UIElement& element) {
+        return _nextNodeID++;
+    }
     UINode createNodeFromElement(const UIElement& element) {
         UINode node;
         node.id = createNodeIDFromElement(element);

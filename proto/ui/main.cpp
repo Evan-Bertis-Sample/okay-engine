@@ -19,17 +19,16 @@ int main() {
     surfaceConfig.height = 480;
     okay::Surface surface(surfaceConfig);
 
-    okay::RendererSettings rendererSettings{
-        .surfaceConfig = surfaceConfig,
+    okay::RendererSettings rendererSettings{.surfaceConfig = surfaceConfig,
         .pipeline = okay::RenderPipeline::create(std::make_unique<okay::ScenePass>())};
 
     auto renderer = okay::Renderer::create(std::move(rendererSettings));
 
     okay::Game::create()
         .addSystems(std::move(renderer),
-                    std::make_unique<okay::AssetManager>(),
-                    std::make_unique<okay::ECS>(),
-                    std::make_unique<okay::TweenEngine>())
+            std::make_unique<okay::AssetManager>(),
+            std::make_unique<okay::ECS>(),
+            std::make_unique<okay::TweenEngine>())
         .onInitialize(__gameInitialize)
         .onUpdate(__gameUpdate)
         .onShutdown(__gameShutdown)
@@ -58,8 +57,7 @@ static void __gameInitialize() {
             .addComponent<okay::MeshRendererComponent>(teapot, material);
 
     s_light = okay::ecs::entity()
-                  .addComponent<okay::TransformComponent>(
-                      glm::vec3{},
+                  .addComponent<okay::TransformComponent>(glm::vec3{},
                       glm::vec3{0.1f},
                       glm::angleAxis(glm::radians(45.0f), glm::vec3{0.0f, 1.0f, 0.0f}))
                   .addComponent<okay::LightComponent>(
@@ -70,68 +68,45 @@ static void __gameInitialize() {
                    .addComponent<okay::CameraComponent>(
                        okay::CameraComponent{okay::Camera::PerspectiveLens{45.0f, 0.1f, 100.0f}});
 
-    // clang-format off
     okay::ecs::entity()
         .addComponent<okay::TransformComponent>(glm::vec3{0.0f, 0.0f, 0.0f})
-        .addComponent<okay::UIComponent>(
-            okay::ui::flexbox()(
-                okay::ui::flexbox()
-                    .backgroundColorSet(glm::vec4{1.0f, 1.0f, 1.0f, 0.5f})
-                    .backgroundImageSet(okay::load::engineTexture("textures/uv_test.jpg"))
-                    (
-                        okay::ui::h1("Hello world!")
+        .addComponent<okay::UIComponent>(okay::ui::flexbox()(okay::ui::flexbox()
+                .backgroundColorSet(glm::vec4{1.0f, 1.0f, 1.0f, 0.5f})
+                .backgroundImageSet(okay::load::engineTexture("textures/uv_test.jpg"))(
+                    okay::ui::h1("Hello world!")
+                        .widthGrow()
+                        .heightGrow()
+                        .backgroundColorSet(glm::vec4(1.0f, 0.0f, 1.0f, 1.0f))
+                        .alignTextHorizontal(okay::TextStyle::HorizontalAlignment::Center)
+                        .alignTextVertical(okay::TextStyle::VerticalAlignment::Middle)
+                        .borderColorSet(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f))
+                        .borderRadiusSet(30)
+                        .borderWidthSet(10)
+                        .marginSet(10),
+                    okay::ui::growBox(okay::UIPrimaryAxis::Horizontal)(
+                        okay::ui::h2("Left")
+                            .backgroundColorSet(glm::vec4(0.0f, 1.0f, 0.0f, 1.0f))
+                            .alignTextCenter()
+                            .alignTextMiddle()
+                            .marginSet(10)
                             .widthGrow()
-                            .heightGrow()
-                            .backgroundColorSet(glm::vec4(1.0f, 0.0f, 1.0f, 1.0f))
-                            .alignTextHorizontal(okay::TextStyle::HorizontalAlignment::Center)
-                            .alignTextVertical(okay::TextStyle::VerticalAlignment::Middle)
+                            .paddingSet(20),
+                        okay::ui::growBox(okay::UIPrimaryAxis::Vertical)
+                            .backgroundColorSet(glm::vec4(0.0f, 1.0f, 1.0f, 0.25f))
                             .borderColorSet(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f))
                             .borderRadiusSet(30)
-                            .borderWidthSet(10)
-                            .marginSet(10)
-                        ,
-                        okay::ui::growBox(okay::UIPrimaryAxis::Horizontal)
-                        (
-                            okay::ui::h2("Left")
-                                .backgroundColorSet(glm::vec4(0.0f, 1.0f, 0.0f, 1.0f))
-                                .alignTextCenter()
-                                .alignTextMiddle()
-                                .marginSet(10)
-                                .widthGrow()
-                                .paddingSet(20)
-                            ,
-                            okay::ui::growBox(okay::UIPrimaryAxis::Vertical)
-                                .backgroundColorSet(glm::vec4(0.0f, 1.0f, 1.0f, 0.25f))
-                                .borderColorSet(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f))
-                                .borderRadiusSet(30)
-                                .borderWidthSet(10)
-                            (     
-                                okay::ui::growBox(okay::UIPrimaryAxis::Vertical) 
-                                    .childSpacingSet(10)
-                                (
-                                    okay::ui::h3("top")
-                                    ,
-                                    okay::ui::range(
-                                        3,
-                                        [](std::int32_t i) {
-                                            return okay::ui::text(
-                                                std::format("{}", i));
-                                        }
-                                    )
-                                    ,
-                                    okay::ui::h3("bottom")   
-                                )
-                                
-                            )
-                        )
-                    )
-            )
-        );
-    //clang-format on
+                            .borderWidthSet(10)(okay::ui::growBox(okay::UIPrimaryAxis::Vertical)
+                                    .childSpacingSet(10)(okay::ui::h3("top"),
+                                        okay::ui::range(3,
+                                            [](std::int32_t i) {
+                                                return okay::ui::text(std::format("{}", i));
+                                            }),
+                                        okay::ui::h3("bottom"))
+
+                                    )))));
 }
 
-static void __gameUpdate() {
-}
+static void __gameUpdate() {}
 
 static void __gameShutdown() {
     // Cleanup logic before game shutdown

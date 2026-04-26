@@ -28,13 +28,13 @@ enum class MaterialFlags : std::uint32_t {
 };
 
 inline MaterialFlags operator|(MaterialFlags a, MaterialFlags b) {
-    return static_cast<MaterialFlags>(static_cast<std::uint32_t>(a) |
-                                      static_cast<std::uint32_t>(b));
+    return static_cast<MaterialFlags>(
+        static_cast<std::uint32_t>(a) | static_cast<std::uint32_t>(b));
 }
 
 inline MaterialFlags operator&(MaterialFlags a, MaterialFlags b) {
-    return static_cast<MaterialFlags>(static_cast<std::uint32_t>(a) &
-                                      static_cast<std::uint32_t>(b));
+    return static_cast<MaterialFlags>(
+        static_cast<std::uint32_t>(a) & static_cast<std::uint32_t>(b));
 }
 
 inline MaterialFlags& operator|=(MaterialFlags& a, MaterialFlags b) {
@@ -57,7 +57,9 @@ struct MaterialFlagCollection {
         return MaterialFlagCollection(MaterialFlags::TRANSPARENT | MaterialFlags::RECEIVE_SHADOWS);
     }
 
-    static MaterialFlagCollection unlit() { return MaterialFlagCollection(MaterialFlags::UNLIT); }
+    static MaterialFlagCollection unlit() {
+        return MaterialFlagCollection(MaterialFlags::UNLIT);
+    }
 
     static MaterialFlagCollection unlitTransparent() {
         return MaterialFlagCollection(MaterialFlags::UNLIT | MaterialFlags::TRANSPARENT);
@@ -68,7 +70,9 @@ struct MaterialFlagCollection {
                                       MaterialFlags::RECEIVE_SHADOWS);
     }
 
-    bool hasFlag(MaterialFlags f) const { return (flags & static_cast<std::uint32_t>(f)) != 0; }
+    bool hasFlag(MaterialFlags f) const {
+        return (flags & static_cast<std::uint32_t>(f)) != 0;
+    }
     MaterialFlagCollection& addFlag(MaterialFlags f) {
         flags |= static_cast<std::uint32_t>(f);
         return *this;
@@ -84,20 +88,30 @@ class IMaterialPropertyCollection {
 
 class Material {
    public:
-    static constexpr std::uint32_t invalidID() { return 0xFFFFFFFFu; }
+    static constexpr std::uint32_t invalidID() {
+        return 0xFFFFFFFFu;
+    }
 
     Material(ShaderHandle shader,
-             std::unique_ptr<IMaterialPropertyCollection> uniforms,
-             std::uint32_t id)
+        std::unique_ptr<IMaterialPropertyCollection> uniforms,
+        std::uint32_t id)
         : _shader(shader), _uniforms(std::move(uniforms)), _id(id) {}
 
-    bool isNone() const { return _id == invalidID(); }
+    bool isNone() const {
+        return _id == invalidID();
+    }
 
-    std::uint32_t id() const { return _id; }
+    std::uint32_t id() const {
+        return _id;
+    }
 
-    std::uint32_t shaderID() const { return _shader->srcHash(); }
+    std::uint32_t shaderID() const {
+        return _shader->srcHash();
+    }
 
-    GLuint programID() const { return _shader->programID(); }
+    GLuint programID() const {
+        return _shader->programID();
+    }
 
     Failable setShader() {
         if (_shader->isNone()) {
@@ -142,9 +156,13 @@ class Material {
         return _shader == other._shader && _id == other._id;
     }
 
-    bool operator!=(const Material& other) const { return !(*this == other); }
+    bool operator!=(const Material& other) const {
+        return !(*this == other);
+    }
 
-    std::unique_ptr<IMaterialPropertyCollection>& properties() { return _uniforms; }
+    std::unique_ptr<IMaterialPropertyCollection>& properties() {
+        return _uniforms;
+    }
 
    private:
     ShaderHandle _shader;
@@ -158,18 +176,24 @@ class Material {
 };
 
 struct MaterialHandle {
-    static MaterialHandle none() { return {nullptr, Material::invalidID()}; }
+    static MaterialHandle none() {
+        return {nullptr, Material::invalidID()};
+    }
 
     MaterialRegistry* owner = nullptr;
     std::uint32_t id = Material::invalidID();
 
-    bool isValid() const { return owner != nullptr && id != Material::invalidID(); }
+    bool isValid() const {
+        return owner != nullptr && id != Material::invalidID();
+    }
 
     bool operator==(const MaterialHandle& other) const {
         return owner == other.owner && id == other.id;
     }
 
-    bool operator!=(const MaterialHandle& other) const { return !(*this == other); }
+    bool operator!=(const MaterialHandle& other) const {
+        return !(*this == other);
+    }
 
     const std::unique_ptr<Material>& operator*() const;
     const std::unique_ptr<Material>& operator->() const;
@@ -178,8 +202,8 @@ struct MaterialHandle {
 
 class MaterialRegistry {
    public:
-    ShaderHandle registerShader(const std::string& vertexSource,
-                                const std::string& fragmentSource) {
+    ShaderHandle registerShader(
+        const std::string& vertexSource, const std::string& fragmentSource) {
         // Create the shader, compile it, and add it to the registry
         Shader shader(vertexSource, fragmentSource);
         shader.compile();
@@ -187,8 +211,8 @@ class MaterialRegistry {
         return {this, shader.programID()};
     };
 
-    MaterialHandle registerMaterial(const ShaderHandle& shader,
-                                    std::unique_ptr<IMaterialPropertyCollection> uniforms) {
+    MaterialHandle registerMaterial(
+        const ShaderHandle& shader, std::unique_ptr<IMaterialPropertyCollection> uniforms) {
         std::uint32_t id = nextID();
         _materials.emplace_back(std::make_unique<Material>(shader, std::move(uniforms), id));
         return {this, id};
@@ -198,29 +222,47 @@ class MaterialRegistry {
         return _materials[handle.id];
     }
 
-    const std::unique_ptr<Material>& getMaterial(std::uint32_t id) const { return _materials[id]; }
+    const std::unique_ptr<Material>& getMaterial(std::uint32_t id) const {
+        return _materials[id];
+    }
 
-    const Shader* getShader(const ShaderHandle& handle) const { return &_shaders.at(handle.id); }
+    const Shader* getShader(const ShaderHandle& handle) const {
+        return &_shaders.at(handle.id);
+    }
 
-    const Shader* getShader(GLuint programID) const { return &_shaders.at(programID); }
+    const Shader* getShader(GLuint programID) const {
+        return &_shaders.at(programID);
+    }
 
-    Shader* getShader(const ShaderHandle& handle) { return &_shaders.at(handle.id); }
+    Shader* getShader(const ShaderHandle& handle) {
+        return &_shaders.at(handle.id);
+    }
 
-    Shader* getShader(GLuint programID) { return &_shaders.at(programID); }
+    Shader* getShader(GLuint programID) {
+        return &_shaders.at(programID);
+    }
 
-    const Shader& getShader(const MaterialHandle& handle) const { return _shaders.at(handle.id); }
+    const Shader& getShader(const MaterialHandle& handle) const {
+        return _shaders.at(handle.id);
+    }
 
-    Shader& getShader(const MaterialHandle& handle) { return _shaders.at(handle.id); }
+    Shader& getShader(const MaterialHandle& handle) {
+        return _shaders.at(handle.id);
+    }
 
     // equality
-    bool operator==(const MaterialRegistry& other) const { return _materials == other._materials; }
+    bool operator==(const MaterialRegistry& other) const {
+        return _materials == other._materials;
+    }
 
    private:
     std::vector<std::unique_ptr<Material>> _materials;
     std::unordered_map<GLuint, Shader> _shaders;
 
     static std::uint32_t _materialID;
-    static std::uint32_t nextID() { return _materialID++; }
+    static std::uint32_t nextID() {
+        return _materialID++;
+    }
 };
 
 template <class Derived>

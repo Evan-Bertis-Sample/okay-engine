@@ -24,16 +24,30 @@ struct ObjectPoolHandle {
     friend bool operator==(ObjectPoolHandle a, ObjectPoolHandle b) {
         return a.index == b.index && a.generation == b.generation;
     }
-    friend bool operator!=(ObjectPoolHandle a, ObjectPoolHandle b) { return !(a == b); }
+    friend bool operator!=(ObjectPoolHandle a, ObjectPoolHandle b) {
+        return !(a == b);
+    }
 
-    static constexpr std::uint32_t invalidIndex() { return 0xFFFFFFFFu; }
-    static ObjectPoolHandle invalidHandle() { return ObjectPoolHandle(invalidIndex()); }
+    static constexpr std::uint32_t invalidIndex() {
+        return 0xFFFFFFFFu;
+    }
+    static ObjectPoolHandle invalidHandle() {
+        return ObjectPoolHandle(invalidIndex());
+    }
 
     // operator overloads for std::map
-    bool operator<(const ObjectPoolHandle& other) const { return index < other.index; }
-    bool operator>(const ObjectPoolHandle& other) const { return index > other.index; }
-    bool operator<=(const ObjectPoolHandle& other) const { return index <= other.index; }
-    bool operator>=(const ObjectPoolHandle& other) const { return index >= other.index; }
+    bool operator<(const ObjectPoolHandle& other) const {
+        return index < other.index;
+    }
+    bool operator>(const ObjectPoolHandle& other) const {
+        return index > other.index;
+    }
+    bool operator<=(const ObjectPoolHandle& other) const {
+        return index <= other.index;
+    }
+    bool operator>=(const ObjectPoolHandle& other) const {
+        return index >= other.index;
+    }
 };
 
 template <typename T>
@@ -57,9 +71,13 @@ class ObjectPool final {
             skipDead();
         }
 
-        reference operator*() const { return _pool->_slots[_index].ref(); }
+        reference operator*() const {
+            return _pool->_slots[_index].ref();
+        }
 
-        pointer operator->() const { return &_pool->_slots[_index].ref(); }
+        pointer operator->() const {
+            return &_pool->_slots[_index].ref();
+        }
 
         IteratorBase& operator++() {
             ++_index;
@@ -77,12 +95,14 @@ class ObjectPool final {
             return _pool == other._pool && _index == other._index;
         }
 
-        bool operator!=(const IteratorBase& other) const { return !(*this == other); }
+        bool operator!=(const IteratorBase& other) const {
+            return !(*this == other);
+        }
 
        private:
         void skipDead() {
-            while (_pool != nullptr && _index < _pool->_slots.size() &&
-                   !_pool->_slots[_index].alive) {
+            while (
+                _pool != nullptr && _index < _pool->_slots.size() && !_pool->_slots[_index].alive) {
                 ++_index;
             }
         }
@@ -94,16 +114,24 @@ class ObjectPool final {
     using Iterator = IteratorBase<false>;
     using ConstIterator = IteratorBase<true>;
 
-    static constexpr std::uint32_t invalidIndex() { return ObjectPoolHandle::invalidIndex(); }
-    static ObjectPoolHandle invalidHandle() { return ObjectPoolHandle::invalidHandle(); }
+    static constexpr std::uint32_t invalidIndex() {
+        return ObjectPoolHandle::invalidIndex();
+    }
+    static ObjectPoolHandle invalidHandle() {
+        return ObjectPoolHandle::invalidHandle();
+    }
 
     ObjectPool() = default;
-    ~ObjectPool() { clear(); }
+    ~ObjectPool() {
+        clear();
+    }
 
     ObjectPool(const ObjectPool&) = delete;
     ObjectPool& operator=(const ObjectPool&) = delete;
 
-    ObjectPool(ObjectPool&& other) noexcept { *this = std::move(other); }
+    ObjectPool(ObjectPool&& other) noexcept {
+        *this = std::move(other);
+    }
     ObjectPool& operator=(ObjectPool&& other) noexcept {
         if (this == &other)
             return *this;
@@ -188,8 +216,12 @@ class ObjectPool final {
         return s.alive && s.generation == h.generation;
     }
 
-    std::size_t size() const { return _aliveCount; }
-    std::size_t capacity() const { return _slots.size(); }
+    std::size_t size() const {
+        return _aliveCount;
+    }
+    std::size_t capacity() const {
+        return _slots.size();
+    }
 
     T& get(ObjectPoolHandle h) {
         if (!valid(h)) {
@@ -270,11 +302,17 @@ class ObjectPool final {
         return _slots[index].generation;
     }
 
-    Iterator begin() { return Iterator(this, 0); }
+    Iterator begin() {
+        return Iterator(this, 0);
+    }
 
-    Iterator end() { return Iterator(this, static_cast<std::uint32_t>(_slots.size())); }
+    Iterator end() {
+        return Iterator(this, static_cast<std::uint32_t>(_slots.size()));
+    }
 
-    ConstIterator begin() const { return ConstIterator(this, 0); }
+    ConstIterator begin() const {
+        return ConstIterator(this, 0);
+    }
 
     ConstIterator end() const {
         return ConstIterator(this, static_cast<std::uint32_t>(_slots.size()));
@@ -289,11 +327,19 @@ class ObjectPool final {
         using Storage = std::aligned_storage_t<sizeof(T), alignof(T)>;
         Storage storage;
 
-        T* ptr() { return reinterpret_cast<T*>(&storage); }
-        const T* ptr() const { return reinterpret_cast<const T*>(&storage); }
+        T* ptr() {
+            return reinterpret_cast<T*>(&storage);
+        }
+        const T* ptr() const {
+            return reinterpret_cast<const T*>(&storage);
+        }
 
-        T& ref() { return *ptr(); }
-        const T& ref() const { return *ptr(); }
+        T& ref() {
+            return *ptr();
+        }
+        const T& ref() const {
+            return *ptr();
+        }
     };
 
     std::vector<Slot> _slots;

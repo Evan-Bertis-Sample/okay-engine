@@ -17,15 +17,19 @@ namespace okay {
 struct TextureLoadSettings {
     std::shared_ptr<TextureDataStore> store;
 
-    TextureLoadSettings(std::shared_ptr<TextureDataStore> store) { this->store = store; }
-    TextureLoadSettings() { store = TextureDataStore::mainStore(); }
+    TextureLoadSettings(std::shared_ptr<TextureDataStore> store) {
+        this->store = store;
+    }
+    TextureLoadSettings() {
+        store = TextureDataStore::mainStore();
+    }
 };
 
 template <>
 struct AssetLoader<Texture, TextureLoadSettings> {
     static Result<Texture> loadAsset(const std::filesystem::path& path,
-                                     const AssetIO& assetIO,
-                                     const TextureLoadSettings& settings) {
+        const AssetIO& assetIO,
+        const TextureLoadSettings& settings) {
         std::shared_ptr<TextureDataStore> store = settings.store;
 
         // get the size of the image
@@ -61,11 +65,11 @@ struct AssetLoader<Texture, TextureLoadSettings> {
 
         std::size_t size = static_cast<size_t>(width * height * channels);
         Engine.logger.debug("Loaded texture {}, size={}, width={}, height={}, channels={}",
-                            path.string(),
-                            size,
-                            width,
-                            height,
-                            channels);
+            path.string(),
+            size,
+            width,
+            height,
+            channels);
         std::span<const std::byte> data =
             std::span<const std::byte>(reinterpret_cast<const std::byte*>(result), size);
         TextureDataStore::TextureHandle handle = store->addTexture(meta, data);

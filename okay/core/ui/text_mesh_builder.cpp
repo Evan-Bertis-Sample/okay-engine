@@ -4,9 +4,8 @@
 
 namespace okay {
 
-void TextMeshBuilder::appendQuadIndices(std::vector<std::uint32_t>& indices,
-                                        std::uint32_t baseVertex,
-                                        bool doubleSided) {
+void TextMeshBuilder::appendQuadIndices(
+    std::vector<std::uint32_t>& indices, std::uint32_t baseVertex, bool doubleSided) {
     indices.push_back(baseVertex + 2);
     indices.push_back(baseVertex + 1);
     indices.push_back(baseVertex + 0);
@@ -25,10 +24,8 @@ void TextMeshBuilder::appendQuadIndices(std::vector<std::uint32_t>& indices,
     indices.push_back(baseVertex + 0);
 }
 
-TextMeshBuilder::TextQuad TextMeshBuilder::generateQuadForGlyph(const FontManager::Glyph& glyph,
-                                                                float baselineX,
-                                                                float baselineY,
-                                                                float layoutScale) {
+TextMeshBuilder::TextQuad TextMeshBuilder::generateQuadForGlyph(
+    const FontManager::Glyph& glyph, float baselineX, float baselineY, float layoutScale) {
     TextQuad quad{};
 
     const float glyphWidth = static_cast<float>(glyph.w) * layoutScale;

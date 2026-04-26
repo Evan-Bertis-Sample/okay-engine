@@ -14,8 +14,7 @@ struct Surface::SurfaceImpl {
     explicit SurfaceImpl(const SurfaceConfig& c) : cfg(c) {}
 };
 
-Surface::Surface(const SurfaceConfig& cfg) : _impl(std::make_unique<SurfaceImpl>(cfg)) {
-}
+Surface::Surface(const SurfaceConfig& cfg) : _impl(std::make_unique<SurfaceImpl>(cfg)) {}
 Surface::~Surface() = default;
 Surface::Surface(Surface&&) noexcept = default;
 Surface& Surface::operator=(Surface&&) noexcept = default;

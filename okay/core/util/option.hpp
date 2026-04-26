@@ -25,19 +25,23 @@ struct unwrap_reference_wrapper<std::reference_wrapper<U>> {
     using type = U;
 };
 template <typename T>
-using option_value_return_t = std::
-    conditional_t<is_reference_wrapper<T>::value, typename unwrap_reference_wrapper<T>::type&, T>;
+using option_value_return_t = std::conditional_t<is_reference_wrapper<T>::value,
+    typename unwrap_reference_wrapper<T>::type&,
+    T>;
 
 template <typename T>
-using option_const_value_return_t =
-    std::conditional_t<is_reference_wrapper<T>::value,
-                       const typename unwrap_reference_wrapper<T>::type&,
-                       T>;
+using option_const_value_return_t = std::conditional_t<is_reference_wrapper<T>::value,
+    const typename unwrap_reference_wrapper<T>::type&,
+    T>;
 template <typename T>
 class Option {
    public:
-    static Option<T> some(T value) { return Option<T>(std::move(value)); }
-    static Option<T> none() { return Option<T>(); }
+    static Option<T> some(T value) {
+        return Option<T>(std::move(value));
+    }
+    static Option<T> none() {
+        return Option<T>();
+    }
 
     Option() = default;
     Option(const Option&) = default;
@@ -86,10 +90,16 @@ class Option {
         return value();
     }
 
-    operator bool() const { return _value.has_value(); }
+    operator bool() const {
+        return _value.has_value();
+    }
 
-    bool isSome() const { return _value.has_value(); }
-    bool isNone() const { return !_value.has_value(); }
+    bool isSome() const {
+        return _value.has_value();
+    }
+    bool isNone() const {
+        return !_value.has_value();
+    }
 
     option_value_return_t<T> value() {
         if (!_value.has_value()) {

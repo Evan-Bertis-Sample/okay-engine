@@ -19,7 +19,9 @@ struct FixedString {
             value[i] = str[i];
     }
 
-    constexpr std::string_view sv() const { return {value, N - 1}; }  // drop '\0'
+    constexpr std::string_view sv() const {
+        return {value, N - 1};
+    }  // drop '\0'
 };
 
 template <std::size_t N>

@@ -27,13 +27,19 @@ class TextureDataStore {
         size_t start;
         size_t size;
 
-        static bool isNone(TextureHandle handle) { return handle.start == 0 && handle.size == 0; }
-        static TextureHandle none() { return TextureHandle{0, 0}; }
+        static bool isNone(TextureHandle handle) {
+            return handle.start == 0 && handle.size == 0;
+        }
+        static TextureHandle none() {
+            return TextureHandle{0, 0};
+        }
 
         bool operator==(TextureHandle other) const {
             return start == other.start && size == other.size;
         }
-        bool operator!=(TextureHandle other) const { return !(*this == other); }
+        bool operator!=(TextureHandle other) const {
+            return !(*this == other);
+        }
 
         // comparison operator for using TextureHandle as a key in std::map
         bool operator<(const TextureHandle& other) const {
@@ -68,13 +74,17 @@ class TextureDataStore {
         _metaMap.erase(handle);
     }
 
-    OkayTextureMeta getTextureMeta(TextureHandle handle) const { return _metaMap.at(handle); }
+    OkayTextureMeta getTextureMeta(TextureHandle handle) const {
+        return _metaMap.at(handle);
+    }
 
     std::span<const std::byte> getTextureData(TextureHandle handle) const {
         return std::span<const std::byte>(_blob.begin() + handle.start, handle.size);
     }
 
-    std::byte* getTextureDataStart(TextureHandle handle) { return _blob.data() + handle.start; }
+    std::byte* getTextureDataStart(TextureHandle handle) {
+        return _blob.data() + handle.start;
+    }
 
    private:
     struct BlockMeta {
@@ -118,12 +128,12 @@ class TextureDataStore {
                 _openBlocks[i].start = handle.start + handle.size;
                 _openBlocks[i].size = remainingSize;
                 Engine.logger.info("Updated open block: start={}, size={}",
-                                   _openBlocks[i].start,
-                                   _openBlocks[i].size);
+                    _openBlocks[i].start,
+                    _openBlocks[i].size);
             } else {
                 Engine.logger.info("Removing open block: start={}, size={}",
-                                   _openBlocks[i].start,
-                                   _openBlocks[i].size);
+                    _openBlocks[i].start,
+                    _openBlocks[i].size);
 
                 _openBlocks.erase(_openBlocks.begin() + i);
             }
@@ -167,35 +177,43 @@ class Texture {
     Texture(std::shared_ptr<TextureDataStore> store, TextureDataStore::TextureHandle handle)
         : store(store), handle(handle) {}
 
-    std::span<const std::byte> getData() const { return store->getTextureData(handle); }
+    std::span<const std::byte> getData() const {
+        return store->getTextureData(handle);
+    }
 
-    OkayTextureMeta getMeta() const { return store->getTextureMeta(handle); }
+    OkayTextureMeta getMeta() const {
+        return store->getTextureMeta(handle);
+    }
 
-    bool hasBeenUploadedToGPU() const { return _glTextureID != 0; }
+    bool hasBeenUploadedToGPU() const {
+        return _glTextureID != 0;
+    }
 
-    GLuint getGLTextureID() const { return _glTextureID; }
+    GLuint getGLTextureID() const {
+        return _glTextureID;
+    }
 
     Failable uploadToGPU(const TextureParameters& params) {
         const auto meta = getMeta();
         const auto data = getData();
 
         Engine.logger.info("Uploading texture to GPU: width={}, height={}, format={}",
-                           meta.width,
-                           meta.height,
-                           static_cast<int>(meta.format));
+            meta.width,
+            meta.height,
+            static_cast<int>(meta.format));
 
         if (meta.format == OkayTextureMeta::Format::DEPTH24_STENCIL8) {
             GL_CHECK_FAILABLE(glGenTextures(1, &_glTextureID));
             GL_CHECK_FAILABLE(glBindTexture(GL_TEXTURE_2D, _glTextureID));
             GL_CHECK_FAILABLE(glTexImage2D(GL_TEXTURE_2D,
-                                           0,
-                                           GL_DEPTH24_STENCIL8,
-                                           meta.width,
-                                           meta.height,
-                                           0,
-                                           GL_DEPTH_STENCIL,
-                                           GL_UNSIGNED_INT_24_8,
-                                           nullptr));
+                0,
+                GL_DEPTH24_STENCIL8,
+                meta.width,
+                meta.height,
+                0,
+                GL_DEPTH_STENCIL,
+                GL_UNSIGNED_INT_24_8,
+                nullptr));
         } else {
             GLenum glFormat;
             GLenum glInternalFormat;
@@ -226,14 +244,14 @@ class Texture {
             GL_CHECK_FAILABLE(glGenTextures(1, &_glTextureID));
             GL_CHECK_FAILABLE(glBindTexture(GL_TEXTURE_2D, _glTextureID));
             GL_CHECK_FAILABLE(glTexImage2D(GL_TEXTURE_2D,
-                                           0,
-                                           glFormat,
-                                           meta.width,
-                                           meta.height,
-                                           0,
-                                           glFormat,
-                                           GL_UNSIGNED_BYTE,
-                                           data.data()));
+                0,
+                glFormat,
+                meta.width,
+                meta.height,
+                0,
+                glFormat,
+                GL_UNSIGNED_BYTE,
+                data.data()));
         }
 
         Engine.logger.debug("Texture uploaded to GPU with ID {}", _glTextureID);
@@ -256,9 +274,15 @@ class Texture {
         return Failable::ok({});
     }
 
-    bool operator==(const Texture& other) const { return handle == other.handle; }
-    bool operator!=(const Texture& other) const { return !(*this == other); }
-    bool operator<(const Texture& other) const { return handle < other.handle; }
+    bool operator==(const Texture& other) const {
+        return handle == other.handle;
+    }
+    bool operator!=(const Texture& other) const {
+        return !(*this == other);
+    }
+    bool operator<(const Texture& other) const {
+        return handle < other.handle;
+    }
 
    private:
     GLuint _glTextureID{0};

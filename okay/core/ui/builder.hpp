@@ -122,15 +122,15 @@ inline UIElement slot(UIPrimaryAxis axis = UIPrimaryAxis::Parent) {
     return UIElement{.axis = axis};
 }
 
-inline UIElementGenerator range(std::int32_t count,
-                                std::function<UIElement(std::int32_t)> generator) {
+inline UIElementGenerator range(
+    std::int32_t count, std::function<UIElement(std::int32_t)> generator) {
     return UIElementGenerator{count, generator};
 }
 
 inline UIElementGenerator range(std::int32_t start,
-                                std::int32_t end,
-                                std::int32_t increment,
-                                std::function<UIElement(std::int32_t)> generator) {
+    std::int32_t end,
+    std::int32_t increment,
+    std::function<UIElement(std::int32_t)> generator) {
     return UIElementGenerator{start, end, increment, generator};
 }
 

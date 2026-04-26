@@ -126,36 +126,36 @@ class Tween : public ITween, public std::enable_shared_from_this<Tween<T>> {
         std::function<void()> onResume = []() {},
         std::function<void()> onLoop = []() {}) {
         auto tweenPtr{std::make_shared<Tween<T>>(start,
-                                                 end,
-                                                 ref,
-                                                 durationMs,
-                                                 easingFn,
-                                                 numLoops,
-                                                 inOutBack,
-                                                 prefixMs,
-                                                 onTick,
-                                                 onEnd,
-                                                 onPause,
-                                                 onResume,
-                                                 onLoop)};
+            end,
+            ref,
+            durationMs,
+            easingFn,
+            numLoops,
+            inOutBack,
+            prefixMs,
+            onTick,
+            onEnd,
+            onPause,
+            onResume,
+            onLoop)};
 
         return tweenPtr;
     }
 
     static std::shared_ptr<Tween<T>> create(const TweenConfig<T>& cfg) {
         auto tweenPtr{std::make_shared<Tween<T>>(cfg.start,
-                                                 cfg.end,
-                                                 cfg.ref,
-                                                 cfg.durationMs,
-                                                 cfg.easingFn,
-                                                 cfg.numLoops,
-                                                 cfg.inOutBack,
-                                                 cfg.prefixMs,
-                                                 cfg.onTick,
-                                                 cfg.onEnd,
-                                                 cfg.onPause,
-                                                 cfg.onResume,
-                                                 cfg.onLoop)};
+            cfg.end,
+            cfg.ref,
+            cfg.durationMs,
+            cfg.easingFn,
+            cfg.numLoops,
+            cfg.inOutBack,
+            cfg.prefixMs,
+            cfg.onTick,
+            cfg.onEnd,
+            cfg.onPause,
+            cfg.onResume,
+            cfg.onLoop)};
 
         return tweenPtr;
     }
@@ -218,7 +218,9 @@ class Tween : public ITween, public std::enable_shared_from_this<Tween<T>> {
         _onReset();
     }
 
-    void kill() { _killTween = true; }
+    void kill() {
+        _killTween = true;
+    }
 
     bool isFinished() {
         if (_killTween) {
@@ -249,9 +251,13 @@ class Tween : public ITween, public std::enable_shared_from_this<Tween<T>> {
         return false;
     }
 
-    void setIsTweening(bool isTweening) { _isTweening = isTweening; }
+    void setIsTweening(bool isTweening) {
+        _isTweening = isTweening;
+    }
 
-    const T& value() const { return _current; }
+    const T& value() const {
+        return _current;
+    }
 
    private:
     // core tween logic

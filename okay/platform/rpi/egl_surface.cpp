@@ -45,25 +45,25 @@ uint32_t bo_to_fb(gbm_bo* bo, int drmFd) {
 
     if (modifiers[0] != 0) {
         ret = drmModeAddFB2WithModifiers(drmFd,
-                                         gbm_bo_get_width(bo),
-                                         gbm_bo_get_height(bo),
-                                         fmt,
-                                         handles,
-                                         strides,
-                                         offsets,
-                                         modifiers,
-                                         &fb,
-                                         DRM_MODE_FB_MODIFIERS);
+            gbm_bo_get_width(bo),
+            gbm_bo_get_height(bo),
+            fmt,
+            handles,
+            strides,
+            offsets,
+            modifiers,
+            &fb,
+            DRM_MODE_FB_MODIFIERS);
     } else {
         ret = drmModeAddFB2(drmFd,
-                            gbm_bo_get_width(bo),
-                            gbm_bo_get_height(bo),
-                            fmt,
-                            handles,
-                            strides,
-                            offsets,
-                            &fb,
-                            0);
+            gbm_bo_get_width(bo),
+            gbm_bo_get_height(bo),
+            fmt,
+            handles,
+            strides,
+            offsets,
+            &fb,
+            0);
     }
 
     return ret == 0 ? fb : 0;
@@ -75,26 +75,26 @@ EGLConfig choose_config(EGLDisplay dpy, bool requestMSAA) {
 
     if (requestMSAA) {
         const EGLint attribs[] = {EGL_SURFACE_TYPE,
-                                  EGL_WINDOW_BIT,
-                                  EGL_RENDERABLE_TYPE,
-                                  EGL_OPENGL_ES3_BIT,
-                                  EGL_RED_SIZE,
-                                  8,
-                                  EGL_GREEN_SIZE,
-                                  8,
-                                  EGL_BLUE_SIZE,
-                                  8,
-                                  EGL_ALPHA_SIZE,
-                                  8,
-                                  EGL_DEPTH_SIZE,
-                                  24,
-                                  EGL_STENCIL_SIZE,
-                                  8,
-                                  EGL_SAMPLE_BUFFERS,
-                                  1,
-                                  EGL_SAMPLES,
-                                  4,
-                                  EGL_NONE};
+            EGL_WINDOW_BIT,
+            EGL_RENDERABLE_TYPE,
+            EGL_OPENGL_ES3_BIT,
+            EGL_RED_SIZE,
+            8,
+            EGL_GREEN_SIZE,
+            8,
+            EGL_BLUE_SIZE,
+            8,
+            EGL_ALPHA_SIZE,
+            8,
+            EGL_DEPTH_SIZE,
+            24,
+            EGL_STENCIL_SIZE,
+            8,
+            EGL_SAMPLE_BUFFERS,
+            1,
+            EGL_SAMPLES,
+            4,
+            EGL_NONE};
 
         if (eglChooseConfig(dpy, attribs, &config, 1, &numConfigs) && numConfigs > 0) {
             return config;
@@ -103,22 +103,22 @@ EGLConfig choose_config(EGLDisplay dpy, bool requestMSAA) {
 
     {
         const EGLint attribs[] = {EGL_SURFACE_TYPE,
-                                  EGL_WINDOW_BIT,
-                                  EGL_RENDERABLE_TYPE,
-                                  EGL_OPENGL_ES3_BIT,
-                                  EGL_RED_SIZE,
-                                  8,
-                                  EGL_GREEN_SIZE,
-                                  8,
-                                  EGL_BLUE_SIZE,
-                                  8,
-                                  EGL_ALPHA_SIZE,
-                                  8,
-                                  EGL_DEPTH_SIZE,
-                                  24,
-                                  EGL_STENCIL_SIZE,
-                                  8,
-                                  EGL_NONE};
+            EGL_WINDOW_BIT,
+            EGL_RENDERABLE_TYPE,
+            EGL_OPENGL_ES3_BIT,
+            EGL_RED_SIZE,
+            8,
+            EGL_GREEN_SIZE,
+            8,
+            EGL_BLUE_SIZE,
+            8,
+            EGL_ALPHA_SIZE,
+            8,
+            EGL_DEPTH_SIZE,
+            24,
+            EGL_STENCIL_SIZE,
+            8,
+            EGL_NONE};
 
         if (eglChooseConfig(dpy, attribs, &config, 1, &numConfigs) && numConfigs > 0) {
             return config;
@@ -161,8 +161,7 @@ struct Surface::SurfaceImpl {
     explicit SurfaceImpl(const SurfaceConfig& c) : cfg(c) {}
 };
 
-Surface::Surface(const SurfaceConfig& cfg) : _impl(std::make_unique<SurfaceImpl>(cfg)) {
-}
+Surface::Surface(const SurfaceConfig& cfg) : _impl(std::make_unique<SurfaceImpl>(cfg)) {}
 
 Surface::~Surface() {
     // destroy();
@@ -355,13 +354,13 @@ void Surface::destroy() {
 
     if (_impl->origCrtc && _impl->drmFd >= 0 && _impl->connectorId) {
         drmModeSetCrtc(_impl->drmFd,
-                       _impl->origCrtc->crtc_id,
-                       _impl->origCrtc->buffer_id,
-                       _impl->origCrtc->x,
-                       _impl->origCrtc->y,
-                       &_impl->connectorId,
-                       1,
-                       &_impl->origCrtc->mode);
+            _impl->origCrtc->crtc_id,
+            _impl->origCrtc->buffer_id,
+            _impl->origCrtc->x,
+            _impl->origCrtc->y,
+            &_impl->connectorId,
+            1,
+            &_impl->origCrtc->mode);
     }
 
     if (_impl->frontFb) {

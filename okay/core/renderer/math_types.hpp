@@ -13,8 +13,8 @@ struct Transform {
     glm::quat rotation{1.0f, 0.0f, 0.0f, 0.0f};
 
     Transform(const glm::vec3& pos = glm::vec3(0.0f),
-              const glm::vec3& scl = glm::vec3(1.0f),
-              const glm::quat& rot = glm::identity<glm::quat>())
+        const glm::vec3& scl = glm::vec3(1.0f),
+        const glm::quat& rot = glm::identity<glm::quat>())
         : position(pos), scale(scl), rotation(rot) {}
 
     // asignment, equality comparison overloads
@@ -29,7 +29,9 @@ struct Transform {
         return position == other.position && scale == other.scale && rotation == other.rotation;
     }
 
-    bool operator!=(const Transform& other) const { return !(*this == other); }
+    bool operator!=(const Transform& other) const {
+        return !(*this == other);
+    }
 
     glm::mat4 toMatrix() const {
         glm::mat4 mat(1.0f);
@@ -47,7 +49,9 @@ struct Bounds {
     Bounds() {}
     Bounds(glm::vec3 min, glm::vec3 max) : minBound(min), maxBound(max) {}
 
-    static Bounds none() { return Bounds(glm::vec3(0, 0, 0), glm::vec3(0, 0, 0)); }
+    static Bounds none() {
+        return Bounds(glm::vec3(0, 0, 0), glm::vec3(0, 0, 0));
+    }
 
     void extend(glm::vec3 point) {
         minBound = glm::min(minBound, point);
@@ -60,7 +64,9 @@ struct Bounds {
         return Bounds(min, max);
     }
 
-    Bounds transform(const Transform& t) const { return transform(t.toMatrix()); }
+    Bounds transform(const Transform& t) const {
+        return transform(t.toMatrix());
+    }
 
     class CornerIterator {
         glm::vec3 minBound;
@@ -113,22 +119,36 @@ struct Bounds {
             return temp;
         }
 
-        bool operator==(const CornerIterator& other) const { return index == other.index; }
+        bool operator==(const CornerIterator& other) const {
+            return index == other.index;
+        }
 
-        bool operator!=(const CornerIterator& other) const { return !(*this == other); }
+        bool operator!=(const CornerIterator& other) const {
+            return !(*this == other);
+        }
     };
 
     struct CornerRange {
         const Bounds& bounds;
 
-        CornerIterator begin() const { return CornerIterator(bounds, 0); }
-        CornerIterator end() const { return CornerIterator(bounds, 8); }
+        CornerIterator begin() const {
+            return CornerIterator(bounds, 0);
+        }
+        CornerIterator end() const {
+            return CornerIterator(bounds, 8);
+        }
     };
 
-    CornerRange corners() const { return CornerRange{*this}; }
+    CornerRange corners() const {
+        return CornerRange{*this};
+    }
 
-    CornerIterator begin() const { return CornerIterator(*this, 0); }
-    CornerIterator end() const { return CornerIterator(*this, 8); }
+    CornerIterator begin() const {
+        return CornerIterator(*this, 0);
+    }
+    CornerIterator end() const {
+        return CornerIterator(*this, 8);
+    }
 };
 
 };  // namespace okay

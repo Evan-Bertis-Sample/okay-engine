@@ -46,8 +46,8 @@ class FilesystemAssetIO final : public AssetIO {
     Result<std::unique_ptr<std::istream>> open(const std::filesystem::path& path) const override {
         auto f = std::make_unique<std::ifstream>(path, std::ios::in | std::ios::binary);
         if (!f->is_open()) {
-            return Result<std::unique_ptr<std::istream>>::errorResult("Failed to open asset: " +
-                                                                      path.string());
+            return Result<std::unique_ptr<std::istream>>::errorResult(
+                "Failed to open asset: " + path.string());
         }
         return Result<std::unique_ptr<std::istream>>::ok(std::move(f));
     }
@@ -64,11 +64,10 @@ class FilesystemAssetIO final : public AssetIO {
 
 template <typename T, typename LoadOptions = std::tuple<>>
 struct AssetLoader {
-    static Result<T> loadAsset(const std::filesystem::path& path,
-                               const AssetIO& assetIO,
-                               LoadOptions options) {
-        static_assert(sizeof(T) != 0,
-                      "No OkayAssetLoader<T> specialization found for this asset type.");
+    static Result<T> loadAsset(
+        const std::filesystem::path& path, const AssetIO& assetIO, LoadOptions options) {
+        static_assert(
+            sizeof(T) != 0, "No OkayAssetLoader<T> specialization found for this asset type.");
         return Result<T>::errorResult("No loader");
     }
 };
@@ -155,8 +154,8 @@ class AssetManager : public System<SystemScope::ENGINE> {
     };
 
     template <typename T, typename AssetIO = DefaultAssetIO, typename... LoadOptions>
-    Result<Asset<T>> loadEngineAssetSync(const std::filesystem::path& path,
-                                         LoadOptions... options) {
+    Result<Asset<T>> loadEngineAssetSync(
+        const std::filesystem::path& path, LoadOptions... options) {
         return loadAssetSync(Load<T, AssetIO>::engineAsset(path), options...);
     }
 
@@ -167,9 +166,8 @@ class AssetManager : public System<SystemScope::ENGINE> {
 
    private:
     template <typename T>
-    inline Asset<T> createAsset(const std::filesystem::path& path,
-                                T loaded,
-                                const AssetIO& assetIO) {
+    inline Asset<T> createAsset(
+        const std::filesystem::path& path, T loaded, const AssetIO& assetIO) {
         return Asset<T>{.asset = loaded, .assetSize = assetIO.fileSize(path).value()};
     }
 };

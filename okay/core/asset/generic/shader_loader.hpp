@@ -31,8 +31,8 @@ struct AssetLoader<Shader> {
 
         // read vertex shader code
         std::unique_ptr<std::istream>& vertexStream = vertexStreamRes.valueRef();
-        std::string vertexShaderCode((std::istreambuf_iterator<char>(*vertexStream)),
-                                     std::istreambuf_iterator<char>());
+        std::string vertexShaderCode(
+            (std::istreambuf_iterator<char>(*vertexStream)), std::istreambuf_iterator<char>());
 
         // load fragment shader
         Result<std::unique_ptr<std::istream>> fragmentStreamRes =
@@ -45,8 +45,8 @@ struct AssetLoader<Shader> {
 
         // read fragment shader code
         std::unique_ptr<std::istream>& fragmentStream = fragmentStreamRes.valueRef();
-        std::string fragmentShaderCode((std::istreambuf_iterator<char>(*fragmentStream)),
-                                       std::istreambuf_iterator<char>());
+        std::string fragmentShaderCode(
+            (std::istreambuf_iterator<char>(*fragmentStream)), std::istreambuf_iterator<char>());
 
         // if this mac, we need to replace the version and remove precision qualifiers since mac's
         // OpenGL doesn't support them
@@ -55,8 +55,7 @@ struct AssetLoader<Shader> {
         auto replaceVersionAndPrecision = [](std::string& shaderCode) {
             shaderCode =
                 std::regex_replace(shaderCode, std::regex("#version 300 es"), "#version 330 core");
-            shaderCode = std::regex_replace(
-                shaderCode,
+            shaderCode = std::regex_replace(shaderCode,
                 std::regex(
                     R"((?:^|\n)[ \t]*precision\s+(lowp|mediump|highp)\s+(float|int|sampler2D|samplerCube)\s*;\s*)"),
                 "\n");

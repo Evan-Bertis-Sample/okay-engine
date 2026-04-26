@@ -16,7 +16,9 @@ class Shader {
    public:
     enum class State { NOT_COMPILED, STANDBY };
 
-    static constexpr std::uint32_t invalidID() { return 0xFFFFFFFFu; }
+    static constexpr std::uint32_t invalidID() {
+        return 0xFFFFFFFFu;
+    }
 
     Shader(const std::string& vertexSource, const std::string& fragmentSource)
         : vertexShader(std::move(vertexSource)),
@@ -40,13 +42,21 @@ class Shader {
     Failable compile();
     Failable set();
 
-    bool isNone() const { return _srcHash == invalidID(); }
+    bool isNone() const {
+        return _srcHash == invalidID();
+    }
 
-    State state() const { return _state; }
+    State state() const {
+        return _state;
+    }
 
-    std::uint32_t srcHash() const { return _srcHash; }
+    std::uint32_t srcHash() const {
+        return _srcHash;
+    }
 
-    GLuint programID() const { return _shaderProgram; }
+    GLuint programID() const {
+        return _shaderProgram;
+    }
 
     GLuint findUniformLocation(const std::string& uniform) {
         auto it = _uniforms.find(uniform);
@@ -117,7 +127,9 @@ class Shader {
     }
 
     // enable inequality operator
-    bool operator!=(const Shader& other) const { return !(*this == other); }
+    bool operator!=(const Shader& other) const {
+        return !(*this == other);
+    }
 
    private:
     struct UniformInfo {
@@ -138,13 +150,17 @@ struct ShaderHandle {
     MaterialRegistry* owner = nullptr;
     std::uint32_t id = Shader::invalidID();
 
-    bool isValid() const { return owner != nullptr && id != Shader::invalidID(); }
+    bool isValid() const {
+        return owner != nullptr && id != Shader::invalidID();
+    }
 
     bool operator==(const ShaderHandle& other) const {
         return owner == other.owner && id == other.id;
     }
 
-    bool operator!=(const ShaderHandle& other) const { return !(*this == other); }
+    bool operator!=(const ShaderHandle& other) const {
+        return !(*this == other);
+    }
 
     const Shader* operator*() const;
     const Shader* operator->() const;

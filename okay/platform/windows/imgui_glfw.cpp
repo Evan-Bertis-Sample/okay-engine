@@ -9,11 +9,9 @@ namespace okay {
 
 struct IMGUIImpl::Context {};
 
-IMGUIImpl::IMGUIImpl() : _context(std::make_unique<IMGUIImpl::Context>()) {
-}
+IMGUIImpl::IMGUIImpl() : _context(std::make_unique<IMGUIImpl::Context>()) {}
 
-IMGUIImpl::~IMGUIImpl() {
-}
+IMGUIImpl::~IMGUIImpl() {}
 
 bool IMGUIImpl::imguiSupported() {
     return true;

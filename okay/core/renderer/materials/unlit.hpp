@@ -27,11 +27,19 @@ struct SceneMaterialProperties {
         return std::tie(modelMatrix, viewMatrix, projectionMatrix, cameraPosition, cameraDirection);
     }
 
-    auto uniformBlockRefs() { return std::tie(); }
-    auto uniformBlockRefs() const { return std::tie(); }
+    auto uniformBlockRefs() {
+        return std::tie();
+    }
+    auto uniformBlockRefs() const {
+        return std::tie();
+    }
 
-    auto textureRefs() { return std::tie(); }
-    auto textureRefs() const { return std::tie(); }
+    auto textureRefs() {
+        return std::tie();
+    }
+    auto textureRefs() const {
+        return std::tie();
+    }
 
     MaterialFlagCollection flags() {
         MaterialFlagCollection flags;
@@ -60,13 +68,21 @@ struct UnlitMaterial final : public SceneMaterialProperties,
         return std::tuple_cat(SceneMaterialProperties::uniformRefs(), std::tie(color));
     }
 
-    auto uniformBlockRefs() { return std::tie(); }
+    auto uniformBlockRefs() {
+        return std::tie();
+    }
 
-    auto uniformBlockRefs() const { return std::tie(); }
+    auto uniformBlockRefs() const {
+        return std::tie();
+    }
 
-    auto textureRefs() { return std::tie(albedo); }
+    auto textureRefs() {
+        return std::tie(albedo);
+    }
 
-    auto textureRefs() const { return std::tie(albedo); };
+    auto textureRefs() const {
+        return std::tie(albedo);
+    };
 
     MaterialFlagCollection flags() {
         MaterialFlagCollection flags = SceneMaterialProperties::flags();

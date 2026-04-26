@@ -16,9 +16,13 @@ struct MeshVertex {
     glm::vec3 color{1.0f, 1.0f, 1.0f};
     glm::vec2 uv{0.0f, 0.0f};
 
-    static std::size_t numFloats() { return 3 + 3 + 3 + 2; }
+    static std::size_t numFloats() {
+        return 3 + 3 + 3 + 2;
+    }
 
-    static std::size_t stride() { return numFloats() * sizeof(float); }
+    static std::size_t stride() {
+        return numFloats() * sizeof(float);
+    }
 
     MeshVertex& operator=(const MeshVertex& other) {
         position = other.position;
@@ -33,7 +37,9 @@ struct MeshVertex {
                uv == other.uv;
     }
 
-    bool operator!=(const MeshVertex& other) const { return !(*this == other); }
+    bool operator!=(const MeshVertex& other) const {
+        return !(*this == other);
+    }
 };
 
 struct MeshData {
@@ -56,9 +62,13 @@ struct Mesh {
           indexCount(iCount),
           bounds(b) {}
 
-    static Mesh none() { return Mesh(0, 0, 0, 0, Bounds::none()); }
+    static Mesh none() {
+        return Mesh(0, 0, 0, 0, Bounds::none());
+    }
 
-    bool isEmpty() { return indexCount == 0; }
+    bool isEmpty() {
+        return indexCount == 0;
+    }
 
     Mesh& operator=(const Mesh& other) {
         vertexOffset = other.vertexOffset;
@@ -73,7 +83,9 @@ struct Mesh {
                indexOffset == other.indexOffset && indexCount == other.indexCount;
     }
 
-    bool operator!=(const Mesh& other) const { return !(*this == other); }
+    bool operator!=(const Mesh& other) const {
+        return !(*this == other);
+    }
 };
 
 class ModelView;
@@ -94,7 +106,9 @@ class MeshBuffer {
    public:
     Failable initVertexAttributes();
 
-    std::size_t size() const { return _indices.size(); }
+    std::size_t size() const {
+        return _indices.size();
+    }
     Mesh addMesh(const MeshData& model);
     void removeMesh(const Mesh& mesh);
     Failable bindMeshData();
@@ -134,7 +148,9 @@ class MeshBuffer {
             return *this;
         }
 
-        bool operator!=(const iterator& other) const { return _index != other._index; }
+        bool operator!=(const iterator& other) const {
+            return _index != other._index;
+        }
 
        private:
         const MeshBuffer* _buffer;

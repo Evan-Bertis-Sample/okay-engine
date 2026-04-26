@@ -70,8 +70,12 @@ class ComponentPool final : public IComponentPool {
         return _pool[index];
     }
 
-    T& get(std::size_t index) { return _pool[index]; }
-    const T& get(std::size_t index) const { return _pool[index]; }
+    T& get(std::size_t index) {
+        return _pool[index];
+    }
+    const T& get(std::size_t index) const {
+        return _pool[index];
+    }
 
    private:
     std::vector<T> _pool;
@@ -108,7 +112,9 @@ class EntityComponentStore {
     void removeChild(const ECSEntity& parent, const ECSEntity& child);
     ECSEntity getParent(const ECSEntity& entity);
     std::uint32_t getEntityID(const ECSEntity& entity) const;
-    std::size_t getEntityCount() const { return _entityMetas.size(); }
+    std::size_t getEntityCount() const {
+        return _entityMetas.size();
+    }
 
     template <typename T>
     Option<std::size_t> getComponentID() const;
@@ -124,11 +130,15 @@ class EntityComponentStore {
             return {typeid(T).hash_code()};
         }
 
-        bool operator==(const ComponentInfo& other) const noexcept { return hash == other.hash; }
+        bool operator==(const ComponentInfo& other) const noexcept {
+            return hash == other.hash;
+        }
     };
 
     struct ComponentInfoHash {
-        std::size_t operator()(const ComponentInfo& info) const noexcept { return info.hash; }
+        std::size_t operator()(const ComponentInfo& info) const noexcept {
+            return info.hash;
+        }
     };
 
     struct EntityMeta {
@@ -160,18 +170,28 @@ class EntityComponentStore {
     using Iterator = ObjectPool<EntityMeta>::Iterator;
     using ConstIterator = ObjectPool<EntityMeta>::ConstIterator;
 
-    Iterator begin() { return _entityMetas.begin(); }
-    Iterator end() { return _entityMetas.end(); }
+    Iterator begin() {
+        return _entityMetas.begin();
+    }
+    Iterator end() {
+        return _entityMetas.end();
+    }
 
-    ConstIterator begin() const { return _entityMetas.begin(); }
-    ConstIterator end() const { return _entityMetas.end(); }
+    ConstIterator begin() const {
+        return _entityMetas.begin();
+    }
+    ConstIterator end() const {
+        return _entityMetas.end();
+    }
 
     std::size_t _nextEntityID{1};
 };
 
 struct ECSEntity {
    public:
-    static constexpr ECSEntity invalid() { return ECSEntity(); }
+    static constexpr ECSEntity invalid() {
+        return ECSEntity();
+    }
     static bool isValid(const ECSEntity& entity) {
         return entity._ecs != nullptr && entity._handle != ObjectPoolHandle::invalidHandle();
     }
@@ -180,9 +200,15 @@ struct ECSEntity {
     bool operator==(const ECSEntity& other) const {
         return _ecs == other._ecs && _handle == other._handle;
     }
-    bool operator!=(const ECSEntity& other) const { return !(*this == other); }
-    bool operator<(const ECSEntity& other) const { return _handle < other._handle; }
-    bool operator>(const ECSEntity& other) const { return _handle > other._handle; }
+    bool operator!=(const ECSEntity& other) const {
+        return !(*this == other);
+    }
+    bool operator<(const ECSEntity& other) const {
+        return _handle < other._handle;
+    }
+    bool operator>(const ECSEntity& other) const {
+        return _handle > other._handle;
+    }
 
     template <typename T>
     Option<std::reference_wrapper<T>> getComponent() {
@@ -191,8 +217,8 @@ struct ECSEntity {
 
     template <typename T, typename... Args>
     T& getOrAddComponent(Args&&... args) const {
-        return _ecs->getOrAddComponent<T>(const_cast<ECSEntity&>(*this),
-                                          std::forward<Args>(args)...);
+        return _ecs->getOrAddComponent<T>(
+            const_cast<ECSEntity&>(*this), std::forward<Args>(args)...);
     }
 
     template <typename T, typename... Args>
@@ -212,16 +238,26 @@ struct ECSEntity {
         return _ecs->hasComponent<T>(*this);
     }
 
-    ECSEntity createChild() const { return _ecs->createEntity(*this); }
-    ECSEntity getParent() const { return _ecs->getParent(*this); }
+    ECSEntity createChild() const {
+        return _ecs->createEntity(*this);
+    }
+    ECSEntity getParent() const {
+        return _ecs->getParent(*this);
+    }
     bool isChildOf(const ECSEntity& potentialParent) const {
         return _ecs->isChildOf(potentialParent, *this);
     }
-    bool isValid() const { return isValid(*this); }
+    bool isValid() const {
+        return isValid(*this);
+    }
 
-    std::uint32_t id() const { return _ecs->getEntityID(*this); }
+    std::uint32_t id() const {
+        return _ecs->getEntityID(*this);
+    }
 
-    void destroy() { _ecs->destroyEntity(*this); }
+    void destroy() {
+        _ecs->destroyEntity(*this);
+    }
 
    private:
     ECSEntity(EntityComponentStore* ecs, ObjectPoolHandle handle) : _handle(handle), _ecs(ecs) {}

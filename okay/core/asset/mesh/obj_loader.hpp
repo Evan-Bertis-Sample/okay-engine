@@ -28,7 +28,9 @@ class ObjLoader final : public MeshLoader {
         int vt = -1;
         int vn = -1;
 
-        bool operator==(const VertKey& o) const { return v == o.v && vt == o.vt && vn == o.vn; }
+        bool operator==(const VertKey& o) const {
+            return v == o.v && vt == o.vt && vn == o.vn;
+        }
     };
 
     struct VertKeyHash {

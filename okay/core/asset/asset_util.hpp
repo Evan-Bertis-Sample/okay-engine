@@ -31,8 +31,8 @@ namespace detail {
 
 template <typename AssetT, bool engineAsset, typename... LoadOptions>
 inline AssetT loadAsset(const std::filesystem::path& path,
-                        SystemParameter<AssetManager> assetManager,
-                        LoadOptions&&... options) {
+    SystemParameter<AssetManager> assetManager,
+    LoadOptions&&... options) {
     if constexpr (engineAsset) {
         return unwrapAssetResult(
             assetManager->loadEngineAssetSync<AssetT>(path, std::forward<LoadOptions>(options)...));
@@ -49,8 +49,8 @@ namespace load {
 // game assets
 template <typename AssetT, typename... LoadOptions>
 inline AssetT asset(const std::filesystem::path& path,
-                    SystemParameter<AssetManager> assetManager = nullptr,
-                    LoadOptions&&... options) {
+    SystemParameter<AssetManager> assetManager = nullptr,
+    LoadOptions&&... options) {
     return detail::loadAsset<AssetT, false>(
         path, assetManager, std::forward<LoadOptions>(options)...);
 }
@@ -58,54 +58,54 @@ inline AssetT asset(const std::filesystem::path& path,
 // engine assets
 template <typename AssetT, typename... LoadOptions>
 inline AssetT engine(const std::filesystem::path& path,
-                     SystemParameter<AssetManager> assetManager = nullptr,
-                     LoadOptions&&... options) {
+    SystemParameter<AssetManager> assetManager = nullptr,
+    LoadOptions&&... options) {
     return detail::loadAsset<AssetT, true>(
         path, assetManager, std::forward<LoadOptions>(options)...);
 }
 
 // optional convenience wrappers
 inline FontManager::FontHandle font(const std::filesystem::path& path,
-                                    SystemParameter<AssetManager> assetManager = nullptr,
-                                    FontLoadOptions options = {}) {
+    SystemParameter<AssetManager> assetManager = nullptr,
+    FontLoadOptions options = {}) {
     return asset<FontManager::FontHandle>(path, assetManager, options);
 }
 
-inline Shader shader(const std::filesystem::path& path,
-                     SystemParameter<AssetManager> assetManager = nullptr) {
+inline Shader shader(
+    const std::filesystem::path& path, SystemParameter<AssetManager> assetManager = nullptr) {
     return asset<Shader>(path, assetManager);
 }
 
 inline Texture texture(const std::filesystem::path& path,
-                       SystemParameter<AssetManager> assetManager = nullptr,
-                       TextureLoadSettings settings = {}) {
+    SystemParameter<AssetManager> assetManager = nullptr,
+    TextureLoadSettings settings = {}) {
     return asset<Texture>(path, assetManager, settings);
 }
 
-inline MeshData meshData(const std::filesystem::path& path,
-                         SystemParameter<AssetManager> assetManager = nullptr) {
+inline MeshData meshData(
+    const std::filesystem::path& path, SystemParameter<AssetManager> assetManager = nullptr) {
     return asset<MeshData>(path, assetManager);
 }
 
 inline FontManager::FontHandle engineFont(const std::filesystem::path& path,
-                                          SystemParameter<AssetManager> assetManager = nullptr,
-                                          FontLoadOptions options = {}) {
+    SystemParameter<AssetManager> assetManager = nullptr,
+    FontLoadOptions options = {}) {
     return engine<FontManager::FontHandle>(path, assetManager, options);
 }
 
-inline Shader engineShader(const std::filesystem::path& path,
-                           SystemParameter<AssetManager> assetManager = nullptr) {
+inline Shader engineShader(
+    const std::filesystem::path& path, SystemParameter<AssetManager> assetManager = nullptr) {
     return engine<Shader>(path, assetManager);
 }
 
 inline Texture engineTexture(const std::filesystem::path& path,
-                             SystemParameter<AssetManager> assetManager = nullptr,
-                             TextureLoadSettings settings = {}) {
+    SystemParameter<AssetManager> assetManager = nullptr,
+    TextureLoadSettings settings = {}) {
     return engine<Texture>(path, assetManager, settings);
 }
 
-inline MeshData engineMeshData(const std::filesystem::path& path,
-                               SystemParameter<AssetManager> assetManager = nullptr) {
+inline MeshData engineMeshData(
+    const std::filesystem::path& path, SystemParameter<AssetManager> assetManager = nullptr) {
     return engine<MeshData>(path, assetManager);
 }
 

@@ -49,14 +49,20 @@ struct TextLineLayout {
     float layoutTop{0.0f};
     float layoutBottom{0.0f};
 
-    int lineHeightGlyph() const { return lineAscentGlyph + lineDescentGlyph; }
+    int lineHeightGlyph() const {
+        return lineAscentGlyph + lineDescentGlyph;
+    }
 
     float lineAdvanceGlyph(float extraLineSpacingGlyph) const {
         return static_cast<float>(lineHeightGlyph()) + extraLineSpacingGlyph;
     }
 
-    float layoutWidth() const { return layoutRight - layoutLeft; }
-    float layoutHeight() const { return layoutTop - layoutBottom; }
+    float layoutWidth() const {
+        return layoutRight - layoutLeft;
+    }
+    float layoutHeight() const {
+        return layoutTop - layoutBottom;
+    }
 };
 
 struct TextLayoutMetrics {
@@ -71,8 +77,12 @@ struct TextLayoutMetrics {
     std::size_t glyphCount{0};
     int maxLineHeightGlyph{0};
 
-    float width() const { return layoutRight - layoutLeft; }
-    float height() const { return layoutTop - layoutBottom; }
+    float width() const {
+        return layoutRight - layoutLeft;
+    }
+    float height() const {
+        return layoutTop - layoutBottom;
+    }
 };
 
 class TextLayout {
@@ -81,9 +91,15 @@ class TextLayout {
 
     TextLayout(std::string_view text, const TextStyle& style);
 
-    std::string_view text() const { return _text; }
-    const TextStyle& style() const { return _style; }
-    const TextLayoutMetrics& metrics() const { return _metrics; }
+    std::string_view text() const {
+        return _text;
+    }
+    const TextStyle& style() const {
+        return _style;
+    }
+    const TextLayoutMetrics& metrics() const {
+        return _metrics;
+    }
 
     LineIterator begin() const;
     LineIterator end() const;
@@ -97,7 +113,9 @@ class TextLayout {
         int lineAscentGlyph{0};
         int lineDescentGlyph{0};
 
-        int lineHeightGlyph() const { return lineAscentGlyph + lineDescentGlyph; }
+        int lineHeightGlyph() const {
+            return lineAscentGlyph + lineDescentGlyph;
+        }
 
         float lineAdvanceGlyph(float extraLineSpacingGlyph) const {
             return static_cast<float>(lineHeightGlyph()) + extraLineSpacingGlyph;
@@ -115,16 +133,14 @@ class TextLayout {
 
     RawLineMetrics measureRawLine(std::size_t lineBegin) const;
 
-    TextLineLayout makeLineLayout(std::size_t lineIndex,
-                                  const RawLineMetrics& raw,
-                                  float baselineY) const;
+    TextLineLayout makeLineLayout(
+        std::size_t lineIndex, const RawLineMetrics& raw, float baselineY) const;
 
     static float computeLayoutScale(float targetFontHeight, int maxLineHeightGlyph);
-    static float computeAlignedLineStartX(TextStyle::HorizontalAlignment alignment,
-                                          float scaledLineWidth);
-    static float computeVerticalAlignmentOffset(TextStyle::VerticalAlignment alignment,
-                                                float layoutTop,
-                                                float layoutBottom);
+    static float computeAlignedLineStartX(
+        TextStyle::HorizontalAlignment alignment, float scaledLineWidth);
+    static float computeVerticalAlignmentOffset(
+        TextStyle::VerticalAlignment alignment, float layoutTop, float layoutBottom);
 
    public:
     class LineIterator {
@@ -137,16 +153,18 @@ class TextLayout {
         LineIterator& operator++();
 
         bool operator==(const LineIterator& other) const;
-        bool operator!=(const LineIterator& other) const { return !(*this == other); }
+        bool operator!=(const LineIterator& other) const {
+            return !(*this == other);
+        }
 
        private:
         friend class TextLayout;
 
         LineIterator(const TextLayout* layout,
-                     std::size_t lineIndex,
-                     std::size_t lineBegin,
-                     float baselineY,
-                     bool atEnd)
+            std::size_t lineIndex,
+            std::size_t lineBegin,
+            float baselineY,
+            bool atEnd)
             : _layout(layout),
               _lineIndex(lineIndex),
               _lineBegin(lineBegin),

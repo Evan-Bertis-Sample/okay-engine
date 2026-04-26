@@ -18,9 +18,8 @@ class StringUtils final {
     static bool StartsWith(std::string_view s, std::string_view prefix);
 
     // Split by a delimiter (keeps empty fields if keepEmpty=true)
-    static std::vector<std::string_view> Split(std::string_view s,
-                                               char delim,
-                                               bool keepEmpty = true);
+    static std::vector<std::string_view> Split(
+        std::string_view s, char delim, bool keepEmpty = true);
 };
 
 }  // namespace okay
