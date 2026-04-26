@@ -54,7 +54,7 @@ static void __gameInitialize() {
 
     okay::FontManager::FontHandle font = okay::load::engineFont("fonts/ARIAL.TTF");
     okay::TextStyle style{.font = font,
-                          .targetFontHeight = 1.0f,
+                          .fontHeight = 1.0f,
                           .horizontalAlignment = okay::TextStyle::HorizontalAlignment::Center,
                           .verticalAlignment = okay::TextStyle::VerticalAlignment::Top};
 

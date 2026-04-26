@@ -163,6 +163,8 @@ void TextLayout::measure() {
     _metrics.layoutRight = _metrics.layoutLeft + scaledWidestLineWidth;
     _metrics.layoutTop = unalignedTop + _verticalAlignmentOffset;
     _metrics.layoutBottom = unalignedBottom + _verticalAlignmentOffset;
+
+    _metrics.lineHeight = _fontManager.getGlyph(_style.font, 'A').h;
 }
 
 TextLayout::LineIterator TextLayout::begin() const {

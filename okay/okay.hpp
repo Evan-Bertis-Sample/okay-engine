@@ -79,6 +79,7 @@
 #include <okay/core/tween/tween_sequence.hpp>
 
 // okay/core/ui
+#include <okay/core/ui/builder.hpp>
 #include <okay/core/ui/element.hpp>
 #include <okay/core/ui/font.hpp>
 #include <okay/core/ui/render_resources.hpp>

@@ -265,44 +265,12 @@ struct UIElement {
     UIElement& alignTextTop() { return alignTextVertical(TextStyle::VerticalAlignment::Top); }
     UIElement& alignTextMiddle() { return alignTextVertical(TextStyle::VerticalAlignment::Middle); }
     UIElement& alignTextBottom() { return alignTextVertical(TextStyle::VerticalAlignment::Bottom); }
+
+    UIElement& textSizeSet(float size) {
+        textStyle.fontHeight = size;
+        return *this;
+    }
 };
-
-namespace ui {
-
-inline UIElement flexbox() {
-    return UIElement{};
-}
-
-inline UIElement text(std::string text, const TextStyle& style = TextStyle{}) {
-    return UIElement{.text = text};
-}
-
-inline UIElement image(const Texture& texture) {
-    return UIElement{.backgroundImage = texture,
-                     .backgroundColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f)};
-}
-
-inline UIElement slot(UIPrimaryAxis axis = UIPrimaryAxis::Parent) {
-    return UIElement{.axis = axis};
-}
-
-inline UIElementGenerator range(std::int32_t count,
-                                std::function<UIElement(std::int32_t)> generator) {
-    return UIElementGenerator{count, generator};
-}
-
-inline UIElementGenerator range(std::int32_t start,
-                                std::int32_t end,
-                                std::int32_t increment,
-                                std::function<UIElement(std::int32_t)> generator) {
-    return UIElementGenerator{start, end, increment, generator};
-}
-
-inline UIElement growBox(UIPrimaryAxis axis = UIPrimaryAxis::Parent) {
-    return UIElement{.width = size::Grow{}, .height = size::Grow{}, .axis = axis};
-}
-
-};  // namespace ui
 
 };  // namespace okay
 

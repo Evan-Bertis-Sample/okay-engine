@@ -79,8 +79,7 @@ static void __gameInitialize() {
                     .backgroundColorSet(glm::vec4{1.0f, 1.0f, 1.0f, 0.5f})
                     .backgroundImageSet(okay::load::engineTexture("textures/uv_test.jpg"))
                     (
-                        okay::ui::text("Hello world!")
-                            .textColorSet(glm::vec3(0.0f, 0.0f, 0.0f))
+                        okay::ui::h1("Hello world!")
                             .widthGrow()
                             .heightGrow()
                             .backgroundColorSet(glm::vec4(1.0f, 0.0f, 1.0f, 1.0f))
@@ -93,8 +92,7 @@ static void __gameInitialize() {
                         ,
                         okay::ui::growBox(okay::UIPrimaryAxis::Horizontal)
                         (
-                            okay::ui::text("Left")
-                                .textColorSet(glm::vec3(1.0f, 0.0f, 1.0f))
+                            okay::ui::h2("Left")
                                 .backgroundColorSet(glm::vec4(0.0f, 1.0f, 0.0f, 1.0f))
                                 .alignTextCenter()
                                 .alignTextMiddle()
@@ -111,7 +109,7 @@ static void __gameInitialize() {
                                 okay::ui::growBox(okay::UIPrimaryAxis::Vertical) 
                                     .childSpacingSet(10)
                                 (
-                                    okay::ui::text("top")
+                                    okay::ui::h3("top")
                                     ,
                                     okay::ui::range(
                                         3,
@@ -121,7 +119,7 @@ static void __gameInitialize() {
                                         }
                                     )
                                     ,
-                                    okay::ui::text("bottom")   
+                                    okay::ui::h3("bottom")   
                                 )
                                 
                             )

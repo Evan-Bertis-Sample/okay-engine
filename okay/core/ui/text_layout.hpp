@@ -65,6 +65,8 @@ struct TextLayoutMetrics {
     float layoutTop{0.0f};
     float layoutBottom{0.0f};
 
+    float lineHeight{0.0f};
+
     std::size_t lineCount{0};
     std::size_t glyphCount{0};
     int maxLineHeightGlyph{0};
