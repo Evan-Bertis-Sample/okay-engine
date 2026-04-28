@@ -1,6 +1,8 @@
 #ifndef __BUILDER_H__
 #define __BUILDER_H__
 
+#include "okay/core/engine/engine.hpp"
+
 #include <okay/core/ui/element.hpp>
 #include <okay/core/util/option.hpp>
 
@@ -134,7 +136,7 @@ inline UIElementGenerator range(std::int32_t start,
     return UIElementGenerator{start, end, increment, generator};
 }
 
-inline UIElement growBox(UIPrimaryAxis axis = UIPrimaryAxis::Parent) {
+inline UIElement growbox(UIPrimaryAxis axis = UIPrimaryAxis::Parent) {
     return UIElement{.width = size::Grow{}, .height = size::Grow{}, .axis = axis};
 }
 
@@ -164,6 +166,92 @@ inline UIElement vspacer() {
 
 inline UIElement box() {
     return UIElement{};
+}
+
+inline UIElement frame(size::Fixed x,
+    size::Fixed y,
+    size::Fixed width,
+    size::Fixed height,
+    SystemParameter<Renderer> renderer = nullptr) {
+    const float screenW = renderer->width();
+    const float screenH = renderer->height();
+
+    return UIElement{
+        .width = width,
+        .height = height,
+
+        .leftMargin = x,
+        .rightMargin = screenW - x.pixels - width.pixels,
+
+        .topMargin = y,
+        .bottomMargin = screenH - y.pixels - height.pixels,
+    };
+}
+
+inline UIElement relFrame(size::Percent x,
+    size::Percent y,
+    size::Percent width,
+    size::Percent height,
+    SystemParameter<Renderer> renderer = nullptr) {
+    const float screenW = renderer->width();
+    const float screenH = renderer->height();
+
+    return UIElement{
+        .width = width,
+        .height = height,
+
+        .leftMargin = x.percent * screenW,
+        .rightMargin = (1.0f - x.percent - width.percent) * screenW,
+
+        .topMargin = y.percent * screenH,
+        .bottomMargin = (1.0f - y.percent - height.percent) * screenH,
+    };
+}
+
+inline UIElement centerFrame(size::Fixed x,
+    size::Fixed y,
+    size::Fixed width,
+    size::Fixed height,
+    SystemParameter<Renderer> renderer = nullptr) {
+    const float screenW = renderer->width();
+    const float screenH = renderer->height();
+
+    const float halfW = width.pixels * 0.5f;
+    const float halfH = height.pixels * 0.5f;
+
+    return UIElement{
+        .width = width,
+        .height = height,
+
+        .leftMargin = x.pixels - halfW,
+        .rightMargin = screenW - (x.pixels + halfW),
+
+        .topMargin = y.pixels - halfH,
+        .bottomMargin = screenH - (y.pixels + halfH),
+    };
+}
+
+inline UIElement relCenterFrame(size::Percent x,
+    size::Percent y,
+    size::Percent width,
+    size::Percent height,
+    SystemParameter<Renderer> renderer = nullptr) {
+    const float screenW = renderer->width();
+    const float screenH = renderer->height();
+
+    const float halfW = width.percent * 0.5f;
+    const float halfH = height.percent * 0.5f;
+
+    return UIElement{
+        .width = width,
+        .height = height,
+
+        .leftMargin = (x.percent - halfW) * screenW,
+        .rightMargin = (1.0f - (x.percent + halfW)) * screenW,
+
+        .topMargin = (y.percent - halfH) * screenH,
+        .bottomMargin = (1.0f - (y.percent + halfH)) * screenH,
+    };
 }
 
 };  // namespace ui

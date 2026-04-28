@@ -70,7 +70,8 @@ static void __gameInitialize() {
 
     okay::ecs::entity()
         .addComponent<okay::TransformComponent>(glm::vec3{0.0f, 0.0f, 0.0f})
-        .addComponent<okay::UIComponent>(okay::ui::flexbox()(okay::ui::flexbox()
+        .addComponent<okay::UIComponent>(
+                okay::ui::centerFrame(400, 240, 300, 300)
                 .backgroundColorSet(glm::vec4{1.0f, 1.0f, 1.0f, 0.5f})
                 .backgroundImageSet(okay::load::engineTexture("textures/uv_test.jpg"))(
                     okay::ui::h1("Hello world!")
@@ -83,7 +84,7 @@ static void __gameInitialize() {
                         .borderRadiusSet(30)
                         .borderWidthSet(10)
                         .marginSet(10),
-                    okay::ui::growBox(okay::UIPrimaryAxis::Horizontal)(
+                    okay::ui::growbox(okay::UIPrimaryAxis::Horizontal)(
                         okay::ui::h2("Left")
                             .backgroundColorSet(glm::vec4(0.0f, 1.0f, 0.0f, 1.0f))
                             .alignTextCenter()
@@ -91,19 +92,19 @@ static void __gameInitialize() {
                             .marginSet(10)
                             .widthGrow()
                             .paddingSet(20),
-                        okay::ui::growBox(okay::UIPrimaryAxis::Vertical)
+                        okay::ui::growbox(okay::UIPrimaryAxis::Vertical)
                             .backgroundColorSet(glm::vec4(0.0f, 1.0f, 1.0f, 0.25f))
                             .borderColorSet(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f))
                             .borderRadiusSet(30)
-                            .borderWidthSet(10)(okay::ui::growBox(okay::UIPrimaryAxis::Vertical)
-                                    .childSpacingSet(10)(okay::ui::h3("top"),
+                            .borderWidthSet(10)(okay::ui::growbox(okay::UIPrimaryAxis::Vertical)
+                                    .childSpacingSet(5)(okay::ui::h3("top").topMarginSet(15).leftMarginSet(15),
                                         okay::ui::range(3,
                                             [](std::int32_t i) {
-                                                return okay::ui::text(std::format("{}", i));
+                                                return okay::ui::text(std::format("{}", i)).leftMarginSet(15);
                                             }),
-                                        okay::ui::h3("bottom"))
+                                        okay::ui::h3("bottom").leftMarginSet(15))
 
-                                    )))));
+                                    ))));
 }
 
 static void __gameUpdate() {}
