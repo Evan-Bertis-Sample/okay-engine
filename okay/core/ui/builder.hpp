@@ -24,7 +24,7 @@ struct UIStyle {
     // Image styles
     UIElement image;
 
-    UIElement applyStyle(UIElement src, UIElement base) {
+    static UIElement applyStyle(UIElement src, UIElement base) {
         Engine.logger.debug("Applying style!");
         src.width = base.width;
         src.height = base.height;
@@ -78,7 +78,7 @@ inline UIElement flexbox() {
 }
 
 inline UIElement text(std::string text, UIStyleParam style = nullptr) {
-    return style->applyStyle(
+    return UIStyle::applyStyle(
         (UIElement){
             .text = text,
         },
@@ -86,7 +86,7 @@ inline UIElement text(std::string text, UIStyleParam style = nullptr) {
 }
 
 inline UIElement h1(std::string text, UIStyleParam style = nullptr) {
-    return style->applyStyle(
+    return UIStyle::applyStyle(
         (UIElement){
             .text = text,
         },
@@ -94,7 +94,7 @@ inline UIElement h1(std::string text, UIStyleParam style = nullptr) {
 }
 
 inline UIElement h2(std::string text, UIStyleParam style = nullptr) {
-    return style->applyStyle(
+    return UIStyle::applyStyle(
         (UIElement){
             .text = text,
         },
@@ -102,7 +102,7 @@ inline UIElement h2(std::string text, UIStyleParam style = nullptr) {
 }
 
 inline UIElement h3(std::string text, UIStyleParam style = nullptr) {
-    return style->applyStyle(
+    return UIStyle::applyStyle(
         (UIElement){
             .text = text,
         },
@@ -110,7 +110,7 @@ inline UIElement h3(std::string text, UIStyleParam style = nullptr) {
 }
 
 inline UIElement image(const Texture& texture, UIStyleParam style = nullptr) {
-    return style->applyStyle(
+    return UIStyle::applyStyle(
         (UIElement){
             .backgroundImage = texture,
             .backgroundColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f),

@@ -105,16 +105,17 @@ class ScenePass : public IRenderPass {
         auto& uniforms = item.material->properties();
         MaterialFlagCollection flags = uniforms->flags();
 
-        if (auto* unlit = dynamic_cast<okay::SceneMaterialProperties*>(uniforms.get())) {
+        if (auto* sceneProps = dynamic_cast<okay::SceneMaterialProperties*>(uniforms.get())) {
             if (flags.hasFlag(MaterialFlags::SCREEN_SPACE)) {
-                unlit->projectionMatrix.set(_ndcProjectionPmatrix);
-                unlit->viewMatrix.set(glm::identity<glm::mat4>());
+                sceneProps->projectionMatrix.set(_ndcProjectionPmatrix);
+                sceneProps->viewMatrix.set(glm::identity<glm::mat4>());
             } else {
-                unlit->projectionMatrix.set(projection);
-                unlit->viewMatrix.set(view);
+                sceneProps->projectionMatrix.set(projection);
+                sceneProps->viewMatrix.set(view);
             }
-            unlit->cameraPosition.set(camPos);
-            unlit->cameraDirection.set(camDir);
+            sceneProps->cameraPosition.set(camPos);
+            sceneProps->cameraDirection.set(camDir);
+            sceneProps->timeMs.set(static_cast<float>(Engine.time->timeSinceStartMs()));
         }
 
         if (auto* lit = dynamic_cast<okay::LitMaterial*>(uniforms.get())) {

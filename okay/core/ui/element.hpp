@@ -163,6 +163,8 @@ struct UIElement {
 
     // rendering
     OKAY_UI_ELEMENT_PROPERTY(bool, doubleSided, false);
+    OKAY_UI_ELEMENT_PROPERTY(MaterialHandle, backgroundMaterialOverride, MaterialHandle::none());
+    OKAY_UI_ELEMENT_PROPERTY(MaterialHandle, textMaterialOverride, MaterialHandle::none());
 
     std::vector<UIElement> children;
 

@@ -14,6 +14,7 @@ struct SceneMaterialProperties {
     UniformProperty<glm::mat4, FixedString("u_projectionMatrix")> projectionMatrix{};
     UniformProperty<glm::vec3, FixedString("u_cameraPosition")> cameraPosition{};
     UniformProperty<glm::vec3, FixedString("u_cameraDirection")> cameraDirection{};
+    UniformProperty<float, FixedString("u_timeMs")> timeMs;
 
     bool isTransparent{false};
     bool recievesShadows{false};
@@ -21,10 +22,12 @@ struct SceneMaterialProperties {
     bool useScreenspaceCoords{false};
 
     auto uniformRefs() {
-        return std::tie(modelMatrix, viewMatrix, projectionMatrix, cameraPosition, cameraDirection);
+        return std::tie(
+            modelMatrix, viewMatrix, projectionMatrix, cameraPosition, cameraDirection, timeMs);
     }
     auto uniformRefs() const {
-        return std::tie(modelMatrix, viewMatrix, projectionMatrix, cameraPosition, cameraDirection);
+        return std::tie(
+            modelMatrix, viewMatrix, projectionMatrix, cameraPosition, cameraDirection, timeMs);
     }
 
     auto uniformBlockRefs() {

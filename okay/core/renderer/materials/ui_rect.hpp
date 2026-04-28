@@ -7,8 +7,7 @@
 
 namespace okay {
 
-struct UIRectMaterial : public SceneMaterialProperties,
-                        public OkayMaterialProperties<UIRectMaterial> {
+struct UIRectProperties : public SceneMaterialProperties {
     UniformProperty<glm::vec4, FixedString("u_color")> color{glm::vec4(1.0f)};
     TextureProperty<FixedString("u_albedo")> albedo;
 
@@ -44,6 +43,32 @@ struct UIRectMaterial : public SceneMaterialProperties,
     auto textureRefs() const {
         return std::tie(albedo);
     };
+};
+
+struct UIRectMaterial : public UIRectProperties, public OkayMaterialProperties<UIRectMaterial> {
+    auto uniformRefs() {
+        return UIRectProperties::uniformRefs();
+    }
+
+    auto uniformRefs() const {
+        return UIRectProperties::uniformRefs();
+    }
+
+    auto uniformBlockRefs() {
+        return UIRectProperties::uniformBlockRefs();
+    }
+
+    auto uniformBlockRefs() const {
+        return UIRectProperties::uniformBlockRefs();
+    }
+
+    auto textureRefs() {
+        return UIRectProperties::textureRefs();
+    }
+
+    auto textureRefs() const {
+        return UIRectProperties::textureRefs();
+    }
 
     MaterialFlagCollection flags() {
         MaterialFlagCollection flags = SceneMaterialProperties::flags();

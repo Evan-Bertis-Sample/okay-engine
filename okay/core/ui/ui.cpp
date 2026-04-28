@@ -435,8 +435,6 @@ void UI::renderNode(const UINode& node, Renderer& renderer, int layerBase) {
             props->borderRadius = pxToUV * static_cast<float>(node.element.borderRadius.pixels);
             props->borderWidth = pxToUV * static_cast<float>(node.element.borderWidth.pixels);
             props->borderColor = node.element.borderColor;
-        } else {
-            Engine.logger.warn("Unable to update rect material properties for UI node {}", node.id);
         }
     }
 

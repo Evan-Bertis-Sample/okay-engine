@@ -35,6 +35,9 @@ class UIRenderResoruces {
     }
 
     Option<MaterialHandle> getRectMaterial(const UIElement& element) {
+        if (element.backgroundMaterialOverride.isValid())
+            return Option<MaterialHandle>::some(element.backgroundMaterialOverride);
+
         Option<RectMaterialKey> key = getRectMaterialKey(element);
 
         if (key.isNone())
@@ -73,6 +76,9 @@ class UIRenderResoruces {
     };
 
     Option<MaterialHandle> getTextMaterial(const UIElement& element) {
+        if (element.textMaterialOverride.isValid())
+            return Option<MaterialHandle>::some(element.textMaterialOverride);
+
         Option<TextMaterialKey> key = getTextMaterialKey(element);
 
         if (key.isNone())
