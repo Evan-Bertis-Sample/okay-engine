@@ -46,7 +46,7 @@ int main() {
 static void __gameInitialize() {
     // Additional game initialization logic
     okay::Texture texture = okay::load::engineTexture("textures/red.jpg");
-    okay::Mesh object = okay::mesh(okay::load::engineMeshData("models/dragon.obj"));
+    okay::Mesh object = okay::mesh(okay::load::engineMeshData("models/teapot.obj"));
 
     okay::Mesh cube = okay::mesh(okay::primitives::box().build());
     okay::ShaderHandle shader = okay::shaderHandle(okay::load::engineShader("shaders/lit"));
@@ -63,7 +63,7 @@ static void __gameInitialize() {
     s_light = okay::ecs::entity()
                   .addComponent<okay::TransformComponent>(
                       glm::vec3{},
-                      glm::vec3{0.1f},
+                      glm::vec3{1.0f},
                       glm::angleAxis(glm::radians(0.0f), glm::vec3{2.0f, 3.0f, 1.0f}))
                   .addComponent<okay::LightComponent>(
                       okay::LightComponent::directional(glm::vec3{1, 1, 1}, 2.5f));

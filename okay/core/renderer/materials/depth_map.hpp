@@ -9,16 +9,17 @@
 namespace okay {
 
 
-using DefaultLightBlock = LightBlock<16>;
+
 
 struct DepthMapMaterial : public SceneMaterialProperties, public OkayMaterialProperties<DepthMapMaterial> {
     
     UniformProperty<glm::mat4, FixedString("u_lightSpaceMatrix")> lightSpaceMatrix{};
+    UniformProperty<glm::mat4, FixedString("u_modelMatrix")> modelMatrix{};
     auto uniformRefs() {
-        return std::tie(lightSpaceMatrix);
+        return std::tie(lightSpaceMatrix, modelMatrix);
     }
     auto uniformRefs() const {
-        return std::tie(lightSpaceMatrix);
+        return std::tie(lightSpaceMatrix, modelMatrix);
     }
 
     auto uniformBlockRefs() { return std::tie(); }
@@ -27,6 +28,10 @@ struct DepthMapMaterial : public SceneMaterialProperties, public OkayMaterialPro
     auto textureRefs() { return std::tie(); }
     auto textureRefs() const { return std::tie(); }
     
+    MaterialFlagCollection flags() {
+        MaterialFlagCollection flags = SceneMaterialProperties::flags();
+        return flags;
+    }
 };
 
 

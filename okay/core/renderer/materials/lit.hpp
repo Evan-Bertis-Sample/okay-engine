@@ -25,7 +25,6 @@ struct LitMaterial : public SceneMaterialProperties, public OkayMaterialProperti
     LitMaterial() { lights.setBindingPoint(0); }
     UniformProperty<float, FixedString("u_ambient")> ambient{0.05f};
     TextureProperty<FixedString("u_albedo")> albedo;
-<<<<<<< HEAD
     UniformProperty<glm::vec3, FixedString("u_color")> color{glm::vec3(1.0f)};
     UniformProperty<float, FixedString("u_metallic")> metallic{0.0f};
     UniformProperty<float, FixedString("u_specular")> specular{0.5f};
@@ -39,11 +38,8 @@ struct LitMaterial : public SceneMaterialProperties, public OkayMaterialProperti
     UniformProperty<float, FixedString("u_specularTrans")> specularTrans{0.0f};
     UniformProperty<float, FixedString("u_flatness")> flatness{0.0f};
     UniformProperty<int, FixedString("u_thin")> thin{0};
-=======
     TextureProperty<FixedString("u_shadowMap")> shadowMap;
-    TextureProperty<FixedString("u_shadowMap")> shadowMap;
-    UniformProperty<glm::vec3, FixedString("u_color")> color{};
->>>>>>> 6c7a2b3 (added shadow-mapping pass 1)
+    
 
     auto uniformRefs() {
         return std::tuple_cat(SceneMaterialProperties::uniformRefs(), std::tie(

@@ -7,6 +7,7 @@
 #include <okay/core/renderer/gl.hpp>
 #include <okay/core/renderer/materials/lit.hpp>
 #include <okay/core/renderer/materials/unlit.hpp>
+#include <okay/core/renderer/materials/depth_map.hpp>
 #include <okay/core/renderer/render_pipeline.hpp>
 #include <okay/core/renderer/renderer.hpp>
 #include <okay/core/renderer/uniform.hpp>
@@ -89,11 +90,11 @@ class ScenePass : public IRenderPass {
                     glReadBuffer(GL_NONE);
                     glBindFramebuffer(GL_FRAMEBUFFER, 0); 
 
-                    float nearPlane = 7.5f, farPlane = 100.0f;
+                    float nearPlane = 700.5f, farPlane = 100.0f;
                     
 
                     // calculate frustum based on camera and give an area slightly larger than it, only when the camera goes outside the area
-                    glm::mat4 lightProjection = glm::ortho(100.0f, 100.0f, 100.0f, 100.0f, nearPlane, farPlane); 
+                    glm::mat4 lightProjection = glm::ortho(100.0f, 100.0f, 100.0f, 1000.0f, nearPlane, farPlane); 
 
                     // use light position and direction
                     glm::vec4 lightPos = l.posType;
@@ -107,14 +108,19 @@ class ScenePass : public IRenderPass {
                         depthMapProperties->lightSpaceMatrix.set(lightSpaceMatrix);
                     }
                     _depthMapMaterial->setShader();
+                    _depthMapMaterial->passUniforms();
+                    glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+                    glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+                    glClear(GL_DEPTH_BUFFER_BIT);
                     
-                   
+                    
                     // First pass, render to depth map
+
+
                     for (const RenderItemHandle& handle : context.world.getRenderItems()) {
                         RenderItem& item = context.world.getRenderItem(handle);
                         if (item.mesh.isEmpty())
                             continue;
-                        
                         
                         
                         if (DepthMapMaterial * depthMapProperties = dynamic_cast<DepthMapMaterial*>(_depthMapMaterial->properties().get())) {
@@ -124,26 +130,26 @@ class ScenePass : public IRenderPass {
                         _depthMapMaterial->passUniforms();
                         context.renderer.meshBuffer().drawMesh(item.mesh);
                     }
-                    
+                    glBindFramebuffer(GL_FRAMEBUFFER, 0); 
                     
                     
 
-                    // Second pass, render scene with depth map
-                    for (const RenderItemHandle& handle : context.world.getRenderItems()) {
+                    // // Second pass, render scene with depth map
+                    // for (const RenderItemHandle& handle : context.world.getRenderItems()) {
 
-                        // set material to depth map material and render to depth map
+                    //     // set material to depth map material and render to depth map
                         
-                        RenderItem& item = context.world.getRenderItem(handle);
-                        if (item.mesh.isEmpty())
-                            continue;
-                        if (item.material->isNone())
-                            continue;
-                        item.material = _depthMapMaterial;
+                    //     RenderItem& item = context.world.getRenderItem(handle);
+                    //     if (item.mesh.isEmpty())
+                    //         continue;
+                    //     if (item.material->isNone())
+                    //         continue;
+                    //     item.material = _depthMapMaterial;
 
-                        
-                        item.material->passUniforms();
-                        context.renderer.meshBuffer().drawMesh(item.mesh);
-                    }
+                       
+                    //     item.material->passUniforms();
+                    //     context.renderer.meshBuffer().drawMesh(item.mesh);
+                    // }
 
                     break; // only render one directional light
             }
@@ -241,9 +247,11 @@ class ScenePass : public IRenderPass {
             std::size_t i = 0;
             for (auto l : context.world.lights()) {
                 block.lights[i++] = l;
+                
             }
+             // bind texture to shadow map
+             // glBindFramebuffer(depthMapFBO, lit->shadowMap.get().getGLTextureID());
 
-             glBindFramebuffer(depthMapFBO, lit->shadowMap.get().getGLTextureID());
         }
     }
 
@@ -277,6 +285,7 @@ class ScenePass : public IRenderPass {
    private:
     std::uint32_t _shaderIndex{Shader::invalidID()};
     std::uint32_t _materialIndex{Material::invalidID()};
+    MaterialHandle _depthMapMaterial;
 };
 
 };  // namespace okay
