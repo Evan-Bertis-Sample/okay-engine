@@ -1,3 +1,4 @@
+#include "glm/gtc/quaternion.hpp"
 #include "okay/core/ecs/ecs_util.hpp"
 #include "okay/core/renderer/material.hpp"
 #include "okay/core/renderer/uniform.hpp"
@@ -60,11 +61,14 @@ static void __gameInitialize() {
 
     okay::ecs::registerBuiltins();
 
+    glm::vec3 ldirection = glm::normalize(glm::vec3(-1.0f, -1.0f, -1.0f));
+    glm::quat rotation = glm::quatLookAt(ldirection, glm::vec3(0.0f, 1.0f, 0.0f));
+
     s_light = okay::ecs::entity()
                   .addComponent<okay::TransformComponent>(
-                      glm::vec3{},
+                      glm::vec3{3.0f, 3.0f, 3.0f},
                       glm::vec3{1.0f},
-                      glm::angleAxis(glm::radians(0.0f), glm::vec3{2.0f, 3.0f, 1.0f}))
+                      rotation)
                   .addComponent<okay::LightComponent>(
                       okay::LightComponent::directional(glm::vec3{1, 1, 1}, 2.5f));
 
@@ -77,16 +81,24 @@ static void __gameInitialize() {
     okay::ecs::entity()
         .addComponent<okay::TransformComponent>(
             pos1,
-            glm::vec3{2.0f},
-            glm::angleAxis(glm::radians(120.0f), glm::vec3{0.0f, 1.0f, 0.0f}))
+            glm::vec3{0.1f},
+            glm::angleAxis(glm::radians(0.0f), glm::vec3{0.0f, 1.0f, 0.0f}))
+        .addComponent<okay::MeshRendererComponent>(object, material);
+
+    glm::vec3 pos2 = glm::vec3(3.0f, 2.0f, 0.0f);
+    okay::ecs::entity()
+        .addComponent<okay::TransformComponent>(
+            pos2,
+            glm::vec3{0.1f},
+            glm::angleAxis(glm::radians(0.0f), glm::vec3{0.0f, 1.0f, 0.0f}))
         .addComponent<okay::MeshRendererComponent>(object, material);
 
 }
 
 static void __gameUpdate() {
     // move the camera in a circle, always looking at the origin
-    float theta = okay::Engine.time->timeSinceStartSec() * 0.05f * glm::pi<float>();
-    // float theta = 0.0f;
+    // float theta = okay::Engine.time->timeSinceStartSec() * 0.05f * glm::pi<float>();
+    float theta = 0.0f;
     glm::vec3 pos = glm::vec3(sin(theta) * 5.0f, 0.0f, cos(theta) * 5.0f);
     // rotation much look at origin
     auto& cameraTransform = s_camera.getComponent<okay::TransformComponent>().value();
