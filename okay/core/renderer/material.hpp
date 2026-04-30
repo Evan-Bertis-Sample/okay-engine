@@ -76,6 +76,7 @@ struct MaterialFlagCollection {
 
 class IMaterialPropertyCollection {
    public:
+    virtual ~IMaterialPropertyCollection() {};
     virtual Failable init(ShaderHandle shader) = 0;
     virtual Failable pass(ShaderHandle shader) = 0;
     virtual MaterialFlagCollection flags() = 0;

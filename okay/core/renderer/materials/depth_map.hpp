@@ -8,9 +8,6 @@
 
 namespace okay {
 
-
-
-
 struct DepthMapMaterial : public SceneMaterialProperties, public OkayMaterialProperties<DepthMapMaterial> {
     
     UniformProperty<glm::mat4, FixedString("u_lightSpaceMatrix")> lightSpaceMatrix{};
@@ -33,8 +30,6 @@ struct DepthMapMaterial : public SceneMaterialProperties, public OkayMaterialPro
         return flags;
     }
 };
-
-
 
 }  // namespace okay
 

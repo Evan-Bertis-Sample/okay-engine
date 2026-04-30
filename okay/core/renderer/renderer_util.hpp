@@ -1,5 +1,5 @@
 #ifndef __RENDERER_UTIL_H__
-#define __RENDERER_UTIL_H___
+#define __RENDERER_UTIL_H__
 
 #include <okay/core/engine/engine.hpp>
 #include <okay/core/renderer/material.hpp>
