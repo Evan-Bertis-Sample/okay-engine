@@ -18,7 +18,16 @@ class UISystem : public ECSSystem<query::Get<TransformComponent, UIComponent>> {
 
     void onPreTick(QueryT::Item& item) override {
         auto& [transform, ui] = item.components;
+
+        if (!ui.uiBuilder) {
+            Engine.logger.debug(
+                "UISystem::onPretick: Entity {} does not have a builder function for the UI!",
+                item.entity.id());
+            return;
+        }
+
         Renderer* renderer = Engine.systems.getSystemChecked<Renderer>();
+        UIElement root = ui.uiBuilder();
         ui.ui.render(transform->position, renderer);
     };
 

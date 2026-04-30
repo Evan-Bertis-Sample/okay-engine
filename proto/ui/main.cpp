@@ -68,10 +68,13 @@ static void __gameInitialize() {
                    .addComponent<okay::CameraComponent>(
                        okay::CameraComponent{okay::Camera::PerspectiveLens{45.0f, 0.1f, 100.0f}});
 
+    // TODO: Add enable/disable predicates
+    // .visibleWhen(() => bool)
+    // TODO: Add clipping behaviors + custom clipping masks
+    // TODO: Add ability to refresh UIs
     okay::ecs::entity()
         .addComponent<okay::TransformComponent>(glm::vec3{0.0f, 0.0f, 0.0f})
-        .addComponent<okay::UIComponent>(
-                okay::ui::centerFrame(400, 240, 300, 300)
+        .addComponent<okay::UIComponent>(okay::ui::centerFrame(400, 240, 300, 300)
                 .backgroundColorSet(glm::vec4{1.0f, 1.0f, 1.0f, 0.5f})
                 .backgroundImageSet(okay::load::engineTexture("textures/uv_test.jpg"))(
                     okay::ui::h1("Hello world!")
@@ -97,10 +100,12 @@ static void __gameInitialize() {
                             .borderColorSet(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f))
                             .borderRadiusSet(30)
                             .borderWidthSet(10)(okay::ui::growbox(okay::UIPrimaryAxis::Vertical)
-                                    .childSpacingSet(5)(okay::ui::h3("top").topMarginSet(15).leftMarginSet(15),
+                                    .childSpacingSet(5)(
+                                        okay::ui::h3("top").topMarginSet(15).leftMarginSet(15),
                                         okay::ui::range(3,
                                             [](std::int32_t i) {
-                                                return okay::ui::text(std::format("{}", i)).leftMarginSet(15);
+                                                return okay::ui::text(std::format("{}", i))
+                                                    .leftMarginSet(15);
                                             }),
                                         okay::ui::h3("bottom").leftMarginSet(15))
 

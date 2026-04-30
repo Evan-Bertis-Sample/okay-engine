@@ -54,7 +54,7 @@ int UILayout::marginMainTotal(const UIElement& element, UIPrimaryAxis axis) cons
 }
 
 int UILayout::marginCrossTotal(const UIElement& element, UIPrimaryAxis axis) const {
-    return marginCrossStart(element, axis) + marginCrossEnd(element, axis);
+    return marginCrossStart(el ement, axis) + marginCrossEnd(element, axis);
 }
 
 void UILayout::computeFixedSizes(UINode& node, LayoutRect parent) {
