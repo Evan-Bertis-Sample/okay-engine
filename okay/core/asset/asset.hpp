@@ -28,6 +28,20 @@
 
 namespace okay {
 
+// TODO: Manage asset lifetimes!
+// Will need to likely add an asset scope enum and an unload function
+// Might need to change mesh_loader to automatically add it to a meshbuffer
+// That way it can free it from the buffer
+// This probably is a better solution, because most implemented loaders will automatically
+// Add the asset data to a manager object
+//
+// Scopes will probably be: Engine, Game, Level, Manual
+// Either that, or we can use smart pointers somehow, but I think will be a breaking
+// Change the API
+// This is beccause you'd need to hold an Asset<T> or shared_ptr<T> to manage the lifetime
+// Which can be a bit clunky because most existing APIs within the engine don't care about the
+// memory-management strat of the objects you pass in (most of them are const &)
+
 template <typename T>
 struct Asset {
     T asset;

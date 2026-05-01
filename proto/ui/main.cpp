@@ -110,8 +110,7 @@ static void __gameInitialize() {
                                                 return okay::ui::text(std::format("{}", i))
                                                     .leftMarginSet(15);
                                             }),
-                                        okay::ui::h3("bottom").leftMarginSet(15))
-                                    )));
+                                        okay::ui::h3("bottom").leftMarginSet(15)))));
         });
 }
 
