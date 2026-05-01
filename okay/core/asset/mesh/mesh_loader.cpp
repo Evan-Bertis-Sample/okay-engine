@@ -17,7 +17,7 @@ static std::unique_ptr<MeshLoader> CreateMeshLoaderForExtension(const std::files
 }
 
 Result<MeshData> AssetLoader<MeshData>::loadAsset(
-    const std::filesystem::path& path, const AssetIO& assetIO) {
+    const std::filesystem::path& path, const AssetIO& assetIO, const std::tuple<>& options) {
     auto loader = CreateMeshLoaderForExtension(path);
     if (!loader) {
         const std::string ext = path.has_extension() ? path.extension().string() : "(no extension)";

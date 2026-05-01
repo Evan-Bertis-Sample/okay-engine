@@ -23,6 +23,14 @@ struct TextureLoadSettings {
     TextureLoadSettings() {
         store = TextureDataStore::mainStore();
     }
+
+    bool operator<(const TextureLoadSettings& other) const {
+        return store < other.store;
+    }
+
+    bool operator==(const TextureLoadSettings& other) const {
+        return store == other.store;
+    }
 };
 
 template <>

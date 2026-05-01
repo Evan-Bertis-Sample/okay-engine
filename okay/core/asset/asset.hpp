@@ -1,6 +1,7 @@
 #ifndef __ASSET_H__
 #define __ASSET_H__
 
+#include <okay/core/engine/engine.hpp>
 #include <okay/core/engine/system.hpp>
 #include <okay/core/util/option.hpp>
 #include <okay/core/util/result.hpp>
@@ -72,6 +73,61 @@ struct AssetLoader {
     }
 };
 
+template <typename T, typename LoadOptions = std::tuple<>>
+class CachedAssetStore {
+   public:
+    static CachedAssetStore& instance() {
+        static CachedAssetStore instance;
+        return instance;
+    }
+
+    void cacheAsset(const std::filesystem::path& path, Asset<T> asset, const LoadOptions& options) {
+        LoadKey key = {
+            .path = path,
+            .options = options,
+        };
+
+        _cache[key] = AssetMetadata{
+            .asset = asset,
+            .referenceCount = 0,
+        };
+    }
+
+    Option<Asset<T>> getCachedAsset(const std::filesystem::path& path, const LoadOptions& options) {
+        LoadKey key = {
+            .path = path,
+            .options = options,
+        };
+
+        if (_cache.contains(key)) {
+            return Option<Asset<T>>::some(_cache[key].asset);
+        }
+
+        return Option<Asset<T>>::none();
+    }
+
+   private:
+    struct LoadKey {
+        std::filesystem::path path;
+        LoadOptions options;
+
+        bool operator==(const LoadKey& other) const {
+            return path == other.path && options == other.options;
+        }
+
+        bool operator<(const LoadKey& other) const {
+            return path < other.path && options < other.options;
+        }
+    };
+
+    struct AssetMetadata {
+        Asset<T> asset;
+        std::size_t referenceCount;
+    };
+
+    std::map<LoadKey, AssetMetadata> _cache;
+};
+
 template <typename T>
 using OnAssetSucceedCB = std::function<void(const Asset<T>&)>;
 
@@ -115,60 +171,63 @@ class AssetManager : public System<SystemScope::ENGINE> {
     template <typename T>
     struct LoadHandle {
        public:
-        enum State { LOADING, COMPLETE, FAILED };
+        enum class State { LOADING, COMPLETE, FAILED };
         State state;
         Result<Asset<T>> asset;
     };
 
-    template <typename T, typename AssetIO = DefaultAssetIO, typename... LoadOptions>
-    LoadHandle<T> loadAssetAsync(const Load<T, AssetIO>& load, LoadOptions... options) {
-        Result<T> res =
-            AssetLoader<T, LoadOptions...>::loadAsset(load.assetPath, load.assetIO, options...);
-
-        if (res.isError()) {
-            auto handleAsset = Result<Asset<T>>::errorResult(res.error());
-            if (load.onFailCB)
-                load.onFailCB(res.error());
-
-            return LoadHandle<T>{.state = LoadHandle<T>::State::FAILED, .asset = handleAsset};
-        } else {
-            Asset<T> asset = createAsset<T>(load.assetPath, res.value(), load.assetIO);
-            auto handleAsset = Result<Asset<T>>::ok(asset);
-            if (load.onCompleteCB)
-                load.onCompleteCB(asset);
-
-            return LoadHandle<T>{.state = LoadHandle<T>::State::COMPLETE, .asset = handleAsset};
+    template <typename T, typename AssetIO = DefaultAssetIO, typename LoadOptions>
+    LoadHandle<T> loadAssetAsync(const Load<T, AssetIO>& load, const LoadOptions& options) {
+        Engine.logger.error(
+            "AssetManager::loadAssetAsync: Async loading not implemented! Please use a sync load for now.");
+        return LoadHandle<T>{
+            .asset = T{},
+            .state = LoadHandle<T>::State::FAILED,
         };
-    };
+    }
 
-    template <typename T, typename AssetIO = DefaultAssetIO, typename... LoadOptions>
-    Result<Asset<T>> loadAssetSync(const Load<T, AssetIO>& load, LoadOptions... options) {
+    template <typename T, typename AssetIO = DefaultAssetIO, typename LoadOptions>
+    Result<Asset<T>> loadAssetSync(const Load<T, AssetIO>& load, const LoadOptions& options) {
+        auto& store = CachedAssetStore<T, LoadOptions>::instance();
+        Option<Asset<T>> assetOpt = store.getCachedAsset(load.assetPath, options);
+        if (assetOpt.isSome()) {
+            return Result<Asset<T>>::ok(assetOpt.value());
+        }
+
         Result<T> res =
-            AssetLoader<T, LoadOptions...>::loadAsset(load.assetPath, load.assetIO, options...);
+            AssetLoader<T, LoadOptions>::loadAsset(load.assetPath, load.assetIO, options);
 
         if (res.isError()) {
             return Result<Asset<T>>::errorResult(res.error());
         } else {
-            return Result<Asset<T>>::ok(createAsset<T>(load.assetPath, res.value(), load.assetIO));
+            return Result<Asset<T>>::ok(
+                createAsset<T>(load.assetPath, res.value(), load.assetIO, options));
         };
     };
 
-    template <typename T, typename AssetIO = DefaultAssetIO, typename... LoadOptions>
+    template <typename T, typename AssetIO = DefaultAssetIO, typename LoadOptions = std::tuple<>>
     Result<Asset<T>> loadEngineAssetSync(
-        const std::filesystem::path& path, LoadOptions... options) {
-        return loadAssetSync(Load<T, AssetIO>::engineAsset(path), options...);
+        const std::filesystem::path& path, const LoadOptions& options = LoadOptions{}) {
+        return loadAssetSync(Load<T, AssetIO>::engineAsset(path), options);
     }
 
-    template <typename T, typename AssetIO = DefaultAssetIO, typename... LoadOptions>
-    Result<Asset<T>> loadGameAssetSync(const std::filesystem::path& path, LoadOptions... options) {
-        return loadAssetSync(Load<T, AssetIO>::gameAsset(path), options...);
+    template <typename T, typename AssetIO = DefaultAssetIO, typename LoadOptions = std::tuple<>>
+    Result<Asset<T>> loadGameAssetSync(
+        const std::filesystem::path& path, const LoadOptions& options = LoadOptions{}) {
+        return loadAssetSync(Load<T, AssetIO>::gameAsset(path), options);
     }
 
    private:
-    template <typename T>
-    inline Asset<T> createAsset(
-        const std::filesystem::path& path, T loaded, const AssetIO& assetIO) {
-        return Asset<T>{.asset = loaded, .assetSize = assetIO.fileSize(path).value()};
+    template <typename T, typename LoadOptions>
+    inline Asset<T> createAsset(const std::filesystem::path& path,
+        T loaded,
+        const AssetIO& assetIO,
+        const LoadOptions& options) {
+        auto asset = Asset<T>{.asset = loaded, .assetSize = assetIO.fileSize(path).value()};
+        // cache this guy
+        auto& store = CachedAssetStore<T, LoadOptions>::instance();
+        store.cacheAsset(path, asset, options);
+        return asset;
     }
 };
 

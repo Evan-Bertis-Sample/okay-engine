@@ -29,16 +29,14 @@ using Load = AssetManager::Load<T>;
 
 namespace detail {
 
-template <typename AssetT, bool engineAsset, typename... LoadOptions>
+template <typename AssetT, bool engineAsset, typename LoadOptions>
 inline AssetT loadAsset(const std::filesystem::path& path,
     SystemParameter<AssetManager> assetManager,
-    LoadOptions&&... options) {
+    const LoadOptions& options) {
     if constexpr (engineAsset) {
-        return unwrapAssetResult(
-            assetManager->loadEngineAssetSync<AssetT>(path, std::forward<LoadOptions>(options)...));
+        return unwrapAssetResult(assetManager->loadEngineAssetSync<AssetT>(path, options));
     } else {
-        return unwrapAssetResult(
-            assetManager->loadGameAssetSync<AssetT>(path, std::forward<LoadOptions>(options)...));
+        return unwrapAssetResult(assetManager->loadGameAssetSync<AssetT>(path, options));
     }
 }
 
@@ -47,21 +45,19 @@ inline AssetT loadAsset(const std::filesystem::path& path,
 namespace load {
 
 // game assets
-template <typename AssetT, typename... LoadOptions>
+template <typename AssetT, typename LoadOptions = std::tuple<>>
 inline AssetT asset(const std::filesystem::path& path,
     SystemParameter<AssetManager> assetManager = nullptr,
-    LoadOptions&&... options) {
-    return detail::loadAsset<AssetT, false>(
-        path, assetManager, std::forward<LoadOptions>(options)...);
+    const LoadOptions& options = LoadOptions{}) {
+    return detail::loadAsset<AssetT, false>(path, assetManager, options);
 }
 
 // engine assets
-template <typename AssetT, typename... LoadOptions>
+template <typename AssetT, typename LoadOptions = std::tuple<>>
 inline AssetT engine(const std::filesystem::path& path,
     SystemParameter<AssetManager> assetManager = nullptr,
-    LoadOptions&&... options) {
-    return detail::loadAsset<AssetT, true>(
-        path, assetManager, std::forward<LoadOptions>(options)...);
+    const LoadOptions& options = LoadOptions{}) {
+    return detail::loadAsset<AssetT, true>(path, assetManager, options);
 }
 
 // optional convenience wrappers

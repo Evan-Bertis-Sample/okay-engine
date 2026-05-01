@@ -15,7 +15,8 @@ namespace okay {
 
 template <>
 struct AssetLoader<Shader> {
-    static Result<Shader> loadAsset(const std::filesystem::path& path, const AssetIO& assetIO) {
+    static Result<Shader> loadAsset(
+        const std::filesystem::path& path, const AssetIO& assetIO, const std::tuple<> options) {
         // by standard, the fragment shader will be path + .frag
         // and the vertex shader will be path + .vert
         Engine.logger.info("Loading shader: {}", path.string());

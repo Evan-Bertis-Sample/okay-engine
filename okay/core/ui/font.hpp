@@ -98,6 +98,14 @@ class FontAtlas {
 struct FontLoadOptions {
     int width{32};
     int height{0};
+
+    bool operator==(const FontLoadOptions& other) const {
+        return width == other.width && height == other.height;
+    }
+
+    bool operator<(const FontLoadOptions& other) const {
+        return width < other.width;
+    }
 };
 
 class FontManager {
