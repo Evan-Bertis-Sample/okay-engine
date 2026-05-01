@@ -87,8 +87,7 @@ static void __gameInitialize() {
         glm::vec3 pos = glm::ballRand(50.0f);
         okay::ECSEntity entity = okay::ecs::entity()
                                      .addComponent<okay::TransformComponent>(pos, glm::vec3{0.5f})
-                                     .addComponent<okay::MeshRendererComponent>(cube, material)
-                                     .addComponent<BobComponent>();
+                                     .addComponent<okay::MeshRendererComponent>(cube, material);
 
         for (std::size_t i = 0; i < 5; ++i) {
             pos = glm::ballRand(100.0f);

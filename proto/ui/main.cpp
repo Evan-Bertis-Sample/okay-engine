@@ -111,7 +111,6 @@ static void __gameInitialize() {
                                                     .leftMarginSet(15);
                                             }),
                                         okay::ui::h3("bottom").leftMarginSet(15))
-
                                     )));
         });
 }

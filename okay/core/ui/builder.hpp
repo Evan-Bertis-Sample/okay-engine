@@ -27,7 +27,7 @@ struct UIStyle {
     UIElement image;
 
     static UIElement applyStyle(UIElement src, UIElement base) {
-        Engine.logger.debug("Applying style!");
+        // Engine.logger.debug("Applying style!");
         src.width = base.width;
         src.height = base.height;
         src.minWidth = base.minWidth;

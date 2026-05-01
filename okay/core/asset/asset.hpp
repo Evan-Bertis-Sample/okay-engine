@@ -10,6 +10,7 @@
 #include <fstream>
 #include <functional>
 #include <istream>
+#include <memory>
 
 #ifdef _WIN32
 #define SEP "\\"
@@ -82,6 +83,7 @@ class CachedAssetStore {
     }
 
     void cacheAsset(const std::filesystem::path& path, Asset<T> asset, const LoadOptions& options) {
+        // Engine.logger.debug("Caching asset {}", path.string());
         LoadKey key = {
             .path = path,
             .options = options,
@@ -100,6 +102,7 @@ class CachedAssetStore {
         };
 
         if (_cache.contains(key)) {
+            // Engine.logger.debug("Found cached asset for {}", path.string());
             return Option<Asset<T>>::some(_cache[key].asset);
         }
 
@@ -116,7 +119,7 @@ class CachedAssetStore {
         }
 
         bool operator<(const LoadKey& other) const {
-            return path < other.path && options < other.options;
+            return std::tie(path, options) < std::tie(other.path, other.options);
         }
     };
 
@@ -223,7 +226,8 @@ class AssetManager : public System<SystemScope::ENGINE> {
         T loaded,
         const AssetIO& assetIO,
         const LoadOptions& options) {
-        auto asset = Asset<T>{.asset = loaded, .assetSize = assetIO.fileSize(path).value()};
+        auto asset =
+            Asset<T>{.asset = std::move(loaded), .assetSize = assetIO.fileSize(path).value()};
         // cache this guy
         auto& store = CachedAssetStore<T, LoadOptions>::instance();
         store.cacheAsset(path, asset, options);

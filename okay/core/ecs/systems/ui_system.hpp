@@ -12,13 +12,10 @@ namespace okay {
 
 class UISystem : public ECSSystem<query::Get<TransformComponent, UIComponent>> {
    public:
-    void onEntityAdded(QueryT::Item& item) override {
-        // Engine.logger.debug("RendererSystem: Entity {} added", item.entity.id());
-    };
+    void onEntityAdded(QueryT::Item& item) override {};
 
     void onPreTick(QueryT::Item& item) override {
         auto& [transform, ui] = item.components;
-
         if (!ui.uiBuilder) {
             Engine.logger.debug(
                 "UISystem::onPretick: Entity {} does not have a builder function for the UI!",
