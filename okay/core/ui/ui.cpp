@@ -54,7 +54,7 @@ int UILayout::marginMainTotal(const UIElement& element, UIPrimaryAxis axis) cons
 }
 
 int UILayout::marginCrossTotal(const UIElement& element, UIPrimaryAxis axis) const {
-    return marginCrossStart(el ement, axis) + marginCrossEnd(element, axis);
+    return marginCrossStart(element, axis) + marginCrossEnd(element, axis);
 }
 
 void UILayout::computeFixedSizes(UINode& node, LayoutRect parent) {
@@ -391,10 +391,31 @@ void UI::render(glm::vec2 screenPosition, SystemParameter<Renderer> renderer) {
     renderNode(_root, *renderer);
 }
 
+void UI::update(UIElement newRoot) {
+    // reset node ID
+    Engine.logger.debug("Updating UI!");
+    _nextNodeID = 1;
+    _root = createNodeFromElement(newRoot);
+    _layout.update(_root);
+}
+
 void UI::renderNode(const UINode& node, Renderer& renderer, int layerBase) {
     NodeRenderInfo& renderInfo = getNodeRenderInfo(node);
-    if (!renderInfo.entityCreated) {
-        // Engine.logger.debug("Creating render entities for UI node {}", node.id);
+    std::size_t elementContentHash = node.element.contentHash();
+    if (!renderInfo.entityCreated || renderInfo.contentHash != elementContentHash) {
+        Engine.logger.debug("Creating render entities for UI node {}", node.id);
+        if (renderInfo.rectEntity.isValid()) {
+            // no need to remove mesh because all rects use the same mesh
+            renderer.world().removeRenderEntity(renderInfo.rectEntity);
+        }
+
+        if (renderInfo.textEntity.isValid()) {
+            // Free text mesh
+            renderer.meshBuffer().removeMesh(renderInfo.textEntity->mesh);
+            renderer.world().removeRenderEntity(renderInfo.textEntity);
+        }
+
+        renderInfo.contentHash = elementContentHash;
         createNodeRenderEnties(node, renderer);
     }
 

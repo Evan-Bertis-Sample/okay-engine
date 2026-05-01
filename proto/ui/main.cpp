@@ -1,3 +1,4 @@
+#include "okay/core/engine/engine.hpp"
 #include <okay/okay.hpp>
 
 #include <glm/glm.hpp>
@@ -74,10 +75,11 @@ static void __gameInitialize() {
     // TODO: Add ability to refresh UIs
     okay::ecs::entity()
         .addComponent<okay::TransformComponent>(glm::vec3{0.0f, 0.0f, 0.0f})
-        .addComponent<okay::UIComponent>(okay::ui::centerFrame(400, 240, 300, 300)
+        .addComponent<okay::UIComponent>([]() {
+            return okay::ui::centerFrame(400, 240, 300, 300)
                 .backgroundColorSet(glm::vec4{1.0f, 1.0f, 1.0f, 0.5f})
                 .backgroundImageSet(okay::load::engineTexture("textures/uv_test.jpg"))(
-                    okay::ui::h1("Hello world!")
+                    okay::ui::h1(std::format("{}", okay::Engine.frameCount()))
                         .widthGrow()
                         .heightGrow()
                         .backgroundColorSet(glm::vec4(1.0f, 0.0f, 1.0f, 1.0f))
@@ -109,7 +111,8 @@ static void __gameInitialize() {
                                             }),
                                         okay::ui::h3("bottom").leftMarginSet(15))
 
-                                    ))));
+                                    )));
+        });
 }
 
 static void __gameUpdate() {}

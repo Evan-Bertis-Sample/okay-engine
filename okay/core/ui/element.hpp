@@ -12,6 +12,7 @@
 #include <okay/core/util/object_pool.hpp>
 #include <okay/core/util/option.hpp>
 
+#include <unordered_map>
 #include <utility>
 #include <variant>
 
@@ -301,6 +302,17 @@ struct UIElement {
     UIElement& textSizeSet(float size) {
         textStyle.fontHeight = size;
         return *this;
+    }
+
+    inline std::size_t hashCombine(std::size_t a, std::size_t b) const {
+        return a + 0x9e3779b9 + (b << 6) + (b >> 2);
+    }
+
+    std::size_t contentHash() const {
+        std::size_t textHash = (text.isSome()) ? std::hash<std::string>{}(text.value()) : 0;
+        std::size_t backgroundHash =
+            (backgroundImage.isSome()) ? backgroundImage.value().getGLTextureID() : 0;
+        return hashCombine(textHash, backgroundHash);
     }
 };
 

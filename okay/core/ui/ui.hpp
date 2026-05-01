@@ -41,6 +41,10 @@ class UILayout {
         glm::ivec2 screenSize;
     };
 
+    void update(UINode root) {
+        _root = root;
+    }
+
     void layout(const Context& context);
 
     Option<LayoutRect> getLayout(const UINode& node) const {
@@ -101,6 +105,7 @@ class UI {
 
    public:
     void render(glm::vec2 screenPosition, SystemParameter<Renderer> renderer = nullptr);
+    void update(UIElement newRoot);
 
    private:
     UINode _root;
@@ -109,15 +114,13 @@ class UI {
     struct NodeRenderInfo {
         RenderEntity rectEntity;
         RenderEntity textEntity;
+        std::size_t contentHash;
         bool entityCreated = false;
     };
 
-    UINode::ID createNodeIDFromElement(const UIElement& element) {
-        return _nextNodeID++;
-    }
     UINode createNodeFromElement(const UIElement& element) {
         UINode node;
-        node.id = createNodeIDFromElement(element);
+        node.id = _nextNodeID++;
         node.element = element;
         for (const UIElement& childElement : element.children) {
             node.children.push_back(createNodeFromElement(childElement));

@@ -28,6 +28,7 @@ class UISystem : public ECSSystem<query::Get<TransformComponent, UIComponent>> {
 
         Renderer* renderer = Engine.systems.getSystemChecked<Renderer>();
         UIElement root = ui.uiBuilder();
+        ui.ui.update(root);
         ui.ui.render(transform->position, renderer);
     };
 
