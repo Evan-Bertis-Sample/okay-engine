@@ -7,6 +7,7 @@
 #include <okay/core/engine/engine.hpp>
 #include <okay/core/renderer/render_world.hpp>
 #include <okay/core/renderer/renderer.hpp>
+#include <okay/core/ui/builder.hpp>
 
 namespace okay {
 
@@ -14,8 +15,6 @@ class UISystem : public ECSSystem<query::Get<TransformComponent, UIComponent>> {
    public:
     void onEntityAdded(QueryT::Item& item) override {
         auto& [transform, ui] = item.components;
-        UIElement root = ui.uiBuilder();
-        ui.ui.update(root);
     };
 
     void onPreTick(QueryT::Item& item) override {
@@ -28,8 +27,8 @@ class UISystem : public ECSSystem<query::Get<TransformComponent, UIComponent>> {
         }
 
         Renderer* renderer = Engine.systems.getSystemChecked<Renderer>();
-        // UIElement root = ui.uiBuilder();
-        // ui.ui.update(root);
+        UIElement root = ui::flexbox()(ui.uiBuilder());
+        ui.ui.update(root);
         ui.ui.render(transform->position, renderer);
     };
 

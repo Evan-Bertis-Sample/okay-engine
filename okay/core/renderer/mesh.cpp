@@ -137,7 +137,7 @@ Failable MeshBuffer::bindMeshData() {
         return Failable::ok({});
     }
 
-    Engine.logger.debug("Binding mesh data");
+    // Engine.logger.debug("Binding mesh data");
 
     if (!_hasInitVertexAttributes) {
         Failable r = initVertexAttributes();
@@ -165,7 +165,7 @@ Failable MeshBuffer::bindMeshData() {
 
     GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
-    Engine.logger.debug("Mesh data bound");
+    // Engine.logger.debug("Mesh data bound");
     _dataOutofDate = false;
     return Failable::ok({});
 }

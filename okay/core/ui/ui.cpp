@@ -397,7 +397,7 @@ void UI::render(glm::vec2 screenPosition, SystemParameter<Renderer> renderer) {
 
 void UI::update(UIElement newRoot) {
     // reset node ID
-    Engine.logger.debug("Updating UI!");
+    // Engine.logger.debug("Updating UI!");
     _nextNodeID = 1;
     _root = createNodeFromElement(newRoot);
     _layout.update(_root);
@@ -407,7 +407,7 @@ void UI::renderNode(const UINode& node, Renderer& renderer, int layerBase) {
     NodeRenderInfo& renderInfo = getNodeRenderInfo(node);
     std::size_t elementContentHash = node.element.contentHash();
     if (!renderInfo.entityCreated || renderInfo.contentHash != elementContentHash) {
-        Engine.logger.debug("Creating render entities for UI node {}", node.id);
+        // Engine.logger.debug("Creating render entities for UI node {}", node.id);
         if (renderInfo.rectEntity.isValid()) {
             // no need to remove mesh because all rects use the same mesh
             renderer.world().removeRenderEntity(renderInfo.rectEntity);
