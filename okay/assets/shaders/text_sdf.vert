@@ -6,31 +6,29 @@ layout(location = 1) in vec3 a_normal;
 layout(location = 2) in vec4 a_color;
 layout(location = 3) in vec2 a_uv;
 
-/* Transforms */
 uniform mat4 u_modelMatrix;
 uniform mat4 u_viewMatrix;
 uniform mat4 u_projectionMatrix;
-
-/* Material */
+uniform vec3 u_cameraPosition;
+uniform vec3 u_cameraDirection;
 uniform vec3 u_color;
 
-/* Camera */
-uniform vec3 u_cameraPosition;
-
 out vec3 v_color;
-out vec3 v_worldPos;
-out vec3 v_worldNormal;
+out vec3 v_normal;
+out vec3 v_position;
 out vec2 v_uv;
+out vec3 v_cameraPosition;
+out vec3 v_cameraDirection;
 
 void main() {
-    vec4 worldPos4 = u_modelMatrix * vec4(a_pos, 1.0f);
-    v_worldPos = worldPos4.xyz;
+    mat4 mvp = u_projectionMatrix * u_viewMatrix * u_modelMatrix;
+    vec4 pos = mvp * vec4(a_pos, 1.0f);
+    gl_Position = pos;
 
-    mat3 normalMatrix = transpose(inverse(mat3(u_modelMatrix)));
-    v_worldNormal = normalize(normalMatrix * a_normal);
-
+    v_color = u_color;
+    v_normal = a_normal;
+    v_position = a_pos;
     v_uv = a_uv;
-    v_color = u_color * a_color.rgb;
-
-    gl_Position = u_projectionMatrix * u_viewMatrix * worldPos4;
+    v_cameraPosition = u_cameraPosition;
+    v_cameraDirection = u_cameraDirection;
 }
