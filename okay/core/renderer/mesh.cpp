@@ -21,8 +21,15 @@ Mesh MeshBuffer::addMesh(const MeshData& mesh) {
     }
 
     Mesh m{};
+    Bounds mBounds{};
 
     if (blockPtr != nullptr) {
+        Engine.logger.debug("Repurposing block: vOffset={}, vCount={}, iOffset={}, iCount={}",
+            blockPtr->vertexCount,
+            blockPtr->vertexOffset,
+            blockPtr->indexOffset,
+            blockPtr->indexCount);
+
         m.vertexOffset = blockPtr->vertexOffset;
         m.vertexCount = mesh.vertices.size();
         m.indexOffset = blockPtr->indexOffset;
@@ -31,27 +38,13 @@ Mesh MeshBuffer::addMesh(const MeshData& mesh) {
         float* ptr{getMeshPointer(m)};
 
         for (const MeshVertex& v : mesh.vertices) {
-            *ptr = v.position.x;
-            ++ptr;
-            *ptr = v.position.y;
-            ++ptr;
-            *ptr = v.position.z;
-            ++ptr;
-            *ptr = v.normal.x;
-            ++ptr;
-            *ptr = v.normal.y;
-            ++ptr;
-            *ptr = v.normal.z;
-            ++ptr;
-            *ptr = v.color.x;
-            ++ptr;
-            *ptr = v.color.y;
-            ++ptr;
-            *ptr = v.color.z;
-            ++ptr;
-            *ptr = v.uv.x;
-            ++ptr;
-            *ptr = v.uv.y;
+            memcpy(ptr, &v.position, 3 * sizeof(float));
+            memcpy(ptr + 3, &v.normal, 3 * sizeof(float));
+            memcpy(ptr + 6, &v.color, 3 * sizeof(float));
+            memcpy(ptr + 9, &v.uv, 2 * sizeof(float));
+            mBounds.extend(v.position);
+
+            ptr += MeshVertex::numFloats();
         }
 
         for (std::size_t i{}; i < m.indexCount; ++i) {
@@ -62,6 +55,8 @@ Mesh MeshBuffer::addMesh(const MeshData& mesh) {
 
         return m;
     }
+
+    Engine.logger.debug("Allocating new block!");
 
     BlockMeta bm{};
 
