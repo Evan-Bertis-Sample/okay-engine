@@ -137,6 +137,10 @@ class UI {
 
     void renderNode(const UINode& node, Renderer& renderer, int depth = 0);
     void createNodeRenderEnties(const UINode& node, Renderer& renderer);
+    void createRectRenderEntity(const UINode& node, Renderer& renderer);
+    void createTextRenderEntity(const UINode& node, Renderer& renderer);
+
+    Mesh getTextMesh(const UINode& node, Renderer& renderer);
 
     UILayout _layout;
     std::unordered_map<UINode::ID, NodeRenderInfo> _nodeRenderInfo;

@@ -405,22 +405,35 @@ void UI::update(UIElement newRoot) {
 
 void UI::renderNode(const UINode& node, Renderer& renderer, int layerBase) {
     NodeRenderInfo& renderInfo = getNodeRenderInfo(node);
+    const UIElement& element = node.element;
     std::size_t elementContentHash = node.element.contentHash();
-    if (!renderInfo.entityCreated || renderInfo.contentHash != elementContentHash) {
+
+    if (!renderInfo.entityCreated) {
+        renderInfo.contentHash = elementContentHash;
+        createNodeRenderEnties(node, renderer);
+    }
+
+    if (renderInfo.contentHash != elementContentHash) {
         // Engine.logger.debug("Creating render entities for UI node {}", node.id);
         if (renderInfo.rectEntity.isValid()) {
-            // no need to remove mesh because all rects use the same mesh
-            renderer.world().removeRenderEntity(renderInfo.rectEntity);
+            if (!(element.backgroundImage.isSome() || element.backgroundColor.a > 0.0f)) {
+                // delete this guy
+                renderer.world().removeRenderEntity(renderInfo.rectEntity);
+            }
+        } else {
+            createTextRenderEntity(node, renderer);
         }
 
         if (renderInfo.textEntity.isValid()) {
-            // Free text mesh
+            // Replace the text mesh
             renderer.meshBuffer().removeMesh(renderInfo.textEntity->mesh);
-            renderer.world().removeRenderEntity(renderInfo.textEntity);
+            renderInfo.textEntity->mesh = getTextMesh(node, renderer);
+
+        } else {
+            createTextRenderEntity(node, renderer);
         }
 
         renderInfo.contentHash = elementContentHash;
-        createNodeRenderEnties(node, renderer);
     }
 
     Option<LayoutRect> layout = _layout.getLayout(node);
@@ -512,6 +525,13 @@ void UI::renderNode(const UINode& node, Renderer& renderer, int layerBase) {
 
 void UI::createNodeRenderEnties(const UINode& node, Renderer& renderer) {
     NodeRenderInfo& renderInfo = getNodeRenderInfo(node);
+    createRectRenderEntity(node, renderer);
+    createTextRenderEntity(node, renderer);
+    renderInfo.entityCreated = true;
+};
+
+void UI::createRectRenderEntity(const UINode& node, Renderer& renderer) {
+    NodeRenderInfo& renderInfo = getNodeRenderInfo(node);
     const UIElement& element = node.element;
 
     if (element.backgroundImage.isSome() || element.backgroundColor.a > 0.0f) {
@@ -523,20 +543,17 @@ void UI::createNodeRenderEnties(const UINode& node, Renderer& renderer) {
 
         renderInfo.rectEntity = entity;
     }
+}
+
+void UI::createTextRenderEntity(const UINode& node, Renderer& renderer) {
+    NodeRenderInfo& renderInfo = getNodeRenderInfo(node);
+    const UIElement& element = node.element;
 
     if (element.text.isSome()) {
         // Engine.logger.debug("Creating render entity for UI element with text
         // element.text.value()); render text
         MaterialHandle handle = UIRenderResoruces::get().getTextMaterial(element).value();
-        TextStyle style = element.textStyle;
-
-        if (!FontManager::instance().isLoadedFont(style.font)) {
-            style.font = FontManager::instance().defaultFont();
-        }
-
-        MeshData textMeshData =
-            TextMeshBuilder::build(element.text.value(), style, element.doubleSided);
-        Mesh textMesh = renderer.meshBuffer().addMesh(textMeshData);
+        Mesh textMesh = getTextMesh(node, renderer);
 
         // Create the render entity, using a default position
         RenderEntity entity =
@@ -544,8 +561,21 @@ void UI::createNodeRenderEnties(const UINode& node, Renderer& renderer) {
 
         renderInfo.textEntity = entity;
     }
+}
 
-    renderInfo.entityCreated = true;
-};
+Mesh UI::getTextMesh(const UINode& node, Renderer& renderer) {
+    const UIElement& element = node.element;
+    if (element.text.isSome()) {
+        TextStyle style = element.textStyle;
+        if (!FontManager::instance().isLoadedFont(style.font)) {
+            style.font = FontManager::instance().defaultFont();
+        }
+        MeshData textMeshData =
+            TextMeshBuilder::build(element.text.value(), style, element.doubleSided);
+        return renderer.meshBuffer().addMesh(textMeshData);
+    }
+
+    return Mesh::none();
+}
 
 }  // namespace okay
