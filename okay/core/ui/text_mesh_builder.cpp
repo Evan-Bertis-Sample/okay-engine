@@ -60,23 +60,26 @@ MeshData TextMeshBuilder::build(std::string_view text, const TextStyle& style, b
     const float glyphScale = style.fontHeight / layout.metrics().lineHeight;
 
     for (const TextLineLayout line : layout) {
-        float baselineX = line.layoutLeft;
-        const float baselineY = line.baselineY;
+        float baselineX = line.layoutLeft * glyphScale;
+        const float baselineY = line.baselineY * glyphScale;
 
         for (char c : line.text) {
             const auto glyph = fontManager.getGlyph(
                 layout.style().font, static_cast<std::uint32_t>(static_cast<unsigned char>(c)));
 
-            const TextQuad quad = generateQuadForGlyph(glyph, baselineX, baselineY, glyphScale);
+            if (glyph.w > 0 && glyph.h > 0) {
+                const TextQuad quad = generateQuadForGlyph(glyph, baselineX, baselineY, glyphScale);
 
-            for (int i = 0; i < 4; ++i) {
-                meshData.vertices.push_back(quad.vertices[i]);
+                for (int i = 0; i < 4; ++i) {
+                    meshData.vertices.push_back(quad.vertices[i]);
+                }
+
+                appendQuadIndices(
+                    meshData.indices, static_cast<std::uint32_t>(quadIndex * 4), doubleSided);
+
+                quadIndex++;
             }
 
-            appendQuadIndices(
-                meshData.indices, static_cast<std::uint32_t>(quadIndex * 4), doubleSided);
-
-            quadIndex++;
             baselineX += static_cast<float>(glyph.advance) * glyphScale;
         }
     }

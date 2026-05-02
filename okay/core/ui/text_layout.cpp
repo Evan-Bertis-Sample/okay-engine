@@ -12,14 +12,6 @@ TextLayout::TextLayout(std::string_view text, const TextStyle& style)
     measure();
 }
 
-float TextLayout::computeLayoutScale(float targetFontHeight, int maxLineHeightGlyph) {
-    if (targetFontHeight <= 0.0f)
-        return 1.0f;
-    if (maxLineHeightGlyph <= 0)
-        return 1.0f;
-    return 1.0;
-}
-
 float TextLayout::computeAlignedLineStartX(
     TextStyle::HorizontalAlignment alignment, float scaledLineWidth) {
     switch (alignment) {
@@ -162,7 +154,8 @@ void TextLayout::measure() {
     _metrics.layoutTop = unalignedTop + _verticalAlignmentOffset;
     _metrics.layoutBottom = unalignedBottom + _verticalAlignmentOffset;
 
-    _metrics.lineHeight = _fontManager.getGlyph(_style.font, 'A').h;
+    const auto& metrics = _fontManager.getFontMetrics(_style.font);
+    _metrics.lineHeight = metrics.height;
 }
 
 TextLayout::LineIterator TextLayout::begin() const {

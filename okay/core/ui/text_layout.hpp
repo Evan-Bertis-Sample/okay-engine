@@ -136,7 +136,6 @@ class TextLayout {
     TextLineLayout makeLineLayout(
         std::size_t lineIndex, const RawLineMetrics& raw, float baselineY) const;
 
-    static float computeLayoutScale(float targetFontHeight, int maxLineHeightGlyph);
     static float computeAlignedLineStartX(
         TextStyle::HorizontalAlignment alignment, float scaledLineWidth);
     static float computeVerticalAlignmentOffset(

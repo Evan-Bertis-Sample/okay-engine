@@ -331,9 +331,13 @@ Option<int> UILayout::computeElementSizeAlongAxis(
             TextStyle style = element.textStyle;
 
             TextLayout layout(element.text.value(), style);
+            const float glyphScale = style.fontHeight / layout.metrics().lineHeight;
+            const float textWidth = layout.metrics().width() * glyphScale;
+            const float textHeight = layout.metrics().height() * glyphScale;
+
             resolved = std::max(resolved,
-                axis == UIPrimaryAxis::Horizontal ? (int)layout.metrics().width()
-                                                  : (int)layout.metrics().height());
+                axis == UIPrimaryAxis::Horizontal ? static_cast<int>(std::ceil(textWidth))
+                                                  : static_cast<int>(std::ceil(textHeight)));
         }
 
         if (element.backgroundImage.isSome()) {

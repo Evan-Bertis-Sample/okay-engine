@@ -141,6 +141,12 @@ class FontManager {
         int descent;
     };
 
+    struct FontMetrics {
+        float ascender;
+        float descender;
+        float height;
+    };
+
     static FontManager& instance() {
         static FontManager instance;
         return instance;
@@ -153,8 +159,10 @@ class FontManager {
     }
 
     Option<FontHandle> loadFont(const std::string& fontPath, const FontLoadOptions& options = {});
-
     Glyph getGlyph(FontHandle font, std::uint32_t codepoint);
+    FontMetrics getFontMetrics(FontHandle font) {
+        return _metricsPerFace[font.id];
+    }
 
     Texture getGlyphAtlas(FontHandle font) {
         return _glyphAtlases[font.id];
@@ -174,11 +182,13 @@ class FontManager {
     std::unordered_map<std::string, std::uint32_t> _fontFaces;
     std::vector<FT_Face> _loadedFaces;
     std::vector<std::unordered_map<std::uint32_t, Glyph>> _glyphsPerFace;
+    std::vector<FontMetrics> _metricsPerFace;
     std::vector<Texture> _glyphAtlases;
     FontAtlas _atlas{ATLAS_W, ATLAS_H};
     Option<FontHandle> _defaultFont;
 
     std::unordered_map<std::uint32_t, Glyph>& getGlyphsForFace(std::uint32_t faceId);
+    FontMetrics& getFontMetricsForFace(std::uint32_t faceId);
 
     void generateGlyphSetAndAtlasForFace(std::uint32_t faceId, int width, int height);
 };

@@ -12,7 +12,11 @@ namespace okay {
 
 class UISystem : public ECSSystem<query::Get<TransformComponent, UIComponent>> {
    public:
-    void onEntityAdded(QueryT::Item& item) override {};
+    void onEntityAdded(QueryT::Item& item) override {
+        auto& [transform, ui] = item.components;
+        UIElement root = ui.uiBuilder();
+        ui.ui.update(root);
+    };
 
     void onPreTick(QueryT::Item& item) override {
         auto& [transform, ui] = item.components;
@@ -24,8 +28,8 @@ class UISystem : public ECSSystem<query::Get<TransformComponent, UIComponent>> {
         }
 
         Renderer* renderer = Engine.systems.getSystemChecked<Renderer>();
-        UIElement root = ui.uiBuilder();
-        ui.ui.update(root);
+        // UIElement root = ui.uiBuilder();
+        // ui.ui.update(root);
         ui.ui.render(transform->position, renderer);
     };
 

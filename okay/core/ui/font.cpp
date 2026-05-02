@@ -54,18 +54,30 @@ std::unordered_map<std::uint32_t, FontManager::Glyph>& FontManager::getGlyphsFor
     return _glyphsPerFace[faceId];
 };
 
+FontManager::FontMetrics& FontManager::getFontMetricsForFace(std::uint32_t faceId) {
+    if (faceId >= _metricsPerFace.size()) {
+        _metricsPerFace.resize(faceId + 1);
+    }
+    return _metricsPerFace[faceId];
+}
+
 void FontManager::generateGlyphSetAndAtlasForFace(std::uint32_t faceId, int width, int height) {
     auto& glyphs = getGlyphsForFace(faceId);
     glyphs.clear();
 
     FT_Face face = _loadedFaces[faceId];
-
     FT_Select_Charmap(face, FT_ENCODING_UNICODE);
-
     if (FT_Set_Pixel_Sizes(face, width, height)) {
         Engine.logger.error("Failed to set font size {} x {}", width, height);
         return;
     }
+
+    FT_Size_Metrics m = face->size->metrics;
+
+    FontMetrics& metrics = getFontMetricsForFace(faceId);
+    metrics.ascender = static_cast<float>(m.ascender >> 6);
+    metrics.descender = static_cast<float>(-(m.descender >> 6));
+    metrics.height = static_cast<float>(m.height >> 6);
 
     for (std::uint32_t codepoint = 32; codepoint < 127; ++codepoint) {
         FT_UInt gIndex = FT_Get_Char_Index(face, codepoint);
@@ -100,8 +112,8 @@ void FontManager::generateGlyphSetAndAtlasForFace(std::uint32_t faceId, int widt
         glyph.bearingX = slot->bitmap_left;
         glyph.bearingY = slot->bitmap_top;
         glyph.advance = slot->advance.x >> 6;
-        glyph.ascent = glyph.bearingY;
-        glyph.descent = glyph.h - glyph.bearingY;
+        glyph.ascent = face->size->metrics.ascender >> 6;
+        glyph.descent = -(face->size->metrics.descender >> 6);
 
         glyph.u0 = static_cast<float>(x) / ATLAS_W;
         glyph.v0 = static_cast<float>(y) / ATLAS_H;
