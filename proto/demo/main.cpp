@@ -5,6 +5,8 @@
 #include <imgui.h>
 #include <utility>
 
+namespace ui = okay::ui;
+
 static void __gameInitialize();
 static void __gameUpdate();
 static void __gameShutdown();
@@ -41,7 +43,7 @@ int main() {
 static void __gameInitialize() {
     // Additional game initialization logic
     okay::Texture texture = okay::load::engineTexture("textures/red.jpg");
-    okay::Mesh object = okay::mesh(okay::load::engineMeshData("models/dragon.obj"));
+    okay::Mesh object = okay::mesh(okay::load::engineMeshData("models/teapot.obj"));
 
     okay::Mesh cube = okay::mesh(okay::primitives::box().build());
     okay::ShaderHandle shader = okay::shaderHandle(okay::load::engineShader("shaders/lit"));
@@ -83,7 +85,7 @@ static void __gameInitialize() {
         .addComponent<okay::TransformComponent>(glm::vec3{0.0f, 2.0f, 0.0f})
         .addComponent<okay::MeshRendererComponent>(textMesh, textMaterial);
 
-    for (std::size_t i = 0; i < 1000; ++i) {
+    for (std::size_t i = 0; i < 10; ++i) {
         glm::vec3 pos = glm::ballRand(50.0f);
         okay::ECSEntity entity = okay::ecs::entity()
                                      .addComponent<okay::TransformComponent>(pos, glm::vec3{0.5f})
@@ -96,6 +98,25 @@ static void __gameInitialize() {
                 .addComponent<okay::MeshRendererComponent>(cube, material);
         }
     }
+
+    okay::ecs::entity().addComponent<okay::TransformComponent>().addComponent<okay::UIComponent>(
+        []() {
+            return ui::frame(10, 10, 200, 100)
+                // .backgroundColorSet(glm::vec4{0.0f, 0.0f, 0.0f, 0.1f})
+                // .borderColorSet(glm::vec4{1.0f, 1.0f, 1.0f, 1.0f})
+                // .borderRadiusSet(10)
+                // .borderWidthSet(1)
+                (
+                    ui::flexbox()
+                        .leftMarginSet(10)
+                        .topMarginSet(10)
+                    (
+                        ui::h2("Performance"),
+                        ui::h1(std::format("FPS: {:2f}", okay::Engine.time->fps())),
+                        ui::h1(std::format("Entity count: {}", okay::ecs::entityCount()))
+                    )
+                );
+        });
 }
 
 static void __gameUpdate() {

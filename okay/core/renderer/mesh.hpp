@@ -121,17 +121,18 @@ class MeshBuffer {
     }
     Mesh addMesh(const MeshData& model);
     void removeMesh(const Mesh& mesh);
-    float* getMeshPointer(const Mesh& mesh);
+    float* getMeshDataPtr(const Mesh& mesh);
+
     Failable bindMeshData();
     void drawMesh(const Mesh& mesh);
 
-    class iterator {
+    class Iterator {
        public:
         using value_type = MeshVertex;
         using difference_type = std::ptrdiff_t;
         using iterator_category = std::forward_iterator_tag;
 
-        iterator(const MeshBuffer* buffer, std::size_t index) : _buffer(buffer), _index(index) {}
+        Iterator(const MeshBuffer* buffer, std::size_t index) : _buffer(buffer), _index(index) {}
 
         MeshVertex operator*() const {
             std::size_t attrIndex = _buffer->_indices[_index];
@@ -154,12 +155,12 @@ class MeshBuffer {
             return MeshVertex{*position, *normal, *color, *uv};
         }
 
-        iterator& operator++() {
+        Iterator& operator++() {
             ++_index;
             return *this;
         }
 
-        bool operator!=(const iterator& other) const {
+        bool operator!=(const Iterator& other) const {
             return _index != other._index;
         }
 
@@ -172,12 +173,12 @@ class MeshBuffer {
        public:
         OkayModelView(const MeshBuffer* buffer, Mesh model) : _buffer(buffer), _model(model) {}
 
-        MeshBuffer::iterator begin() const {
-            return MeshBuffer::iterator(_buffer, _model.indexOffset);
+        MeshBuffer::Iterator begin() const {
+            return MeshBuffer::Iterator(_buffer, _model.indexOffset);
         }
 
-        MeshBuffer::iterator end() const {
-            return MeshBuffer::iterator(_buffer, _model.indexOffset + _model.indexCount);
+        MeshBuffer::Iterator end() const {
+            return MeshBuffer::Iterator(_buffer, _model.indexOffset + _model.indexCount);
         }
 
        private:

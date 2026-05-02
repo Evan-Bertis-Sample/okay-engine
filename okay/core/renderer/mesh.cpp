@@ -24,18 +24,12 @@ Mesh MeshBuffer::addMesh(const MeshData& mesh) {
     Bounds mBounds{};
 
     if (blockPtr != nullptr) {
-        Engine.logger.debug("Repurposing block: vOffset={}, vCount={}, iOffset={}, iCount={}",
-            blockPtr->vertexCount,
-            blockPtr->vertexOffset,
-            blockPtr->indexOffset,
-            blockPtr->indexCount);
-
         m.vertexOffset = blockPtr->vertexOffset;
         m.vertexCount = mesh.vertices.size();
         m.indexOffset = blockPtr->indexOffset;
         m.indexCount = mesh.indices.size();
 
-        float* ptr{getMeshPointer(m)};
+        float* ptr{getMeshDataPtr(m)};
 
         for (const MeshVertex& v : mesh.vertices) {
             memcpy(ptr, &v.position, 3 * sizeof(float));
@@ -56,7 +50,9 @@ Mesh MeshBuffer::addMesh(const MeshData& mesh) {
         return m;
     }
 
-    Engine.logger.debug("Allocating new block!");
+    Engine.logger.debug("Allocating new mesh block with {} vertices, {} indices",
+        mesh.vertices.size(),
+        mesh.indices.size());
 
     BlockMeta bm{};
 
@@ -110,15 +106,17 @@ void MeshBuffer::removeMesh(const Mesh& mesh) {
     // look for block to free
     for (auto& block : _blocks) {
         if (block.vertexOffset == mesh.vertexOffset) {
+            Engine.logger.debug(
+                "Freeing mesh with {} vertices and {} indices", mesh.vertexCount, mesh.indexCount);
             block.isFree = true;
             break;
         }
     }
 
-    _dataOutofDate = true;
+    // _dataOutofDate = true;
 }
 
-float* MeshBuffer::getMeshPointer(const Mesh& mesh) {
+float* MeshBuffer::getMeshDataPtr(const Mesh& mesh) {
     std::size_t floatIndex{mesh.vertexOffset * MeshVertex::numFloats()};
 
     if (floatIndex >= _bufferData.size()) {
