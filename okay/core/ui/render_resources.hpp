@@ -113,7 +113,7 @@ class UIRenderResoruces {
         return Option<MaterialHandle>::some(handle);
     };
 
-    static constexpr std::string_view UI_TEXT_SHADER = "shaders/unlit";
+    static constexpr std::string_view UI_TEXT_SHADER = "shaders/text_sdf";
     static constexpr std::string_view UI_RECT_SHADER = "shaders/ui_rect";
     static constexpr std::string_view WHITE_TEXTURE = "textures/white.jpg";
 

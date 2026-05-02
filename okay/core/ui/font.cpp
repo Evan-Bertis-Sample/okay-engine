@@ -4,6 +4,8 @@
 #include <okay/core/asset/asset_util.hpp>
 #include <okay/core/asset/generic/font_loader.hpp>
 
+#include "freetype/freetype.h"
+
 namespace okay {
 
 using FontHandle = FontManager::FontHandle;
@@ -59,15 +61,25 @@ void FontManager::generateGlyphSetAndAtlasForFace(std::uint32_t faceId, int widt
     FT_Face face = _loadedFaces[faceId];
 
     FT_Select_Charmap(face, FT_ENCODING_UNICODE);
-    FT_Set_Pixel_Sizes(face, width, height);
 
-    FT_UInt gindex;
-    FT_ULong charcode = FT_Get_First_Char(face, &gindex);
+    if (FT_Set_Pixel_Sizes(face, width, height)) {
+        Engine.logger.error("Failed to set font size {} x {}", width, height);
+        return;
+    }
 
-    while (gindex != 0) {
-        if (FT_Load_Glyph(face, gindex, FT_LOAD_RENDER)) {
-            // Failed to load glyph, skip it
-            charcode = FT_Get_Next_Char(face, charcode, &gindex);
+    for (std::uint32_t codepoint = 32; codepoint < 127; ++codepoint) {
+        FT_UInt gIndex = FT_Get_Char_Index(face, codepoint);
+        if (gIndex == 0) {
+            continue;
+        }
+
+        if (FT_Load_Glyph(face, gIndex, FT_LOAD_DEFAULT)) {
+            Engine.logger.warn("Failed to load glyph for codepoint {}", codepoint);
+            continue;
+        }
+
+        if (FT_Render_Glyph(face->glyph, FT_RENDER_MODE_SDF)) {
+            Engine.logger.warn("Failed to SDF-render glyph for codepoint {}", codepoint);
             continue;
         }
 
@@ -82,7 +94,7 @@ void FontManager::generateGlyphSetAndAtlasForFace(std::uint32_t faceId, int widt
         }
 
         Glyph glyph;
-        glyph.codepoint = charcode;
+        glyph.codepoint = codepoint;
         glyph.w = slot->bitmap.width;
         glyph.h = slot->bitmap.rows;
         glyph.bearingX = slot->bitmap_left;
@@ -90,17 +102,18 @@ void FontManager::generateGlyphSetAndAtlasForFace(std::uint32_t faceId, int widt
         glyph.advance = slot->advance.x >> 6;
         glyph.ascent = glyph.bearingY;
         glyph.descent = glyph.h - glyph.bearingY;
-        glyph.u0 = (float)x / ATLAS_W;
-        glyph.v0 = (float)y / ATLAS_H;
-        glyph.u1 = (float)(x + glyph.w) / ATLAS_W;
-        glyph.v1 = (float)(y + glyph.h) / ATLAS_H;
-        glyphs[charcode] = glyph;
 
-        charcode = FT_Get_Next_Char(face, charcode, &gindex);
+        glyph.u0 = static_cast<float>(x) / ATLAS_W;
+        glyph.v0 = static_cast<float>(y) / ATLAS_H;
+        glyph.u1 = static_cast<float>(x + glyph.w) / ATLAS_W;
+        glyph.v1 = static_cast<float>(y + glyph.h) / ATLAS_H;
+
+        glyphs[codepoint] = glyph;
     }
 
-    if (faceId >= _glyphAtlases.size())
+    if (faceId >= _glyphAtlases.size()) {
         _glyphAtlases.resize(faceId + 1);
+    }
 
     OkayTextureMeta meta;
     meta.width = ATLAS_W;
@@ -111,10 +124,11 @@ void FontManager::generateGlyphSetAndAtlasForFace(std::uint32_t faceId, int widt
 
     auto store = TextureDataStore::mainStore();
 
-    auto handle = store->addTexture(meta, (void*)_atlas.pixels().data(), _atlas.pixels().size());
+    auto handle = store->addTexture(meta, (void*)(_atlas.pixels().data()), _atlas.pixels().size());
+
     _glyphAtlases[faceId] = Texture(store, handle);
 
-    _atlas.reset();  // clear the atlas for the next font face
+    _atlas.reset();
 }
 
 FontManager::FontHandle FontManager::defaultFont() {

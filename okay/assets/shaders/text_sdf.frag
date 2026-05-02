@@ -17,6 +17,6 @@ void main() {
     if (alpha < 0.01) {
         discard;
     }
-    
+
     FragColor = vec4(u_color, alpha);
 }

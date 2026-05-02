@@ -96,8 +96,8 @@ class FontAtlas {
 };
 
 struct FontLoadOptions {
-    int width{32};
-    int height{0};
+    int width{0};
+    int height{64};
 
     bool operator==(const FontLoadOptions& other) const {
         return width == other.width && height == other.height;
@@ -180,77 +180,7 @@ class FontManager {
 
     std::unordered_map<std::uint32_t, Glyph>& getGlyphsForFace(std::uint32_t faceId);
 
-    void generateGlyphSetAndAtlasForFace(std::uint32_t faceId, int width, int height) {
-        auto& glyphs = getGlyphsForFace(faceId);
-        glyphs.clear();
-
-        FT_Face face = _loadedFaces[faceId];
-
-        FT_Select_Charmap(face, FT_ENCODING_UNICODE);
-        FT_Set_Pixel_Sizes(face, width, height);
-
-        FT_UInt gindex;
-        FT_ULong charcode = FT_Get_First_Char(face, &gindex);
-
-        while (gindex != 0) {
-            // Load glyph without rendering (DEFAULT)
-            if (FT_Load_Glyph(face, gindex, FT_LOAD_DEFAULT)) {
-                charcode = FT_Get_Next_Char(face, charcode, &gindex);
-                continue;
-            }
-
-            // Render glyph via SDF render mode
-            if (FT_Render_Glyph(face->glyph, FT_RENDER_MODE_SDF)) {
-                charcode = FT_Get_Next_Char(face, charcode, &gindex);
-                continue;
-            }
-
-            FT_GlyphSlot slot = face->glyph;
-
-            int x = 0;
-            int y = 0;
-
-            if (!_atlas.addGlyph(slot->bitmap, x, y)) {
-                Engine.logger.error("Font atlas overflow");
-                break;
-            }
-
-            Glyph glyph;
-            glyph.codepoint = charcode;
-            glyph.w = slot->bitmap.width;
-            glyph.h = slot->bitmap.rows;
-            glyph.bearingX = slot->bitmap_left;
-            glyph.bearingY = slot->bitmap_top;
-            glyph.advance = slot->advance.x >> 6;
-            glyph.ascent = glyph.bearingY;
-            glyph.descent = glyph.h - glyph.bearingY;
-            glyph.u0 = (float)x / ATLAS_W;
-            glyph.v0 = (float)y / ATLAS_H;
-            glyph.u1 = (float)(x + glyph.w) / ATLAS_W;
-            glyph.v1 = (float)(y + glyph.h) / ATLAS_H;
-            glyphs[charcode] = glyph;
-
-            charcode = FT_Get_Next_Char(face, charcode, &gindex);
-        }
-
-        if (faceId >= _glyphAtlases.size())
-            _glyphAtlases.resize(faceId + 1);
-
-        OkayTextureMeta meta;
-        meta.width = ATLAS_W;
-        meta.height = ATLAS_H;
-        meta.channels = 4;
-        meta.mipLevels = 1;
-        meta.format = OkayTextureMeta::Format::RGBA8;
-
-        auto store = TextureDataStore::mainStore();
-
-        auto handle =
-            store->addTexture(meta, (void*)_atlas.pixels().data(), _atlas.pixels().size());
-        _glyphAtlases[faceId] = Texture(store, handle);
-
-        _atlas.reset();  // clear the atlas for the next font face
-    }
+    void generateGlyphSetAndAtlasForFace(std::uint32_t faceId, int width, int height);
 };
 
 };  // namespace okay

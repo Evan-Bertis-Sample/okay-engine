@@ -1,10 +1,9 @@
 
 #include <okay/okay.hpp>
 
-#include <glm/glm.hpp>
 #include <glm/ext/vector_float3.hpp>
+#include <glm/glm.hpp>
 #include <glm/gtc/random.hpp>
-
 #include <utility>
 
 static void __gameInitialize();
@@ -21,17 +20,16 @@ int main() {
     surfaceConfig.height = 480;
     okay::Surface surface(surfaceConfig);
 
-    okay::RendererSettings rendererSettings{
-        .surfaceConfig = surfaceConfig,
+    okay::RendererSettings rendererSettings{.surfaceConfig = surfaceConfig,
         .pipeline = okay::RenderPipeline::create(std::make_unique<okay::ScenePass>())};
 
     auto renderer = okay::Renderer::create(std::move(rendererSettings));
 
     okay::Game::create()
         .addSystems(std::move(renderer),
-                    std::make_unique<okay::AssetManager>(),
-                    std::make_unique<okay::ECS>(),
-                    std::make_unique<okay::TweenEngine>())
+            std::make_unique<okay::AssetManager>(),
+            std::make_unique<okay::ECS>(),
+            std::make_unique<okay::TweenEngine>())
         .onInitialize(__gameInitialize)
         .onUpdate(__gameUpdate)
         .onShutdown(__gameShutdown)
@@ -52,8 +50,8 @@ static void __gameInitialize() {
 
     okay::TextureLoadSettings textureLoadSettings(okay::TextureDataStore::mainStore());
     okay::Texture texture =
-        assetManager
-            ->loadEngineAssetSync<okay::Texture>("textures/uv_test.jpg", textureLoadSettings)
+        assetManager->loadEngineAssetSync<okay::Texture>(
+                        "textures/uv_test.jpg", textureLoadSettings)
             .value()
             .asset;
 
@@ -61,8 +59,11 @@ static void __gameInitialize() {
         .width = 32,
     };
 
-    okay::FontManager::FontHandle font = assetManager->loadEngineAssetSync<okay::FontManager::FontHandle>(
-        "fonts/ARIAL.TTF", fontLoad).value().asset;
+    okay::FontManager::FontHandle font =
+        assetManager->loadEngineAssetSync<okay::FontManager::FontHandle>(
+                        "fonts/ARIAL.TTF", fontLoad)
+            .value()
+            .asset;
 
     okay::Mesh teapot = renderer->meshBuffer().addMesh(teapotRes.value().asset);
     okay::Mesh cube = renderer->meshBuffer().addMesh(okay::primitives::box().build());
@@ -112,8 +113,7 @@ static void __gameInitialize() {
             .addComponent<okay::MeshRendererComponent>(teapot, uvTestMaterial);
 
     s_light = ecs->createEntity()
-                  .addComponent<okay::TransformComponent>(
-                      glm::vec3{},
+                  .addComponent<okay::TransformComponent>(glm::vec3{},
                       glm::vec3{0.1f},
                       glm::angleAxis(glm::radians(45.0f), glm::vec3{0.0f, 1.0f, 0.0f}))
                   .addComponent<okay::LightComponent>(
@@ -128,7 +128,6 @@ static void __gameInitialize() {
     ecs->createEntity()
         .addComponent<okay::TransformComponent>(glm::vec3{0.0f, 0.5f, 0.0f}, glm::vec3{1.0f})
         .addComponent<okay::MeshRendererComponent>(textMesh, textMaterialHandle);
-
 }
 
 static void __gameUpdate() {
