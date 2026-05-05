@@ -182,13 +182,14 @@ Result<Mesh> MeshBuffer::updateMesh(Mesh mesh, const MeshData& newModel) {
             ptr += MeshVertex::numFloats();
         }
 
-        memcpy(&_indices[mesh.indexCount], newModel.indices.data(), newModel.indices().size());
+        memcpy(&_indices[mesh.indexCount], newModel.indices.data(), newModel.indices.size());
 
-        Mesh newMesh = {.vertexOffset = mesh.vertexOffset,
-            .vertexCount = newModel.vertices.size(),
-            .indexOffset = mesh.indexCount,
-            .indexCount = newModel.indices.size(),
-            .bounds = mBounds};
+        Mesh newMesh;
+        newMesh.vertexOffset = mesh.vertexOffset;
+        newMesh.vertexCount = newModel.vertices.size();
+        newMesh.indexOffset = mesh.indexCount;
+        newMesh.indexCount = newModel.indices.size();
+        newMesh.bounds = mBounds;
 
         return Result<Mesh>::ok(newMesh);
     }

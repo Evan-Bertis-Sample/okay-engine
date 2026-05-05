@@ -6,7 +6,6 @@
 #include <okay/core/util/result.hpp>
 
 #include <glm/glm.hpp>
-#include <okaycore/util/mesh.hpp>
 #include <vector>
 
 namespace okay {
