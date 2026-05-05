@@ -1,3 +1,5 @@
+#include "okay/core/ecs/components/render_component.hpp"
+#include "okay/core/ecs/components/transform_component.hpp"
 #include <okay/okay.hpp>
 
 #include <glm/glm.hpp>
@@ -23,7 +25,7 @@ int main() {
 
     okay::RendererSettings rendererSettings{.surfaceConfig = surfaceConfig,
         .pipeline = okay::RenderPipeline::create(std::make_unique<okay::ScenePass>()),
-        .enableIMGUI = true};
+        .enableIMGUI = false};
 
     auto renderer = okay::Renderer::create(std::move(rendererSettings));
 
@@ -42,7 +44,7 @@ int main() {
 
 static void __gameInitialize() {
     // Additional game initialization logic
-    okay::Texture texture = okay::load::engineTexture("textures/red.jpg");
+    okay::Texture texture = okay::load::engineTexture("textures/uv_test.jpg");
     okay::Mesh object = okay::mesh(okay::load::engineMeshData("models/teapot.obj"));
 
     okay::Mesh cube = okay::mesh(okay::primitives::box().build());
@@ -52,20 +54,6 @@ static void __gameInitialize() {
     materialProperties->color.set(glm::vec4(1.0f, 1.0f, 0.0f, 1.0f));
     materialProperties->albedo = texture;
     okay::MaterialHandle material = okay::materialHandle(shader, std::move(materialProperties));
-
-    okay::FontManager::FontHandle font = okay::load::engineFont("fonts/ARIAL.TTF");
-    okay::TextStyle style{.font = font,
-        .fontHeight = 1.0f,
-        .horizontalAlignment = okay::TextStyle::HorizontalAlignment::Center,
-        .verticalAlignment = okay::TextStyle::VerticalAlignment::Top};
-
-    okay::Mesh textMesh = okay::mesh(okay::textMesh("Hello, world!", style, true));
-
-    auto textProperties = std::make_unique<okay::LitMaterial>();
-    textProperties->albedo = okay::FontManager::instance().getGlyphAtlas(font);
-    textProperties->isTransparent = true;
-    textProperties->color = glm::vec3(1.0);
-    okay::MaterialHandle textMaterial = okay::materialHandle(shader, std::move(textProperties));
 
     okay::ecs::registerBuiltins();
 
@@ -81,18 +69,19 @@ static void __gameInitialize() {
                    .addComponent<okay::CameraComponent>(
                        okay::CameraComponent{okay::Camera::PerspectiveLens{45.0f, 0.1f, 100.0f}});
 
-    okay::ecs::entity()
-        .addComponent<okay::TransformComponent>(glm::vec3{0.0f, 2.0f, 0.0f})
-        .addComponent<okay::MeshRendererComponent>(textMesh, textMaterial);
 
-    for (std::size_t i = 0; i < 10; ++i) {
+    s_teapot = okay::ecs::entity()
+        .addComponent<okay::TransformComponent>(glm::vec3{}, glm::vec3{0.1f})
+        .addComponent<okay::MeshRendererComponent>(object, material);
+
+    for (std::size_t i = 0; i < 1000; ++i) {
         glm::vec3 pos = glm::ballRand(50.0f);
         okay::ECSEntity entity = okay::ecs::entity()
                                      .addComponent<okay::TransformComponent>(pos, glm::vec3{0.5f})
                                      .addComponent<okay::MeshRendererComponent>(cube, material);
 
         for (std::size_t i = 0; i < 5; ++i) {
-            pos = glm::ballRand(100.0f);
+            pos = glm::ballRand(10.0f);
             okay::ecs::entity(entity)
                 .addComponent<okay::TransformComponent>(pos, glm::vec3{0.5f})
                 .addComponent<okay::MeshRendererComponent>(cube, material);
@@ -102,18 +91,20 @@ static void __gameInitialize() {
     okay::ecs::entity().addComponent<okay::TransformComponent>().addComponent<okay::UIComponent>(
         []() {
             return ui::frame(10, 10, 200, 100)
-                // .backgroundColorSet(glm::vec4{0.0f, 0.0f, 0.0f, 0.1f})
-                // .borderColorSet(glm::vec4{1.0f, 1.0f, 1.0f, 1.0f})
-                // .borderRadiusSet(10)
-                // .borderWidthSet(1)
                 (
                     ui::flexbox()
-                        .leftMarginSet(10)
-                        .topMarginSet(10)
+                        .marginSet(10)
+                        .paddingSet(10)
+                        .rightPaddingSet(20)
+                        .backgroundColorSet(glm::vec4{0.05f, 0.0f, 0.05f, 0.5f})
+                        .borderColorSet(glm::vec4{1.0f, 1.0f, 1.0f, 0.8f})
+                        .borderRadiusSet(5)
+                        .borderWidthSet(1)
                     (
-                        ui::h2("Performance"),
-                        ui::h1(std::format("FPS: {:2f}", okay::Engine.time->fps())),
-                        ui::h1(std::format("Entity count: {}", okay::ecs::entityCount()))
+                        ui::h3("Performance"),
+                        ui::spacer(),
+                        ui::h2(std::format("FPS: {:2f}", okay::Engine.time->fps())),
+                        ui::h2(std::format("Entity count: {}", okay::ecs::entityCount()))
                     )
                 );
         });
@@ -121,24 +112,13 @@ static void __gameInitialize() {
 
 static void __gameUpdate() {
     // move the camera in a circle, always looking at the origin
-    float theta = okay::Engine.time->timeSinceStartSec() * 0.05f * glm::pi<float>();
+    float theta = okay::Engine.time->timeSinceStartSec() * 0.5f * glm::pi<float>();
     const float distance = 10.0f;
     glm::vec3 pos = glm::vec3(sin(theta) * distance, 1.0f, cos(theta) * distance);
     // rotation much look at origin
     auto& cameraTransform = s_camera.getComponent<okay::TransformComponent>().value();
     cameraTransform->position = pos;
     cameraTransform.lookAt(s_camera, glm::vec3{});
-
-    okay::ECSEntity toDelete;
-
-    if (toDelete.isValid()) {
-        okay::Engine.logger.info("FPS: {} | Destroying entity {}, now {} entities",
-            okay::Engine.time->fps(),
-            toDelete.id(),
-            okay::ecs::entityCount());
-        toDelete.destroy();
-    }
-    ImGui::ShowDemoWindow();
 }
 
 static void __gameShutdown() {

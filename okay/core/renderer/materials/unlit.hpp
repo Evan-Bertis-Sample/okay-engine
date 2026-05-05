@@ -20,6 +20,7 @@ struct SceneMaterialProperties {
     bool recievesShadows{false};
     bool castsShadows{false};
     bool useScreenspaceCoords{false};
+    bool doubleSided{false};
 
     auto uniformRefs() {
         return std::tie(
@@ -54,6 +55,8 @@ struct SceneMaterialProperties {
             flags.addFlag(MaterialFlags::CAST_SHADOWS);
         if (useScreenspaceCoords)
             flags.addFlag(MaterialFlags::SCREEN_SPACE);
+        if (doubleSided)
+            flags.addFlag(MaterialFlags::DOUBLE_SIDED);
         return flags;
     }
 };

@@ -93,6 +93,7 @@ struct LitMaterial : public SceneMaterialProperties, public OkayMaterialProperti
 
     MaterialFlagCollection flags() {
         MaterialFlagCollection flags = SceneMaterialProperties::flags();
+        flags.addFlag(MaterialFlags::RECEIVE_SHADOWS).addFlag(MaterialFlags::CAST_SHADOWS);
         return flags;
     }
 };

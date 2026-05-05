@@ -2,6 +2,8 @@
 #define __SCENE_PASS_H__
 
 #include "glm/ext/matrix_transform.hpp"
+#include "okay/core/engine/system.hpp"
+#include "okay/core/renderer/material.hpp"
 #include "okay/core/renderer/render_world.hpp"
 
 #include <okay/core/engine/engine.hpp>
@@ -12,7 +14,9 @@
 #include <okay/core/renderer/renderer.hpp>
 #include <okay/core/renderer/uniform.hpp>
 
+#include <chrono>
 #include <memory>
+#include <thread>
 
 namespace okay {
 
@@ -29,16 +33,16 @@ class ScenePass : public IRenderPass {
     virtual void resize(int newWidth, int newHeight) override {}
 
     virtual void render(const RendererContext& context) override {
-        GL_CHECK(glClearColor(0.113f, 0.008, 0.208, 1.0f));
-        GL_CHECK(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+        GL_CHECK(glDepthMask(GL_TRUE));
+        GL_CHECK(glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE));
         GL_CHECK(glEnable(GL_DEPTH_TEST));
-        GL_CHECK(glCullFace(GL_BACK));
-        GL_CHECK(glEnable(GL_CULL_FACE));
         GL_CHECK(glDisable(GL_BLEND));
-        GL_CHECK(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+
+        GL_CHECK(glClearColor(0.113f, 0.008f, 0.208f, 1.0f));
+        GL_CHECK(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+
         // doesn't need MSAA, but should if the platform can support it
         glEnable(GL_MULTISAMPLE);
-        // glFrontFace(GL_CW);
 
         _shaderIndex = Shader::invalidID();
         _materialIndex = Material::invalidID();
@@ -81,8 +85,10 @@ class ScenePass : public IRenderPass {
                 Engine.logger.error("Failed to pass uniforms : {}", f.error());
 
             // Engine.logger.info("Drawing item with transform {}", item.transform);
-
+            applyMaterialFlags(item);
             context.renderer.meshBuffer().drawMesh(item.mesh);
+
+            // Engine.logger.debug("Render layer {}", item.renderLayer);
         }
     }
 
@@ -148,11 +154,12 @@ class ScenePass : public IRenderPass {
         }
 
         if (flags.hasFlag(MaterialFlags::TRANSPARENT)) {
-            GL_CHECK(glEnable(GL_BLEND));
-            GL_CHECK(glDepthMask(GL_FALSE));
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glDepthMask(GL_FALSE);
         } else {
-            GL_CHECK(glDisable(GL_BLEND));
-            GL_CHECK(glDepthMask(GL_TRUE));
+            glDisable(GL_BLEND);
+            glDepthMask(GL_TRUE);
         }
 
         if (flags.hasFlag(MaterialFlags::SCREEN_SPACE)) {

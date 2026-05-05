@@ -193,6 +193,7 @@ RenderEntity RenderWorld::addRenderEntity(const Transform& transform,
     item.transform = transform;
     item.material = material;
     item.mesh = mesh;
+    item.renderLayer = 0;
 
     RenderEntity entity(this, handle);
 

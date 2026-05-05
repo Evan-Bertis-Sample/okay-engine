@@ -392,7 +392,7 @@ void UI::render(glm::vec2 screenPosition, SystemParameter<Renderer> renderer) {
         .screenSize = glm::ivec2(renderer->width(), renderer->height()),
     };
     _layout.layout(layoutContext);
-    renderNode(_root, *renderer);
+    renderNode(_root, *renderer, (0x1 << 7) + 1);
 }
 
 void UI::update(UIElement newRoot) {
@@ -428,7 +428,6 @@ void UI::renderNode(const UINode& node, Renderer& renderer, int layerBase) {
             // Replace the text mesh
             renderer.meshBuffer().removeMesh(renderInfo.textEntity->mesh);
             renderInfo.textEntity->mesh = getTextMesh(node, renderer);
-
         } else {
             createTextRenderEntity(node, renderer);
         }
