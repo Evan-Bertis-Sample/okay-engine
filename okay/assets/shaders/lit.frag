@@ -8,6 +8,8 @@ in vec3 v_worldNormal;
 in vec2 v_uv;
 in mat3 v_worldToTangent;
 
+
+
 out vec4 FragColor;
 
 /* Camera */
@@ -427,6 +429,27 @@ vec3 evaluateDisney(vec3 N, vec3 wi, vec3 wm, vec3 wo, vec3 baseColor) {
     return reflectance;
 }
 
+float ShadowCalculation(vec4 fragPosLightSpace)
+{
+    // perform perspective divide
+    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    // transform to [0,1] range
+    projCoords = projCoords * 0.5 + 0.5;
+    // get closest depth value from light's perspective (using [0,1] range fragPosLight as coords)
+    float closestDepth = texture(u_shadowMap, projCoords.xy).r; 
+    // get depth of current fragment from light's perspective
+    float currentDepth = projCoords.z;
+    // check whether current frag pos is in shadow
+    float shadow = currentDepth > closestDepth  ? 1.0 : 0.0;
+
+    return shadow;
+}  
+
+
+in vec3 v_FragPos;
+in vec3 v_Normal;
+in vec2 v_TexCoords;
+in vec4 v_FragPosLightSpace;
 
 void main() {
     vec3 N = safeNormalize(v_worldNormal); // normal vector
@@ -492,6 +515,20 @@ void main() {
         colorOut += evaluateDisney(nt, wi, wm, wo, baseColor) * Lrgb * intensity * att;
     }
 
+    float spec = 0.0;
+    vec3 lightColor = vec3(1.0);
+    vec3 lightDir = normalize(v_worldPos - v_FragPos);
+    vec3 normal = normalize(v_Normal);
+    float diff = max(dot(lightDir, normal), 0.0);
+    vec3 diffuse = diff * lightColor;
+    vec3 ambient = 0.15 * lightColor;
+    vec3 specular = spec * lightColor;
     FragColor = vec4(colorOut, texAlbedo.a);
+    float shadow = ShadowCalculation(v_FragPosLightSpace);
+    vec3 lighting = (ambient + (1.0 - shadow) * (diffuse + specular)) * colorOut;
+    // lighting = vec3(1);
+    FragColor = vec4(lighting, 1.0);
+    float d = texture(u_shadowMap, v_TexCoords).r;
+    FragColor = vec4(vec3(d), 1.0);
 
 }
