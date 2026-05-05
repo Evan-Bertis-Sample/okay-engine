@@ -426,8 +426,14 @@ void UI::renderNode(const UINode& node, Renderer& renderer, int layerBase) {
 
         if (renderInfo.textEntity.isValid()) {
             // Replace the text mesh
+            Mesh oldMesh = renderInfo.textEntity->mesh;
             renderer.meshBuffer().removeMesh(renderInfo.textEntity->mesh);
             renderInfo.textEntity->mesh = getTextMesh(node, renderer);
+            Engine.logger.debug("Switching mesh from ({}, {}), to mesh ({}, {})",
+                oldMesh.vertexOffset,
+                oldMesh.vertexCount,
+                renderInfo.textEntity->mesh.vertexOffset,
+                renderInfo.textEntity->mesh.vertexCount);
         } else {
             createTextRenderEntity(node, renderer);
         }

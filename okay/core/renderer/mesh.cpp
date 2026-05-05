@@ -116,6 +116,86 @@ void MeshBuffer::removeMesh(const Mesh& mesh) {
     // _dataOutofDate = true;
 }
 
+Mesh MeshBuffer::reserveMesh(std::size_t numVertices, std::size_t numIndices) {
+    BlockMeta* blockPtr{};
+    for (auto& block : _blocks) {
+        if (block.isFree && block.vertexCount >= numVertices && block.indexCount >= numIndices) {
+            block.isFree = false;
+            blockPtr = &block;
+            break;
+        }
+    }
+
+    if (blockPtr == nullptr) {
+        // reserve a new block
+        Mesh mesh;
+        mesh.vertexOffset = _bufferData.size() / MeshVertex::numFloats();
+        mesh.vertexCount = numVertices;
+        mesh.indexOffset = _indices.size();
+        mesh.indexCount = numIndices;
+
+        BlockMeta newBlock;
+        newBlock.isFree = false;
+        newBlock.vertexCount = mesh.vertexCount;
+        newBlock.vertexOffset = mesh.vertexOffset;
+        newBlock.indexCount = mesh.indexCount;
+        newBlock.indexOffset = mesh.indexOffset;
+
+        _blocks.push_back(newBlock);
+
+        _bufferData.resize(_bufferData.size() + numVertices * MeshVertex::numFloats());
+        _indices.resize(_indices.size() + numIndices);
+
+        return mesh;
+    }
+
+    blockPtr->isFree = false;
+    Mesh mesh;
+    mesh.vertexOffset = blockPtr->vertexOffset;
+    mesh.vertexCount = numVertices;
+    mesh.indexOffset = blockPtr->indexOffset;
+    mesh.indexCount = numIndices;
+    return mesh;
+}
+
+Result<Mesh> MeshBuffer::updateMesh(Mesh mesh, const MeshData& newModel) {
+    // get the block
+    for (BlockMeta& block : _blocks) {
+        if (block.vertexOffset != mesh.vertexOffset)
+            continue;
+
+        if (block.vertexCount < mesh.vertexCount || block.indexCount < mesh.indexCount) {
+            return Result<Mesh>::errorResult("Cannot fit new model into mesh block");
+        }
+
+        Bounds mBounds;
+        for (std::size_t i = 0; i < newModel.vertices.size(); i++) {
+            std::size_t bufPos = mesh.vertexOffset + i;
+            float* ptr = &_bufferData[bufPos];
+            MeshVertex v = newModel.vertices[i];
+
+            memcpy(ptr, &v.position, 3 * sizeof(float));
+            memcpy(ptr + 3, &v.normal, 3 * sizeof(float));
+            memcpy(ptr + 6, &v.color, 3 * sizeof(float));
+            memcpy(ptr + 9, &v.uv, 2 * sizeof(float));
+            mBounds.extend(v.position);
+            ptr += MeshVertex::numFloats();
+        }
+
+        memcpy(&_indices[mesh.indexCount], newModel.indices.data(), newModel.indices().size());
+
+        Mesh newMesh = {.vertexOffset = mesh.vertexOffset,
+            .vertexCount = newModel.vertices.size(),
+            .indexOffset = mesh.indexCount,
+            .indexCount = newModel.indices.size(),
+            .bounds = mBounds};
+
+        return Result<Mesh>::ok(newMesh);
+    }
+
+    return Result<Mesh>::errorResult("Unable to find block for mesh! Cannot update mesh data");
+}
+
 float* MeshBuffer::getMeshDataPtr(const Mesh& mesh) {
     std::size_t floatIndex{mesh.vertexOffset * MeshVertex::numFloats()};
 
@@ -124,7 +204,6 @@ float* MeshBuffer::getMeshDataPtr(const Mesh& mesh) {
 
         return nullptr;
     }
-
     return &_bufferData[floatIndex];
 }
 

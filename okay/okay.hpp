@@ -84,6 +84,7 @@
 #include <okay/core/ui/font.hpp>
 #include <okay/core/ui/render_resources.hpp>
 #include <okay/core/ui/text_layout.hpp>
+#include <okay/core/ui/text_mesh_buffer.hpp>
 #include <okay/core/ui/text_mesh_builder.hpp>
 #include <okay/core/ui/ui.hpp>
 

@@ -6,6 +6,7 @@
 #include <okay/core/util/result.hpp>
 
 #include <glm/glm.hpp>
+#include <okaycore/util/mesh.hpp>
 #include <vector>
 
 namespace okay {
@@ -121,8 +122,9 @@ class MeshBuffer {
     }
     Mesh addMesh(const MeshData& model);
     void removeMesh(const Mesh& mesh);
-    float* getMeshDataPtr(const Mesh& mesh);
+    Mesh reserveMesh(std::size_t numVertices, std::size_t numIndices);
 
+    Result<Mesh> updateMesh(Mesh mesh, const MeshData& newModel);
     Failable bindMeshData();
     void drawMesh(const Mesh& mesh);
 
@@ -185,6 +187,8 @@ class MeshBuffer {
         const MeshBuffer* _buffer;
         Mesh _model;
     };
+
+    float* getMeshDataPtr(const Mesh& mesh);
 };
 
 }  // namespace okay
