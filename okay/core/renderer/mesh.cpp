@@ -159,35 +159,39 @@ Mesh MeshBuffer::reserveMesh(std::size_t numVertices, std::size_t numIndices) {
 }
 
 Result<Mesh> MeshBuffer::updateMesh(Mesh mesh, const MeshData& newModel) {
-    // get the block
     for (BlockMeta& block : _blocks) {
         if (block.vertexOffset != mesh.vertexOffset)
             continue;
 
-        if (block.vertexCount < mesh.vertexCount || block.indexCount < mesh.indexCount) {
+        if (block.vertexCount < newModel.vertices.size() ||
+            block.indexCount < newModel.indices.size()) {
             return Result<Mesh>::errorResult("Cannot fit new model into mesh block");
         }
 
-        Bounds mBounds;
+        Bounds mBounds = Bounds::none();
+
         for (std::size_t i = 0; i < newModel.vertices.size(); i++) {
-            std::size_t bufPos = mesh.vertexOffset + i;
-            float* ptr = &_bufferData[bufPos];
-            MeshVertex v = newModel.vertices[i];
+            float* ptr = &_bufferData[(block.vertexOffset + i) * MeshVertex::numFloats()];
+            const MeshVertex& v = newModel.vertices[i];
 
             memcpy(ptr, &v.position, 3 * sizeof(float));
             memcpy(ptr + 3, &v.normal, 3 * sizeof(float));
             memcpy(ptr + 6, &v.color, 3 * sizeof(float));
             memcpy(ptr + 9, &v.uv, 2 * sizeof(float));
+
             mBounds.extend(v.position);
-            ptr += MeshVertex::numFloats();
         }
 
-        memcpy(&_indices[mesh.indexCount], newModel.indices.data(), newModel.indices.size());
+        for (std::size_t i = 0; i < newModel.indices.size(); i++) {
+            _indices[block.indexOffset + i] = newModel.indices[i] + block.vertexOffset;
+        }
+
+        _dataOutofDate = true;
 
         Mesh newMesh;
-        newMesh.vertexOffset = mesh.vertexOffset;
+        newMesh.vertexOffset = block.vertexOffset;
         newMesh.vertexCount = newModel.vertices.size();
-        newMesh.indexOffset = mesh.indexCount;
+        newMesh.indexOffset = block.indexOffset;
         newMesh.indexCount = newModel.indices.size();
         newMesh.bounds = mBounds;
 
