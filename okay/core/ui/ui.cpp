@@ -93,7 +93,9 @@ void UILayout::computeFixedSizes(UINode& node, LayoutRect parent) {
     }
 }
 
-UI::UI(UIElement root) {
+UI::UI() : _textMeshBuffer() {}
+
+UI::UI(UIElement root) : _textMeshBuffer() {
     _root = createNodeFromElement(root);
     _layout = UILayout(_root);
 }
@@ -428,7 +430,7 @@ void UI::renderNode(const UINode& node, Renderer& renderer, int layerBase) {
             // Replace the text mesh
             Mesh oldMesh = renderInfo.textEntity->mesh;
             renderer.meshBuffer().removeMesh(renderInfo.textEntity->mesh);
-            renderInfo.textEntity->mesh = getTextMesh(node, renderer);
+            renderInfo.textEntity->mesh = createTextMesh(node, renderer);
             Engine.logger.debug("Switching mesh from ({}, {}), to mesh ({}, {})",
                 oldMesh.vertexOffset,
                 oldMesh.vertexCount,
@@ -558,7 +560,7 @@ void UI::createTextRenderEntity(const UINode& node, Renderer& renderer) {
         // Engine.logger.debug("Creating render entity for UI element with text
         // element.text.value()); render text
         MaterialHandle handle = UIRenderResoruces::get().getTextMaterial(element).value();
-        Mesh textMesh = getTextMesh(node, renderer);
+        Mesh textMesh = createTextMesh(node, renderer);
 
         // Create the render entity, using a default position
         RenderEntity entity =
@@ -568,16 +570,23 @@ void UI::createTextRenderEntity(const UINode& node, Renderer& renderer) {
     }
 }
 
-Mesh UI::getTextMesh(const UINode& node, Renderer& renderer) {
+Mesh UI::createTextMesh(const UINode& node, Renderer& renderer) {
     const UIElement& element = node.element;
     if (element.text.isSome()) {
         TextStyle style = element.textStyle;
         if (!FontManager::instance().isLoadedFont(style.font)) {
             style.font = FontManager::instance().defaultFont();
         }
-        MeshData textMeshData =
-            TextMeshBuilder::build(element.text.value(), style, element.doubleSided);
-        return renderer.meshBuffer().addMesh(textMeshData);
+
+        NodeRenderInfo& renderInfo = getNodeRenderInfo(node);
+
+        if (!_textMeshBuffer.isValidHandle(renderInfo.textMeshHandle)) {
+            renderInfo.textMeshHandle = _textMeshBuffer.allocateHandle();
+        }
+
+        _textMeshBuffer.updateMesh(renderInfo.textMeshHandle, style, element.text.value());
+
+        return _textMeshBuffer.getMesh(renderInfo.textMeshHandle);
     }
 
     return Mesh::none();

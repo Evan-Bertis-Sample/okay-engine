@@ -8,6 +8,7 @@
 #include <okay/core/renderer/mesh.hpp>
 #include <okay/core/renderer/renderer.hpp>
 #include <okay/core/ui/element.hpp>
+#include <okay/core/ui/text_mesh_buffer.hpp>
 
 #include <array>
 #include <glm/glm.hpp>
@@ -100,7 +101,7 @@ class UILayout {
 
 class UI {
    public:
-    UI() = default;
+    UI();
     UI(UIElement root);
 
    public:
@@ -115,7 +116,9 @@ class UI {
         RenderEntity rectEntity;
         RenderEntity textEntity;
         std::size_t contentHash;
-        bool entityCreated = false;
+        bool entityCreated{false};
+        TextMeshBuffer::TextMeshHandle textMeshHandle{
+            TextMeshBuffer::TextMeshHandle::invalidHandle()};
     };
 
     UINode createNodeFromElement(const UIElement& element) {
@@ -140,10 +143,11 @@ class UI {
     void createRectRenderEntity(const UINode& node, Renderer& renderer);
     void createTextRenderEntity(const UINode& node, Renderer& renderer);
 
-    Mesh getTextMesh(const UINode& node, Renderer& renderer);
+    Mesh createTextMesh(const UINode& node, Renderer& renderer);
 
     UILayout _layout;
     std::unordered_map<UINode::ID, NodeRenderInfo> _nodeRenderInfo;
+    TextMeshBuffer _textMeshBuffer;
 };
 
 };  // namespace okay

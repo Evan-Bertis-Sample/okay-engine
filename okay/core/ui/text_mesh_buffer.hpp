@@ -15,11 +15,11 @@ class TextMeshBuffer {
    public:
     using TextMeshHandle = ObjectPoolHandle;
 
-    TextMeshBuffer(MeshBuffer& buffer) : _meshBuffer(buffer) {}
+    TextMeshBuffer(SystemParameter<Renderer> renderer = nullptr) : _renderer(renderer) {}
 
     TextMeshHandle allocateHandle(std::size_t maxFontLength = 25) {
-        Mesh mesh = _meshBuffer.reserveMesh(maxFontLength * 4,  // 4 vertices per quad
-            maxFontLength * 6                                   // 6 indices per quad
+        Mesh mesh = _renderer->meshBuffer().reserveMesh(maxFontLength * 4,  // 4 vertices per quad
+            maxFontLength * 6                                               // 6 indices per quad
         );
 
         TextMeshMeta meta = {.mesh = mesh, .maxQuads = maxFontLength};
@@ -32,7 +32,7 @@ class TextMeshBuffer {
             Engine.logger.warn("Tried to free an invalid handle with id {}", handle.index);
         }
         TextMeshMeta meta = _textMeshPool.get(handle);
-        _meshBuffer.removeMesh(meta.mesh);
+        _renderer->meshBuffer().removeMesh(meta.mesh);
         _textMeshPool.destroy(handle);
     }
 
@@ -58,7 +58,7 @@ class TextMeshBuffer {
         if (quadsUsed < meta.maxQuads) {
             // this is easy, we can simply reuse the mesh
             MeshData textMeshData = TextMeshBuilder::build(text, style, false);
-            Result<Mesh> updated = _meshBuffer.updateMesh(meta.mesh, textMeshData);
+            Result<Mesh> updated = _renderer->meshBuffer().updateMesh(meta.mesh, textMeshData);
 
             if (updated.isError()) {
                 Engine.logger.error("Failed to update text mesh! Error: {}", updated.error());
@@ -70,19 +70,19 @@ class TextMeshBuffer {
         }
 
         // we need to reallocate the mesh
-        _meshBuffer.removeMesh(meta.mesh);
+        _renderer->meshBuffer().removeMesh(meta.mesh);
 
         const std::size_t newQuadSize = std::max(meta.maxQuads * 2, quadsUsed);
 
-        Mesh mesh = _meshBuffer.reserveMesh(newQuadSize * 4,  // 4 vertices per quad
-            newQuadSize * 6                                   // 6 indices per quad
+        Mesh mesh = _renderer->meshBuffer().reserveMesh(newQuadSize * 4,  // 4 vertices per quad
+            newQuadSize * 6                                               // 6 indices per quad
         );
         meta.mesh = mesh;
         meta.maxQuads = newQuadSize;
 
         MeshData textMeshData = TextMeshBuilder::build(text, style, false);
 
-        Result<Mesh> updated = _meshBuffer.updateMesh(meta.mesh, textMeshData);
+        Result<Mesh> updated = _renderer->meshBuffer().updateMesh(meta.mesh, textMeshData);
         if (updated.isError()) {
             Engine.logger.error("Failed to update text mesh! Error: {}", updated.error());
             return;
@@ -91,6 +91,10 @@ class TextMeshBuffer {
         meta.mesh = updated.value();
     };
 
+    bool isValidHandle(TextMeshHandle handle) const {
+        return _textMeshPool.valid(handle);
+    }
+
    private:
     struct TextMeshMeta {
         Mesh mesh{Mesh::none()};
@@ -98,7 +102,7 @@ class TextMeshBuffer {
     };
 
     ObjectPool<TextMeshMeta> _textMeshPool;
-    MeshBuffer& _meshBuffer;
+    SystemParameter<Renderer> _renderer;
 };
 
 };  // namespace okay
