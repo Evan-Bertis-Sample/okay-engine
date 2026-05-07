@@ -235,6 +235,17 @@ class ScenePass : public IRenderPass {
             //  glBindFramebuffer(_depthMapFBO, lit->shadowMap.get().getGLTextureID());
             //  lit->shadowMap.set()
 
+            
+            // GPUState::instance().textures.bindSampler2D(
+                //     item.material->programID(),
+                //     loc,
+                //     _depthMap,
+                //     Text
+                // );
+                
+            GLuint loc = item.material->getShader().findUniformLocation("u_shadowMap");
+            glActiveTexture(GL_TEXTURE0 + _depthMap);
+            glUniform1i((GLint)loc, (GLint)_depthMap);
         }
     }
 

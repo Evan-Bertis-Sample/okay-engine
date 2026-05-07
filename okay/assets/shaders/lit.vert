@@ -48,9 +48,9 @@ void main() {
     v_worldToTangent = transpose(TBN);
     gl_Position = u_projectionMatrix * u_viewMatrix * worldPos4;
 
-    v_FragPos = vec3(u_modelMatrix * vec4(a_pos, 1.0));
-    v_Normal = transpose(inverse(mat3(u_modelMatrix))) * a_normal;
-    v_TexCoords = aTexCoords;
-    v_FragPosLightSpace = u_projectionMatrix * vec4(v_FragPos, 1.0);
+    // v_FragPos = vec3(u_modelMatrix * vec4(a_pos, 1.0));
+    // v_Normal = transpose(inverse(mat3(u_modelMatrix))) * a_normal;
+    // v_TexCoords = aTexCoords;
+    // v_FragPosLightSpace = u_projectionMatrix * vec4(v_FragPos, 1.0);
     
 }

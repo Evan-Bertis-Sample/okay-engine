@@ -146,6 +146,10 @@ class Material {
 
     std::unique_ptr<IMaterialPropertyCollection>& properties() { return _uniforms; }
 
+    Shader &getShader() {
+        return *_shader.get();
+    }
+
    private:
     ShaderHandle _shader;
     std::size_t _id{invalidID()};
