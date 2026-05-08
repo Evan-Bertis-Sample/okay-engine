@@ -21,6 +21,7 @@ out vec3 v_position;
 out vec2 v_uv;
 out vec3 v_cameraPosition;
 out vec3 v_cameraDirection;
+out vec2 v_clipSpaceUV;
 
 void main() {
     mat4 mvp = u_projectionMatrix * u_viewMatrix * u_modelMatrix;
@@ -33,4 +34,5 @@ void main() {
     v_uv = a_uv;
     v_cameraPosition = u_cameraPosition;
     v_cameraDirection = u_cameraDirection;
+    v_clipSpaceUV = vec2(a_color.x, a_color.y);
 }

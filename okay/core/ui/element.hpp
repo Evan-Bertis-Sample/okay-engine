@@ -167,7 +167,11 @@ struct UIElement {
     OKAY_UI_ELEMENT_PROPERTY(bool, doubleSided, false);
     OKAY_UI_ELEMENT_PROPERTY(MaterialHandle, backgroundMaterialOverride, MaterialHandle::none());
     OKAY_UI_ELEMENT_PROPERTY(MaterialHandle, textMaterialOverride, MaterialHandle::none());
+
+    // WARN: This doesn't work yet!
     OKAY_UI_ELEMENT_PROPERTY(UIClippingMode, clippingMode, UIClippingMode::Clip_Overflow)
+
+    OKAY_UI_ELEMENT_PROPERTY(Option<Texture>, clipMask);
 
     std::vector<UIElement> children;
 

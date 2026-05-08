@@ -50,15 +50,10 @@ class UIRenderResoruces {
 
         // create a material
         auto materialProperties = std::make_unique<RectMaterial>();
-        Engine.logger.debug(
-            "Setting background color to ({}, {}, {}, {}) for UI element with background image",
-            element.backgroundColor.r,
-            element.backgroundColor.g,
-            element.backgroundColor.b,
-            element.backgroundColor.a);
         materialProperties->color = element.backgroundColor;
         materialProperties->albedo = getElementTexture(element);
         materialProperties->borderColor = element.borderColor;
+        materialProperties->clipMask = getElementClipMask(element);
 
         // flags
         materialProperties->isTransparent = true;
@@ -102,6 +97,7 @@ class UIRenderResoruces {
         materialProperties->castsShadows = false;
         materialProperties->recievesShadows = false;
         materialProperties->pxRange = static_cast<float>(FontManager::SDF_SPREAD_PX);
+        materialProperties->clipMask = getElementClipMask(element);
 
         Renderer* renderer = Engine.systems.getSystemChecked<Renderer>();
         MaterialHandle handle = renderer->materialRegistry().registerMaterial(
@@ -122,10 +118,11 @@ class UIRenderResoruces {
         FontManager::FontHandle font;
         glm::vec3 color;
         int atlasTextureWidth;
+        Texture clipMask;
 
         bool operator==(const TextMaterialKey& other) const {
             return font == other.font && color == other.color &&
-                   atlasTextureWidth == other.atlasTextureWidth;
+                   atlasTextureWidth == other.atlasTextureWidth && clipMask == other.clipMask;
         }
 
         bool operator!=(const TextMaterialKey& other) const {
@@ -136,12 +133,13 @@ class UIRenderResoruces {
             return font < other.font ||
                    (font == other.font && glm::length(color) < glm::length(other.color)) ||
                    (font == other.font && color == other.color &&
-                       atlasTextureWidth < other.atlasTextureWidth);
+                       atlasTextureWidth < other.atlasTextureWidth && clipMask < other.clipMask);
         }
     };
 
     struct RectMaterialKey {
         Texture texture;
+        Texture clipMask;
         glm::vec4 color;
         glm::vec2 borderRadius;
         glm::vec2 borderWidth;
@@ -149,7 +147,8 @@ class UIRenderResoruces {
 
         bool operator==(const RectMaterialKey& o) const {
             return texture == o.texture && color == o.color && borderRadius == o.borderRadius &&
-                   borderWidth == o.borderWidth && borderColor == o.borderColor;
+                   borderWidth == o.borderWidth && borderColor == o.borderColor &&
+                   clipMask == o.clipMask;
         }
 
         bool operator!=(const RectMaterialKey& o) const {
@@ -269,6 +268,13 @@ class UIRenderResoruces {
         }
 
         // Engine.logger.debug("Using white texture for UI element with no background image");
+        return _whiteTexture;
+    }
+
+    Texture getElementClipMask(const UIElement& element) const {
+        if (element.clipMask.isSome()) {
+            return element.clipMask.value();
+        }
         return _whiteTexture;
     }
 };

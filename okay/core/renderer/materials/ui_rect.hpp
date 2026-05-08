@@ -10,6 +10,7 @@ namespace okay {
 struct UIRectProperties : public SceneMaterialProperties {
     UniformProperty<glm::vec4, FixedString("u_color")> color{glm::vec4(1.0f)};
     TextureProperty<FixedString("u_albedo")> albedo;
+    TextureProperty<FixedString("u_clipMask")> clipMask;
 
     UniformProperty<glm::vec2, FixedString("u_borderRadius")> borderRadius{glm::vec2(0.0f)};
     UniformProperty<glm::vec2, FixedString("u_borderWidth")> borderWidth{glm::vec2(0.0f)};
@@ -37,11 +38,11 @@ struct UIRectProperties : public SceneMaterialProperties {
     }
 
     auto textureRefs() {
-        return std::tie(albedo);
+        return std::tie(albedo, clipMask);
     }
 
     auto textureRefs() const {
-        return std::tie(albedo);
+        return std::tie(albedo, clipMask);
     };
 };
 

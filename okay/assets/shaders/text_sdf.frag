@@ -2,10 +2,12 @@
 precision highp float;
 
 in vec2 v_uv;
+in vec2 v_clipSpaceUV;
 
 layout(location = 0) out vec4 FragColor;
 
 uniform sampler2D u_albedo;
+uniform sampler2D u_clipMask;
 uniform vec4 u_color;
 
 void main() {
@@ -16,10 +18,11 @@ void main() {
     float screenPxRange = max(0.5 * dot(unitRange, 1.0 / fwidth(v_uv)), 1.0);
 
     float alpha = clamp((sd - 0.5) * screenPxRange + 0.5, 0.0, 1.0);
+    alpha *= u_color.a;
 
     if (alpha < 0.01) {
         discard;
     }
 
-    FragColor = vec4(u_color.rgb, alpha * u_color.a);
+    FragColor = vec4(u_color.rgb, alpha);
 }

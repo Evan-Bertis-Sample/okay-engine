@@ -37,12 +37,15 @@ TextMeshBuilder::TextQuad TextMeshBuilder::generateQuadForGlyph(
     const float glyphBottom = glyphTop - glyphHeight;
 
     const glm::vec3 normal{0.0f, 0.0f, 1.0f};
-    const glm::vec3 color{1.0f, 1.0f, 1.0f};
 
-    quad.vertices[0] = {{glyphLeft, glyphTop, 0.0f}, normal, color, {glyph.u0, glyph.v0}};
-    quad.vertices[1] = {{glyphRight, glyphTop, 0.0f}, normal, color, {glyph.u1, glyph.v0}};
-    quad.vertices[2] = {{glyphRight, glyphBottom, 0.0f}, normal, color, {glyph.u1, glyph.v1}};
-    quad.vertices[3] = {{glyphLeft, glyphBottom, 0.0f}, normal, color, {glyph.u0, glyph.v1}};
+    quad.vertices[0] = {
+        {glyphLeft, glyphTop, 0.0f}, normal, {0.0f, 1.0f, 1.0f}, {glyph.u0, glyph.v0}};
+    quad.vertices[1] = {
+        {glyphRight, glyphTop, 0.0f}, normal, {1.0f, 1.0f, 1.0f}, {glyph.u1, glyph.v0}};
+    quad.vertices[2] = {
+        {glyphRight, glyphBottom, 0.0f}, normal, {1.0f, 0.0f, 1.0f}, {glyph.u1, glyph.v1}};
+    quad.vertices[3] = {
+        {glyphLeft, glyphBottom, 0.0f}, normal, {0.0f, 0.0f, 0.0f}, {glyph.u0, glyph.v1}};
 
     return quad;
 }

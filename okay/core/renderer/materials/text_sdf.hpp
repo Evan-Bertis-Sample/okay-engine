@@ -10,6 +10,7 @@ namespace okay {
 struct TextSDFProperties : public SceneMaterialProperties {
     UniformProperty<glm::vec4, FixedString("u_color")> color{glm::vec4(1.0f)};
     TextureProperty<FixedString("u_albedo")> albedo;
+    TextureProperty<FixedString("u_clipMask")> clipMask;
     UniformProperty<float, FixedString("u_pxRange")> pxRange{32.0};
     UniformProperty<glm::vec2, FixedString("u_clipSpaceTL")> clipSpaceTL{glm::vec2(-1.0f, 1.0f)};
     UniformProperty<glm::vec2, FixedString("u_clipSpaceBR")> clipSpaceBR{glm::vec2(1.0f, -1.0f)};
@@ -33,11 +34,11 @@ struct TextSDFProperties : public SceneMaterialProperties {
     }
 
     auto textureRefs() {
-        return std::tie(albedo);
+        return std::tie(albedo, clipMask);
     }
 
     auto textureRefs() const {
-        return std::tie(albedo);
+        return std::tie(albedo, clipMask);
     };
 };
 

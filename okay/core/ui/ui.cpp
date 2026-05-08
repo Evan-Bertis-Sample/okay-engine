@@ -475,21 +475,25 @@ void UI::renderNode(const UINode& node, Renderer& renderer, int layerBase) {
         // update the material properties
         const glm::vec2 pxToUV = glm::vec2(1.0f / rect.pxSize.x, 1.0f / rect.pxSize.y);
 
-        if (UIRenderResoruces::RectMaterial* props = dynamic_cast<UIRenderResoruces::RectMaterial*>(
-                renderInfo.rectEntity->material->properties().get())) {
-            props->borderRadius = pxToUV * static_cast<float>(node.element.borderRadius.pixels);
-            props->borderWidth = pxToUV * static_cast<float>(node.element.borderWidth.pixels);
-            props->borderColor = node.element.borderColor;
+        // TODO: Figure out a way to pass clipping bounds not based on material
+        // UIElements share a material when possible, therefore this doesn't work
 
-            if (element.clippingMode == UIClippingMode::Clip_Overflow) {
-                props->clipSpaceTL = parentRect.topLeft();
-                props->clipSpaceBR = parentRect.bottomRight();
+        // if (UIRenderResoruces::RectMaterial* props =
+        // dynamic_cast<UIRenderResoruces::RectMaterial*>(
+        //         renderInfo.rectEntity->material->properties().get())) {
+        //     props->borderRadius = pxToUV * static_cast<float>(node.element.borderRadius.pixels);
+        //     props->borderWidth = pxToUV * static_cast<float>(node.element.borderWidth.pixels);
+        //     props->borderColor = node.element.borderColor;
 
-            } else {
-                props->clipSpaceBR = glm::vec2(1.0f, -1.0f);
-                props->clipSpaceTL = glm::vec2(-1.0f, 1.0f);
-            }
-        }
+        //     if (element.clippingMode == UIClippingMode::Clip_Overflow) {
+        //         props->clipSpaceTL = parentRect.topLeft();
+        //         props->clipSpaceBR = parentRect.bottomRight();
+
+        //     } else {
+        //         props->clipSpaceBR = glm::vec2(1.0f, -1.0f);
+        //         props->clipSpaceTL = glm::vec2(-1.0f, 1.0f);
+        //     }
+        // }
     }
 
     if (renderInfo.textEntity.isValid()) {
@@ -533,17 +537,21 @@ void UI::renderNode(const UINode& node, Renderer& renderer, int layerBase) {
         props.transform.scale = glm::vec3(pxToNdcScale.x, pxToNdcScale.y, 1.0f);
         props.renderLayer = layerBase + 1;
 
-        if (UIRenderResoruces::TextMaterial* props = dynamic_cast<UIRenderResoruces::TextMaterial*>(
-                renderInfo.textEntity->material->properties().get())) {
-            if (element.clippingMode == UIClippingMode::Clip_Overflow) {
-                props->clipSpaceTL = parentRect.topLeft();
-                props->clipSpaceBR = parentRect.bottomRight();
+        // TODO: Figure out a way to pass clipping bounds not based on material
+        // UIElements share a material when possible, therefore this doesn't work
 
-            } else {
-                props->clipSpaceBR = glm::vec2(1.0f, -1.0f);
-                props->clipSpaceTL = glm::vec2(-1.0f, 1.0f);
-            }
-        }
+        // if (UIRenderResoruces::TextMaterial* props =
+        // dynamic_cast<UIRenderResoruces::TextMaterial*>(
+        //         renderInfo.textEntity->material->properties().get())) {
+        //     if (element.clippingMode == UIClippingMode::Clip_Overflow) {
+        //         props->clipSpaceTL = parentRect.topLeft();
+        //         props->clipSpaceBR = parentRect.bottomRight();
+
+        //     } else {
+        //         props->clipSpaceBR = glm::vec2(1.0f, -1.0f);
+        //         props->clipSpaceTL = glm::vec2(-1.0f, 1.0f);
+        //     }
+        // }
     }
 
     for (const UINode& child : node.children) {
