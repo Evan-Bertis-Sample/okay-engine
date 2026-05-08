@@ -72,16 +72,16 @@ static void __gameInitialize() {
                    .addComponent<okay::MeshRendererComponent>(object, material);
 
     for (std::size_t i = 0; i < 1000; ++i) {
-        glm::vec3 pos = glm::ballRand(25.0f);
+        glm::vec3 pos = glm::ballRand(50.0f);
         okay::ECSEntity entity = okay::ecs::entity()
-                                     .addComponent<okay::TransformComponent>(pos, glm::vec3{0.025f})
-                                     .addComponent<okay::MeshRendererComponent>(object, material);
+                                     .addComponent<okay::TransformComponent>(pos, glm::vec3{0.5f})
+                                     .addComponent<okay::MeshRendererComponent>(cube, material);
 
         for (std::size_t i = 0; i < 5; ++i) {
             pos = glm::ballRand(10.0f);
             okay::ecs::entity(entity)
                 .addComponent<okay::TransformComponent>(pos, glm::vec3{0.5f})
-                .addComponent<okay::MeshRendererComponent>(object, material);
+                .addComponent<okay::MeshRendererComponent>(cube, material);
         }
     }
 
