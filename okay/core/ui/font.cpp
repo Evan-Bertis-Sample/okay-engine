@@ -154,4 +154,59 @@ FontManager::FontHandle FontManager::defaultFont() {
     return _defaultFont.value();
 }
 
+bool FontAtlas::addGlyph(const FT_Bitmap& bm, int& outX, int& outY) {
+    const int gw = (int)bm.width;
+    const int gh = (int)bm.rows;
+    if (gw == 0 || gh == 0) {
+        outX = 0;
+        outY = 0;
+        return true;
+    }
+
+    const int bw = gw + PAD * 2;
+    const int bh = gh + PAD * 2;
+    if (_penX + bw > _width) {
+        _penX = PAD;
+        _penY += _rowH;
+        _rowH = 0;
+    }
+
+    if (_penY + bh > _height)
+        return false;
+
+    outX = _penX + PAD;
+    outY = _penY + PAD;
+    blit(bm, outX, outY);
+    _penX += bw;
+    if (bh > _rowH)
+        _rowH = bh;
+
+    return true;
+}
+
+void FontAtlas::reset() {
+    _penX = PAD;
+    _penY = PAD;
+    _rowH = 0;
+    std::fill(_pixels.begin(), _pixels.end(), 0);
+}
+
+void FontAtlas::blit(const FT_Bitmap& bm, int dstX, int dstY) {
+    for (int row = 0; row < (int)bm.rows; ++row) {
+        const std::uint8_t* src = (const std::uint8_t*)(bm.buffer + row * bm.pitch);
+
+        for (int col = 0; col < (int)bm.width; ++col) {
+            int x = dstX + col;
+            int y = dstY + row;
+
+            size_t idx = ((size_t)y * _width + x) * 4;
+
+            _pixels[idx + 0] = 255;
+            _pixels[idx + 1] = 255;
+            _pixels[idx + 2] = 255;
+            _pixels[idx + 3] = src[col];
+        }
+    }
+}
+
 };  // namespace okay

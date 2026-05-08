@@ -56,12 +56,7 @@ class UILayout {
 
     void layout(const Context& context);
 
-    Option<LayoutRect> getLayout(UINode::ID nodeID) const {
-        if (!_layoutMap.contains(nodeID)) {
-            return Option<LayoutRect>::none();
-        }
-        return _layoutMap.at(nodeID);
-    }
+    Option<LayoutRect> getLayout(UINode::ID nodeID) const;
     Option<LayoutRect> getLayout(const UINode& node) const {
         return getLayout(node.id);
     };
@@ -76,26 +71,12 @@ class UILayout {
     void computeFitSizes(UINode& node, LayoutRect frame);
     void computePositions(UINode& node, LayoutRect frame);
 
-    LayoutRect& getOrMakeRect(const UINode& node) {
-        if (!_layoutMap.contains(node.id)) {
-            _layoutMap[node.id] = LayoutRect{};
-        }
-        return _layoutMap[node.id];
-    }
-
+    LayoutRect& getOrMakeRect(const UINode& node);
     LayoutRect getRect(const UINode& node) const {
         return _layoutMap.at(node.id);
     }
 
-    int computeSize(ElementRealSize size, int parentSize) const {
-        if (std::holds_alternative<size::Percent>(size)) {
-            float percent = std::get<size::Percent>(size).percent;
-            return static_cast<int>(percent * (float)parentSize);
-        } else if (std::holds_alternative<size::Fixed>(size)) {
-            return std::get<size::Fixed>(size).pixels;
-        }
-        return 0;
-    }
+    int computeSize(ElementRealSize size, int parentSize) const;
 
     int marginMainStart(const UIElement& element, UIAxis axis) const;
     int marginMainEnd(const UIElement& element, UIAxis axis) const;
@@ -146,12 +127,7 @@ class UI {
         return getNodeRenderInfo(node.id);
     }
 
-    NodeRenderInfo& getNodeRenderInfo(UINode::ID nodeID) {
-        if (!_nodeRenderInfo.contains(nodeID)) {
-            _nodeRenderInfo[nodeID] = NodeRenderInfo{};
-        }
-        return _nodeRenderInfo[nodeID];
-    }
+    NodeRenderInfo& getNodeRenderInfo(UINode::ID nodeID);
 
     void renderNode(const UINode& node, Renderer& renderer, int depth = 0);
     void createNodeRenderEnties(const UINode& node, Renderer& renderer);

@@ -170,7 +170,7 @@ struct UIElement {
 
     // WARN: This doesn't work yet!
     OKAY_UI_ELEMENT_PROPERTY(UIClippingMode, clippingMode, UIClippingMode::Clip_Overflow)
-
+    // WARN: This doesn't work yet!
     OKAY_UI_ELEMENT_PROPERTY(Option<Texture>, clipMask);
 
     std::vector<UIElement> children;

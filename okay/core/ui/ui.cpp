@@ -475,25 +475,24 @@ void UI::renderNode(const UINode& node, Renderer& renderer, int layerBase) {
         // update the material properties
         const glm::vec2 pxToUV = glm::vec2(1.0f / rect.pxSize.x, 1.0f / rect.pxSize.y);
 
-        // TODO: Figure out a way to pass clipping bounds not based on material
-        // UIElements share a material when possible, therefore this doesn't work
+        if (UIRenderResoruces::RectMaterial* props = dynamic_cast<UIRenderResoruces::RectMaterial*>(
+                renderInfo.rectEntity->material->properties().get())) {
+            props->borderRadius = pxToUV * static_cast<float>(node.element.borderRadius.pixels);
+            props->borderWidth = pxToUV * static_cast<float>(node.element.borderWidth.pixels);
+            props->borderColor = node.element.borderColor;
 
-        // if (UIRenderResoruces::RectMaterial* props =
-        // dynamic_cast<UIRenderResoruces::RectMaterial*>(
-        //         renderInfo.rectEntity->material->properties().get())) {
-        //     props->borderRadius = pxToUV * static_cast<float>(node.element.borderRadius.pixels);
-        //     props->borderWidth = pxToUV * static_cast<float>(node.element.borderWidth.pixels);
-        //     props->borderColor = node.element.borderColor;
+            // TODO: Figure out a way to pass clipping bounds not based on material
+            // UIElements share a material when possible, therefore this doesn't work
 
-        //     if (element.clippingMode == UIClippingMode::Clip_Overflow) {
-        //         props->clipSpaceTL = parentRect.topLeft();
-        //         props->clipSpaceBR = parentRect.bottomRight();
+            // if (element.clippingMode == UIClippingMode::Clip_Overflow) {
+            //     props->clipSpaceTL = parentRect.topLeft();
+            //     props->clipSpaceBR = parentRect.bottomRight();
 
-        //     } else {
-        //         props->clipSpaceBR = glm::vec2(1.0f, -1.0f);
-        //         props->clipSpaceTL = glm::vec2(-1.0f, 1.0f);
-        //     }
-        // }
+            // } else {
+            //     props->clipSpaceBR = glm::vec2(1.0f, -1.0f);
+            //     props->clipSpaceTL = glm::vec2(-1.0f, 1.0f);
+            // }
+        }
     }
 
     if (renderInfo.textEntity.isValid()) {
@@ -621,4 +620,31 @@ Mesh UI::getTextMesh(const UINode& node, Renderer& renderer) {
     return Mesh::none();
 }
 
+LayoutRect& UILayout::getOrMakeRect(const UINode& node) {
+    if (!_layoutMap.contains(node.id)) {
+        _layoutMap[node.id] = LayoutRect{};
+    }
+    return _layoutMap[node.id];
+}
+int UILayout::computeSize(ElementRealSize size, int parentSize) const {
+    if (std::holds_alternative<size::Percent>(size)) {
+        float percent = std::get<size::Percent>(size).percent;
+        return static_cast<int>(percent * (float)parentSize);
+    } else if (std::holds_alternative<size::Fixed>(size)) {
+        return std::get<size::Fixed>(size).pixels;
+    }
+    return 0;
+}
+UI::NodeRenderInfo& UI::getNodeRenderInfo(UINode::ID nodeID) {
+    if (!_nodeRenderInfo.contains(nodeID)) {
+        _nodeRenderInfo[nodeID] = NodeRenderInfo{};
+    }
+    return _nodeRenderInfo[nodeID];
+}
+Option<LayoutRect> UILayout::getLayout(UINode::ID nodeID) const {
+    if (!_layoutMap.contains(nodeID)) {
+        return Option<LayoutRect>::none();
+    }
+    return _layoutMap.at(nodeID);
+}
 }  // namespace okay
