@@ -90,7 +90,7 @@ static void __gameInitialize() {
                         .borderRadiusSet(30)
                         .borderWidthSet(10)
                         .marginSet(10),
-                    okay::ui::growbox(okay::UIPrimaryAxis::Horizontal)(
+                    okay::ui::growbox(okay::UIAxis::Horizontal)(
                         okay::ui::h2("Left")
                             .backgroundColorSet(glm::vec4(0.0f, 1.0f, 0.0f, 1.0f))
                             .alignTextCenter()
@@ -98,11 +98,11 @@ static void __gameInitialize() {
                             .marginSet(10)
                             .widthGrow()
                             .paddingSet(20),
-                        okay::ui::growbox(okay::UIPrimaryAxis::Vertical)
+                        okay::ui::growbox(okay::UIAxis::Vertical)
                             .backgroundColorSet(glm::vec4(0.0f, 1.0f, 1.0f, 0.25f))
                             .borderColorSet(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f))
                             .borderRadiusSet(30)
-                            .borderWidthSet(10)(okay::ui::growbox(okay::UIPrimaryAxis::Vertical)
+                            .borderWidthSet(10)(okay::ui::growbox(okay::UIAxis::Vertical)
                                     .childSpacingSet(5)(
                                         okay::ui::h3("top").topMarginSet(15).leftMarginSet(15),
                                         okay::ui::range(3,

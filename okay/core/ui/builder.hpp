@@ -120,7 +120,7 @@ inline UIElement image(const Texture& texture, UIStyleParam style = nullptr) {
         style->image);
 }
 
-inline UIElement slot(UIPrimaryAxis axis = UIPrimaryAxis::Parent) {
+inline UIElement slot(UIAxis axis = UIAxis::Parent) {
     return UIElement{.axis = axis};
 }
 
@@ -136,20 +136,20 @@ inline UIElementGenerator range(std::int32_t start,
     return UIElementGenerator{start, end, increment, generator};
 }
 
-inline UIElement growbox(UIPrimaryAxis axis = UIPrimaryAxis::Parent) {
+inline UIElement growbox(UIAxis axis = UIAxis::Parent) {
     return UIElement{.width = size::Grow{}, .height = size::Grow{}, .axis = axis};
 }
 
 inline UIElement row() {
-    return UIElement{.axis = UIPrimaryAxis::Horizontal};
+    return UIElement{.axis = UIAxis::Horizontal};
 }
 
 inline UIElement column() {
-    return UIElement{.axis = UIPrimaryAxis::Vertical};
+    return UIElement{.axis = UIAxis::Vertical};
 }
 
 inline UIElement stack() {
-    return UIElement{.axis = UIPrimaryAxis::Parent};
+    return UIElement{.axis = UIAxis::Parent};
 }
 
 inline UIElement spacer() {

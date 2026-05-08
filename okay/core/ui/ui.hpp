@@ -21,7 +21,7 @@ struct UINode {
    public:
     using ID = std::uint32_t;
     ID id;
-
+    ID parentID;
     UIElement element;
     std::vector<UINode> children;
 };
@@ -29,8 +29,16 @@ struct UINode {
 struct LayoutRect {
     glm::ivec2 pxPosition{0, 0};
     glm::ivec2 pxSize{0, 0};
-    UIPrimaryAxis axis{UIPrimaryAxis::Parent};
+    UIAxis axis{UIAxis::Parent};
     bool resolvedSize{false};
+
+    glm::vec2 bottomRight() const {
+        return glm::vec2(pxPosition.x + pxSize.x, pxPosition.y + pxSize.y);
+    }
+
+    glm::vec2 topLeft() const {
+        return pxPosition;
+    }
 };
 
 class UILayout {
@@ -48,11 +56,14 @@ class UILayout {
 
     void layout(const Context& context);
 
-    Option<LayoutRect> getLayout(const UINode& node) const {
-        if (!_layoutMap.contains(node.id)) {
+    Option<LayoutRect> getLayout(UINode::ID nodeID) const {
+        if (!_layoutMap.contains(nodeID)) {
             return Option<LayoutRect>::none();
         }
-        return _layoutMap.at(node.id);
+        return _layoutMap.at(nodeID);
+    }
+    Option<LayoutRect> getLayout(const UINode& node) const {
+        return getLayout(node.id);
     };
 
     void toString(std::stringstream& ss) const;
@@ -86,15 +97,15 @@ class UILayout {
         return 0;
     }
 
-    int marginMainStart(const UIElement& element, UIPrimaryAxis axis) const;
-    int marginMainEnd(const UIElement& element, UIPrimaryAxis axis) const;
-    int marginCrossStart(const UIElement& element, UIPrimaryAxis axis) const;
-    int marginCrossEnd(const UIElement& element, UIPrimaryAxis axis) const;
-    int marginMainTotal(const UIElement& element, UIPrimaryAxis axis) const;
-    int marginCrossTotal(const UIElement& element, UIPrimaryAxis axis) const;
+    int marginMainStart(const UIElement& element, UIAxis axis) const;
+    int marginMainEnd(const UIElement& element, UIAxis axis) const;
+    int marginCrossStart(const UIElement& element, UIAxis axis) const;
+    int marginCrossEnd(const UIElement& element, UIAxis axis) const;
+    int marginMainTotal(const UIElement& element, UIAxis axis) const;
+    int marginCrossTotal(const UIElement& element, UIAxis axis) const;
 
     Option<int> computeElementSizeAlongAxis(
-        const UINode& node, UIPrimaryAxis axis, LayoutRect frame) const;
+        const UINode& node, UIAxis axis, LayoutRect frame) const;
 
     void toString(std::stringstream& ss, const UINode& node, int indent = 0) const;
 };
@@ -121,21 +132,25 @@ class UI {
             TextMeshBuffer::TextMeshHandle::invalidHandle()};
     };
 
-    UINode createNodeFromElement(const UIElement& element) {
+    UINode createNodeFromElement(const UIElement& element, UINode::ID parentID) {
         UINode node;
         node.id = _nextNodeID++;
         node.element = element;
         for (const UIElement& childElement : element.children) {
-            node.children.push_back(createNodeFromElement(childElement));
+            node.children.push_back(createNodeFromElement(childElement, node.parentID));
         }
         return node;
     }
 
     NodeRenderInfo& getNodeRenderInfo(const UINode& node) {
-        if (!_nodeRenderInfo.contains(node.id)) {
-            _nodeRenderInfo[node.id] = NodeRenderInfo{};
+        return getNodeRenderInfo(node.id);
+    }
+
+    NodeRenderInfo& getNodeRenderInfo(UINode::ID nodeID) {
+        if (!_nodeRenderInfo.contains(nodeID)) {
+            _nodeRenderInfo[nodeID] = NodeRenderInfo{};
         }
-        return _nodeRenderInfo[node.id];
+        return _nodeRenderInfo[nodeID];
     }
 
     void renderNode(const UINode& node, Renderer& renderer, int depth = 0);

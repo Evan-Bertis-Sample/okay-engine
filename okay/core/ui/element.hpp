@@ -37,7 +37,8 @@ struct Fixed {
 using ElementSize = std::variant<size::Fit, size::Grow, size::Percent, size::Fixed>;
 using ElementRealSize = std::variant<size::Percent, size::Fixed>;
 
-enum class UIPrimaryAxis { Horizontal, Vertical, Parent };
+enum class UIAxis { Horizontal, Vertical, Parent };
+enum class UIClippingMode { No_Clipping, Clip_Overflow };
 
 #define OKAY_UI_ELEMENT_PROPERTY(typeName, valueName, ...) \
     typeName valueName{__VA_ARGS__};                       \
@@ -131,7 +132,7 @@ struct UIElement {
     OKAY_UI_ELEMENT_PROPERTY(ElementSize, height, size::Fit{});
     OKAY_UI_ELEMENT_PROPERTY(ElementRealSize, minWidth, size::Percent{0.0f});
     OKAY_UI_ELEMENT_PROPERTY(ElementRealSize, minHeight, size::Percent{0.0f});
-    OKAY_UI_ELEMENT_PROPERTY(UIPrimaryAxis, axis, UIPrimaryAxis::Parent);
+    OKAY_UI_ELEMENT_PROPERTY(UIAxis, axis, UIAxis::Parent);
 
     // Padding
     OKAY_UI_ELEMENT_PROPERTY(size::Fixed, leftPadding, size::Fixed{0});
@@ -166,6 +167,7 @@ struct UIElement {
     OKAY_UI_ELEMENT_PROPERTY(bool, doubleSided, false);
     OKAY_UI_ELEMENT_PROPERTY(MaterialHandle, backgroundMaterialOverride, MaterialHandle::none());
     OKAY_UI_ELEMENT_PROPERTY(MaterialHandle, textMaterialOverride, MaterialHandle::none());
+    OKAY_UI_ELEMENT_PROPERTY(UIClippingMode, clippingMode, UIClippingMode::Clip_Overflow)
 
     std::vector<UIElement> children;
 
@@ -192,8 +194,8 @@ struct UIElement {
         }
     }
 
-    ElementSize getSizeAlongAxis(UIPrimaryAxis axis) const {
-        return axis == UIPrimaryAxis::Horizontal ? width : height;
+    ElementSize getSizeAlongAxis(UIAxis axis) const {
+        return axis == UIAxis::Horizontal ? width : height;
     }
 
     UIElement& paddingSet(

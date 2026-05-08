@@ -1,6 +1,7 @@
 #include "ui.hpp"
 
 #include "element.hpp"
+#include "glm/fwd.hpp"
 #include "render_resources.hpp"
 #include "text_mesh_builder.hpp"
 
@@ -19,7 +20,7 @@ void UILayout::layout(const Context& context) {
     LayoutRect rootFrame{
         .pxPosition = glm::ivec2(0, 0),
         .pxSize = context.screenSize,
-        .axis = UIPrimaryAxis::Vertical,
+        .axis = UIAxis::Vertical,
         .resolvedSize = true,
     };
 
@@ -31,29 +32,27 @@ void UILayout::layout(const Context& context) {
     computePositions(_root, rootFrame);
 }
 
-int UILayout::marginMainStart(const UIElement& element, UIPrimaryAxis axis) const {
-    return axis == UIPrimaryAxis::Horizontal ? element.leftMargin.pixels : element.topMargin.pixels;
+int UILayout::marginMainStart(const UIElement& element, UIAxis axis) const {
+    return axis == UIAxis::Horizontal ? element.leftMargin.pixels : element.topMargin.pixels;
 }
 
-int UILayout::marginMainEnd(const UIElement& element, UIPrimaryAxis axis) const {
-    return axis == UIPrimaryAxis::Horizontal ? element.rightMargin.pixels
-                                             : element.bottomMargin.pixels;
+int UILayout::marginMainEnd(const UIElement& element, UIAxis axis) const {
+    return axis == UIAxis::Horizontal ? element.rightMargin.pixels : element.bottomMargin.pixels;
 }
 
-int UILayout::marginCrossStart(const UIElement& element, UIPrimaryAxis axis) const {
-    return axis == UIPrimaryAxis::Horizontal ? element.topMargin.pixels : element.leftMargin.pixels;
+int UILayout::marginCrossStart(const UIElement& element, UIAxis axis) const {
+    return axis == UIAxis::Horizontal ? element.topMargin.pixels : element.leftMargin.pixels;
 }
 
-int UILayout::marginCrossEnd(const UIElement& element, UIPrimaryAxis axis) const {
-    return axis == UIPrimaryAxis::Horizontal ? element.bottomMargin.pixels
-                                             : element.rightMargin.pixels;
+int UILayout::marginCrossEnd(const UIElement& element, UIAxis axis) const {
+    return axis == UIAxis::Horizontal ? element.bottomMargin.pixels : element.rightMargin.pixels;
 }
 
-int UILayout::marginMainTotal(const UIElement& element, UIPrimaryAxis axis) const {
+int UILayout::marginMainTotal(const UIElement& element, UIAxis axis) const {
     return marginMainStart(element, axis) + marginMainEnd(element, axis);
 }
 
-int UILayout::marginCrossTotal(const UIElement& element, UIPrimaryAxis axis) const {
+int UILayout::marginCrossTotal(const UIElement& element, UIAxis axis) const {
     return marginCrossStart(element, axis) + marginCrossEnd(element, axis);
 }
 
@@ -61,7 +60,7 @@ void UILayout::computeFixedSizes(UINode& node, LayoutRect parent) {
     LayoutRect& rect = getOrMakeRect(node);
     const UIElement& element = node.element;
 
-    UIPrimaryAxis resolvedAxis = element.axis == UIPrimaryAxis::Parent ? parent.axis : element.axis;
+    UIAxis resolvedAxis = element.axis == UIAxis::Parent ? parent.axis : element.axis;
     rect.axis = resolvedAxis;
 
     // Root already has a frame; children get theirs from parent.
@@ -72,8 +71,8 @@ void UILayout::computeFixedSizes(UINode& node, LayoutRect parent) {
     int minWidth = computeSize(element.minWidth, parent.pxSize.x);
     int minHeight = computeSize(element.minHeight, parent.pxSize.y);
 
-    Option<int> width = computeElementSizeAlongAxis(node, UIPrimaryAxis::Horizontal, parent);
-    Option<int> height = computeElementSizeAlongAxis(node, UIPrimaryAxis::Vertical, parent);
+    Option<int> width = computeElementSizeAlongAxis(node, UIAxis::Horizontal, parent);
+    Option<int> height = computeElementSizeAlongAxis(node, UIAxis::Vertical, parent);
 
     if (width.isSome()) {
         rect.pxSize.x = std::max(width.value(), minWidth);
@@ -96,7 +95,7 @@ void UILayout::computeFixedSizes(UINode& node, LayoutRect parent) {
 UI::UI() : _textMeshBuffer() {}
 
 UI::UI(UIElement root) : _textMeshBuffer() {
-    _root = createNodeFromElement(root);
+    _root = createNodeFromElement(root, 0);
     _layout = UILayout(_root);
 }
 
@@ -104,9 +103,8 @@ void UILayout::computeFitSizes(UINode& node, LayoutRect parent) {
     LayoutRect& rect = getOrMakeRect(node);
     const UIElement& element = node.element;
 
-    UIPrimaryAxis mainAxis = rect.axis;
-    UIPrimaryAxis crossAxis = (mainAxis == UIPrimaryAxis::Horizontal) ? UIPrimaryAxis::Vertical
-                                                                      : UIPrimaryAxis::Horizontal;
+    UIAxis mainAxis = rect.axis;
+    UIAxis crossAxis = (mainAxis == UIAxis::Horizontal) ? UIAxis::Vertical : UIAxis::Horizontal;
 
     int leftPadding = element.leftPadding.pixels;
     int rightPadding = element.rightPadding.pixels;
@@ -127,7 +125,7 @@ void UILayout::computeFitSizes(UINode& node, LayoutRect parent) {
         LayoutRect& childRect = getOrMakeRect(child);
         ElementSize childCrossDecl = child.element.getSizeAlongAxis(crossAxis);
 
-        if (crossAxis == UIPrimaryAxis::Horizontal) {
+        if (crossAxis == UIAxis::Horizontal) {
             if (childRect.pxSize.x == 0) {
                 if (std::holds_alternative<size::Grow>(childCrossDecl)) {
                     int minWidth = computeSize(child.element.minWidth, rect.pxSize.x);
@@ -180,10 +178,9 @@ void UILayout::computeFitSizes(UINode& node, LayoutRect parent) {
     for (UINode& child : node.children) {
         LayoutRect& childRect = getOrMakeRect(child);
 
-        int childMain =
-            (mainAxis == UIPrimaryAxis::Horizontal) ? childRect.pxSize.x : childRect.pxSize.y;
+        int childMain = (mainAxis == UIAxis::Horizontal) ? childRect.pxSize.x : childRect.pxSize.y;
         int childCross =
-            (crossAxis == UIPrimaryAxis::Horizontal) ? childRect.pxSize.x : childRect.pxSize.y;
+            (crossAxis == UIAxis::Horizontal) ? childRect.pxSize.x : childRect.pxSize.y;
 
         childMain += marginMainTotal(child.element, mainAxis);
         childCross += marginCrossTotal(child.element, mainAxis);
@@ -204,7 +201,7 @@ void UILayout::computeFitSizes(UINode& node, LayoutRect parent) {
     ElementSize heightDecl = element.height;
 
     if (std::holds_alternative<size::Fit>(widthDecl)) {
-        if (mainAxis == UIPrimaryAxis::Horizontal) {
+        if (mainAxis == UIAxis::Horizontal) {
             rect.pxSize.x = std::max(rect.pxSize.x, summedMain + totalSpacing + horizontalPadding);
         } else {
             rect.pxSize.x = std::max(rect.pxSize.x, maxCross + horizontalPadding);
@@ -212,7 +209,7 @@ void UILayout::computeFitSizes(UINode& node, LayoutRect parent) {
     }
 
     if (std::holds_alternative<size::Fit>(heightDecl)) {
-        if (mainAxis == UIPrimaryAxis::Vertical) {
+        if (mainAxis == UIAxis::Vertical) {
             rect.pxSize.y = std::max(rect.pxSize.y, summedMain + totalSpacing + verticalPadding);
         } else {
             rect.pxSize.y = std::max(rect.pxSize.y, maxCross + verticalPadding);
@@ -224,7 +221,7 @@ void UILayout::computeFitSizes(UINode& node, LayoutRect parent) {
     contentHeight = std::max(0, rect.pxSize.y - verticalPadding);
 
     // Distribute remaining space to grow children along the main axis.
-    int contentMainSize = (mainAxis == UIPrimaryAxis::Horizontal) ? contentWidth : contentHeight;
+    int contentMainSize = (mainAxis == UIAxis::Horizontal) ? contentWidth : contentHeight;
     int remainingMain = std::max(0, contentMainSize - summedMain - growMargins - totalSpacing);
     int growShare = (growChildren > 0) ? (remainingMain / growChildren) : 0;
 
@@ -236,7 +233,7 @@ void UILayout::computeFitSizes(UINode& node, LayoutRect parent) {
             continue;
         }
 
-        if (mainAxis == UIPrimaryAxis::Horizontal) {
+        if (mainAxis == UIAxis::Horizontal) {
             int minWidth = computeSize(child.element.minWidth, rect.pxSize.x);
             childRect.pxSize.x = std::max(growShare, minWidth);
         } else {
@@ -250,9 +247,8 @@ void UILayout::computePositions(UINode& node, LayoutRect parent) {
     LayoutRect& rect = getOrMakeRect(node);
     const UIElement& element = node.element;
 
-    UIPrimaryAxis mainAxis = rect.axis;
-    UIPrimaryAxis crossAxis = (mainAxis == UIPrimaryAxis::Horizontal) ? UIPrimaryAxis::Vertical
-                                                                      : UIPrimaryAxis::Horizontal;
+    UIAxis mainAxis = rect.axis;
+    UIAxis crossAxis = (mainAxis == UIAxis::Horizontal) ? UIAxis::Vertical : UIAxis::Horizontal;
 
     int leftPadding = element.leftPadding.pixels;
     int rightPadding = element.rightPadding.pixels;
@@ -276,7 +272,7 @@ void UILayout::computePositions(UINode& node, LayoutRect parent) {
         int crossStart = marginCrossStart(child.element, mainAxis);
         int crossEnd = marginCrossEnd(child.element, mainAxis);
 
-        if (mainAxis == UIPrimaryAxis::Horizontal) {
+        if (mainAxis == UIAxis::Horizontal) {
             childRect.pxPosition.x = contentX + cursor + mainStart;
             childRect.pxPosition.y = contentY + crossStart;
 
@@ -307,11 +303,11 @@ void UILayout::computePositions(UINode& node, LayoutRect parent) {
 }
 
 Option<int> UILayout::computeElementSizeAlongAxis(
-    const UINode& node, UIPrimaryAxis axis, LayoutRect frame) const {
+    const UINode& node, UIAxis axis, LayoutRect frame) const {
     const UIElement& element = node.element;
     ElementSize size = element.getSizeAlongAxis(axis);
 
-    int parentSize = (axis == UIPrimaryAxis::Horizontal) ? frame.pxSize.x : frame.pxSize.y;
+    int parentSize = (axis == UIAxis::Horizontal) ? frame.pxSize.x : frame.pxSize.y;
 
     if (std::holds_alternative<size::Fixed>(size)) {
         return std::get<size::Fixed>(size).pixels;
@@ -338,15 +334,15 @@ Option<int> UILayout::computeElementSizeAlongAxis(
             const float textHeight = layout.metrics().height() * glyphScale;
 
             resolved = std::max(resolved,
-                axis == UIPrimaryAxis::Horizontal ? static_cast<int>(std::ceil(textWidth))
-                                                  : static_cast<int>(std::ceil(textHeight)));
+                axis == UIAxis::Horizontal ? static_cast<int>(std::ceil(textWidth))
+                                           : static_cast<int>(std::ceil(textHeight)));
         }
 
         if (element.backgroundImage.isSome()) {
             Texture texture = element.backgroundImage.value();
             resolved = std::max(resolved,
-                axis == UIPrimaryAxis::Horizontal ? (int)texture.getMeta().width
-                                                  : (int)texture.getMeta().height);
+                axis == UIAxis::Horizontal ? (int)texture.getMeta().width
+                                           : (int)texture.getMeta().height);
         }
 
         // Only intrinsic leaf fit is resolved here.
@@ -401,7 +397,7 @@ void UI::update(UIElement newRoot) {
     // reset node ID
     // Engine.logger.debug("Updating UI!");
     _nextNodeID = 1;
-    _root = createNodeFromElement(newRoot);
+    _root = createNodeFromElement(newRoot, 0);
     _layout.update(_root);
 }
 
@@ -447,9 +443,14 @@ void UI::renderNode(const UINode& node, Renderer& renderer, int layerBase) {
         Engine.logger.warn("No layout found for UI node {}, skipping render", node.id);
         return;
     }
-
     const LayoutRect rect = layout.value();
     const glm::vec2 screenSize = glm::vec2(renderer.width(), renderer.height());
+
+    Option<LayoutRect> parentLayout = _layout.getLayout(node.parentID);
+    const LayoutRect parentRect =
+        (parentLayout.isSome()) ? parentLayout.value()
+                                : LayoutRect{.pxPosition = glm::ivec2{0, 0},
+                                      .pxSize = glm::ivec2{renderer.width(), renderer.height()}};
 
     // Convert from top-left pixel coordinates to NDC.
     auto pixelToNdc = [&](const glm::vec2& px) -> glm::vec2 {
@@ -479,6 +480,15 @@ void UI::renderNode(const UINode& node, Renderer& renderer, int layerBase) {
             props->borderRadius = pxToUV * static_cast<float>(node.element.borderRadius.pixels);
             props->borderWidth = pxToUV * static_cast<float>(node.element.borderWidth.pixels);
             props->borderColor = node.element.borderColor;
+
+            if (element.clippingMode == UIClippingMode::Clip_Overflow) {
+                props->clipSpaceTL = parentRect.topLeft();
+                props->clipSpaceBR = parentRect.bottomRight();
+
+            } else {
+                props->clipSpaceBR = glm::vec2(1.0f, -1.0f);
+                props->clipSpaceTL = glm::vec2(-1.0f, 1.0f);
+            }
         }
     }
 
@@ -522,6 +532,18 @@ void UI::renderNode(const UINode& node, Renderer& renderer, int layerBase) {
         props.transform.position = glm::vec3(textOriginNdc, 0.0f);
         props.transform.scale = glm::vec3(pxToNdcScale.x, pxToNdcScale.y, 1.0f);
         props.renderLayer = layerBase + 1;
+
+        if (UIRenderResoruces::TextMaterial* props = dynamic_cast<UIRenderResoruces::TextMaterial*>(
+                renderInfo.textEntity->material->properties().get())) {
+            if (element.clippingMode == UIClippingMode::Clip_Overflow) {
+                props->clipSpaceTL = parentRect.topLeft();
+                props->clipSpaceBR = parentRect.bottomRight();
+
+            } else {
+                props->clipSpaceBR = glm::vec2(1.0f, -1.0f);
+                props->clipSpaceTL = glm::vec2(-1.0f, 1.0f);
+            }
+        }
     }
 
     for (const UINode& child : node.children) {

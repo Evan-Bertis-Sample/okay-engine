@@ -85,21 +85,19 @@ static void __gameInitialize() {
         }
     }
 
-    okay::ecs::entity()
-        .addComponent<okay::TransformComponent>()
-        .addComponent<okay::UIComponent>(
-            []() {
-                return ui::frame(10, 10, 200, 100)(ui::flexbox()
-                        .marginSet(10)
-                        .paddingSet(10)
-                        .rightPaddingSet(20)
-                        .backgroundColorSet(glm::vec4{0.05f, 0.0f, 0.05f, 0.5f})
-                        .borderColorSet(glm::vec4{1.0f, 1.0f, 1.0f, 0.8f})
-                        .borderRadiusSet(5)
-                        .borderWidthSet(1)(ui::h3("Performance"),
-                            ui::vspacer(10),
-                            ui::h3(std::format("FPS: {:2f}", okay::Engine.time->fps())),
-                            ui::h2(std::format("Entity count: {}", okay::ecs::entityCount()))));
+    okay::ecs::entity().addComponent<okay::TransformComponent>().addComponent<okay::UIComponent>(
+        []() {
+            return ui::frame(10, 10, 200, 100)(ui::flexbox()
+                    .marginSet(10)
+                    .paddingSet(10)
+                    .rightPaddingSet(20)
+                    .backgroundColorSet(glm::vec4{0.05f, 0.0f, 0.05f, 0.5f})
+                    .borderColorSet(glm::vec4{1.0f, 1.0f, 1.0f, 0.8f})
+                    .borderRadiusSet(5)
+                    .borderWidthSet(1)(ui::h3("Performance"),
+                        ui::vspacer(10),
+                        ui::h3(std::format("FPS: {:2f}", okay::Engine.time->fps())),
+                        ui::h2(std::format("Entity count: {}", okay::ecs::entityCount()))));
         });
 }
 
