@@ -429,13 +429,12 @@ void UI::renderNode(const UINode& node, Renderer& renderer, int layerBase) {
         if (renderInfo.textEntity.isValid()) {
             // Replace the text mesh
             Mesh oldMesh = renderInfo.textEntity->mesh;
-            renderer.meshBuffer().removeMesh(renderInfo.textEntity->mesh);
-            renderInfo.textEntity->mesh = createTextMesh(node, renderer);
-            Engine.logger.debug("Switching mesh from ({}, {}), to mesh ({}, {})",
-                oldMesh.vertexOffset,
-                oldMesh.vertexCount,
-                renderInfo.textEntity->mesh.vertexOffset,
-                renderInfo.textEntity->mesh.vertexCount);
+            renderInfo.textEntity->mesh = getTextMesh(node, renderer);
+            // Engine.logger.debug("Switching mesh from ({}, {}), to mesh ({}, {})",
+            //     oldMesh.vertexOffset,
+            //     oldMesh.vertexCount,
+            //     renderInfo.textEntity->mesh.vertexOffset,
+            //     renderInfo.textEntity->mesh.vertexCount);
         } else {
             createTextRenderEntity(node, renderer);
         }
@@ -560,7 +559,7 @@ void UI::createTextRenderEntity(const UINode& node, Renderer& renderer) {
         // Engine.logger.debug("Creating render entity for UI element with text
         // element.text.value()); render text
         MaterialHandle handle = UIRenderResoruces::get().getTextMaterial(element).value();
-        Mesh textMesh = createTextMesh(node, renderer);
+        Mesh textMesh = getTextMesh(node, renderer);
 
         // Create the render entity, using a default position
         RenderEntity entity =
@@ -570,7 +569,7 @@ void UI::createTextRenderEntity(const UINode& node, Renderer& renderer) {
     }
 }
 
-Mesh UI::createTextMesh(const UINode& node, Renderer& renderer) {
+Mesh UI::getTextMesh(const UINode& node, Renderer& renderer) {
     const UIElement& element = node.element;
     if (element.text.isSome()) {
         TextStyle style = element.textStyle;

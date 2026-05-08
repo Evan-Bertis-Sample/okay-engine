@@ -1,5 +1,4 @@
 #version 300 es
-
 precision highp float;
 
 in vec2 v_uv;
@@ -10,10 +9,13 @@ uniform sampler2D u_albedo;
 uniform vec3 u_color;
 
 void main() {
-    float distance = texture(u_albedo, v_uv).a;
-    float smoothing_factor = fwidth(distance);
-    float boundary = 0.5;
-    float alpha = smoothstep(boundary - smoothing_factor, boundary + smoothing_factor, distance);
+    float sd = texture(u_albedo, v_uv).a;
+    float u_pxRange = 64.0;
+    vec2 texSize = vec2(textureSize(u_albedo, 0));
+    vec2 unitRange = vec2(u_pxRange) / texSize;
+    float screenPxRange = max(0.5 * dot(unitRange, 1.0 / fwidth(v_uv)), 1.0);
+
+    float alpha = clamp((sd - 0.5) * screenPxRange + 0.5, 0.0, 1.0);
 
     if (alpha < 0.01) {
         discard;

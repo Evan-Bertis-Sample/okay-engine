@@ -96,7 +96,8 @@ static void __gameInitialize() {
                     .borderRadiusSet(5)
                     .borderWidthSet(1)(ui::h3("Performance"),
                         ui::spacer(),
-                        ui::h2(std::format("FPS: {:2f}", okay::Engine.time->fps())),
+                        ui::h3(std::format("FPS: {:2f}", okay::Engine.time->fps())),
+                        ui::h3("FPS: 123.1"),
                         ui::h2(std::format("Entity count: {}", okay::ecs::entityCount()))));
         });
 }
