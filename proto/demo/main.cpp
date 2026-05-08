@@ -72,33 +72,34 @@ static void __gameInitialize() {
                    .addComponent<okay::MeshRendererComponent>(object, material);
 
     for (std::size_t i = 0; i < 1000; ++i) {
-        glm::vec3 pos = glm::ballRand(50.0f);
+        glm::vec3 pos = glm::ballRand(25.0f);
         okay::ECSEntity entity = okay::ecs::entity()
-                                     .addComponent<okay::TransformComponent>(pos, glm::vec3{0.5f})
-                                     .addComponent<okay::MeshRendererComponent>(cube, material);
+                                     .addComponent<okay::TransformComponent>(pos, glm::vec3{0.025f})
+                                     .addComponent<okay::MeshRendererComponent>(object, material);
 
         for (std::size_t i = 0; i < 5; ++i) {
             pos = glm::ballRand(10.0f);
             okay::ecs::entity(entity)
                 .addComponent<okay::TransformComponent>(pos, glm::vec3{0.5f})
-                .addComponent<okay::MeshRendererComponent>(cube, material);
+                .addComponent<okay::MeshRendererComponent>(object, material);
         }
     }
 
-    okay::ecs::entity().addComponent<okay::TransformComponent>().addComponent<okay::UIComponent>(
-        []() {
-            return ui::frame(10, 10, 200, 100)(ui::flexbox()
-                    .marginSet(10)
-                    .paddingSet(10)
-                    .rightPaddingSet(20)
-                    .backgroundColorSet(glm::vec4{0.05f, 0.0f, 0.05f, 0.5f})
-                    .borderColorSet(glm::vec4{1.0f, 1.0f, 1.0f, 0.8f})
-                    .borderRadiusSet(5)
-                    .borderWidthSet(1)(ui::h3("Performance"),
-                        ui::spacer(),
-                        ui::h3(std::format("FPS: {:2f}", okay::Engine.time->fps())),
-                        ui::h3("FPS: 123.1"),
-                        ui::h2(std::format("Entity count: {}", okay::ecs::entityCount()))));
+    okay::ecs::entity()
+        .addComponent<okay::TransformComponent>()
+        .addComponent<okay::UIComponent>(
+            []() {
+                return ui::frame(10, 10, 200, 100)(ui::flexbox()
+                        .marginSet(10)
+                        .paddingSet(10)
+                        .rightPaddingSet(20)
+                        .backgroundColorSet(glm::vec4{0.05f, 0.0f, 0.05f, 0.5f})
+                        .borderColorSet(glm::vec4{1.0f, 1.0f, 1.0f, 0.8f})
+                        .borderRadiusSet(5)
+                        .borderWidthSet(1)(ui::h3("Performance"),
+                            ui::vspacer(10),
+                            ui::h3(std::format("FPS: {:2f}", okay::Engine.time->fps())),
+                            ui::h2(std::format("Entity count: {}", okay::ecs::entityCount()))));
         });
 }
 

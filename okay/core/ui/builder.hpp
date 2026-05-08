@@ -156,12 +156,15 @@ inline UIElement spacer() {
     return UIElement{.width = size::Grow{}, .height = size::Grow{}};
 }
 
-inline UIElement hspacer() {
-    return UIElement{.width = size::Grow{}};
+inline UIElement hspacer(size::Fixed width) {
+    return UIElement{.width = width, .height = size::Grow{}};
 }
 
-inline UIElement vspacer() {
-    return UIElement{.height = size::Grow{}};
+inline UIElement vspacer(size::Fixed height) {
+    return UIElement{
+        .width = size::Grow{},
+        .height = size::Grow{},
+    };
 }
 
 inline UIElement box() {
