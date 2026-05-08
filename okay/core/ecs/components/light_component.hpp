@@ -11,7 +11,9 @@ struct LightComponent {
     struct PointLightOptions {
         float radius{1.0f};
 
-        bool operator==(const PointLightOptions& other) const { return radius == other.radius; }
+        bool operator==(const PointLightOptions& other) const {
+            return radius == other.radius;
+        }
     };
 
     struct SpotLightOptions {
@@ -24,7 +26,9 @@ struct LightComponent {
 
     // Implied by the transform!
     struct DirectionalLightOptions {
-        bool operator==(const DirectionalLightOptions& other) const { return true; }
+        bool operator==(const DirectionalLightOptions& other) const {
+            return true;
+        }
     };
 
     std::variant<PointLightOptions, SpotLightOptions, DirectionalLightOptions> options{
@@ -50,9 +54,9 @@ struct LightComponent {
     }
 
     static LightComponent spot(glm::vec3 rgb,
-                               float intensity = 1.0f,
-                               float radius = 1.0f,
-                               float angleRad = glm::radians(45.0f)) {
+        float intensity = 1.0f,
+        float radius = 1.0f,
+        float angleRad = glm::radians(45.0f)) {
         LightComponent lc{};
         lc.options = SpotLightOptions{radius, angleRad};
         lc.color = rgb;
@@ -74,7 +78,9 @@ struct LightComponent {
         return options == other.options && color == other.color && intensity == other.intensity;
     }
 
-    bool operator!=(const LightComponent& other) const { return !(*this == other); }
+    bool operator!=(const LightComponent& other) const {
+        return !(*this == other);
+    }
 };
 
 };  // namespace okay

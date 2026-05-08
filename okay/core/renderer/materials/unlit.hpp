@@ -14,23 +14,36 @@ struct SceneMaterialProperties {
     UniformProperty<glm::mat4, FixedString("u_projectionMatrix")> projectionMatrix{};
     UniformProperty<glm::vec3, FixedString("u_cameraPosition")> cameraPosition{};
     UniformProperty<glm::vec3, FixedString("u_cameraDirection")> cameraDirection{};
+    UniformProperty<float, FixedString("u_timeMs")> timeMs;
 
     bool isTransparent{false};
     bool recievesShadows{false};
     bool castsShadows{false};
+    bool useScreenspaceCoords{false};
+    bool doubleSided{false};
 
     auto uniformRefs() {
-        return std::tie(modelMatrix, viewMatrix, projectionMatrix, cameraPosition, cameraDirection);
+        return std::tie(
+            modelMatrix, viewMatrix, projectionMatrix, cameraPosition, cameraDirection, timeMs);
     }
     auto uniformRefs() const {
-        return std::tie(modelMatrix, viewMatrix, projectionMatrix, cameraPosition, cameraDirection);
+        return std::tie(
+            modelMatrix, viewMatrix, projectionMatrix, cameraPosition, cameraDirection, timeMs);
     }
 
-    auto uniformBlockRefs() { return std::tie(); }
-    auto uniformBlockRefs() const { return std::tie(); }
+    auto uniformBlockRefs() {
+        return std::tie();
+    }
+    auto uniformBlockRefs() const {
+        return std::tie();
+    }
 
-    auto textureRefs() { return std::tie(); }
-    auto textureRefs() const { return std::tie(); }
+    auto textureRefs() {
+        return std::tie();
+    }
+    auto textureRefs() const {
+        return std::tie();
+    }
 
     MaterialFlagCollection flags() {
         MaterialFlagCollection flags;
@@ -40,12 +53,16 @@ struct SceneMaterialProperties {
             flags.addFlag(MaterialFlags::RECEIVE_SHADOWS);
         if (castsShadows)
             flags.addFlag(MaterialFlags::CAST_SHADOWS);
+        if (useScreenspaceCoords)
+            flags.addFlag(MaterialFlags::SCREEN_SPACE);
+        if (doubleSided)
+            flags.addFlag(MaterialFlags::DOUBLE_SIDED);
         return flags;
     }
 };
 
-struct UnlitMaterial : public SceneMaterialProperties,
-                       public OkayMaterialProperties<UnlitMaterial> {
+struct UnlitMaterial final : public SceneMaterialProperties,
+                             public OkayMaterialProperties<UnlitMaterial> {
     UniformProperty<glm::vec3, FixedString("u_color")> color{};
     TextureProperty<FixedString("u_albedo")> albedo;
 
@@ -57,13 +74,21 @@ struct UnlitMaterial : public SceneMaterialProperties,
         return std::tuple_cat(SceneMaterialProperties::uniformRefs(), std::tie(color));
     }
 
-    auto uniformBlockRefs() { return std::tie(); }
+    auto uniformBlockRefs() {
+        return std::tie();
+    }
 
-    auto uniformBlockRefs() const { return std::tie(); }
+    auto uniformBlockRefs() const {
+        return std::tie();
+    }
 
-    auto textureRefs() { return std::tie(albedo); }
+    auto textureRefs() {
+        return std::tie(albedo);
+    }
 
-    auto textureRefs() const { return std::tie(albedo); };
+    auto textureRefs() const {
+        return std::tie(albedo);
+    };
 
     MaterialFlagCollection flags() {
         MaterialFlagCollection flags = SceneMaterialProperties::flags();

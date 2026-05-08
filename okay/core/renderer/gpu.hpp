@@ -18,7 +18,9 @@ namespace okay {
 class UniformBlockManager {
    public:
     UniformBlockManager() = default;
-    ~UniformBlockManager() { destroyAll(); }
+    ~UniformBlockManager() {
+        destroyAll();
+    }
 
     UniformBlockManager(const UniformBlockManager&) = delete;
     UniformBlockManager& operator=(const UniformBlockManager&) = delete;
@@ -93,7 +95,9 @@ class UniformBlockManager {
     }
 
    private:
-    static constexpr GLuint invalidBinding() { return 0xFFFFFFFFu; }
+    static constexpr GLuint invalidBinding() {
+        return 0xFFFFFFFFu;
+    }
 
     struct GpuUbo {
         GLuint id = 0;
@@ -121,7 +125,9 @@ class UniformBlockManager {
         return it != u.boundPrograms.end();
     }
 
-    static void markBoundToProgram(GpuUbo& u, GLuint program) { u.boundPrograms[program] = true; }
+    static void markBoundToProgram(GpuUbo& u, GLuint program) {
+        u.boundPrograms[program] = true;
+    }
 
     template <class BlockProp>
     static std::uint32_t versionOf(const BlockProp& p) {
@@ -147,7 +153,9 @@ class UniformBlockManager {
 class TextureManager {
    public:
     TextureManager() = default;
-    ~TextureManager() { destroyAll(); }
+    ~TextureManager() {
+        destroyAll();
+    }
 
     TextureManager(const TextureManager&) = delete;
     TextureManager& operator=(const TextureManager&) = delete;
@@ -163,9 +171,8 @@ class TextureManager {
     }
 
     // Ensure a GL texture exists and is uploaded; returns GL id.
-    Failable ensureUploaded2D(const Texture& tex,
-                              const Texture::TextureParameters& params,
-                              GLuint& outTextureId) {
+    Failable ensureUploaded2D(
+        const Texture& tex, const Texture::TextureParameters& params, GLuint& outTextureId) {
         if (!tex.store || TextureDataStore::TextureHandle::isNone(tex.handle)) {
             return Failable::ok();
         }
@@ -189,14 +196,14 @@ class TextureManager {
 
             if (meta.format == OkayTextureMeta::Format::DEPTH24_STENCIL8) {
                 GL_CHECK_FAILABLE(glTexImage2D(GL_TEXTURE_2D,
-                                               0,
-                                               GL_DEPTH24_STENCIL8,
-                                               meta.width,
-                                               meta.height,
-                                               0,
-                                               GL_DEPTH_STENCIL,
-                                               GL_UNSIGNED_INT_24_8,
-                                               nullptr));
+                    0,
+                    GL_DEPTH24_STENCIL8,
+                    meta.width,
+                    meta.height,
+                    0,
+                    GL_DEPTH_STENCIL,
+                    GL_UNSIGNED_INT_24_8,
+                    nullptr));
             } else {
                 GLenum glFormat = GL_RGBA;
                 GLenum glInternal = GL_RGBA8;
@@ -224,14 +231,14 @@ class TextureManager {
 
                 // NOTE: internalFormat must be glInternal (not glFormat)
                 GL_CHECK_FAILABLE(glTexImage2D(GL_TEXTURE_2D,
-                                               0,
-                                               glInternal,
-                                               meta.width,
-                                               meta.height,
-                                               0,
-                                               glFormat,
-                                               GL_UNSIGNED_BYTE,
-                                               data.data()));
+                    0,
+                    glInternal,
+                    meta.width,
+                    meta.height,
+                    0,
+                    glFormat,
+                    GL_UNSIGNED_BYTE,
+                    data.data()));
             }
 
             gt.meta = meta;
@@ -263,10 +270,10 @@ class TextureManager {
 
     // Bind a 2D texture to a unit and set sampler uniform = unit.
     Failable bindSampler2D(GLuint program,
-                           GLuint samplerLoc,
-                           const Texture& tex,
-                           const Texture::TextureParameters& params,
-                           GLuint unit) {
+        GLuint samplerLoc,
+        const Texture& tex,
+        const Texture::TextureParameters& params,
+        GLuint unit) {
         GLuint id = 0;
         auto r = ensureUploaded2D(tex, params, id);
         if (r.isError())
@@ -306,8 +313,8 @@ class TextureManager {
         bool paramsInitialized = false;
     };
 
-    static bool sameParams(const Texture::TextureParameters& a,
-                           const Texture::TextureParameters& b) {
+    static bool sameParams(
+        const Texture::TextureParameters& a, const Texture::TextureParameters& b) {
         return a.minFilter == b.minFilter && a.magFilter == b.magFilter && a.wrapS == b.wrapS &&
                a.wrapT == b.wrapT;
     }

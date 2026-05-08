@@ -15,12 +15,18 @@ def register_subparser(subparser):
         action="store_true",
         help="Run the project with gdb",
     )
+    subparser.add_argument(
+        "--proto-name",
+        action="store",
+        help="Override the default target/project name (demo)",
+        default="demo"
+    )
 
 
 
 def main(args):
     build_options = OkayBuildOptions.from_args(args)
-    project_dir = OkayToolUtil.get_root_dir() / "proto" / "demo"
+    project_dir = OkayToolUtil.get_root_dir() / "proto" / args.proto_name
 
     if not os.path.exists(project_dir):
         print(f"Error: The project directory {project_dir} does not exist")

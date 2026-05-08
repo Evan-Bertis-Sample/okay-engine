@@ -55,8 +55,7 @@ void Renderer::initialize() {
     }
 }
 
-void Renderer::postInitialize() {
-}
+void Renderer::postInitialize() {}
 
 void Renderer::preTick() {
     if (_imguiImpl->imguiSupported() && _imguiEnabled && _imguiInitialized) {

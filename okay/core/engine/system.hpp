@@ -40,7 +40,7 @@ template <SystemScope ScopeV>
 class System : public ISystem {
    public:
     static_assert(ScopeV >= SystemScope::ENGINE && ScopeV < SystemScope::SCOPE_COUNT,
-                  "ScopeV must be a valid OkaySystemScope value.");
+        "ScopeV must be a valid OkaySystemScope value.");
 
     static const SystemScope SCOPE = ScopeV;
 };
@@ -85,7 +85,9 @@ class SystemPool {
         return _systems.find(ISystem::sysid<T>) != _systems.end();
     }
 
-    bool hasSystem(std::size_t hash) const { return _systems.find(hash) != _systems.end(); }
+    bool hasSystem(std::size_t hash) const {
+        return _systems.find(hash) != _systems.end();
+    }
 
     class Iterator {
        private:
@@ -102,8 +104,12 @@ class SystemPool {
         explicit Iterator(base_it it) : _it(it) {}
 
         // Deref to raw pointer
-        value_type operator*() const { return _it->second.get(); }
-        value_type operator->() const { return _it->second.get(); }
+        value_type operator*() const {
+            return _it->second.get();
+        }
+        value_type operator->() const {
+            return _it->second.get();
+        }
 
         Iterator& operator++() {
             ++_it;
@@ -127,21 +133,35 @@ class SystemPool {
             return tmp;
         }
 
-        friend bool operator==(const Iterator& a, const Iterator& b) { return a._it == b._it; }
-        friend bool operator!=(const Iterator& a, const Iterator& b) { return a._it != b._it; }
+        friend bool operator==(const Iterator& a, const Iterator& b) {
+            return a._it == b._it;
+        }
+        friend bool operator!=(const Iterator& a, const Iterator& b) {
+            return a._it != b._it;
+        }
 
         // expose underlying for internal helpers
-        base_it base() const { return _it; }
+        base_it base() const {
+            return _it;
+        }
 
        private:
         base_it _it{};
     };
 
-    std::size_t size() const noexcept { return _systems.size(); }
-    bool empty() const noexcept { return _systems.empty(); }
+    std::size_t size() const noexcept {
+        return _systems.size();
+    }
+    bool empty() const noexcept {
+        return _systems.empty();
+    }
 
-    Iterator begin() { return Iterator{_systems.begin()}; }
-    Iterator end() { return Iterator{_systems.end()}; }
+    Iterator begin() {
+        return Iterator{_systems.begin()};
+    }
+    Iterator end() {
+        return Iterator{_systems.end()};
+    }
 
    private:
     std::map<std::size_t, std::unique_ptr<ISystem>> _systems;
@@ -175,7 +195,9 @@ class SystemManager {
         _pools[T::SCOPE].registerSystem(std::move(system));
     }
 
-    SystemPool& getPool(const SystemScope scope) { return _pools[scope]; }
+    SystemPool& getPool(const SystemScope scope) {
+        return _pools[scope];
+    }
 
     bool hasSystem(std::size_t hash) {
         for (const SystemPool& pool : _pools) {

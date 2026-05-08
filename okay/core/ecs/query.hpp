@@ -83,7 +83,7 @@ template <typename Get, typename Exclude = query::Exclude<>, typename Optional =
              query::IsOptionalQuery<Optional>)
 struct ECSQuery {
     using Item = typename ECSQueryItemFromTuples<typename Get::ComponentTypes,
-                                                 typename Optional::ComponentTypes>::Type;
+        typename Optional::ComponentTypes>::Type;
 
     static void initialize(const EntityComponentStore& store) {
         _getBitmask = Get::bitmask(store);
@@ -97,22 +97,22 @@ struct ECSQuery {
 
     static Item createItem(ECSEntity entity, EntityComponentStore& store) {
         return createItemImpl(std::move(entity),
-                              store,
-                              typename Get::ComponentPack{},
-                              typename Optional::ComponentPack{});
+            store,
+            typename Get::ComponentPack{},
+            typename Optional::ComponentPack{});
     }
 
    private:
     template <typename... GetComponents, typename... OptionalComponents>
     static Item createItemImpl(ECSEntity entity,
-                               EntityComponentStore& store,
-                               TypePack<GetComponents...>,
-                               TypePack<OptionalComponents...>) {
+        EntityComponentStore& store,
+        TypePack<GetComponents...>,
+        TypePack<OptionalComponents...>) {
         return Item{.entity = std::move(entity),
-                    .components = std::forward_as_tuple(
-                        store.template getComponent<GetComponents>(entity).value()...),
-                    .optional = std::make_tuple(
-                        store.template getComponent<OptionalComponents>(entity).value()...)};
+            .components = std::forward_as_tuple(
+                store.template getComponent<GetComponents>(entity).value()...),
+            .optional = std::make_tuple(
+                store.template getComponent<OptionalComponents>(entity).value()...)};
     }
 
     inline static ECSComponentMask _getBitmask{};

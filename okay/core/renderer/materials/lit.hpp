@@ -1,11 +1,12 @@
 #ifndef __LIT_H__
 #define __LIT_H__
 
+#include "glm/detail/qualifier.hpp"
+
 #include <okay/core/renderer/materials/unlit.hpp>
 #include <okay/core/renderer/render_world.hpp>
 #include <okay/core/renderer/uniform.hpp>
 #include <okay/core/util/type.hpp>
-#include "glm/detail/qualifier.hpp"
 
 #include <glm/glm.hpp>
 
@@ -22,7 +23,9 @@ using DefaultLightBlock = LightBlock<16>;
 struct LitMaterial : public SceneMaterialProperties, public OkayMaterialProperties<LitMaterial> {
     BlockProperty<DefaultLightBlock, FixedString("u_lights")> lights{};
 
-    LitMaterial() { lights.setBindingPoint(0); }
+    LitMaterial() {
+        lights.setBindingPoint(0);
+    }
     UniformProperty<float, FixedString("u_ambient")> ambient{0.05f};
     TextureProperty<FixedString("u_albedo")> albedo;
     UniformProperty<glm::vec3, FixedString("u_color")> color{glm::vec3(1.0f)};
@@ -40,26 +43,57 @@ struct LitMaterial : public SceneMaterialProperties, public OkayMaterialProperti
     UniformProperty<int, FixedString("u_thin")> thin{0};
 
     auto uniformRefs() {
-        return std::tuple_cat(SceneMaterialProperties::uniformRefs(), std::tie(
-            ambient, color, metallic, specular, specularTint, roughness, anisotropic, 
-            sheen, sheenTint, clearcoat, clearcoatGloss, specularTrans, flatness, thin
-        ));
+        return std::tuple_cat(SceneMaterialProperties::uniformRefs(),
+            std::tie(ambient,
+                color,
+                metallic,
+                specular,
+                specularTint,
+                roughness,
+                anisotropic,
+                sheen,
+                sheenTint,
+                clearcoat,
+                clearcoatGloss,
+                specularTrans,
+                flatness,
+                thin));
     }
     auto uniformRefs() const {
-        return std::tuple_cat(SceneMaterialProperties::uniformRefs(), std::tie(
-            ambient, color, metallic, specular, specularTint, roughness, anisotropic, 
-            sheen, sheenTint, clearcoat, clearcoatGloss, specularTrans, flatness, thin
-        ));
+        return std::tuple_cat(SceneMaterialProperties::uniformRefs(),
+            std::tie(ambient,
+                color,
+                metallic,
+                specular,
+                specularTint,
+                roughness,
+                anisotropic,
+                sheen,
+                sheenTint,
+                clearcoat,
+                clearcoatGloss,
+                specularTrans,
+                flatness,
+                thin));
     }
 
-    auto uniformBlockRefs() { return std::tie(lights); }
-    auto uniformBlockRefs() const { return std::tie(lights); }
+    auto uniformBlockRefs() {
+        return std::tie(lights);
+    }
+    auto uniformBlockRefs() const {
+        return std::tie(lights);
+    }
 
-    auto textureRefs() { return std::tie(albedo); }
-    auto textureRefs() const { return std::tie(albedo); }
+    auto textureRefs() {
+        return std::tie(albedo);
+    }
+    auto textureRefs() const {
+        return std::tie(albedo);
+    }
 
     MaterialFlagCollection flags() {
         MaterialFlagCollection flags = SceneMaterialProperties::flags();
+        flags.addFlag(MaterialFlags::RECEIVE_SHADOWS).addFlag(MaterialFlags::CAST_SHADOWS);
         return flags;
     }
 };
@@ -68,7 +102,7 @@ static_assert(sizeof(okay::Light) == 64, "OkayLight must be 64 bytes (4 vec4s)")
 static_assert(alignof(okay::Light) == 16, "OkayLight must be 16-byte aligned");
 
 static_assert(sizeof(okay::DefaultLightBlock) == 16 + 16 * 64,
-              "DefaultLightBlock must be 1040 bytes (vec4 + 16 Lights)");
+    "DefaultLightBlock must be 1040 bytes (vec4 + 16 Lights)");
 static_assert(alignof(okay::DefaultLightBlock) == 16, "DefaultLightBlock must be 16-byte aligned");
 
 }  // namespace okay

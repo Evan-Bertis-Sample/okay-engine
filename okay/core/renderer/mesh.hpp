@@ -16,9 +16,13 @@ struct MeshVertex {
     glm::vec3 color{1.0f, 1.0f, 1.0f};
     glm::vec2 uv{0.0f, 0.0f};
 
-    static std::size_t numFloats() { return 3 + 3 + 3 + 2; }
+    static std::size_t numFloats() {
+        return 3 + 3 + 3 + 2;
+    }
 
-    static std::size_t stride() { return numFloats() * sizeof(float); }
+    static std::size_t stride() {
+        return numFloats() * sizeof(float);
+    }
 
     MeshVertex& operator=(const MeshVertex& other) {
         position = other.position;
@@ -33,7 +37,9 @@ struct MeshVertex {
                uv == other.uv;
     }
 
-    bool operator!=(const MeshVertex& other) const { return !(*this == other); }
+    bool operator!=(const MeshVertex& other) const {
+        return !(*this == other);
+    }
 };
 
 struct MeshData {
@@ -56,9 +62,13 @@ struct Mesh {
           indexCount(iCount),
           bounds(b) {}
 
-    static Mesh none() { return Mesh(0, 0, 0, 0, Bounds::none()); }
+    static Mesh none() {
+        return Mesh(0, 0, 0, 0, Bounds::none());
+    }
 
-    bool isEmpty() { return indexCount == 0; }
+    bool isEmpty() {
+        return indexCount == 0;
+    }
 
     Mesh& operator=(const Mesh& other) {
         vertexOffset = other.vertexOffset;
@@ -73,7 +83,9 @@ struct Mesh {
                indexOffset == other.indexOffset && indexCount == other.indexCount;
     }
 
-    bool operator!=(const Mesh& other) const { return !(*this == other); }
+    bool operator!=(const Mesh& other) const {
+        return !(*this == other);
+    }
 };
 
 class ModelView;
@@ -91,22 +103,37 @@ class MeshBuffer {
     bool _hasInitVertexAttributes{false};
     bool _dataOutofDate{true};
 
+    struct BlockMeta {
+        std::size_t vertexOffset;
+        std::size_t vertexCount;
+        std::size_t indexOffset;
+        std::size_t indexCount;
+        bool isFree = false;
+    };
+
+    std::vector<BlockMeta> _blocks;
+
    public:
     Failable initVertexAttributes();
 
-    std::size_t size() const { return _indices.size(); }
+    std::size_t size() const {
+        return _indices.size();
+    }
     Mesh addMesh(const MeshData& model);
     void removeMesh(const Mesh& mesh);
+    Mesh reserveMesh(std::size_t numVertices, std::size_t numIndices);
+
+    Result<Mesh> updateMesh(Mesh mesh, const MeshData& newModel);
     Failable bindMeshData();
     void drawMesh(const Mesh& mesh);
 
-    class iterator {
+    class Iterator {
        public:
         using value_type = MeshVertex;
         using difference_type = std::ptrdiff_t;
         using iterator_category = std::forward_iterator_tag;
 
-        iterator(const MeshBuffer* buffer, std::size_t index) : _buffer(buffer), _index(index) {}
+        Iterator(const MeshBuffer* buffer, std::size_t index) : _buffer(buffer), _index(index) {}
 
         MeshVertex operator*() const {
             std::size_t attrIndex = _buffer->_indices[_index];
@@ -129,12 +156,14 @@ class MeshBuffer {
             return MeshVertex{*position, *normal, *color, *uv};
         }
 
-        iterator& operator++() {
+        Iterator& operator++() {
             ++_index;
             return *this;
         }
 
-        bool operator!=(const iterator& other) const { return _index != other._index; }
+        bool operator!=(const Iterator& other) const {
+            return _index != other._index;
+        }
 
        private:
         const MeshBuffer* _buffer;
@@ -145,18 +174,20 @@ class MeshBuffer {
        public:
         OkayModelView(const MeshBuffer* buffer, Mesh model) : _buffer(buffer), _model(model) {}
 
-        MeshBuffer::iterator begin() const {
-            return MeshBuffer::iterator(_buffer, _model.indexOffset);
+        MeshBuffer::Iterator begin() const {
+            return MeshBuffer::Iterator(_buffer, _model.indexOffset);
         }
 
-        MeshBuffer::iterator end() const {
-            return MeshBuffer::iterator(_buffer, _model.indexOffset + _model.indexCount);
+        MeshBuffer::Iterator end() const {
+            return MeshBuffer::Iterator(_buffer, _model.indexOffset + _model.indexCount);
         }
 
        private:
         const MeshBuffer* _buffer;
         Mesh _model;
     };
+
+    float* getMeshDataPtr(const Mesh& mesh);
 };
 
 }  // namespace okay

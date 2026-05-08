@@ -10,9 +10,8 @@ namespace okay::primitives {
 static constexpr float kPi = 3.14159265358979323846f;
 
 template <typename BuilderT>
-static inline okay::MeshVertex applyTransforms(const BuilderT& builder,
-                                               const VertexTransformation<BuilderT>& xf,
-                                               okay::MeshVertex v) {
+static inline okay::MeshVertex applyTransforms(
+    const BuilderT& builder, const VertexTransformation<BuilderT>& xf, okay::MeshVertex v) {
     const Placement& placement = builder.transform();
 
     v.position = placement.rotation * v.position + placement.center;
@@ -35,12 +34,12 @@ okay::MeshData RectBuilder::build(const VertexTransformation<RectBuilder>& xf) c
         [&](glm::vec3 position, glm::vec3 normal, glm::vec2 uv) -> std::uint32_t {
         const std::uint32_t index = static_cast<std::uint32_t>(out.vertices.size());
         out.vertices.push_back(applyTransforms(*this,
-                                               xf,
-                                               okay::MeshVertex{
-                                                   .position = position,
-                                                   .normal = normal,
-                                                   .uv = uv,
-                                               }));
+            xf,
+            okay::MeshVertex{
+                .position = position,
+                .normal = normal,
+                .uv = uv,
+            }));
         return index;
     };
 
@@ -66,8 +65,7 @@ okay::MeshData RectBuilder::build(const VertexTransformation<RectBuilder>& xf) c
         }
 
         // Back face, reversed winding
-        out.indices.insert(
-            out.indices.end(),
+        out.indices.insert(out.indices.end(),
             {backBase + 0, backBase + 2, backBase + 1, backBase + 0, backBase + 3, backBase + 2});
     }
 
@@ -102,12 +100,12 @@ okay::MeshData PlaneBuilder::build(const VertexTransformation<PlaneBuilder>& xf)
                 const float localX = -halfWidth + u * size.x;
 
                 out.vertices.push_back(applyTransforms(*this,
-                                                       xf,
-                                                       okay::MeshVertex{
-                                                           .position = {localX, localY, 0.0f},
-                                                           .normal = surfaceNormal,
-                                                           .uv = {u, v},
-                                                       }));
+                    xf,
+                    okay::MeshVertex{
+                        .position = {localX, localY, 0.0f},
+                        .normal = surfaceNormal,
+                        .uv = {u, v},
+                    }));
             }
         }
 
@@ -153,50 +151,50 @@ okay::MeshData BoxBuilder::build(const VertexTransformation<BoxBuilder>& xf) con
     const BoxFaceDefinition faces[6] = {
         // +Z
         {{0, 0, 1},
-         {-halfExtents.x, -halfExtents.y, halfExtents.z},
-         {halfExtents.x, -halfExtents.y, halfExtents.z},
-         {halfExtents.x, halfExtents.y, halfExtents.z},
-         {-halfExtents.x, halfExtents.y, halfExtents.z}},
+            {-halfExtents.x, -halfExtents.y, halfExtents.z},
+            {halfExtents.x, -halfExtents.y, halfExtents.z},
+            {halfExtents.x, halfExtents.y, halfExtents.z},
+            {-halfExtents.x, halfExtents.y, halfExtents.z}},
         // -Z
         {{0, 0, -1},
-         {halfExtents.x, -halfExtents.y, -halfExtents.z},
-         {-halfExtents.x, -halfExtents.y, -halfExtents.z},
-         {-halfExtents.x, halfExtents.y, -halfExtents.z},
-         {halfExtents.x, halfExtents.y, -halfExtents.z}},
+            {halfExtents.x, -halfExtents.y, -halfExtents.z},
+            {-halfExtents.x, -halfExtents.y, -halfExtents.z},
+            {-halfExtents.x, halfExtents.y, -halfExtents.z},
+            {halfExtents.x, halfExtents.y, -halfExtents.z}},
         // +X
         {{1, 0, 0},
-         {halfExtents.x, -halfExtents.y, halfExtents.z},
-         {halfExtents.x, -halfExtents.y, -halfExtents.z},
-         {halfExtents.x, halfExtents.y, -halfExtents.z},
-         {halfExtents.x, halfExtents.y, halfExtents.z}},
+            {halfExtents.x, -halfExtents.y, halfExtents.z},
+            {halfExtents.x, -halfExtents.y, -halfExtents.z},
+            {halfExtents.x, halfExtents.y, -halfExtents.z},
+            {halfExtents.x, halfExtents.y, halfExtents.z}},
         // -X
         {{-1, 0, 0},
-         {-halfExtents.x, -halfExtents.y, -halfExtents.z},
-         {-halfExtents.x, -halfExtents.y, halfExtents.z},
-         {-halfExtents.x, halfExtents.y, halfExtents.z},
-         {-halfExtents.x, halfExtents.y, -halfExtents.z}},
+            {-halfExtents.x, -halfExtents.y, -halfExtents.z},
+            {-halfExtents.x, -halfExtents.y, halfExtents.z},
+            {-halfExtents.x, halfExtents.y, halfExtents.z},
+            {-halfExtents.x, halfExtents.y, -halfExtents.z}},
         // +Y
         {{0, 1, 0},
-         {-halfExtents.x, halfExtents.y, halfExtents.z},
-         {halfExtents.x, halfExtents.y, halfExtents.z},
-         {halfExtents.x, halfExtents.y, -halfExtents.z},
-         {-halfExtents.x, halfExtents.y, -halfExtents.z}},
+            {-halfExtents.x, halfExtents.y, halfExtents.z},
+            {halfExtents.x, halfExtents.y, halfExtents.z},
+            {halfExtents.x, halfExtents.y, -halfExtents.z},
+            {-halfExtents.x, halfExtents.y, -halfExtents.z}},
         // -Y
         {{0, -1, 0},
-         {-halfExtents.x, -halfExtents.y, -halfExtents.z},
-         {halfExtents.x, -halfExtents.y, -halfExtents.z},
-         {halfExtents.x, -halfExtents.y, halfExtents.z},
-         {-halfExtents.x, -halfExtents.y, halfExtents.z}},
+            {-halfExtents.x, -halfExtents.y, -halfExtents.z},
+            {halfExtents.x, -halfExtents.y, -halfExtents.z},
+            {halfExtents.x, -halfExtents.y, halfExtents.z},
+            {-halfExtents.x, -halfExtents.y, halfExtents.z}},
     };
 
     const auto PushFaceVertex = [&](glm::vec3 position, glm::vec3 normal, glm::vec2 uv) {
         out.vertices.push_back(applyTransforms(*this,
-                                               xf,
-                                               okay::MeshVertex{
-                                                   .position = position,
-                                                   .normal = normal,
-                                                   .uv = uv,
-                                               }));
+            xf,
+            okay::MeshVertex{
+                .position = position,
+                .normal = normal,
+                .uv = uv,
+            }));
     };
 
     for (const auto& face : faces) {
@@ -208,12 +206,12 @@ okay::MeshData BoxBuilder::build(const VertexTransformation<BoxBuilder>& xf) con
         PushFaceVertex(face.d, face.normal, {0, 1});
 
         out.indices.insert(out.indices.end(),
-                           {baseVertex + 0,
-                            baseVertex + 1,
-                            baseVertex + 2,
-                            baseVertex + 0,
-                            baseVertex + 2,
-                            baseVertex + 3});
+            {baseVertex + 0,
+                baseVertex + 1,
+                baseVertex + 2,
+                baseVertex + 0,
+                baseVertex + 2,
+                baseVertex + 3});
     }
 
     return out;
@@ -250,12 +248,12 @@ okay::MeshData UVSphereBuilder::build(const VertexTransformation<UVSphereBuilder
             const glm::vec3 localPosition = unitNormal * radius;
 
             out.vertices.push_back(applyTransforms(*this,
-                                                   xf,
-                                                   okay::MeshVertex{
-                                                       .position = localPosition,
-                                                       .normal = unitNormal,
-                                                       .uv = {u, 1.0f - v},
-                                                   }));
+                xf,
+                okay::MeshVertex{
+                    .position = localPosition,
+                    .normal = unitNormal,
+                    .uv = {u, 1.0f - v},
+                }));
         }
     }
 
@@ -279,7 +277,9 @@ okay::MeshData UVSphereBuilder::build(const VertexTransformation<UVSphereBuilder
 
 struct EdgeKey {
     std::uint32_t a, b;
-    bool operator==(const EdgeKey& o) const { return a == o.a && b == o.b; }
+    bool operator==(const EdgeKey& o) const {
+        return a == o.a && b == o.b;
+    }
 };
 
 struct EdgeKeyHash {
@@ -288,8 +288,7 @@ struct EdgeKeyHash {
     }
 };
 
-static std::uint32_t getOrCreateMidpointVertex(
-    std::vector<glm::vec3>& unitPositions,
+static std::uint32_t getOrCreateMidpointVertex(std::vector<glm::vec3>& unitPositions,
     std::unordered_map<EdgeKey, std::uint32_t, EdgeKeyHash>& cache,
     std::uint32_t i0,
     std::uint32_t i1) {
@@ -333,9 +332,66 @@ okay::MeshData IcoSphereBuilder::build(const VertexTransformation<IcoSphereBuild
         glm::normalize(glm::vec3{-t, 0, 1}),
     };
 
-    triangles = {0, 11, 5,  0, 5,  1, 0, 1, 7, 0, 7,  10, 0, 10, 11, 1, 5, 9, 5, 11,
-                 4, 11, 10, 2, 10, 7, 6, 7, 1, 8, 3,  9,  4, 3,  4,  2, 3, 2, 6, 3,
-                 6, 8,  3,  8, 9,  4, 9, 5, 2, 4, 11, 6,  2, 10, 8,  6, 7, 9, 8, 1};
+    triangles = {0,
+        11,
+        5,
+        0,
+        5,
+        1,
+        0,
+        1,
+        7,
+        0,
+        7,
+        10,
+        0,
+        10,
+        11,
+        1,
+        5,
+        9,
+        5,
+        11,
+        4,
+        11,
+        10,
+        2,
+        10,
+        7,
+        6,
+        7,
+        1,
+        8,
+        3,
+        9,
+        4,
+        3,
+        4,
+        2,
+        3,
+        2,
+        6,
+        3,
+        6,
+        8,
+        3,
+        8,
+        9,
+        4,
+        9,
+        5,
+        2,
+        4,
+        11,
+        6,
+        2,
+        10,
+        8,
+        6,
+        7,
+        9,
+        8,
+        1};
 
     for (int s = 0; s < subdivisions; ++s) {
         std::unordered_map<EdgeKey, std::uint32_t, EdgeKeyHash> midpointCache;
@@ -366,12 +422,12 @@ okay::MeshData IcoSphereBuilder::build(const VertexTransformation<IcoSphereBuild
         const float v = std::acos(std::clamp(unitNormal.z, -1.0f, 1.0f)) / kPi;
 
         out.vertices.push_back(applyTransforms(*this,
-                                               xf,
-                                               okay::MeshVertex{
-                                                   .position = unitNormal * radius,
-                                                   .normal = unitNormal,
-                                                   .uv = {u, 1.0f - v},
-                                               }));
+            xf,
+            okay::MeshVertex{
+                .position = unitNormal * radius,
+                .normal = unitNormal,
+                .uv = {u, 1.0f - v},
+            }));
     }
 
     return out;
@@ -401,20 +457,20 @@ okay::MeshData CylinderBuilder::build(const VertexTransformation<CylinderBuilder
         const glm::vec3 topPos = radialNormal * radius + glm::vec3(0, 0, +halfHeight);
 
         out.vertices.push_back(applyTransforms(*this,
-                                               xf,
-                                               okay::MeshVertex{
-                                                   .position = bottomPos,
-                                                   .normal = radialNormal,
-                                                   .uv = {u, 0.0f},
-                                               }));
+            xf,
+            okay::MeshVertex{
+                .position = bottomPos,
+                .normal = radialNormal,
+                .uv = {u, 0.0f},
+            }));
 
         out.vertices.push_back(applyTransforms(*this,
-                                               xf,
-                                               okay::MeshVertex{
-                                                   .position = topPos,
-                                                   .normal = radialNormal,
-                                                   .uv = {u, 1.0f},
-                                               }));
+            xf,
+            okay::MeshVertex{
+                .position = topPos,
+                .normal = radialNormal,
+                .uv = {u, 1.0f},
+            }));
     }
 
     const auto SideVertexIndex = [&](int col, int top) -> std::uint32_t {
@@ -436,21 +492,21 @@ okay::MeshData CylinderBuilder::build(const VertexTransformation<CylinderBuilder
     // Caps
     const std::uint32_t bottomCenterIndex = static_cast<std::uint32_t>(out.vertices.size());
     out.vertices.push_back(applyTransforms(*this,
-                                           xf,
-                                           okay::MeshVertex{
-                                               .position = {0, 0, -halfHeight},
-                                               .normal = {0, 0, -1},
-                                               .uv = {0.5f, 0.5f},
-                                           }));
+        xf,
+        okay::MeshVertex{
+            .position = {0, 0, -halfHeight},
+            .normal = {0, 0, -1},
+            .uv = {0.5f, 0.5f},
+        }));
 
     const std::uint32_t topCenterIndex = static_cast<std::uint32_t>(out.vertices.size());
     out.vertices.push_back(applyTransforms(*this,
-                                           xf,
-                                           okay::MeshVertex{
-                                               .position = {0, 0, +halfHeight},
-                                               .normal = {0, 0, +1},
-                                               .uv = {0.5f, 0.5f},
-                                           }));
+        xf,
+        okay::MeshVertex{
+            .position = {0, 0, +halfHeight},
+            .normal = {0, 0, +1},
+            .uv = {0.5f, 0.5f},
+        }));
 
     // Bottom Ring
     const std::uint32_t bottomRingBase = static_cast<std::uint32_t>(out.vertices.size());
@@ -461,8 +517,7 @@ okay::MeshData CylinderBuilder::build(const VertexTransformation<CylinderBuilder
         const float cosTheta = std::cos(theta);
         const float sinTheta = std::sin(theta);
 
-        out.vertices.push_back(applyTransforms(
-            *this,
+        out.vertices.push_back(applyTransforms(*this,
             xf,
             okay::MeshVertex{
                 .position =
@@ -481,8 +536,7 @@ okay::MeshData CylinderBuilder::build(const VertexTransformation<CylinderBuilder
         const float cosTheta = std::cos(theta);
         const float sinTheta = std::sin(theta);
 
-        out.vertices.push_back(applyTransforms(
-            *this,
+        out.vertices.push_back(applyTransforms(*this,
             xf,
             okay::MeshVertex{
                 .position =
@@ -532,23 +586,23 @@ okay::MeshData ConeBuilder::build(const VertexTransformation<ConeBuilder>& xf) c
             glm::normalize(glm::vec3(cosTheta, sinTheta, radius / height));
 
         out.vertices.push_back(applyTransforms(*this,
-                                               xf,
-                                               okay::MeshVertex{
-                                                   .position = ringPos,
-                                                   .normal = approxNormal,
-                                                   .uv = {u, 0.0f},
-                                               }));
+            xf,
+            okay::MeshVertex{
+                .position = ringPos,
+                .normal = approxNormal,
+                .uv = {u, 0.0f},
+            }));
     }
 
     // Apex
     const std::uint32_t apexIndex = static_cast<std::uint32_t>(out.vertices.size());
     out.vertices.push_back(applyTransforms(*this,
-                                           xf,
-                                           okay::MeshVertex{
-                                               .position = {0, 0, +halfHeight},
-                                               .normal = {0, 0, 1},  // simple
-                                               .uv = {0.5f, 1.0f},
-                                           }));
+        xf,
+        okay::MeshVertex{
+            .position = {0, 0, +halfHeight},
+            .normal = {0, 0, 1},  // simple
+            .uv = {0.5f, 1.0f},
+        }));
 
     // Side triangles
     for (int col = 0; col < radialSegments; ++col) {
@@ -563,12 +617,12 @@ okay::MeshData ConeBuilder::build(const VertexTransformation<ConeBuilder>& xf) c
     // Cap center
     const std::uint32_t capCenterIndex = static_cast<std::uint32_t>(out.vertices.size());
     out.vertices.push_back(applyTransforms(*this,
-                                           xf,
-                                           okay::MeshVertex{
-                                               .position = {0, 0, -halfHeight},
-                                               .normal = {0, 0, -1},
-                                               .uv = {0.5f, 0.5f},
-                                           }));
+        xf,
+        okay::MeshVertex{
+            .position = {0, 0, -halfHeight},
+            .normal = {0, 0, -1},
+            .uv = {0.5f, 0.5f},
+        }));
 
     // Cap ring
     const std::uint32_t capRingBase = static_cast<std::uint32_t>(out.vertices.size());
@@ -579,8 +633,7 @@ okay::MeshData ConeBuilder::build(const VertexTransformation<ConeBuilder>& xf) c
         const float cosTheta = std::cos(theta);
         const float sinTheta = std::sin(theta);
 
-        out.vertices.push_back(applyTransforms(
-            *this,
+        out.vertices.push_back(applyTransforms(*this,
             xf,
             okay::MeshVertex{
                 .position =
@@ -631,20 +684,20 @@ okay::MeshData CapsuleBuilder::build(const VertexTransformation<CapsuleBuilder>&
             const glm::vec3 topPos = radialNormal * radius + glm::vec3(0, 0, +halfCylinderHeight);
 
             out.vertices.push_back(applyTransforms(*this,
-                                                   xf,
-                                                   okay::MeshVertex{
-                                                       .position = bottomPos,
-                                                       .normal = radialNormal,
-                                                       .uv = {u, 0.0f},
-                                                   }));
+                xf,
+                okay::MeshVertex{
+                    .position = bottomPos,
+                    .normal = radialNormal,
+                    .uv = {u, 0.0f},
+                }));
 
             out.vertices.push_back(applyTransforms(*this,
-                                                   xf,
-                                                   okay::MeshVertex{
-                                                       .position = topPos,
-                                                       .normal = radialNormal,
-                                                       .uv = {u, 1.0f},
-                                                   }));
+                xf,
+                okay::MeshVertex{
+                    .position = topPos,
+                    .normal = radialNormal,
+                    .uv = {u, 1.0f},
+                }));
         }
 
         const auto SideVertexIndex = [&](int col, int top) -> std::uint32_t {
@@ -695,8 +748,7 @@ okay::MeshData CapsuleBuilder::build(const VertexTransformation<CapsuleBuilder>&
 
                 localPosition.z += topHemisphere ? halfCylinderHeight : -halfCylinderHeight;
 
-                mesh.vertices.push_back(applyTransforms(
-                    *this,
+                mesh.vertices.push_back(applyTransforms(*this,
                     xf,
                     okay::MeshVertex{
                         .position = localPosition,

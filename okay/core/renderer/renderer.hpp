@@ -48,15 +48,29 @@ class Renderer : public System<SystemScope::ENGINE> {
     void postTick() override;
     void shutdown() override;
 
-    RenderWorld& world() { return _world; }
-    MeshBuffer& meshBuffer() { return _meshBuffer; }
-    RenderTargetPool& renderTargetPool() { return _renderTargetPool; }
-    MaterialRegistry& materialRegistry() { return _materialRegistry; }
+    RenderWorld& world() {
+        return _world;
+    }
+    MeshBuffer& meshBuffer() {
+        return _meshBuffer;
+    }
+    RenderTargetPool& renderTargetPool() {
+        return _renderTargetPool;
+    }
+    MaterialRegistry& materialRegistry() {
+        return _materialRegistry;
+    }
 
-    uint32_t width() const { return _surfaceConfig.width; }
-    uint32_t height() const { return _surfaceConfig.height; }
+    uint32_t width() const {
+        return _surfaceConfig.width;
+    }
+    uint32_t height() const {
+        return _surfaceConfig.height;
+    }
 
-    void* getSurfaceWindow() { return _surface->getWindow(); }
+    void* getSurfaceWindow() {
+        return _surface->getWindow();
+    }
 
    private:
     SurfaceConfig _surfaceConfig;

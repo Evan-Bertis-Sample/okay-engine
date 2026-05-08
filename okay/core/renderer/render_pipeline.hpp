@@ -45,7 +45,9 @@ class RenderPipeline {
         return *this;
     }
 
-    void addPass(std::unique_ptr<IRenderPass> pass) { _passes.emplace_back(std::move(pass)); }
+    void addPass(std::unique_ptr<IRenderPass> pass) {
+        _passes.emplace_back(std::move(pass));
+    }
 
     void initialize() {
         for (auto& pass : _passes) {
@@ -65,7 +67,9 @@ class RenderPipeline {
         }
     }
 
-    const std::vector<std::unique_ptr<IRenderPass>>& passes() const { return _passes; }
+    const std::vector<std::unique_ptr<IRenderPass>>& passes() const {
+        return _passes;
+    }
 
    private:
     std::vector<std::unique_ptr<IRenderPass>> _passes;

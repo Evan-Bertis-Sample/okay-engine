@@ -18,7 +18,8 @@ class MeshLoader {
 
 template <>
 struct AssetLoader<MeshData> {
-    static Result<MeshData> loadAsset(const std::filesystem::path& path, const AssetIO& assetIO);
+    static Result<MeshData> loadAsset(
+        const std::filesystem::path& path, const AssetIO& assetIO, const std::tuple<>& options);
 };
 
 }  // namespace okay

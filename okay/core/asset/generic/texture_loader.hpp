@@ -17,17 +17,27 @@ namespace okay {
 struct TextureLoadSettings {
     std::shared_ptr<TextureDataStore> store;
 
-    TextureLoadSettings(std::shared_ptr<TextureDataStore> store) { this->store = store; }
-    TextureLoadSettings() { store = TextureDataStore::mainStore(); }
+    TextureLoadSettings(std::shared_ptr<TextureDataStore> store) {
+        this->store = store;
+    }
+    TextureLoadSettings() {
+        store = TextureDataStore::mainStore();
+    }
+
+    bool operator<(const TextureLoadSettings& other) const {
+        return store < other.store;
+    }
+
+    bool operator==(const TextureLoadSettings& other) const {
+        return store == other.store;
+    }
 };
 
 template <>
 struct AssetLoader<Texture, TextureLoadSettings> {
     static Result<Texture> loadAsset(const std::filesystem::path& path,
-                                     const AssetIO& assetIO,
-                                     const TextureLoadSettings& settings) {
-        Engine.logger.info("Loading texture: {}", path.string());
-
+        const AssetIO& assetIO,
+        const TextureLoadSettings& settings) {
         std::shared_ptr<TextureDataStore> store = settings.store;
 
         // get the size of the image
@@ -50,12 +60,29 @@ struct AssetLoader<Texture, TextureLoadSettings> {
         OkayTextureMeta meta;
         meta.width = width;
         meta.height = height;
-        meta.format = OkayTextureMeta::Format::RGB8;
+
+        if (channels == 3) {
+            meta.format = OkayTextureMeta::Format::RGB8;
+        } else if (channels == 4) {
+            meta.format = OkayTextureMeta::Format::RGBA8;
+        } else {
+            Engine.logger.error("Unsupported image format: {}", path.string());
+            stbi_image_free(result);
+            return Result<Texture>::errorResult("Unsupported image format: " + path.string());
+        }
+
         std::size_t size = static_cast<size_t>(width * height * channels);
-        Engine.logger.debug("Image size: {}", size);
+        Engine.logger.debug("Loaded texture {}, size={}, width={}, height={}, channels={}",
+            path.string(),
+            size,
+            width,
+            height,
+            channels);
         std::span<const std::byte> data =
             std::span<const std::byte>(reinterpret_cast<const std::byte*>(result), size);
         TextureDataStore::TextureHandle handle = store->addTexture(meta, data);
+
+        stbi_image_free(result);
         return Result<Texture>::ok(Texture(store, handle));
     }
 };
