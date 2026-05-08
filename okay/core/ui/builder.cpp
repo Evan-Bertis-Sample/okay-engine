@@ -20,6 +20,8 @@ UIStyle::UIStyle() {
     h2 = UIElement().textColorSet(scaleMaintainA(white, 0.8)).textSizeSet(18.0f);
 
     h3 = UIElement().textColorSet(scaleMaintainA(white, 0.85)).textSizeSet(14.0f);
+
+    image = UIElement().backgroundColorSet(white);
 };
 
 void UIStyle::setMainFont(const FontManager::FontHandle& font) {

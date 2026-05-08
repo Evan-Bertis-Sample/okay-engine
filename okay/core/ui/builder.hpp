@@ -112,12 +112,7 @@ inline UIElement h3(std::string text, UIStyleParam style = nullptr) {
 }
 
 inline UIElement image(const Texture& texture, UIStyleParam style = nullptr) {
-    return UIStyle::applyStyle(
-        (UIElement){
-            .backgroundImage = texture,
-            .backgroundColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f),
-        },
-        style->image);
+    return UIStyle::applyStyle(UIElement(), style->image).backgroundImageSet(texture);
 }
 
 inline UIElement slot(UIAxis axis = UIAxis::Parent) {

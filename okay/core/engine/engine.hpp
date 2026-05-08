@@ -116,7 +116,8 @@ class Game {
                 break;
         }
 
-        _onInitialize();
+        if (_onInitialize)
+            _onInitialize();
 
         for (ISystem* system : enginePool) {
             system->postInitialize();
@@ -162,7 +163,8 @@ class Game {
                     break;
             }
 
-            _onUpdate();
+            if (_onUpdate)
+                _onUpdate();
 
             for (ISystem* system : enginePool) {
                 system->postTick();
@@ -197,7 +199,8 @@ class Game {
         std::cout << "Shutdown location: " << Engine.shutdownLoc().file_name() << ":"
                   << Engine.shutdownLoc().line() << std::endl;
 
-        _onShutdown();
+        if (_onShutdown)
+            _onShutdown();
     }
 
    private:

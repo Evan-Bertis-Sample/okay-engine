@@ -17,7 +17,7 @@
 
 namespace okay {
 
-inline void registerBuiltinComponentsAndSystems(SystemParameter<ECS> ecs) {
+inline void registerBuiltinComponentsAndSystems(SystemParameter<ECS> ecs = nullptr) {
     // components
     ecs->registerComponentType<TransformComponent>();
     ecs->registerComponentType<MeshRendererComponent>();
