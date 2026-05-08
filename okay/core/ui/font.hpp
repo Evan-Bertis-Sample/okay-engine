@@ -174,6 +174,9 @@ class FontManager {
 
     FontHandle defaultFont();
 
+    // Freetype's default
+    constexpr static int SDF_SPREAD_PX = 8;
+
    private:
     constexpr static int ATLAS_W = 2048;
     constexpr static int ATLAS_H = 2048;

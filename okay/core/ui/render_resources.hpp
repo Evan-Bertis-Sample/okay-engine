@@ -5,8 +5,8 @@
 #include <okay/core/asset/asset_util.hpp>
 #include <okay/core/asset/generic/texture_loader.hpp>
 #include <okay/core/renderer/material.hpp>
+#include <okay/core/renderer/materials/text_sdf.hpp>
 #include <okay/core/renderer/materials/ui_rect.hpp>
-#include <okay/core/renderer/materials/unlit.hpp>
 #include <okay/core/renderer/primitive.hpp>
 #include <okay/core/renderer/render_world.hpp>
 #include <okay/core/renderer/texture.hpp>
@@ -23,7 +23,7 @@ namespace okay {
 class UIRenderResoruces {
    public:
     using RectMaterial = UIRectMaterial;
-    using TextMaterial = UnlitMaterial;
+    using TextMaterial = TextSDFMaterial;
 
     static UIRenderResoruces& get() {
         static UIRenderResoruces instance;
@@ -101,6 +101,7 @@ class UIRenderResoruces {
         materialProperties->useScreenspaceCoords = true;
         materialProperties->castsShadows = false;
         materialProperties->recievesShadows = false;
+        materialProperties->pxRange = static_cast<float>(FontManager::SDF_SPREAD_PX);
 
         Renderer* renderer = Engine.systems.getSystemChecked<Renderer>();
         MaterialHandle handle = renderer->materialRegistry().registerMaterial(

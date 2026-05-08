@@ -151,7 +151,7 @@ struct UIElement {
     // Content
     OKAY_UI_ELEMENT_PROPERTY(Option<std::string>, text);
     OKAY_UI_ELEMENT_PROPERTY(TextStyle, textStyle);
-    OKAY_UI_ELEMENT_PROPERTY(glm::vec3, textColor, 1.0f, 1.0f, 1.0f);
+    OKAY_UI_ELEMENT_PROPERTY(glm::vec4, textColor, 1.0f, 1.0f, 1.0f, 1.0f);
 
     // background
     OKAY_UI_ELEMENT_PROPERTY(Option<Texture>, backgroundImage);

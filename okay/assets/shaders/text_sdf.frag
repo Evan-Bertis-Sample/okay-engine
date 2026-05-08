@@ -6,7 +6,7 @@ in vec2 v_uv;
 layout(location = 0) out vec4 FragColor;
 
 uniform sampler2D u_albedo;
-uniform vec3 u_color;
+uniform vec4 u_color;
 
 void main() {
     float sd = texture(u_albedo, v_uv).a;
@@ -21,5 +21,5 @@ void main() {
         discard;
     }
 
-    FragColor = vec4(u_color, alpha);
+    FragColor = vec4(u_color.rgb, alpha * u_color.a);
 }
