@@ -8,6 +8,10 @@ in vec3 v_worldNormal;
 in vec2 v_uv;
 in mat3 v_worldToTangent;
 
+in vec3 FragPos;
+in vec3 Normal;
+in vec2 TexCoords;
+in vec4 FragPosLightSpace;
 
 
 out vec4 FragColor;
@@ -19,7 +23,7 @@ uniform vec3 u_cameraPosition;
 uniform float u_ambient;     // e.g. 0.05
 uniform sampler2D u_albedo;  // optional, can be ignored if not used
 uniform sampler2D u_shadowMap; 
-
+uniform sampler2D diffuseTexture; // optional, can be ignored if not used
 /* Disney BSDF Parameters */
 // All params are in [0, 1]
 
@@ -446,10 +450,6 @@ float ShadowCalculation(vec4 fragPosLightSpace)
 }  
 
 
-in vec3 v_FragPos;
-in vec3 v_Normal;
-in vec2 v_TexCoords;
-in vec4 v_FragPosLightSpace;
 
 void main() {
     vec3 N = safeNormalize(v_worldNormal); // normal vector
@@ -461,7 +461,7 @@ void main() {
 
     int count = int(meta.x + 0.5);
     int maxLights = min(count, 16);
-
+    float shadow;
     for (int i = 0; i < 16; ++i) {
         if (i >= maxLights) break;
 
@@ -511,25 +511,36 @@ void main() {
         vec3 wi = safeNormalize(v_worldToTangent * L);
         vec3 wm = safeNormalize(wo + wi); // half vector
 
+        // shadow = (i == 0) ? ShadowCalculation(FragPosLightSpace) : 0.0;      
+         
         colorOut += evaluateDisney(nt, wi, wm, wo, baseColor) * Lrgb * intensity * att;
     }
 
-    // float spec = 0.0;
+   
+
+
+    // FragColor = texture(u_shadowMap, v_uv);
+    // vec3 color = texture(diffuseTexture, TexCoords).rgb;
+    // vec3 normal = normalize(Normal);
     // vec3 lightColor = vec3(1.0);
-    // vec3 lightDir = normalize(v_worldPos - v_FragPos);
-    // vec3 normal = normalize(v_Normal);
+    // // ambient
+    // vec3 ambient = 0.15 * lightColor;
+    // // diffuse
+    // vec3 lightDir = normalize(v_worldPos - FragPos);
     // float diff = max(dot(lightDir, normal), 0.0);
     // vec3 diffuse = diff * lightColor;
-    // vec3 ambient = 0.15 * lightColor;
-    // vec3 specular = spec * lightColor;
-    // FragColor = vec4(colorOut, texAlbedo.a);
-    // float shadow = ShadowCalculation(v_FragPosLightSpace);
-    // vec3 lighting = (ambient + (1.0 - shadow) * (diffuse + specular)) * colorOut;
-    // // lighting = vec3(1);
+    // // specular
+    // vec3 viewDir = normalize(u_cameraPosition - FragPos);
+    // float spec = 0.0;
+    // vec3 halfwayDir = normalize(lightDir + viewDir);  
+    // spec = pow(max(dot(normal, halfwayDir), 0.0), 64.0);
+    // vec3 specular = spec * lightColor;    
+    // // calculate shadow
+    // float shadow = ShadowCalculation(FragPosLightSpace);       
+    // vec3 lighting = (ambient + (1.0 - shadow) * (diffuse + specular)) * color;    
+    
     // FragColor = vec4(lighting, 1.0);
-    // float d = texture(u_shadowMap, v_TexCoords).r;
-    // FragColor = vec4(vec3(d), 1.0);
-
-
+    // FragColor = vec4(colorOut, 1.0);
+    // FragColor = vec4(vec3(shadow), 1.0);
     FragColor = texture(u_shadowMap, v_uv);
 }

@@ -142,8 +142,8 @@ class ScenePass : public IRenderPass {
 
             context.renderer.meshBuffer().drawMesh(item.mesh);
         }
-        displayDepthMap(context);
-
+        // displayDepthMap(context);
+        
     }
 
     void displayDepthMap(const RendererContext& context) {
@@ -182,7 +182,7 @@ class ScenePass : public IRenderPass {
         
         int w = context.renderer.width();
         int h = context.renderer.height();
-        glViewport(0, 0, w / 3, h / 3);  // bottom-left, 1/3 of screen
+        glViewport(0, 0, w, h);  // bottom-left, 1/3 of screen
         
         glDisable(GL_DEPTH_TEST);
         glUseProgram(program);
@@ -244,7 +244,14 @@ class ScenePass : public IRenderPass {
                 // );
                 
             GLuint loc = item.material->getShader().findUniformLocation("u_shadowMap");
-            glActiveTexture(GL_TEXTURE0 + _depthMap);
+
+            // glActiveTexture(GL_TEXTURE0 + _depthMap);
+            // // // glActiveTexture(GL_TEXTURE0);
+            // // glBindTexture(GL_TEXTURE_2D, _depthMap);
+            // glUniform1i((GLint)loc, (GLint)_depthMap);
+            // // // glUniform1i((GLint) loc, 0);
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, _depthMap);
             glUniform1i((GLint)loc, (GLint)_depthMap);
         }
     }

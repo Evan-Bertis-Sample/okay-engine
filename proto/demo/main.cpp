@@ -48,7 +48,7 @@ static void __gameInitialize() {
     // Additional game initialization logic
     okay::Texture texture = okay::load::engineTexture("textures/red.jpg");
     okay::Mesh object = okay::mesh(okay::load::engineMeshData("models/teapot.obj"));
-
+    
     okay::Mesh cube = okay::mesh(okay::primitives::box().build());
     okay::ShaderHandle shader = okay::shaderHandle(okay::load::engineShader("shaders/lit"));
 
@@ -81,9 +81,9 @@ static void __gameInitialize() {
     okay::ecs::entity()
         .addComponent<okay::TransformComponent>(
             pos1,
-            glm::vec3{0.1f},
+            glm::vec3{1.0f},
             glm::angleAxis(glm::radians(0.0f), glm::vec3{0.0f, 1.0f, 0.0f}))
-        .addComponent<okay::MeshRendererComponent>(object, material);
+        .addComponent<okay::MeshRendererComponent>(cube, material);
 
     glm::vec3 pos2 = glm::vec3(3.0f, 2.0f, 0.0f);
     okay::ecs::entity()
@@ -92,6 +92,8 @@ static void __gameInitialize() {
             glm::vec3{0.1f},
             glm::angleAxis(glm::radians(0.0f), glm::vec3{0.0f, 1.0f, 0.0f}))
         .addComponent<okay::MeshRendererComponent>(object, material);
+
+    
 
 }
 

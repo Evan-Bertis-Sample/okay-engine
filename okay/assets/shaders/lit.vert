@@ -10,7 +10,7 @@ layout(location = 4) in vec2 aTexCoords;
 uniform mat4 u_modelMatrix;
 uniform mat4 u_viewMatrix;
 uniform mat4 u_projectionMatrix;
-
+uniform mat4 u_lightSpaceMatrix;
 /* Material */
 uniform vec3 u_color;
 
@@ -23,11 +23,13 @@ out vec3 v_worldNormal;
 out vec2 v_uv;
 out mat3 v_worldToTangent;
 
+out vec3 FragPos;
+out vec3 Normal;
+out vec2 TexCoords;
+out vec4 FragPosLightSpace;
 
-out vec3 v_FragPos;
-out vec3 v_Normal;
-out vec2 v_TexCoords;
-out vec4 v_FragPosLightSpace;
+
+
 
 void main() {
     vec4 worldPos4 = u_modelMatrix * vec4(a_pos, 1.0f);
@@ -48,9 +50,11 @@ void main() {
     v_worldToTangent = transpose(TBN);
     gl_Position = u_projectionMatrix * u_viewMatrix * worldPos4;
 
-    // v_FragPos = vec3(u_modelMatrix * vec4(a_pos, 1.0));
-    // v_Normal = transpose(inverse(mat3(u_modelMatrix))) * a_normal;
-    // v_TexCoords = aTexCoords;
-    // v_FragPosLightSpace = u_projectionMatrix * vec4(v_FragPos, 1.0);
+    // FragPos = vec3(u_modelMatrix * vec4(a_pos, 1.0));
+    // Normal = transpose(inverse(mat3(u_modelMatrix))) * a_normal;
+    // TexCoords = aTexCoords;
+    // FragPosLightSpace = u_lightSpaceMatrix * vec4(FragPos, 1.0);
+    // gl_Position = u_projectionMatrix * u_viewMatrix * vec4(FragPos, 1.0);
+
     
 }
