@@ -24,7 +24,11 @@ struct Fit {};
 struct Grow {};
 struct Percent {
     float percent;
+
+    Percent(float percent) : percent(percent) {}
+    Percent() : percent(0) {}
 };
+
 struct Fixed {
     int pixels;
 

@@ -29,7 +29,7 @@ class UISystem : public ECSSystem<query::Get<TransformComponent, UIComponent>> {
         Renderer* renderer = Engine.systems.getSystemChecked<Renderer>();
         UIElement root = ui::flexbox()(ui.uiBuilder());
         ui.ui.update(root);
-        ui.ui.render(transform->position, renderer);
+        ui.ui.render(transform->position, ui.uiLayer, renderer);
     };
 
     void onEntityRemoved(QueryT::Item& item) override {};

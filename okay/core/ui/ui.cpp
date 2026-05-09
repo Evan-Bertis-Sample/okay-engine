@@ -385,12 +385,13 @@ void UILayout::toString(std::stringstream& ss, const UINode& node, int indent) c
 
 // UI
 
-void UI::render(glm::vec2 screenPosition, SystemParameter<Renderer> renderer) {
+void UI::render(
+    glm::vec2 screenPosition, std::uint8_t uiLayer, SystemParameter<Renderer> renderer) {
     UILayout::Context layoutContext{
         .screenSize = glm::ivec2(renderer->width(), renderer->height()),
     };
     _layout.layout(layoutContext);
-    renderNode(_root, *renderer, (0x1 << 7) + 1);
+    renderNode(_root, *renderer, (0x1 << 7) + 1 + (uiLayer * 24));
 }
 
 void UI::update(UIElement newRoot) {
@@ -626,6 +627,7 @@ LayoutRect& UILayout::getOrMakeRect(const UINode& node) {
     }
     return _layoutMap[node.id];
 }
+
 int UILayout::computeSize(ElementRealSize size, int parentSize) const {
     if (std::holds_alternative<size::Percent>(size)) {
         float percent = std::get<size::Percent>(size).percent;
@@ -635,16 +637,19 @@ int UILayout::computeSize(ElementRealSize size, int parentSize) const {
     }
     return 0;
 }
+
 UI::NodeRenderInfo& UI::getNodeRenderInfo(UINode::ID nodeID) {
     if (!_nodeRenderInfo.contains(nodeID)) {
         _nodeRenderInfo[nodeID] = NodeRenderInfo{};
     }
     return _nodeRenderInfo[nodeID];
 }
+
 Option<LayoutRect> UILayout::getLayout(UINode::ID nodeID) const {
     if (!_layoutMap.contains(nodeID)) {
         return Option<LayoutRect>::none();
     }
     return _layoutMap.at(nodeID);
 }
+
 }  // namespace okay

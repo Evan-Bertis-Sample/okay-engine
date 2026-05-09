@@ -201,7 +201,7 @@ Texture UIRenderResoruces::getElementTexture(const UIElement& element) const {
         return element.backgroundImage.value();
     }
 
-    // Engine.logger.debug("Using white texture for UI element with no background image");
+    Engine.logger.debug("Using white texture for UI element with no background image");
     return _whiteTexture;
 }
 

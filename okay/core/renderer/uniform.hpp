@@ -280,13 +280,6 @@ class TextureProperty {
         return _params;
     }
 
-    void setUnit(GLuint unit) {
-        _unit = unit;
-    }
-    GLuint unit() const {
-        return _unit;
-    }
-
     std::uint32_t version() const {
         return _version;
     }
@@ -299,7 +292,6 @@ class TextureProperty {
    private:
     Texture _value{};
     Texture::TextureParameters _params{};
-    GLuint _unit{0};
     std::uint32_t _version{1};
 };
 
