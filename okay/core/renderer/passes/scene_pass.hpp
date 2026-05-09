@@ -139,7 +139,13 @@ class ScenePass : public IRenderPass {
             Failable f = item.material->passUniforms();
             if (f.isError())
                 Engine.logger.error("Failed to pass uniforms : {}", f.error());
-
+            if (auto* lit = dynamic_cast<okay::LitMaterial*>(item.material->properties().get())) {
+                GLuint loc = item.material->getShader().findUniformLocation("u_shadowMap");
+                constexpr GLint SHADOW_MAP_UNIT = 7;
+                glActiveTexture(GL_TEXTURE0 + SHADOW_MAP_UNIT);
+                glBindTexture(GL_TEXTURE_2D, _depthMap);
+                glUniform1i((GLint)loc, SHADOW_MAP_UNIT);
+            }
             context.renderer.meshBuffer().drawMesh(item.mesh);
         }
         // displayDepthMap(context);
@@ -251,10 +257,10 @@ class ScenePass : public IRenderPass {
             // glUniform1i((GLint)loc, (GLint)_depthMap);
             // // // glUniform1i((GLint) loc, 0);
 
-            constexpr GLint SHADOW_MAP_UNIT = 7; // choose a texture unit to avoid conflicts with other textures
-            glActiveTexture(GL_TEXTURE0 + SHADOW_MAP_UNIT);
-            glBindTexture(GL_TEXTURE_2D, _depthMap);
-            glUniform1i((GLint)loc, SHADOW_MAP_UNIT);
+            // constexpr GLint SHADOW_MAP_UNIT = 7; // choose a texture unit to avoid conflicts with other textures
+            // glActiveTexture(GL_TEXTURE0 + SHADOW_MAP_UNIT);
+            // glBindTexture(GL_TEXTURE_2D, _depthMap);
+            // glUniform1i((GLint)loc, SHADOW_MAP_UNIT);
         }
     }
 
