@@ -155,7 +155,6 @@ void UIRenderResoruces::loadResoruces() {
         rectShader.vertexShader, rectShader.fragmentShader);
 
     _quadMesh = renderer->meshBuffer().addMesh(
-
         primitives::rect().sizeSet(glm::vec2(1.0f, 1.0f)).twoSidedSet(true).build());
 }
 

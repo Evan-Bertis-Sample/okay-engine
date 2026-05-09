@@ -40,6 +40,8 @@ struct AssetLoader<Texture, TextureLoadSettings> {
         const TextureLoadSettings& settings) {
         std::shared_ptr<TextureDataStore> store = settings.store;
 
+        stbi_set_flip_vertically_on_load(true);
+
         // get the size of the image
         int width, height, channels;
         if (stbi_info(path.string().c_str(), &width, &height, &channels) == 0) {
