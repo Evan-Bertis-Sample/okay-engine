@@ -250,9 +250,11 @@ class ScenePass : public IRenderPass {
             // // glBindTexture(GL_TEXTURE_2D, _depthMap);
             // glUniform1i((GLint)loc, (GLint)_depthMap);
             // // // glUniform1i((GLint) loc, 0);
-            glActiveTexture(GL_TEXTURE0);
+
+            constexpr GLint SHADOW_MAP_UNIT = 7; // choose a texture unit to avoid conflicts with other textures
+            glActiveTexture(GL_TEXTURE0 + SHADOW_MAP_UNIT);
             glBindTexture(GL_TEXTURE_2D, _depthMap);
-            glUniform1i((GLint)loc, (GLint)_depthMap);
+            glUniform1i((GLint)loc, SHADOW_MAP_UNIT);
         }
     }
 
