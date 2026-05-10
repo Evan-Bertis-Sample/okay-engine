@@ -274,9 +274,9 @@ class TextureManager {
         const Texture& tex,
         const Texture::TextureParameters& params,
         GLuint unit) {
-        if (!tex.store || TextureDataStore::TextureHandle::isNone(tex.handle)) {
-            return Failable::errorResult("Tried to bind an empty texture.");
-        }
+        // if (!tex.store || TextureDataStore::TextureHandle::isNone(tex.handle)) {
+        // return Failable::errorResult("Tried to bind an empty texture.");
+        // }
 
         GLuint id = 0;
         auto r = ensureUploaded2D(tex, params, id);

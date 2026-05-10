@@ -50,6 +50,7 @@ class RendererSystem : public ECSSystem<query::Get<TransformComponent, MeshRende
         props.transform = transform.transform;
         props.mesh = render.mesh;
         props.material = render.material;
+        props.renderLayer = render.renderLayer;
 
         // Deconsturctor of props will resubmit the entity with the updated properties
     };

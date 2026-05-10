@@ -5,6 +5,7 @@
 
 #include <array>
 #include <cstdint>
+#include <iostream>
 #include <iterator>
 #include <map>
 #include <memory>
@@ -184,6 +185,7 @@ class SystemManager {
     T* getSystemChecked() {
         Option<T*> opt = getSystem<T>();
         if (!opt) {
+            std::cout << "ERROR: Unable to get system " << typeid(T).name() << std::endl;
             while (true) {
             }
         }

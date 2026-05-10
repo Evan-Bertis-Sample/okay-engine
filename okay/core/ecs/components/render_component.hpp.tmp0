@@ -19,8 +19,9 @@ struct MeshRendererComponent {
     RenderEntity renderEntity{};
 
     MeshRendererComponent() {}
-    MeshRendererComponent(Mesh mesh, MaterialHandle mat, std::uint8_t renderLayer = 0)
-        : mesh(mesh), material(mat), renderLayer(renderLayer) {}
+    MeshRendererComponent(Mesh mesh, MaterialHandle mat, std::uint8_t renderLayer = 0) :
+        mesh(mesh), material(mat), renderLayer(renderLayer) {}
+
 };
 
 }  // namespace okay
