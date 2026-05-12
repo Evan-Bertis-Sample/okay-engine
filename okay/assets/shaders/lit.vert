@@ -50,11 +50,11 @@ void main() {
     v_worldToTangent = transpose(TBN);
     gl_Position = u_projectionMatrix * u_viewMatrix * worldPos4;
 
-    // FragPos = vec3(u_modelMatrix * vec4(a_pos, 1.0));
-    // Normal = transpose(inverse(mat3(u_modelMatrix))) * a_normal;
-    // TexCoords = aTexCoords;
-    // FragPosLightSpace = u_lightSpaceMatrix * vec4(FragPos, 1.0);
-    // gl_Position = u_projectionMatrix * u_viewMatrix * vec4(FragPos, 1.0);
+    FragPos = vec3(u_modelMatrix * vec4(a_pos, 1.0));
+    Normal = transpose(inverse(mat3(u_modelMatrix))) * a_normal;
+    TexCoords = aTexCoords;
+    FragPosLightSpace = u_lightSpaceMatrix * vec4(FragPos, 1.0);
+    gl_Position = u_projectionMatrix * u_viewMatrix * vec4(FragPos, 1.0);
 
     
 }

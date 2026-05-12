@@ -38,19 +38,23 @@ struct LitMaterial : public SceneMaterialProperties, public OkayMaterialProperti
     UniformProperty<float, FixedString("u_specularTrans")> specularTrans{0.0f};
     UniformProperty<float, FixedString("u_flatness")> flatness{0.0f};
     UniformProperty<int, FixedString("u_thin")> thin{0};
+    UniformProperty<glm::mat4, FixedString("u_modelMatrix")> modelMatrix{};
+    UniformProperty<glm::mat4, FixedString("u_viewMatrix")> viewMatrix{};
+    UniformProperty<glm::mat4, FixedString("u_projectionMatrix")> projectionMatrix{};
+    UniformProperty<glm::mat4, FixedString("u_lightSpaceMatrix")> lightSpaceMatrix{};
     TextureProperty<FixedString("u_shadowMap")> shadowMap;
     
 
     auto uniformRefs() {
         return std::tuple_cat(SceneMaterialProperties::uniformRefs(), std::tie(
             ambient, color, metallic, specular, specularTint, roughness, anisotropic, 
-            sheen, sheenTint, clearcoat, clearcoatGloss, specularTrans, flatness, thin
+            sheen, sheenTint, clearcoat, clearcoatGloss, specularTrans, flatness, thin, modelMatrix, viewMatrix, projectionMatrix, lightSpaceMatrix
         ));
     }
     auto uniformRefs() const {
         return std::tuple_cat(SceneMaterialProperties::uniformRefs(), std::tie(
             ambient, color, metallic, specular, specularTint, roughness, anisotropic, 
-            sheen, sheenTint, clearcoat, clearcoatGloss, specularTrans, flatness, thin
+            sheen, sheenTint, clearcoat, clearcoatGloss, specularTrans, flatness, thin, modelMatrix, viewMatrix, projectionMatrix, lightSpaceMatrix
         ));
     }
 

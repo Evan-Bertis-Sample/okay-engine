@@ -140,11 +140,18 @@ class ScenePass : public IRenderPass {
             if (f.isError())
                 Engine.logger.error("Failed to pass uniforms : {}", f.error());
             if (auto* lit = dynamic_cast<okay::LitMaterial*>(item.material->properties().get())) {
+                
+                lit->projectionMatrix.set(projection);
+                lit->viewMatrix.set(view);
+                lit->cameraPosition.set(camPos);
+                lit->cameraDirection.set(camDir);
+
+                lit->lightSpaceMatrix.set(_lightSpaceMatrix);
                 GLuint loc = item.material->getShader().findUniformLocation("u_shadowMap");
                 constexpr GLint SHADOW_MAP_UNIT = 7;
-                glActiveTexture(GL_TEXTURE0 + _depthMap);
+                glActiveTexture(GL_TEXTURE0 + SHADOW_MAP_UNIT);
                 glBindTexture(GL_TEXTURE_2D, _depthMap);
-                glUniform1i((GLint)loc, GLint(_depthMap));
+                glUniform1i((GLint)loc, SHADOW_MAP_UNIT);
             }
             context.renderer.meshBuffer().drawMesh(item.mesh);
         }

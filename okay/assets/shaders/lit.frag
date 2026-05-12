@@ -445,7 +445,7 @@ float ShadowCalculation(vec4 fragPosLightSpace)
     float currentDepth = projCoords.z;
     // check whether current frag pos is in shadow
     float shadow = currentDepth > closestDepth  ? 1.0 : 0.0;
-
+    
     return shadow;
 }  
 
@@ -461,7 +461,7 @@ void main() {
 
     int count = int(meta.x + 0.5);
     int maxLights = min(count, 16);
-    float shadow;
+    float shadow = 0.0f;
     for (int i = 0; i < 16; ++i) {
         if (i >= maxLights) break;
 
@@ -510,10 +510,12 @@ void main() {
         vec3 wo = safeNormalize(v_worldToTangent * V);
         vec3 wi = safeNormalize(v_worldToTangent * L);
         vec3 wm = safeNormalize(wo + wi); // half vector
-
-        // shadow = (i == 0) ? ShadowCalculation(FragPosLightSpace) : 0.0;      
-         
-        colorOut += evaluateDisney(nt, wi, wm, wo, baseColor) * Lrgb * intensity * att;
+        
+        shadow = (i == 0) ? ShadowCalculation(FragPosLightSpace) : 0.0;
+        shadow = 0.0;
+        colorOut += evaluateDisney(nt, wi, wm, wo, baseColor) * Lrgb * intensity * att * (1.0 - shadow);
+        // colorOut += evaluateDisney(nt, wi, wm, wo, baseColor) * Lrgb * intensity * att;
+    
     }
 
    
@@ -542,5 +544,7 @@ void main() {
     // FragColor = vec4(lighting, 1.0);
     // FragColor = vec4(colorOut, 1.0);
     // FragColor = vec4(vec3(shadow), 1.0);
-    FragColor = texture(u_shadowMap, v_uv);
+    // FragColor = texture(u_shadowMap, v_uv);
+    FragColor = vec4(colorOut, 1.0);
+    // FragColor = vec4(vec3(0.0),1.0);
 }
