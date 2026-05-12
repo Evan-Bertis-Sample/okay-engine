@@ -46,7 +46,7 @@ int main() {
 
 static void __gameInitialize() {
     // Additional game initialization logic
-    okay::Texture texture = okay::load::engineTexture("textures/red.jpg");
+    okay::Texture texture = okay::load::engineTexture("textures/uv_test.jpg");
     okay::Mesh object = okay::mesh(okay::load::engineMeshData("models/teapot.obj"));
     
     okay::Mesh cube = okay::mesh(okay::primitives::box().build());
