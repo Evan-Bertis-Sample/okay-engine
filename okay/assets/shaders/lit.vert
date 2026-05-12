@@ -23,12 +23,10 @@ out vec3 v_worldNormal;
 out vec2 v_uv;
 out mat3 v_worldToTangent;
 
-out vec3 FragPos;
-out vec3 Normal;
-out vec2 TexCoords;
-out vec4 FragPosLightSpace;
-
-
+out vec3 v_fragPos;
+out vec3 v_normal;
+out vec2 v_texCoords;
+out vec4 v_fragPosLightSpace;
 
 
 void main() {
@@ -50,11 +48,11 @@ void main() {
     v_worldToTangent = transpose(TBN);
     gl_Position = u_projectionMatrix * u_viewMatrix * worldPos4;
 
-    FragPos = vec3(u_modelMatrix * vec4(a_pos, 1.0));
-    Normal = transpose(inverse(mat3(u_modelMatrix))) * a_normal;
-    TexCoords = aTexCoords;
-    FragPosLightSpace = u_lightSpaceMatrix * vec4(FragPos, 1.0);
-    gl_Position = u_projectionMatrix * u_viewMatrix * vec4(FragPos, 1.0);
+    v_fragPos = vec3(u_modelMatrix * vec4(a_pos, 1.0));
+    v_normal = transpose(inverse(mat3(u_modelMatrix))) * a_normal;
+    v_texCoords = aTexCoords;
+    v_fragPosLightSpace = u_lightSpaceMatrix * vec4(v_fragPos, 1.0);
+    gl_Position = u_projectionMatrix * u_viewMatrix * vec4(v_fragPos, 1.0);
 
     
 }
