@@ -134,19 +134,21 @@ class ScenePass : public IRenderPass {
 
             // Set per-object uniforms
             setPerObjectUniforms(item);
-
+            
+            if (auto* lit = dynamic_cast<okay::LitMaterial*>(item.material->properties().get())) {
+                lit->projectionMatrix.set(projection);
+                lit->viewMatrix.set(view);
+                lit->cameraPosition.set(camPos);
+                lit->cameraDirection.set(camDir);
+                lit->lightSpaceMatrix.set(_lightSpaceMatrix);
+            }
             // Now push uniforms for this draw (or only the ones you changed)
             Failable f = item.material->passUniforms();
             if (f.isError())
                 Engine.logger.error("Failed to pass uniforms : {}", f.error());
             if (auto* lit = dynamic_cast<okay::LitMaterial*>(item.material->properties().get())) {
                 
-                lit->projectionMatrix.set(projection);
-                lit->viewMatrix.set(view);
-                lit->cameraPosition.set(camPos);
-                lit->cameraDirection.set(camDir);
-
-                lit->lightSpaceMatrix.set(_lightSpaceMatrix);
+                
                 GLuint loc = item.material->getShader().findUniformLocation("u_shadowMap");
                 constexpr GLint SHADOW_MAP_UNIT = 7;
                 glActiveTexture(GL_TEXTURE0 + SHADOW_MAP_UNIT);
@@ -242,8 +244,9 @@ class ScenePass : public IRenderPass {
             std::size_t i = 0;
             for (auto l : context.world.lights()) {
                 block.lights[i++] = l;
-                
             }
+
+           
              // bind texture to shadow map
             //  glBindFramebuffer(_depthMapFBO, lit->shadowMap.get().getGLTextureID());
             //  lit->shadowMap.set()
@@ -256,7 +259,7 @@ class ScenePass : public IRenderPass {
                 //     Text
                 // );
                 
-            GLuint loc = item.material->getShader().findUniformLocation("u_shadowMap");
+            // GLuint loc = item.material->getShader().findUniformLocation("u_shadowMap");
 
             // glActiveTexture(GL_TEXTURE0 + _depthMap);
             // // // glActiveTexture(GL_TEXTURE0);

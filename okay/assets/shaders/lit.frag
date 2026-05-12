@@ -512,7 +512,6 @@ void main() {
         vec3 wm = safeNormalize(wo + wi); // half vector
         
         shadow = (i == 0) ? ShadowCalculation(FragPosLightSpace) : 0.0;
-        shadow = 0.0;
         colorOut += evaluateDisney(nt, wi, wm, wo, baseColor) * Lrgb * intensity * att * (1.0 - shadow);
         // colorOut += evaluateDisney(nt, wi, wm, wo, baseColor) * Lrgb * intensity * att;
     
