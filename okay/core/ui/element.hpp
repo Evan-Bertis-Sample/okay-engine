@@ -321,7 +321,7 @@ struct UIElement {
     std::size_t contentHash() const {
         std::size_t textHash = (text.isSome()) ? std::hash<std::string>{}(text.value()) : 0;
         std::size_t backgroundHash =
-            (backgroundImage.isSome()) ? backgroundImage.value().getGLTextureID() : 0;
+            (backgroundImage.isSome()) ? backgroundImage.value().handle.start : 0;
         return hashCombine(textHash, backgroundHash);
     }
 };

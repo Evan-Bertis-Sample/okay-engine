@@ -6,6 +6,7 @@
 
 #include <okay/core/asset/asset_util.hpp>
 #include <okay/core/engine/engine.hpp>
+#include <okay/core/renderer/gpu.hpp>
 #include <okay/core/renderer/texture.hpp>
 
 #include <imgui.h>
@@ -50,19 +51,19 @@ void Renderer::initialize() {
         .wrapS = GL_REPEAT,
         .wrapT = GL_REPEAT,
     };
-    Failable uploadRes = white.uploadToGPU(params);
-
+    GLuint whiteID = 0;
+    Failable uploadRes = GPUState::instance().textures.ensureUploaded2D(white, params, whiteID);
     if (uploadRes.isError()) {
         Engine.logger.error("Unable to upload white texture to GPU! Error: {}", uploadRes.error());
     } else {
-        if (white.getGLTextureID() != 0) {
+        if (whiteID != 1) {
             Engine.logger.warn(
-                "White texture is not uploaded at 0"
-                "it is located at {}."
+                "White texture is not uploaded at 1, "
+                "it is located at {}. "
                 "For texture defaults to work properly,"
                 "ensure no texture is uploaded before "
                 "render initialization.",
-                white.getGLTextureID());
+                whiteID);
         }
     }
 

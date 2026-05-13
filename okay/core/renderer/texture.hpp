@@ -190,95 +190,6 @@ class Texture {
         return store->getTextureMeta(handle);
     }
 
-    bool hasBeenUploadedToGPU() const {
-        return _glTextureID != 0;
-    }
-
-    GLuint getGLTextureID() const {
-        return _glTextureID;
-    }
-
-    Failable uploadToGPU(const TextureParameters& params) {
-        const auto meta = getMeta();
-        const auto data = getData();
-
-        Engine.logger.info("Uploading texture to GPU: width={}, height={}, format={}",
-            meta.width,
-            meta.height,
-            static_cast<int>(meta.format));
-
-        if (meta.format == OkayTextureMeta::Format::DEPTH24_STENCIL8) {
-            GL_CHECK_FAILABLE(glGenTextures(1, &_glTextureID));
-            GL_CHECK_FAILABLE(glBindTexture(GL_TEXTURE_2D, _glTextureID));
-            GL_CHECK_FAILABLE(glTexImage2D(GL_TEXTURE_2D,
-                0,
-                GL_DEPTH24_STENCIL8,
-                meta.width,
-                meta.height,
-                0,
-                GL_DEPTH_STENCIL,
-                GL_UNSIGNED_INT_24_8,
-                nullptr));
-        } else {
-            GLenum glFormat;
-            GLenum glInternalFormat;
-            switch (meta.format) {
-                case OkayTextureMeta::Format::RGBA8:
-                    glFormat = GL_RGBA;
-                    glInternalFormat = GL_RGBA8;
-                    break;
-                case OkayTextureMeta::Format::RGB8:
-                    glFormat = GL_RGB;
-                    glInternalFormat = GL_RGB8;
-                    break;
-                case OkayTextureMeta::Format::RGBA16F:
-                    glFormat = GL_RGBA;
-                    glInternalFormat = GL_RGBA16F;
-                    break;
-                case OkayTextureMeta::Format::RGB16F:
-                    glFormat = GL_RGB;
-                    glInternalFormat = GL_RGB16F;
-                    break;
-                default:
-                    return Failable::errorResult("Unsupported texture format");
-            }
-
-            Engine.logger.debug(
-                "Texture format: glFormat={}, glInternalFormat={}", glFormat, glInternalFormat);
-
-            GL_CHECK_FAILABLE(glGenTextures(1, &_glTextureID));
-            GL_CHECK_FAILABLE(glBindTexture(GL_TEXTURE_2D, _glTextureID));
-            GL_CHECK_FAILABLE(glTexImage2D(GL_TEXTURE_2D,
-                0,
-                glFormat,
-                meta.width,
-                meta.height,
-                0,
-                glFormat,
-                GL_UNSIGNED_BYTE,
-                data.data()));
-        }
-
-        Engine.logger.debug("Texture uploaded to GPU with ID {}", _glTextureID);
-
-        // set parameters
-        GL_CHECK_FAILABLE(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, params.minFilter));
-        GL_CHECK_FAILABLE(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, params.magFilter));
-        GL_CHECK_FAILABLE(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, params.wrapS));
-        GL_CHECK_FAILABLE(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, params.wrapT));
-
-        return Failable::ok({});
-    }
-
-    Failable bind() const {
-        if (_glTextureID == 0) {
-            return Failable::errorResult("Texture not uploaded to GPU");
-        }
-
-        glBindTexture(GL_TEXTURE_2D, _glTextureID);
-        return Failable::ok({});
-    }
-
     bool operator==(const Texture& other) const {
         return handle == other.handle;
     }
@@ -288,9 +199,6 @@ class Texture {
     bool operator<(const Texture& other) const {
         return handle < other.handle;
     }
-
-   private:
-    GLuint _glTextureID{0};
 };
 
 }  // namespace okay
