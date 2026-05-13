@@ -3,6 +3,10 @@
 
 #include <okay/core/asset/asset.hpp>
 #include <okay/core/asset/asset_util.hpp>
+#include <okay/core/asset/generic/font_loader.hpp>
+#include <okay/core/asset/generic/shader_loader.hpp>
+#include <okay/core/asset/generic/texture_loader.hpp>
+#include <okay/core/asset/mesh/mesh_loader.hpp>
 #include <okay/core/engine/system.hpp>
 
 #include <filesystem>
@@ -27,12 +31,14 @@ class AssetRef {
     T& operator*() {
         if (!loaded)
             load();
+
         return asset;
     }
 
     T* operator->() {
         if (!loaded)
             load();
+
         return &asset;
     }
 
@@ -44,11 +50,13 @@ class AssetRef {
    private:
     void load() {
         if constexpr (engineAsset) {
-            assetManager->loadEngineAssetSync<T, AssetManager::DefaultAssetIO, LoadOptions>(
-                path, loadOptions);
+            asset = unwrapAssetResult(
+                assetManager->loadEngineAssetSync<T, AssetManager::DefaultAssetIO, LoadOptions>(
+                    path, loadOptions));
         } else {
-            assetManager->loadGameAssetSync<T, AssetManager::DefaultAssetIO, LoadOptions>(
-                path, loadOptions);
+            asset = unwrapAssetResult(
+                assetManager->loadGameAssetSync<T, AssetManager::DefaultAssetIO, LoadOptions>(
+                    path, loadOptions));
         }
         loaded = true;
     }

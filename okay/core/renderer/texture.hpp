@@ -75,6 +75,11 @@ class TextureDataStore {
     }
 
     OkayTextureMeta getTextureMeta(TextureHandle handle) const {
+        if (TextureHandle::isNone(handle)) {
+            // Engine.logger.error("Unable to get texture Meta of invalid handle!");
+            return OkayTextureMeta{};
+        }
+
         return _metaMap.at(handle);
     }
 

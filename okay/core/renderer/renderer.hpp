@@ -39,8 +39,6 @@ class Renderer : public System<SystemScope::ENGINE> {
           _pipeline(std::move(settings.pipeline)),
           _imguiEnabled(settings.enableIMGUI) {}
 
-    Shader shader;
-
     void initialize() override;
     void postInitialize() override;
     void preTick() override;
@@ -64,12 +62,21 @@ class Renderer : public System<SystemScope::ENGINE> {
     uint32_t width() const {
         return _surfaceConfig.width;
     }
+
     uint32_t height() const {
         return _surfaceConfig.height;
     }
 
     void* getSurfaceWindow() {
         return _surface->getWindow();
+    }
+
+    void setSkyboxMaterial(MaterialHandle mat) {
+        _skyboxMaterial = mat;
+    }
+
+    MaterialHandle skyboxMaterial() {
+        return _skyboxMaterial;
     }
 
    private:
@@ -83,6 +90,7 @@ class Renderer : public System<SystemScope::ENGINE> {
     std::unique_ptr<IMGUIImpl> _imguiImpl;
     bool _imguiEnabled{false};
     bool _imguiInitialized{false};
+    MaterialHandle _skyboxMaterial{MaterialHandle::none()};
 };
 
 }  // namespace okay

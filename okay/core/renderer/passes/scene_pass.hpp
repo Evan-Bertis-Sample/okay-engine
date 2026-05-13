@@ -28,7 +28,12 @@ class ScenePass : public IRenderPass {
         return "ScenePass";
     }
 
-    virtual void initialize() override {}
+    virtual void initialize() override {
+        _skyboxMesh = Engine.systems.getSystemChecked<Renderer>()->meshBuffer().addMesh(
+            okay::primitives::box()
+                .sizeSet(glm::vec3{2.0f, 2.0f, 2.0f})  // to span -1.0 to 1.0
+                .build());
+    }
 
     virtual void resize(int newWidth, int newHeight) override {}
 
@@ -46,14 +51,52 @@ class ScenePass : public IRenderPass {
 
         _shaderIndex = Shader::invalidID();
         _materialIndex = Material::invalidID();
-
-        _ndcProjectionPmatrix = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, 0.0f, 1.0f);
+        _screenSpaceProjectionMat = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, 0.0f, 10.0f);
 
         float aspect = float(context.renderer.width()) / float(context.renderer.height());
         auto view = context.world.camera().viewMatrix();
         auto projection = context.world.camera().projectionMatrix(aspect);
         auto camPos = context.world.camera().position();
         auto camDir = context.world.camera().direction();
+
+        // render the skybox
+        MaterialHandle skyboxMaterial = context.renderer.skyboxMaterial();
+        if (skyboxMaterial.isValid()) {
+            glDepthMask(GL_FALSE);
+            glDepthFunc(GL_LEQUAL);
+            glDisable(GL_BLEND);
+            glEnable(GL_DEPTH_TEST);
+            glDisable(GL_CULL_FACE);
+
+            Failable f = skyboxMaterial->setShader();
+
+            if (f.isError()) {
+                Engine.logger.error("Failed to set skybox shader! Error: {}", f.error());
+            }
+
+            if (auto* props =
+                    dynamic_cast<SceneMaterialProperties*>(skyboxMaterial->properties().get())) {
+                props->modelMatrix.set(glm::identity<glm::mat4>());
+                props->projectionMatrix.set(_screenSpaceProjectionMat);
+                props->viewMatrix.set(glm::mat4(glm::mat3(view)));
+                props->timeMs = Engine.time->deltaTimeMs();
+                Failable passRes = skyboxMaterial->passUniforms();
+
+                if (passRes.isError()) {
+                    Engine.logger.error(
+                        "Failed to pass scene props to skybox material! Error: {}", f.error());
+                }
+            }
+
+            if (!f.isError())
+                context.renderer.meshBuffer().drawMesh(_skyboxMesh);
+
+            glDepthFunc(GL_LESS);
+            glDepthMask(GL_TRUE);
+
+            _shaderIndex = Shader::invalidID();
+            _materialIndex = Material::invalidID();
+        };
 
         for (const RenderItemHandle& handle : context.world.getRenderItems()) {
             RenderItem& item = context.world.getRenderItem(handle);
@@ -113,7 +156,7 @@ class ScenePass : public IRenderPass {
 
         if (auto* sceneProps = dynamic_cast<okay::SceneMaterialProperties*>(uniforms.get())) {
             if (flags.hasFlag(MaterialFlags::SCREEN_SPACE)) {
-                sceneProps->projectionMatrix.set(_ndcProjectionPmatrix);
+                sceneProps->projectionMatrix.set(_screenSpaceProjectionMat);
                 sceneProps->viewMatrix.set(glm::identity<glm::mat4>());
             } else {
                 sceneProps->projectionMatrix.set(projection);
@@ -172,8 +215,8 @@ class ScenePass : public IRenderPass {
    private:
     std::uint32_t _shaderIndex{Shader::invalidID()};
     std::uint32_t _materialIndex{Material::invalidID()};
-
-    glm::mat4 _ndcProjectionPmatrix{};
+    glm::mat4 _screenSpaceProjectionMat{};
+    Mesh _skyboxMesh;
 };
 
 };  // namespace okay
