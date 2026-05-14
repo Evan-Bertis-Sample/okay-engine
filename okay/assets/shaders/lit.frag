@@ -8,8 +8,6 @@ in vec3 v_worldNormal;
 in vec2 v_uv;
 in mat3 v_worldToTangent;
 
-in vec3 v_fragPos;
-in vec3 v_normal;
 in vec2 v_texCoords;
 in vec4 v_fragPosLightSpace;
 
@@ -444,7 +442,7 @@ float ShadowCalculation(vec4 fragPosLightSpace)
     // get depth of current fragment from light's perspective
     float currentDepth = projCoords.z;
     // check whether current frag pos is in shadow
-    float shadow = currentDepth > closestDepth  ? 1.0 : 0.0;
+    float shadow = currentDepth > closestDepth ? 1.0 : 0.0;
     
     return shadow;
 }  
@@ -452,7 +450,6 @@ float ShadowCalculation(vec4 fragPosLightSpace)
 
 
 void main() {
-    vec3 N = safeNormalize(v_worldNormal); // normal vector
     vec3 V = safeNormalize(u_cameraPosition - v_worldPos); // view vector
     
     vec4 texAlbedo = texture(u_albedo, v_uv);
@@ -461,7 +458,7 @@ void main() {
 
     int count = int(meta.x + 0.5);
     int maxLights = min(count, 16);
-    float shadow = 0.0f;
+    float shadow = 0.0;
     for (int i = 0; i < 16; ++i) {
         if (i >= maxLights) break;
 
@@ -516,35 +513,5 @@ void main() {
         // colorOut += evaluateDisney(nt, wi, wm, wo, baseColor) * Lrgb * intensity * att;
     
     }
-
-   
-
-
-    // FragColor = texture(u_shadowMap, v_uv);
-    // vec3 color = texture(diffuseTexture, TexCoords).rgb;
-    // vec3 normal = normalize(Normal);
-    // vec3 lightColor = vec3(1.0);
-    // // ambient
-    // vec3 ambient = 0.15 * lightColor;
-    // // diffuse
-    // vec3 lightDir = normalize(v_worldPos - FragPos);
-    // float diff = max(dot(lightDir, normal), 0.0);
-    // vec3 diffuse = diff * lightColor;
-    // // specular
-    // vec3 viewDir = normalize(u_cameraPosition - FragPos);
-    // float spec = 0.0;
-    // vec3 halfwayDir = normalize(lightDir + viewDir);  
-    // spec = pow(max(dot(normal, halfwayDir), 0.0), 64.0);
-    // vec3 specular = spec * lightColor;    
-    // // calculate shadow
-    // float shadow = ShadowCalculation(FragPosLightSpace);       
-    // vec3 lighting = (ambient + (1.0 - shadow) * (diffuse + specular)) * color;    
-    
-    // FragColor = vec4(lighting, 1.0);
-    // FragColor = vec4(colorOut, 1.0);
-    // FragColor = vec4(vec3(shadow), 1.0);
-    // FragColor = texture(u_shadowMap, v_uv);
-    FragColor = vec4(colorOut, 1.0);
-    
-    // FragColor = vec4(vec3(0.0),1.0);
+    FragColor = vec4(colorOut, texAlbedo.a);
 }
