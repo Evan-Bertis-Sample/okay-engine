@@ -10,6 +10,8 @@
 #include <imgui.h>
 #include <utility>
 
+namespace ui = okay::ui;
+
 static void __gameInitialize();
 static void __gameUpdate();
 static void __gameShutdown();
@@ -25,18 +27,17 @@ int main() {
     surfaceConfig.height = 480;
     okay::Surface surface(surfaceConfig);
 
-    okay::RendererSettings rendererSettings{
-        .surfaceConfig = surfaceConfig,
+    okay::RendererSettings rendererSettings{.surfaceConfig = surfaceConfig,
         .pipeline = okay::RenderPipeline::create(std::make_unique<okay::ScenePass>()),
-        .enableIMGUI = true};
+        .enableIMGUI = false};
 
     auto renderer = okay::Renderer::create(std::move(rendererSettings));
 
     okay::Game::create()
         .addSystems(std::move(renderer),
-                    std::make_unique<okay::AssetManager>(),
-                    std::make_unique<okay::ECS>(),
-                    std::make_unique<okay::TweenEngine>())
+            std::make_unique<okay::AssetManager>(),
+            std::make_unique<okay::ECS>(),
+            std::make_unique<okay::TweenEngine>())
         .onInitialize(__gameInitialize)
         .onUpdate(__gameUpdate)
         .onShutdown(__gameShutdown)
@@ -62,8 +63,6 @@ static void __gameInitialize() {
     props->albedo = texture;
     props->roughness.set(0.75f);
     props->clearcoat.set(0.75f);
-    props->albedo.setUnit(0);
-    props->shadowMap.setUnit(1);
     okay::MaterialHandle material = okay::materialHandle(shader, std::move(props));
 
     okay::ecs::registerBuiltins();

@@ -13,9 +13,13 @@ class DirtySet final {
    public:
     DirtySet() = default;
 
-    explicit DirtySet(std::size_t capacity) { _present.resize(capacity, 0); }
+    explicit DirtySet(std::size_t capacity) {
+        _present.resize(capacity, 0);
+    }
 
-    void reserveItems(std::size_t n) { _items.reserve(n); }
+    void reserveItems(std::size_t n) {
+        _items.reserve(n);
+    }
 
     void ensureCapacity(std::size_t capacity) {
         if (_present.size() < capacity)
@@ -67,14 +71,20 @@ class DirtySet final {
         _items.clear();
     }
 
-    bool empty() const { return _items.empty(); }
-    std::size_t size() const { return _items.size(); }
+    bool empty() const {
+        return _items.empty();
+    }
+    std::size_t size() const {
+        return _items.size();
+    }
 
     std::span<const IndexT> items() const {
         return std::span<const IndexT>(_items.data(), _items.size());
     }
 
-    const std::vector<IndexT>& vec() const { return _items; }
+    const std::vector<IndexT>& vec() const {
+        return _items;
+    }
 
    private:
     std::vector<IndexT> _items;

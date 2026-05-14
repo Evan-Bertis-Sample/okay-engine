@@ -21,7 +21,9 @@ class RenderTarget {
 
     RenderTarget(const RenderTargetConfig& config) : _config(config) {}
 
-    const std::string& name() const { return _config.name; }
+    const std::string& name() const {
+        return _config.name;
+    }
 
    private:
     RenderTargetConfig _config;

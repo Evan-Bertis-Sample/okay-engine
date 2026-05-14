@@ -15,10 +15,10 @@ class Singleton {
     Singleton& operator=(Singleton&&) = delete;
 
     static T& instance() noexcept(std::is_nothrow_default_constructible_v<T>) {
-        static_assert(std::is_base_of_v<Singleton<T>, T>,
-                      "T must derive from Singleton<T> (CRTP).");
+        static_assert(
+            std::is_base_of_v<Singleton<T>, T>, "T must derive from Singleton<T> (CRTP).");
         static_assert(std::is_default_constructible_v<T>,
-                      "T must be default-constructible (or befriend Singleton<T>).");
+            "T must be default-constructible (or befriend Singleton<T>).");
 
         static T s_instance{};
         return s_instance;

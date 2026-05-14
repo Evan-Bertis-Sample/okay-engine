@@ -27,13 +27,19 @@ class TextureDataStore {
         size_t start;
         size_t size;
 
-        static bool isNone(TextureHandle handle) { return handle.start == 0 && handle.size == 0; }
-        static TextureHandle none() { return TextureHandle{0, 0}; }
+        static bool isNone(TextureHandle handle) {
+            return handle.start == 0 && handle.size == 0;
+        }
+        static TextureHandle none() {
+            return TextureHandle{0, 0};
+        }
 
         bool operator==(TextureHandle other) const {
             return start == other.start && size == other.size;
         }
-        bool operator!=(TextureHandle other) const { return !(*this == other); }
+        bool operator!=(TextureHandle other) const {
+            return !(*this == other);
+        }
 
         // comparison operator for using TextureHandle as a key in std::map
         bool operator<(const TextureHandle& other) const {
@@ -68,13 +74,22 @@ class TextureDataStore {
         _metaMap.erase(handle);
     }
 
-    OkayTextureMeta getTextureMeta(TextureHandle handle) const { return _metaMap.at(handle); }
+    OkayTextureMeta getTextureMeta(TextureHandle handle) const {
+        if (TextureHandle::isNone(handle)) {
+            // Engine.logger.error("Unable to get texture Meta of invalid handle!");
+            return OkayTextureMeta{};
+        }
+
+        return _metaMap.at(handle);
+    }
 
     std::span<const std::byte> getTextureData(TextureHandle handle) const {
         return std::span<const std::byte>(_blob.begin() + handle.start, handle.size);
     }
 
-    std::byte* getTextureDataStart(TextureHandle handle) { return _blob.data() + handle.start; }
+    std::byte* getTextureDataStart(TextureHandle handle) {
+        return _blob.data() + handle.start;
+    }
 
    private:
     struct BlockMeta {
@@ -118,12 +133,12 @@ class TextureDataStore {
                 _openBlocks[i].start = handle.start + handle.size;
                 _openBlocks[i].size = remainingSize;
                 Engine.logger.info("Updated open block: start={}, size={}",
-                                   _openBlocks[i].start,
-                                   _openBlocks[i].size);
+                    _openBlocks[i].start,
+                    _openBlocks[i].size);
             } else {
                 Engine.logger.info("Removing open block: start={}, size={}",
-                                   _openBlocks[i].start,
-                                   _openBlocks[i].size);
+                    _openBlocks[i].start,
+                    _openBlocks[i].size);
 
                 _openBlocks.erase(_openBlocks.begin() + i);
             }
@@ -265,19 +280,23 @@ class Texture {
         return Failable::ok({});
     }
 
-    Failable bind() const {
-        if (_glTextureID == 0) {
-            return Failable::errorResult("Texture not uploaded to GPU");
-        }
-
-        glBindTexture(GL_TEXTURE_2D, _glTextureID);
-        return Failable::ok({});
+    OkayTextureMeta getMeta() const {
+        return store->getTextureMeta(handle);
     }
 
    private:
     GLuint _glTextureID{ 0 };
     bool _isExternal{ false };
     OkayTextureMeta _externalMeta{};
+    bool operator==(const Texture& other) const {
+        return handle == other.handle;
+    }
+    bool operator!=(const Texture& other) const {
+        return !(*this == other);
+    }
+    bool operator<(const Texture& other) const {
+        return handle < other.handle;
+    }
 };
 
 }  // namespace okay

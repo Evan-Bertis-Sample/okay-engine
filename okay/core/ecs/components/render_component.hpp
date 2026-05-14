@@ -15,7 +15,12 @@ struct MeshRendererComponent {
    public:
     Mesh mesh{Mesh::none()};
     MaterialHandle material{MaterialHandle::none()};
-    RenderEntity renderEntity;
+    std::uint8_t renderLayer{0};
+    RenderEntity renderEntity{};
+
+    MeshRendererComponent() {}
+    MeshRendererComponent(Mesh mesh, MaterialHandle mat, std::uint8_t renderLayer = 0)
+        : mesh(mesh), material(mat), renderLayer(renderLayer) {}
 };
 
 }  // namespace okay

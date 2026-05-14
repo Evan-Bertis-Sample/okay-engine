@@ -1,6 +1,7 @@
 #include "render_world.hpp"
 
 #include "glm/ext/matrix_transform.hpp"
+#include "material.hpp"
 
 #include <queue>
 
@@ -45,6 +46,7 @@ RenderEntity::Properties RenderEntity::operator*() const {
     p.material = item.material;
     p.mesh = item.mesh;
     p.transform = item.transform;
+    p.renderLayer = item.renderLayer;
     return p;
 }
 
@@ -62,11 +64,11 @@ bool RenderEntity::isValid() const {
 RenderWorld::ChildRange RenderWorld::children(RenderEntity parent) {
     if (!_renderItemPool.valid(parent._renderItem)) {
         return ChildRange(ChildIterator(*this, RenderItemHandle::invalidHandle()),
-                          ChildIterator(*this, RenderItemHandle::invalidHandle()));
+            ChildIterator(*this, RenderItemHandle::invalidHandle()));
     }
     const RenderItem& p = _renderItemPool.get(parent._renderItem);
     return ChildRange(ChildIterator(*this, p.firstChild),
-                      ChildIterator(*this, RenderItemHandle::invalidHandle()));
+        ChildIterator(*this, RenderItemHandle::invalidHandle()));
 }
 
 const RenderWorld::ChildRange RenderWorld::children(RenderEntity parent) const {
@@ -124,20 +126,26 @@ void RenderWorld::rebuildTransforms() {
 }
 
 void RenderWorld::rebuildMaterials() {
+    // recompute the sortKeys for every render item
+    for (int i = 0; i < _activeRenderItems; i++) {
+        RenderItem& item = _renderItemPool.get(_memoizedRenderItems[i]);
+        item.computeSortKey();
+    }
+
     std::sort(_memoizedRenderItems.begin(),
-              _memoizedRenderItems.begin() + _activeRenderItems,
-              [this](const RenderItemHandle& a, const RenderItemHandle& b) {
-                  bool aValid = isValidEntity(a);
-                  bool bValid = isValidEntity(b);
+        _memoizedRenderItems.begin() + _activeRenderItems,
+        [this](const RenderItemHandle& a, const RenderItemHandle& b) {
+            bool aValid = isValidEntity(a);
+            bool bValid = isValidEntity(b);
 
-                  if (aValid != bValid)
-                      return aValid;
+            if (aValid != bValid)
+                return aValid;
 
-                  if (!aValid)
-                      return false;
+            if (!aValid)
+                return false;
 
-                  return getRenderItem(a).sortKey < getRenderItem(b).sortKey;
-              });
+            return getRenderItem(a).sortKey < getRenderItem(b).sortKey;
+        });
 
     _needsMaterialRebuild = false;
 }
@@ -168,9 +176,9 @@ const std::span<RenderItemHandle> RenderWorld::getRenderItems() {
 }
 
 RenderEntity RenderWorld::addRenderEntity(const Transform& transform,
-                                          const MaterialHandle& material,
-                                          const Mesh& mesh,
-                                          RenderEntity parent) {
+    const MaterialHandle& material,
+    const Mesh& mesh,
+    RenderEntity parent) {
     RenderItemHandle handle = _renderItemPool.emplace(material, mesh);
     // add this handle to the _memozedRenderItems vector
     _activeRenderItems++;
@@ -185,6 +193,7 @@ RenderEntity RenderWorld::addRenderEntity(const Transform& transform,
     item.transform = transform;
     item.material = material;
     item.mesh = mesh;
+    item.renderLayer = 0;
 
     RenderEntity entity(this, handle);
 
@@ -303,8 +312,8 @@ bool RenderWorld::isChildOf(RenderEntity parent, RenderEntity child) const {
     return false;
 }
 
-void RenderWorld::updateEntity(RenderItemHandle renderItem,
-                               const RenderEntity::Properties&& properties) {
+void RenderWorld::updateEntity(
+    RenderItemHandle renderItem, const RenderEntity::Properties&& properties) {
     if (!_renderItemPool.valid(renderItem)) {
         return;
     }
@@ -312,8 +321,9 @@ void RenderWorld::updateEntity(RenderItemHandle renderItem,
     RenderItem& item = _renderItemPool.get(renderItem);
 
     // check for changes and mark dirty as needed
-    if (item.material != properties.material) {
+    if (item.material != properties.material || item.renderLayer != properties.renderLayer) {
         item.material = properties.material;
+        item.renderLayer = properties.renderLayer;
         handleDirtyMaterial(renderItem);
     }
     if (item.mesh != properties.mesh) {
@@ -328,16 +338,37 @@ void RenderWorld::updateEntity(RenderItemHandle renderItem,
 
 // OkayRenderItem
 
+inline std::uint64_t getBits(std::uint64_t value, std::uint32_t start, std::uint32_t end) {
+    return (value >> start) & ((1 << (end - start)) - 1);
+}
+
 RenderItem::RenderItem(MaterialHandle mat, Mesh m) : material(mat), mesh(m) {
-    if (mat->isNone() || mesh.isEmpty()) {
+    computeSortKey();
+}
+
+void RenderItem::computeSortKey() {
+    if (material->isNone() || mesh.isEmpty()) {
         sortKey = std::numeric_limits<std::uint64_t>::max();
-    } else {
-        // 64 bit sort key
-        // highest bits are shader id
-        // lower bits are material id
-        // this has the effect such that when you sort by sort key, materials are sorted into shader
-        // buckets
-        sortKey = (static_cast<std::uint64_t>(mat->shaderID()) << 32) |
-                  static_cast<std::uint64_t>(mat->id());
+        return;
     }
+
+    bool opaque = !material->properties()->flags().hasFlag(MaterialFlags::TRANSPARENT);
+
+    std::uint64_t transparentBit = opaque ? 0ULL : 1ULL;
+    std::uint64_t layer = static_cast<std::uint64_t>(this->renderLayer) & 0xFFULL;
+    std::uint64_t shaderID = material->shaderID() & ((1ULL << 27) - 1ULL);
+    std::uint64_t materialID = material->id() & ((1ULL << 27) - 1ULL);
+
+    // Layout (MSB → LSB):
+    // [63]     transparentBit   opaque = 0, transparent = 1
+    // [62..55] renderLayer      lower layer = earlier
+    // [54..28] shaderID
+    // [27..1]  materialID
+    // [0]      unused
+
+    sortKey = 0;
+    sortKey |= transparentBit << 63;
+    sortKey |= layer << 55;
+    sortKey |= shaderID << 28;
+    sortKey |= materialID << 1;
 }

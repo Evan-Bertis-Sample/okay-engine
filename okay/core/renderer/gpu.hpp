@@ -18,7 +18,9 @@ namespace okay {
 class UniformBlockManager {
    public:
     UniformBlockManager() = default;
-    ~UniformBlockManager() { destroyAll(); }
+    ~UniformBlockManager() {
+        destroyAll();
+    }
 
     UniformBlockManager(const UniformBlockManager&) = delete;
     UniformBlockManager& operator=(const UniformBlockManager&) = delete;
@@ -93,7 +95,9 @@ class UniformBlockManager {
     }
 
    private:
-    static constexpr GLuint invalidBinding() { return 0xFFFFFFFFu; }
+    static constexpr GLuint invalidBinding() {
+        return 0xFFFFFFFFu;
+    }
 
     struct GpuUbo {
         GLuint id = 0;
@@ -121,7 +125,9 @@ class UniformBlockManager {
         return it != u.boundPrograms.end();
     }
 
-    static void markBoundToProgram(GpuUbo& u, GLuint program) { u.boundPrograms[program] = true; }
+    static void markBoundToProgram(GpuUbo& u, GLuint program) {
+        u.boundPrograms[program] = true;
+    }
 
     template <class BlockProp>
     static std::uint32_t versionOf(const BlockProp& p) {
@@ -146,8 +152,17 @@ class UniformBlockManager {
 
 class TextureManager {
    public:
+    struct GPUTextureInfo {
+        GLuint id = 0;
+        OkayTextureMeta meta{};
+        Texture::TextureParameters params{};
+        bool paramsInitialized = false;
+    };
+
     TextureManager() = default;
-    ~TextureManager() { destroyAll(); }
+    ~TextureManager() {
+        destroyAll();
+    }
 
     TextureManager(const TextureManager&) = delete;
     TextureManager& operator=(const TextureManager&) = delete;
@@ -162,6 +177,14 @@ class TextureManager {
         _textures.clear();
     }
 
+    Option<GPUTextureInfo> getGPUTextureInfo(const Texture& tex) {
+        TextureKey key{tex.store.get(), tex.handle};
+        if (!_textures.contains(key)) {
+            return Option<GPUTextureInfo>::none();
+        }
+        return _textures.at(key);
+    }
+
     // Ensure a GL texture exists and is uploaded; returns GL id.
     Failable ensureUploaded2D(const Texture& tex,
                               const Texture::TextureParameters& params,
@@ -174,11 +197,12 @@ class TextureManager {
         }
         
         if (!tex.store || TextureDataStore::TextureHandle::isNone(tex.handle)) {
+            outTextureId = 1;  // the first
             return Failable::ok();
         }
 
         TextureKey key{tex.store.get(), tex.handle};
-        GpuTexture2D& gt = _textures[key];
+        GPUTextureInfo& gt = _textures[key];
 
         if (gt.id == 0) {
             // Create + upload once
@@ -196,14 +220,14 @@ class TextureManager {
 
             if (meta.format == OkayTextureMeta::Format::DEPTH24_STENCIL8) {
                 GL_CHECK_FAILABLE(glTexImage2D(GL_TEXTURE_2D,
-                                               0,
-                                               GL_DEPTH24_STENCIL8,
-                                               meta.width,
-                                               meta.height,
-                                               0,
-                                               GL_DEPTH_STENCIL,
-                                               GL_UNSIGNED_INT_24_8,
-                                               nullptr));
+                    0,
+                    GL_DEPTH24_STENCIL8,
+                    meta.width,
+                    meta.height,
+                    0,
+                    GL_DEPTH_STENCIL,
+                    GL_UNSIGNED_INT_24_8,
+                    nullptr));
             } else {
                 GLenum glFormat = GL_RGBA;
                 GLenum glInternal = GL_RGBA8;
@@ -231,14 +255,14 @@ class TextureManager {
 
                 // NOTE: internalFormat must be glInternal (not glFormat)
                 GL_CHECK_FAILABLE(glTexImage2D(GL_TEXTURE_2D,
-                                               0,
-                                               glInternal,
-                                               meta.width,
-                                               meta.height,
-                                               0,
-                                               glFormat,
-                                               GL_UNSIGNED_BYTE,
-                                               data.data()));
+                    0,
+                    glInternal,
+                    meta.width,
+                    meta.height,
+                    0,
+                    glFormat,
+                    GL_UNSIGNED_BYTE,
+                    data.data()));
             }
 
             gt.meta = meta;
@@ -270,15 +294,18 @@ class TextureManager {
 
     // Bind a 2D texture to a unit and set sampler uniform = unit.
     Failable bindSampler2D(GLuint program,
-                           GLuint samplerLoc,
-                           const Texture& tex,
-                           const Texture::TextureParameters& params,
-                           GLuint unit) {
+        GLuint samplerLoc,
+        const Texture& tex,
+        const Texture::TextureParameters& params,
+        GLuint unit) {
+        // if (!tex.store || TextureDataStore::TextureHandle::isNone(tex.handle)) {
+        // return Failable::errorResult("Tried to bind an empty texture.");
+        // }
+
         GLuint id = 0;
         auto r = ensureUploaded2D(tex, params, id);
         if (r.isError())
             return r;
-
         GL_CHECK_FAILABLE(glUseProgram(program));
         GL_CHECK_FAILABLE(glActiveTexture(GL_TEXTURE0 + unit));
         GL_CHECK_FAILABLE(glBindTexture(GL_TEXTURE_2D, id));
@@ -306,20 +333,13 @@ class TextureManager {
         }
     };
 
-    struct GpuTexture2D {
-        GLuint id = 0;
-        OkayTextureMeta meta{};
-        Texture::TextureParameters params{};
-        bool paramsInitialized = false;
-    };
-
-    static bool sameParams(const Texture::TextureParameters& a,
-                           const Texture::TextureParameters& b) {
+    static bool sameParams(
+        const Texture::TextureParameters& a, const Texture::TextureParameters& b) {
         return a.minFilter == b.minFilter && a.magFilter == b.magFilter && a.wrapS == b.wrapS &&
                a.wrapT == b.wrapT;
     }
 
-    std::unordered_map<TextureKey, GpuTexture2D, TextureKeyHash> _textures;
+    std::unordered_map<TextureKey, GPUTextureInfo, TextureKeyHash> _textures;
 };
 
 class GPUState {

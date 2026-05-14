@@ -14,12 +14,14 @@ struct TransformComponent {
     Transform transform;
 
     TransformComponent(const glm::vec3& position = glm::vec3(0.0f),
-                       const glm::vec3& scale = glm::vec3(1.0f),
-                       const glm::quat& rotation = glm::quat())
+        const glm::vec3& scale = glm::vec3(1.0f),
+        const glm::quat& rotation = glm::quat())
         : transform(position, scale, rotation) {}
     TransformComponent(const Transform& transform) : transform(transform) {}
 
-    glm::mat4 toMatrix() const { return transform.toMatrix(); }
+    glm::mat4 toMatrix() const {
+        return transform.toMatrix();
+    }
 
     glm::vec3 localForward() const {
         return glm::normalize(transform.rotation * glm::vec3(0.0f, 0.0f, -1.0f));
@@ -86,8 +88,8 @@ struct TransformComponent {
     glm::vec3 getWorldScale(const ECSEntity& entity) const {
         glm::mat4 worldMatrix = getWorldMatrix(entity);
         return glm::vec3(glm::length(glm::vec3(worldMatrix[0])),
-                         glm::length(glm::vec3(worldMatrix[1])),
-                         glm::length(glm::vec3(worldMatrix[2])));
+            glm::length(glm::vec3(worldMatrix[1])),
+            glm::length(glm::vec3(worldMatrix[2])));
     }
 
     glm::quat getWorldRotation(const ECSEntity& entity) const {
@@ -105,8 +107,8 @@ struct TransformComponent {
     }
 
     void lookAt(const ECSEntity& entity,
-                glm::vec3 target,
-                glm::vec3 upDirection = glm::vec3(0.0f, 1.0f, 0.0f)) {
+        glm::vec3 target,
+        glm::vec3 upDirection = glm::vec3(0.0f, 1.0f, 0.0f)) {
         glm::vec3 worldPos = getWorldPosition(entity);
         glm::vec3 direction = target - worldPos;
 
@@ -138,13 +140,25 @@ struct TransformComponent {
         }
     }
 
-    bool operator==(const TransformComponent& other) const { return transform == other.transform; }
-    bool operator!=(const TransformComponent& other) const { return !(*this == other); }
+    bool operator==(const TransformComponent& other) const {
+        return transform == other.transform;
+    }
+    bool operator!=(const TransformComponent& other) const {
+        return !(*this == other);
+    }
 
-    Transform& operator*() { return transform; }
-    const Transform& operator*() const { return transform; }
-    Transform* operator->() { return &transform; }
-    const Transform* operator->() const { return &transform; }
+    Transform& operator*() {
+        return transform;
+    }
+    const Transform& operator*() const {
+        return transform;
+    }
+    Transform* operator->() {
+        return &transform;
+    }
+    const Transform* operator->() const {
+        return &transform;
+    }
 };
 
 }  // namespace okay

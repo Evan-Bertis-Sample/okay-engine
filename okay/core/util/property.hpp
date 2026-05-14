@@ -26,12 +26,22 @@ class Property {
     Property(T initial, std::function<void(T)> onDirty)
         : _value(std::move(initial)), _onDirty(onDirty) {}
 
-    void bind(std::function<void(T)> onDirty) { _onDirty = onDirty; }
-    void clear() { _onDirty = {}; }
+    void bind(std::function<void(T)> onDirty) {
+        _onDirty = onDirty;
+    }
+    void clear() {
+        _onDirty = {};
+    }
 
-    const T& get() const { return _value; }
-    T& getMutable() { return _value; }
-    operator const T&() const { return _value; }
+    const T& get() const {
+        return _value;
+    }
+    T& getMutable() {
+        return _value;
+    }
+    operator const T&() const {
+        return _value;
+    }
 
     void set(const T& value) {
         if (isSameValue(value))
@@ -57,10 +67,14 @@ class Property {
         return *this;
     }
 
-    void markDirty() { notifyDirty(); }
+    void markDirty() {
+        notifyDirty();
+    }
 
    private:
-    void notifyDirty() { _onDirty.invoke(_value); }
+    void notifyDirty() {
+        _onDirty.invoke(_value);
+    }
 
     T _value{};
     std::function<void(T)> _onDirty;

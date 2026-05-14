@@ -9,14 +9,64 @@
 using namespace okay;
 
 Mesh MeshBuffer::addMesh(const MeshData& mesh) {
+    BlockMeta* blockPtr{};
+
+    for (auto& block : _blocks) {
+        if (block.isFree && block.vertexCount >= mesh.vertices.size() &&
+            block.indexCount >= mesh.indices.size()) {
+            block.isFree = false;
+            blockPtr = &block;
+            break;
+        }
+    }
+
     Mesh m{};
+    Bounds mBounds{};
+
+    if (blockPtr != nullptr) {
+        m.vertexOffset = blockPtr->vertexOffset;
+        m.vertexCount = mesh.vertices.size();
+        m.indexOffset = blockPtr->indexOffset;
+        m.indexCount = mesh.indices.size();
+
+        float* ptr{getMeshDataPtr(m)};
+
+        for (const MeshVertex& v : mesh.vertices) {
+            memcpy(ptr, &v.position, 3 * sizeof(float));
+            memcpy(ptr + 3, &v.normal, 3 * sizeof(float));
+            memcpy(ptr + 6, &v.color, 3 * sizeof(float));
+            memcpy(ptr + 9, &v.uv, 2 * sizeof(float));
+            mBounds.extend(v.position);
+
+            ptr += MeshVertex::numFloats();
+        }
+
+        for (std::size_t i{}; i < m.indexCount; ++i) {
+            _indices[blockPtr->indexOffset + i] = mesh.indices[i] + m.vertexOffset;
+        }
+
+        _dataOutofDate = true;
+
+        return m;
+    }
+
+    Engine.logger.debug("Allocating new mesh block with {} vertices, {} indices",
+        mesh.vertices.size(),
+        mesh.indices.size());
+
+    BlockMeta bm{};
 
     // get the vertexOffset of the mesh
     m.vertexOffset = _bufferData.size() / MeshVertex::numFloats();
+    bm.vertexOffset = m.vertexOffset;
     m.vertexCount = mesh.vertices.size();
+    bm.vertexCount = m.vertexCount;
 
     m.indexOffset = _indices.size();
+    bm.indexOffset = m.indexOffset;
     m.indexCount = mesh.indices.size();
+    bm.indexCount = m.indexCount;
+
     Bounds b = Bounds::none();
 
     // push the vertices of the mesh
@@ -47,27 +97,119 @@ Mesh MeshBuffer::addMesh(const MeshData& mesh) {
 
     _dataOutofDate = true;
 
+    _blocks.push_back(bm);
+
     return m;
 }
 
 void MeshBuffer::removeMesh(const Mesh& mesh) {
-    // update the indices that refer to vertices after this mesh -- their offset must be decremented
-
-    // from mesh.indexOffset + mesh.indexCount ... end
-    // decrement by mesh.vertexCount
-    for (std::size_t i = mesh.indexOffset + mesh.indexCount; i < _indices.size(); ++i) {
-        _indices[i] -= mesh.vertexCount;
+    // look for block to free
+    for (auto& block : _blocks) {
+        if (block.vertexOffset == mesh.vertexOffset) {
+            Engine.logger.debug(
+                "Freeing mesh with {} vertices and {} indices", mesh.vertexCount, mesh.indexCount);
+            block.isFree = true;
+            break;
+        }
     }
 
-    // remove the indices
-    _indices.erase(_indices.begin() + mesh.indexOffset,
-                   _indices.begin() + mesh.indexOffset + mesh.indexCount);
-    // remove the vertices
-    _bufferData.erase(_bufferData.begin() + mesh.vertexOffset * MeshVertex::numFloats(),
-                      _bufferData.begin() + mesh.vertexOffset * MeshVertex::numFloats() +
-                          mesh.vertexCount * MeshVertex::numFloats());
+    // _dataOutofDate = true;
+}
 
-    _dataOutofDate = true;
+Mesh MeshBuffer::reserveMesh(std::size_t numVertices, std::size_t numIndices) {
+    BlockMeta* blockPtr{};
+    for (auto& block : _blocks) {
+        if (block.isFree && block.vertexCount >= numVertices && block.indexCount >= numIndices) {
+            block.isFree = false;
+            blockPtr = &block;
+            break;
+        }
+    }
+
+    if (blockPtr == nullptr) {
+        // reserve a new block
+        Mesh mesh;
+        mesh.vertexOffset = _bufferData.size() / MeshVertex::numFloats();
+        mesh.vertexCount = numVertices;
+        mesh.indexOffset = _indices.size();
+        mesh.indexCount = numIndices;
+
+        BlockMeta newBlock;
+        newBlock.isFree = false;
+        newBlock.vertexCount = mesh.vertexCount;
+        newBlock.vertexOffset = mesh.vertexOffset;
+        newBlock.indexCount = mesh.indexCount;
+        newBlock.indexOffset = mesh.indexOffset;
+
+        _blocks.push_back(newBlock);
+
+        _bufferData.resize(_bufferData.size() + numVertices * MeshVertex::numFloats());
+        _indices.resize(_indices.size() + numIndices);
+
+        return mesh;
+    }
+
+    blockPtr->isFree = false;
+    Mesh mesh;
+    mesh.vertexOffset = blockPtr->vertexOffset;
+    mesh.vertexCount = numVertices;
+    mesh.indexOffset = blockPtr->indexOffset;
+    mesh.indexCount = numIndices;
+    return mesh;
+}
+
+Result<Mesh> MeshBuffer::updateMesh(Mesh mesh, const MeshData& newModel) {
+    for (BlockMeta& block : _blocks) {
+        if (block.vertexOffset != mesh.vertexOffset)
+            continue;
+
+        if (block.vertexCount < newModel.vertices.size() ||
+            block.indexCount < newModel.indices.size()) {
+            return Result<Mesh>::errorResult("Cannot fit new model into mesh block");
+        }
+
+        Bounds mBounds = Bounds::none();
+
+        for (std::size_t i = 0; i < newModel.vertices.size(); i++) {
+            float* ptr = &_bufferData[(block.vertexOffset + i) * MeshVertex::numFloats()];
+            const MeshVertex& v = newModel.vertices[i];
+
+            memcpy(ptr, &v.position, 3 * sizeof(float));
+            memcpy(ptr + 3, &v.normal, 3 * sizeof(float));
+            memcpy(ptr + 6, &v.color, 3 * sizeof(float));
+            memcpy(ptr + 9, &v.uv, 2 * sizeof(float));
+
+            mBounds.extend(v.position);
+        }
+
+        for (std::size_t i = 0; i < newModel.indices.size(); i++) {
+            _indices[block.indexOffset + i] = newModel.indices[i] + block.vertexOffset;
+        }
+
+        _dataOutofDate = true;
+
+        Mesh newMesh;
+        newMesh.vertexOffset = block.vertexOffset;
+        newMesh.vertexCount = newModel.vertices.size();
+        newMesh.indexOffset = block.indexOffset;
+        newMesh.indexCount = newModel.indices.size();
+        newMesh.bounds = mBounds;
+
+        return Result<Mesh>::ok(newMesh);
+    }
+
+    return Result<Mesh>::errorResult("Unable to find block for mesh! Cannot update mesh data");
+}
+
+float* MeshBuffer::getMeshDataPtr(const Mesh& mesh) {
+    std::size_t floatIndex{mesh.vertexOffset * MeshVertex::numFloats()};
+
+    if (floatIndex >= _bufferData.size()) {
+        Engine.logger.error("getMeshPointer out of bounds");
+
+        return nullptr;
+    }
+    return &_bufferData[floatIndex];
 }
 
 Failable MeshBuffer::initVertexAttributes() {
@@ -89,35 +231,35 @@ Failable MeshBuffer::initVertexAttributes() {
 
     GL_CHECK(glEnableVertexAttribArray(0));
     GL_CHECK(glVertexAttribPointer(0,
-                                   3,
-                                   GL_FLOAT,
-                                   GL_FALSE,
-                                   MeshVertex::stride(),
-                                   reinterpret_cast<void*>(0 * sizeof(float))));
+        3,
+        GL_FLOAT,
+        GL_FALSE,
+        MeshVertex::stride(),
+        reinterpret_cast<void*>(0 * sizeof(float))));
 
     GL_CHECK(glEnableVertexAttribArray(1));
     GL_CHECK(glVertexAttribPointer(1,
-                                   3,
-                                   GL_FLOAT,
-                                   GL_FALSE,
-                                   MeshVertex::stride(),
-                                   reinterpret_cast<void*>(3 * sizeof(float))));
+        3,
+        GL_FLOAT,
+        GL_FALSE,
+        MeshVertex::stride(),
+        reinterpret_cast<void*>(3 * sizeof(float))));
 
     GL_CHECK(glEnableVertexAttribArray(2));
     GL_CHECK(glVertexAttribPointer(2,
-                                   3,
-                                   GL_FLOAT,
-                                   GL_FALSE,
-                                   MeshVertex::stride(),
-                                   reinterpret_cast<void*>(6 * sizeof(float))));
+        3,
+        GL_FLOAT,
+        GL_FALSE,
+        MeshVertex::stride(),
+        reinterpret_cast<void*>(6 * sizeof(float))));
 
     GL_CHECK(glEnableVertexAttribArray(3));
     GL_CHECK(glVertexAttribPointer(3,
-                                   2,
-                                   GL_FLOAT,
-                                   GL_FALSE,
-                                   MeshVertex::stride(),
-                                   reinterpret_cast<void*>(9 * sizeof(float))));
+        2,
+        GL_FLOAT,
+        GL_FALSE,
+        MeshVertex::stride(),
+        reinterpret_cast<void*>(9 * sizeof(float))));
 
     GL_CHECK(glBindVertexArray(0));
     GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, 0));
@@ -137,7 +279,7 @@ Failable MeshBuffer::bindMeshData() {
         return Failable::ok({});
     }
 
-    Engine.logger.debug("Binding mesh data");
+    // Engine.logger.debug("Binding mesh data");
 
     if (!_hasInitVertexAttributes) {
         Failable r = initVertexAttributes();
@@ -159,13 +301,13 @@ Failable MeshBuffer::bindMeshData() {
 
     GL_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ebo));
     GL_CHECK(glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-                          _indices.size() * sizeof(GLuint),
-                          _indices.data(),
-                          GL_STATIC_DRAW));
+        _indices.size() * sizeof(GLuint),
+        _indices.data(),
+        GL_STATIC_DRAW));
 
     GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
-    Engine.logger.debug("Mesh data bound");
+    // Engine.logger.debug("Mesh data bound");
     _dataOutofDate = false;
     return Failable::ok({});
 }

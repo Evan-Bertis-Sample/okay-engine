@@ -18,14 +18,14 @@ inline ShaderHandle shaderHandle(Shader shader, SystemParameter<Renderer> render
 }
 
 inline MaterialHandle materialHandle(ShaderHandle shaderHandle,
-                                     std::unique_ptr<IMaterialPropertyCollection> uniforms,
-                                     SystemParameter<Renderer> renderer = nullptr) {
+    std::unique_ptr<IMaterialPropertyCollection> uniforms,
+    SystemParameter<Renderer> renderer = nullptr) {
     return renderer->materialRegistry().registerMaterial(shaderHandle, std::move(uniforms));
 }
 
 inline MaterialHandle materialHandle(Shader shader,
-                                     std::unique_ptr<IMaterialPropertyCollection> uniforms,
-                                     SystemParameter<Renderer> renderer = nullptr) {
+    std::unique_ptr<IMaterialPropertyCollection> uniforms,
+    SystemParameter<Renderer> renderer = nullptr) {
     return renderer->materialRegistry().registerMaterial(shaderHandle(shader), std::move(uniforms));
 }
 

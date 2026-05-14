@@ -22,16 +22,15 @@ out vec2 v_uv;
 out vec3 v_cameraPosition;
 out vec3 v_cameraDirection;
 
-
 void main() {
-   mat4 mvp = u_projectionMatrix * u_viewMatrix * u_modelMatrix;
-   vec4 pos = mvp * vec4(a_pos, 1.0f);
-   gl_Position = pos;
+    mat4 mvp = u_projectionMatrix * u_viewMatrix * u_modelMatrix;
+    vec4 pos = mvp * vec4(a_pos, 1.0f);
+    gl_Position = pos;
 
-   v_color = u_color;
-   v_normal = a_normal;
-   v_position = a_pos;
-   v_uv = a_uv;
-   v_cameraPosition = u_cameraPosition;
-   v_cameraDirection = u_cameraDirection;
+    v_color = u_color;
+    v_normal = a_normal;
+    v_position = a_pos;
+    v_uv = a_uv;
+    v_cameraPosition = u_cameraPosition;
+    v_cameraDirection = u_cameraDirection;
 }

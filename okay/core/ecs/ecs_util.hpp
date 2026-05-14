@@ -5,6 +5,8 @@
 #include <okay/core/ecs/ecs.hpp>
 #include <okay/core/engine/engine.hpp>
 
+#include <functional>
+
 namespace okay::ecs {
 
 inline void registerBuiltins(SystemParameter<ECS> ecs = nullptr) {
@@ -50,6 +52,18 @@ inline void destroyEntity(ECSEntity entity, SystemParameter<ECS> ecs = nullptr) 
 
 inline std::size_t entityCount(SystemParameter<ECS> ecs = nullptr) {
     return ecs->getEntityCount();
+}
+
+inline ECSEntity sceneEntity(
+    Transform transform = Transform{}, SystemParameter<ECS> ecs = nullptr) {
+    return ecs->createEntity().addComponent<TransformComponent>(transform);
+}
+
+inline ECSEntity uiEntity(std::function<UIElement()> uiBuilder,
+    std::uint8_t uiLayer = 0,
+    SystemParameter<ECS> ecs = nullptr) {
+    return ecs->createEntity().addComponent<TransformComponent>().addComponent<UIComponent>(
+        uiBuilder, uiLayer);
 }
 
 };  // namespace okay::ecs

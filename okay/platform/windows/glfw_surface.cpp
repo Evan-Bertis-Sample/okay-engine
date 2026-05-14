@@ -13,8 +13,7 @@ struct Surface::SurfaceImpl {
     explicit SurfaceImpl(const SurfaceConfig& c) : cfg(c) {}
 };
 
-Surface::Surface(const SurfaceConfig& cfg) : _impl(std::make_unique<SurfaceImpl>(cfg)) {
-}
+Surface::Surface(const SurfaceConfig& cfg) : _impl(std::make_unique<SurfaceImpl>(cfg)) {}
 Surface::~Surface() = default;
 Surface::Surface(Surface&&) noexcept = default;
 Surface& Surface::operator=(Surface&&) noexcept = default;
@@ -27,7 +26,6 @@ void Surface::initialize() {
     glfwWindowHint(GLFW_SAMPLES, 4);
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true);
     glfwWindowHint(GLFW_RESIZABLE, _impl->cfg.resizable ? GLFW_TRUE : GLFW_FALSE);
-
     _impl->window =
         glfwCreateWindow(_impl->cfg.width, _impl->cfg.height, _impl->cfg.title, nullptr, nullptr);
     if (!_impl->window)

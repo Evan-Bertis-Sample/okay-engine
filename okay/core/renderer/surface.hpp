@@ -9,11 +9,11 @@
 namespace okay {
 
 struct SurfaceConfig {
-    int width = 800;
-    int height = 600;
-    const char* title = "Okay Surface";
-    bool resizable = true;
-    bool vsync = true;
+    int width{800};
+    int height{600};
+    const char* title{"Okay Surface"};
+    bool resizable{true};
+    bool vsync{false};
 };
 
 class Surface {
