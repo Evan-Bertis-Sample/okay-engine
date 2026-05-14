@@ -17,6 +17,7 @@ static void __gameShutdown();
 static okay::ECSEntity s_teapot;
 static okay::ECSEntity s_light;
 static okay::ECSEntity s_camera;
+static okay::ECSEntity s_cube;
 
 int main() {
     okay::SurfaceConfig surfaceConfig;
@@ -46,7 +47,7 @@ int main() {
 
 static void __gameInitialize() {
     // Additional game initialization logic
-    okay::Texture texture = okay::load::engineTexture("textures/uv_test.jpg");
+    okay::Texture texture = okay::load::engineTexture("textures/red.jpg");
     okay::Mesh object = okay::mesh(okay::load::engineMeshData("models/teapot.obj"));
     
     okay::Mesh cube = okay::mesh(okay::primitives::box().build());
@@ -78,7 +79,7 @@ static void __gameInitialize() {
                        okay::CameraComponent{okay::Camera::PerspectiveLens{45.0f, 0.1f, 100.0f}});
 
     glm::vec3 pos1 = glm::vec3(0.0f, 0.0f, 0.0f);
-    okay::ecs::entity()
+    s_cube = okay::ecs::entity()
         .addComponent<okay::TransformComponent>(
             pos1,
             glm::vec3{1.0f},
@@ -86,7 +87,7 @@ static void __gameInitialize() {
         .addComponent<okay::MeshRendererComponent>(cube, material);
 
     glm::vec3 pos2 = glm::vec3(3.0f, 2.0f, 0.0f);
-    okay::ecs::entity()
+    s_teapot = okay::ecs::entity()
         .addComponent<okay::TransformComponent>(
             pos2,
             glm::vec3{0.1f},

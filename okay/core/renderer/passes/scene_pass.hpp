@@ -120,11 +120,8 @@ class ScenePass : public IRenderPass {
                 continue;
             if (item.material->isNone())
                 continue;
-
-            Camera& camera = context.world.camera();
-            if (!camera.isInFrustum(item.mesh.bounds.transform(item.worldMatrix), aspect)) {
-                continue;
-            }
+            
+            
 
             // Shader switch: bind program + per-frame stuff
             if (_materialIndex != item.material->id()) {

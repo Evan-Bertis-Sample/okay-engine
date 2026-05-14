@@ -8,10 +8,10 @@ in vec3 v_worldNormal;
 in vec2 v_uv;
 in mat3 v_worldToTangent;
 
-in vec3 FragPos;
-in vec3 Normal;
-in vec2 TexCoords;
-in vec4 FragPosLightSpace;
+in vec3 v_fragPos;
+in vec3 v_normal;
+in vec2 v_texCoords;
+in vec4 v_fragPosLightSpace;
 
 
 out vec4 FragColor;
@@ -511,7 +511,7 @@ void main() {
         vec3 wi = safeNormalize(v_worldToTangent * L);
         vec3 wm = safeNormalize(wo + wi); // half vector
         
-        shadow = (i == 0) ? ShadowCalculation(FragPosLightSpace) : 0.0;
+        shadow = (i == 0) ? ShadowCalculation(v_fragPosLightSpace) : 0.0;
         colorOut += evaluateDisney(nt, wi, wm, wo, baseColor) * Lrgb * intensity * att * (1.0 - shadow);
         // colorOut += evaluateDisney(nt, wi, wm, wo, baseColor) * Lrgb * intensity * att;
     
@@ -545,5 +545,6 @@ void main() {
     // FragColor = vec4(vec3(shadow), 1.0);
     // FragColor = texture(u_shadowMap, v_uv);
     FragColor = vec4(colorOut, 1.0);
+    
     // FragColor = vec4(vec3(0.0),1.0);
 }
