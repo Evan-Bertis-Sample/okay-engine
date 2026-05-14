@@ -47,17 +47,23 @@ int main() {
 
 static void __gameInitialize() {
     // Additional game initialization logic
-    okay::Texture texture = okay::load::engineTexture("textures/red.jpg");
+    okay::Texture texture = okay::load::engineTexture("textures/uv_test.jpg");
     okay::Mesh object = okay::mesh(okay::load::engineMeshData("models/teapot.obj"));
     
+    // okay::primitives::BoxBuilder box = okay::primitives::box()
+    //     .sizeSet(glm::vec3(10.0f, 10.0f, 1.0f)
+    //     .build()
+
     okay::Mesh cube = okay::mesh(okay::primitives::box().build());
     okay::ShaderHandle shader = okay::shaderHandle(okay::load::engineShader("shaders/lit"));
 
     auto props = std::make_unique<okay::LitMaterial>();
-    props->color.set(glm::vec3(0.824, 0.118, 0.118)); 
+    props->color.set(glm::vec3(0.8, 0.8, 0.8)); 
     props->albedo = texture;
     props->roughness.set(0.75f);
     props->clearcoat.set(0.75f);
+    props->albedo.setUnit(0);
+    props->shadowMap.setUnit(1);
     okay::MaterialHandle material = okay::materialHandle(shader, std::move(props));
 
     okay::ecs::registerBuiltins();
@@ -82,9 +88,9 @@ static void __gameInitialize() {
     okay::ecs::entity()
         .addComponent<okay::TransformComponent>(
             pos1,
-            glm::vec3{1.0f},
+            glm::vec3{0.1f},
             glm::angleAxis(glm::radians(0.0f), glm::vec3{0.0f, 1.0f, 0.0f}))
-        .addComponent<okay::MeshRendererComponent>(cube, material);
+        .addComponent<okay::MeshRendererComponent>(object, material);
 
     glm::vec3 pos2 = glm::vec3(3.0f, 2.0f, 0.0f);
     okay::ecs::entity()
@@ -117,7 +123,7 @@ static void __gameUpdate() {
                                  okay::ecs::entityCount());
         toDelete.destroy();
     }
-    ImGui::ShowDemoWindow();
+    // ImGui::ShowDemoWindow();
 }
 
 static void __gameShutdown() {
