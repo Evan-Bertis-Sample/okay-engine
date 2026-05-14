@@ -166,6 +166,13 @@ class TextureManager {
     Failable ensureUploaded2D(const Texture& tex,
                               const Texture::TextureParameters& params,
                               GLuint& outTextureId) {
+        if (tex.isExternal()) {
+            outTextureId = tex.getGLTextureID();
+            return outTextureId != 0
+                ? Failable::ok({})
+                : Failable::errorResult("External texture has no GL id");
+        }
+        
         if (!tex.store || TextureDataStore::TextureHandle::isNone(tex.handle)) {
             return Failable::ok();
         }

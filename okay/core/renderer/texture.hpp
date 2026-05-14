@@ -10,7 +10,7 @@
 namespace okay {
 
 struct OkayTextureMeta {
-    enum class Format : std::uint8_t { RGBA8, RGB8, RGBA16F, RGB16F, DEPTH24_STENCIL8 };
+    enum class Format : std::uint8_t { RGBA8, RGB8, RGBA16F, RGB16F, DEPTH24_STENCIL8, DEPTH_COMPONENT };
 
     std::uint32_t width;
     std::uint32_t height;
@@ -167,15 +167,33 @@ class Texture {
     Texture(std::shared_ptr<TextureDataStore> store, TextureDataStore::TextureHandle handle)
         : store(store), handle(handle) {}
 
-    std::span<const std::byte> getData() const { return store->getTextureData(handle); }
+    static Texture fromGLTexture(GLuint glID, OkayTextureMeta meta) {
+        Texture t;
+        t._glTextureID = glID;
+        t._externalMeta = meta;
+        t._isExternal = true;
+        return t;
+    }
 
-    OkayTextureMeta getMeta() const { return store->getTextureMeta(handle); }
+    bool isExternal() const { return _isExternal; }
+
+    std::span<const std::byte> getData() const {
+        if (_isExternal) {
+            Engine.logger.error("Store is null for externally created textures");
+        }
+        return store->getTextureData(handle); 
+    }
+
+    OkayTextureMeta getMeta() const {
+        return _isExternal ? _externalMeta : store->getTextureMeta(handle); 
+    }
 
     bool hasBeenUploadedToGPU() const { return _glTextureID != 0; }
 
     GLuint getGLTextureID() const { return _glTextureID; }
 
     Failable uploadToGPU(const TextureParameters& params) {
+        if (_isExternal) return Failable::ok({});
         const auto meta = getMeta();
         const auto data = getData();
 
@@ -257,7 +275,9 @@ class Texture {
     }
 
    private:
-    GLuint _glTextureID{0};
+    GLuint _glTextureID{ 0 };
+    bool _isExternal{ false };
+    OkayTextureMeta _externalMeta{};
 };
 
 }  // namespace okay
