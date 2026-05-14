@@ -25,6 +25,7 @@ struct LitMaterial : public SceneMaterialProperties, public OkayMaterialProperti
     LitMaterial() { lights.setBindingPoint(0); }
     UniformProperty<float, FixedString("u_ambient")> ambient{0.05f};
     TextureProperty<FixedString("u_albedo")> albedo;
+    TextureProperty<FixedString("u_shadowMap")> shadowMap;
     UniformProperty<glm::vec3, FixedString("u_color")> color{glm::vec3(1.0f)};
     UniformProperty<float, FixedString("u_metallic")> metallic{0.0f};
     UniformProperty<float, FixedString("u_specular")> specular{0.5f};
@@ -38,23 +39,18 @@ struct LitMaterial : public SceneMaterialProperties, public OkayMaterialProperti
     UniformProperty<float, FixedString("u_specularTrans")> specularTrans{0.0f};
     UniformProperty<float, FixedString("u_flatness")> flatness{0.0f};
     UniformProperty<int, FixedString("u_thin")> thin{0};
-    UniformProperty<glm::mat4, FixedString("u_modelMatrix")> modelMatrix{};
-    UniformProperty<glm::mat4, FixedString("u_viewMatrix")> viewMatrix{};
-    UniformProperty<glm::mat4, FixedString("u_projectionMatrix")> projectionMatrix{};
     UniformProperty<glm::mat4, FixedString("u_lightSpaceMatrix")> lightSpaceMatrix{};
-    TextureProperty<FixedString("u_shadowMap")> shadowMap;
-    
 
     auto uniformRefs() {
         return std::tuple_cat(SceneMaterialProperties::uniformRefs(), std::tie(
-            ambient, color, metallic, specular, specularTint, roughness, anisotropic, 
-            sheen, sheenTint, clearcoat, clearcoatGloss, specularTrans, flatness, thin, modelMatrix, viewMatrix, projectionMatrix, lightSpaceMatrix
+            ambient, color, metallic, specular, specularTint, roughness, anisotropic,
+            sheen, sheenTint, clearcoat, clearcoatGloss, specularTrans, flatness, thin, lightSpaceMatrix
         ));
     }
     auto uniformRefs() const {
         return std::tuple_cat(SceneMaterialProperties::uniformRefs(), std::tie(
-            ambient, color, metallic, specular, specularTint, roughness, anisotropic, 
-            sheen, sheenTint, clearcoat, clearcoatGloss, specularTrans, flatness, thin, modelMatrix, viewMatrix, projectionMatrix, lightSpaceMatrix
+            ambient, color, metallic, specular, specularTint, roughness, anisotropic,
+            sheen, sheenTint, clearcoat, clearcoatGloss, specularTrans, flatness, thin, lightSpaceMatrix
         ));
     }
 

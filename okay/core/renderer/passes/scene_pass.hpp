@@ -2,6 +2,7 @@
 #define __SCENE_PASS_H__
 
 #include "okay/core/renderer/render_world.hpp"
+#include "okay/core/renderer/texture.hpp"
 
 #include <okay/core/engine/engine.hpp>
 #include <okay/core/renderer/gl.hpp>
@@ -44,18 +45,31 @@ class ScenePass : public IRenderPass {
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, _depthMap, 0);
         glDrawBuffer(GL_NONE);
         glReadBuffer(GL_NONE);
-        glBindFramebuffer(GL_FRAMEBUFFER, 0); 
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        
+        okay::OkayTextureMeta depthMeta {
+            .width = (uint32_t) SHADOW_WIDTH,
+            .height = (uint32_t) SHADOW_HEIGHT,
+            .channels = 1,
+            .mipLevels = 1,
+            .format = okay::OkayTextureMeta::Format::DEPTH_COMPONENT,
+        };
+        _depthMapTexture = Texture::fromGLTexture(_depthMap, depthMeta);
     }
 
     virtual void resize(int newWidth, int newHeight) override {}
 
     virtual void render(const RendererContext& context) override {
-        GL_CHECK(glClearColor(0.113f, 0.008, 0.208, 1.0f));
+        // GL_CHECK(glClearColor(0.113f, 0.008, 0.208, 1.0f));
+        GL_CHECK(glClearColor(0.580, 0.580, 0.580, 1.0));
         GL_CHECK(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
+        GL_CHECK(glViewport(0, 0, context.renderer.width(), context.renderer.height()));
+        GL_CHECK(glDepthFunc(GL_LESS)); 
+        
         GL_CHECK(glEnable(GL_DEPTH_TEST));
-        GL_CHECK(glCullFace(GL_BACK));
         GL_CHECK(glEnable(GL_CULL_FACE));
+        GL_CHECK(glCullFace(GL_BACK));
         GL_CHECK(glDisable(GL_BLEND));
         GL_CHECK(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
         // doesn't need MSAA, but should if the platform can support it
@@ -103,7 +117,9 @@ class ScenePass : public IRenderPass {
                         if (item.mesh.isEmpty()) continue;
 
                         if (depthProps) depthProps->modelMatrix.set(item.worldMatrix);
-                        _depthMapMaterial->passUniforms();
+                        Failable df = _depthMapMaterial->passUniforms();
+                        if (df.isError()) Engine.logger.error("depth passUniforms: {}", df.error());
+                        
                         context.renderer.meshBuffer().drawMesh(item.mesh);
                     }
 
@@ -121,7 +137,10 @@ class ScenePass : public IRenderPass {
             if (item.material->isNone())
                 continue;
             
-            
+            // Camera& camera = context.world.camera();
+            // if (!camera.isInFrustum(item.mesh.bounds.transform(item.worldMatrix), aspect)) {
+            //     continue;
+            // }
 
             // Shader switch: bind program + per-frame stuff
             if (_materialIndex != item.material->id()) {
@@ -138,20 +157,12 @@ class ScenePass : public IRenderPass {
                 lit->cameraPosition.set(camPos);
                 lit->cameraDirection.set(camDir);
                 lit->lightSpaceMatrix.set(_lightSpaceMatrix);
+                lit->shadowMap.set(_depthMapTexture);
             }
             // Now push uniforms for this draw (or only the ones you changed)
             Failable f = item.material->passUniforms();
             if (f.isError())
                 Engine.logger.error("Failed to pass uniforms : {}", f.error());
-            if (auto* lit = dynamic_cast<okay::LitMaterial*>(item.material->properties().get())) {
-                
-                
-                GLuint loc = item.material->getShader().findUniformLocation("u_shadowMap");
-                constexpr GLint SHADOW_MAP_UNIT = 7;
-                glActiveTexture(GL_TEXTURE0 + SHADOW_MAP_UNIT);
-                glBindTexture(GL_TEXTURE_2D, _depthMap);
-                glUniform1i((GLint)loc, SHADOW_MAP_UNIT);
-            }
             context.renderer.meshBuffer().drawMesh(item.mesh);
         }
         // displayDepthMap(context);
@@ -235,39 +246,12 @@ class ScenePass : public IRenderPass {
         }
 
         if (auto* lit = dynamic_cast<okay::LitMaterial*>(uniforms.get())) {
-            // per-frame lighting setup
             DefaultLightBlock& block = lit->lights.edit();
             block.meta.x = static_cast<float>(context.world.lights().size());
             std::size_t i = 0;
             for (auto l : context.world.lights()) {
                 block.lights[i++] = l;
             }
-
-           
-             // bind texture to shadow map
-            //  glBindFramebuffer(_depthMapFBO, lit->shadowMap.get().getGLTextureID());
-            //  lit->shadowMap.set()
-
-            
-            // GPUState::instance().textures.bindSampler2D(
-                //     item.material->programID(),
-                //     loc,
-                //     _depthMap,
-                //     Text
-                // );
-                
-            // GLuint loc = item.material->getShader().findUniformLocation("u_shadowMap");
-
-            // glActiveTexture(GL_TEXTURE0 + _depthMap);
-            // // // glActiveTexture(GL_TEXTURE0);
-            // // glBindTexture(GL_TEXTURE_2D, _depthMap);
-            // glUniform1i((GLint)loc, (GLint)_depthMap);
-            // // // glUniform1i((GLint) loc, 0);
-
-            // constexpr GLint SHADOW_MAP_UNIT = 7; // choose a texture unit to avoid conflicts with other textures
-            // glActiveTexture(GL_TEXTURE0 + SHADOW_MAP_UNIT);
-            // glBindTexture(GL_TEXTURE_2D, _depthMap);
-            // glUniform1i((GLint)loc, SHADOW_MAP_UNIT);
         }
     }
 
@@ -306,6 +290,7 @@ class ScenePass : public IRenderPass {
     unsigned int _depthMap { 0 };
     glm::mat4 _lightSpaceMatrix;
     MaterialHandle _depthMapMaterial;
+    Texture _depthMapTexture;
 };
 
 };  // namespace okay
