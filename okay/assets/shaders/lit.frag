@@ -431,7 +431,7 @@ vec3 evaluateDisney(vec3 N, vec3 wi, vec3 wm, vec3 wo, vec3 baseColor) {
     return reflectance;
 }
 
-float ShadowCalculation(vec4 fragPosLightSpace)
+float ShadowCalculation(vec4 fragPosLightSpace, vec3 N, vec3 L)
 {
     // perform perspective divide
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
@@ -442,7 +442,8 @@ float ShadowCalculation(vec4 fragPosLightSpace)
     // get depth of current fragment from light's perspective
     float currentDepth = projCoords.z;
     // check whether current frag pos is in shadow
-    float shadow = currentDepth > closestDepth ? 1.0 : 0.0;
+    float bias = max(0.05 * (1.0 - dot(N, L)), 0.005);
+    float shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;
     
     return shadow;
 }  
@@ -450,6 +451,7 @@ float ShadowCalculation(vec4 fragPosLightSpace)
 
 
 void main() {
+    vec3 N = safeNormalize(v_worldNormal);
     vec3 V = safeNormalize(u_cameraPosition - v_worldPos); // view vector
     
     vec4 texAlbedo = texture(u_albedo, v_uv);
@@ -508,9 +510,8 @@ void main() {
         vec3 wi = safeNormalize(v_worldToTangent * L);
         vec3 wm = safeNormalize(wo + wi); // half vector
         
-        shadow = (i == 0) ? ShadowCalculation(v_fragPosLightSpace) : 0.0;
+        shadow = (i == 0) ? ShadowCalculation(v_fragPosLightSpace, N, L) : 0.0;
         colorOut += evaluateDisney(nt, wi, wm, wo, baseColor) * Lrgb * intensity * att * (1.0 - shadow);
-        // colorOut += evaluateDisney(nt, wi, wm, wo, baseColor) * Lrgb * intensity * att;
     
     }
     FragColor = vec4(colorOut, texAlbedo.a);
