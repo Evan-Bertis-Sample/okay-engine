@@ -17,7 +17,7 @@ static void __gameShutdown();
 static okay::ECSEntity s_teapot;
 static okay::ECSEntity s_light;
 static okay::ECSEntity s_camera;
-static okay::ECSEntity s_cube;
+
 
 int main() {
     okay::SurfaceConfig surfaceConfig;
@@ -79,7 +79,7 @@ static void __gameInitialize() {
                        okay::CameraComponent{okay::Camera::PerspectiveLens{45.0f, 0.1f, 100.0f}});
 
     glm::vec3 pos1 = glm::vec3(0.0f, 0.0f, 0.0f);
-    s_cube = okay::ecs::entity()
+    okay::ecs::entity()
         .addComponent<okay::TransformComponent>(
             pos1,
             glm::vec3{1.0f},
@@ -87,7 +87,7 @@ static void __gameInitialize() {
         .addComponent<okay::MeshRendererComponent>(cube, material);
 
     glm::vec3 pos2 = glm::vec3(3.0f, 2.0f, 0.0f);
-    s_teapot = okay::ecs::entity()
+    okay::ecs::entity()
         .addComponent<okay::TransformComponent>(
             pos2,
             glm::vec3{0.1f},
