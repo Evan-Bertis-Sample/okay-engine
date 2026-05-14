@@ -280,14 +280,6 @@ class Texture {
         return Failable::ok({});
     }
 
-    OkayTextureMeta getMeta() const {
-        return store->getTextureMeta(handle);
-    }
-
-   private:
-    GLuint _glTextureID{ 0 };
-    bool _isExternal{ false };
-    OkayTextureMeta _externalMeta{};
     bool operator==(const Texture& other) const {
         return handle == other.handle;
     }
@@ -297,6 +289,11 @@ class Texture {
     bool operator<(const Texture& other) const {
         return handle < other.handle;
     }
+
+   private:
+    GLuint _glTextureID{ 0 };
+    bool _isExternal{ false };
+    OkayTextureMeta _externalMeta{};
 };
 
 }  // namespace okay

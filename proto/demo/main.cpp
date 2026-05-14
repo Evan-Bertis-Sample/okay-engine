@@ -51,7 +51,7 @@ static void __gameInitialize() {
     okay::Texture texture = okay::load::engineTexture("textures/uv_test.jpg");
     okay::Mesh object = okay::mesh(okay::load::engineMeshData("models/teapot.obj"));
     
-    // okay::primitives::BoxBuilder box = okay::primitives::box()
+    // okay::primitives::BoxBuilder box = okay::primitives::box().build()
     //     .sizeSet(glm::vec3(10.0f, 10.0f, 1.0f)
     //     .build()
 
@@ -79,7 +79,7 @@ static void __gameInitialize() {
                       okay::LightComponent::directional(glm::vec3{1, 1, 1}, 2.5f));
 
     s_camera = okay::ecs::entity()
-                   .addComponent<okay::TransformComponent>(glm::vec3{0.0f, 0.0f, 5.0f})
+                   .addComponent<okay::TransformComponent>(glm::vec3{0.0f, 0.0f, 0.0f})
                    .addComponent<okay::CameraComponent>(
                        okay::CameraComponent{okay::Camera::PerspectiveLens{45.0f, 0.1f, 100.0f}});
 
@@ -105,9 +105,10 @@ static void __gameInitialize() {
 
 static void __gameUpdate() {
     // move the camera in a circle, always looking at the origin
-    // float theta = okay::Engine.time->timeSinceStartSec() * 0.05f * glm::pi<float>();
-    float theta = 0.0f;
-    glm::vec3 pos = glm::vec3(sin(theta) * 5.0f, 0.0f, cos(theta) * 5.0f);
+    float theta = okay::Engine.time->timeSinceStartSec() * 0.05f * glm::pi<float>();
+    // float theta = 0.0f;
+    // glm::vec3 pos = glm::vec3(sin(theta) * 5.0f, 0.0f, cos(theta) * 5.0f);
+    glm::vec3 pos = glm::vec3(5.0, 5.0, -10.0);
     // rotation much look at origin
     auto& cameraTransform = s_camera.getComponent<okay::TransformComponent>().value();
     cameraTransform->position = pos;

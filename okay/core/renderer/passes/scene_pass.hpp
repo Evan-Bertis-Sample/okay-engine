@@ -16,6 +16,7 @@
 #include <okay/core/renderer/renderer.hpp>
 #include <okay/core/renderer/uniform.hpp>
 
+#include "GLFW/glfw3.h"
 #include <chrono>
 #include <memory>
 #include <thread>
@@ -72,12 +73,14 @@ class ScenePass : public IRenderPass {
     virtual void resize(int newWidth, int newHeight) override {}
 
     virtual void render(const RendererContext& context) override {
+        glfwGetFramebufferSize((GLFWwindow*)context.renderer.getSurfaceWindow(), &_fbwidth, &_fbheight);
+
         // GL_CHECK(glClearColor(0.113f, 0.008, 0.208, 1.0f));
         GL_CHECK(glClearColor(0.580, 0.580, 0.580, 1.0));
         GL_CHECK(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
         GL_CHECK(glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE));
 
-        GL_CHECK(glViewport(0, 0, context.renderer.width(), context.renderer.height()));
+        GL_CHECK(glViewport(0, 0, _fbwidth, _fbheight));
         GL_CHECK(glDepthFunc(GL_LESS)); 
         
         GL_CHECK(glEnable(GL_DEPTH_TEST));
@@ -94,12 +97,11 @@ class ScenePass : public IRenderPass {
         _materialIndex = Material::invalidID();
         _screenSpaceProjectionMat = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, 0.0f, 10.0f);
 
-        float aspect = float(context.renderer.width()) / float(context.renderer.height());
+        float aspect = float(_fbwidth) / float(_fbheight);
         auto view = context.world.camera().viewMatrix();
         auto projection = context.world.camera().projectionMatrix(aspect);
         auto camPos = context.world.camera().position();
         auto camDir = context.world.camera().direction();
-
 
         for (const Light& l : context.world.lights()) {
             switch (l.type()) {
@@ -140,7 +142,7 @@ class ScenePass : public IRenderPass {
                     }
 
                     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-                    glViewport(0, 0, context.renderer.width(), context.renderer.height());
+                    glViewport(0, 0, _fbwidth, _fbheight);
                     break;
                 }
             }
@@ -247,8 +249,8 @@ class ScenePass : public IRenderPass {
             glGenVertexArrays(1, &depthmapVAO);
         }
         
-        int w = context.renderer.width();
-        int h = context.renderer.height();
+        int w = _fbwidth;
+        int h = _fbheight;
         glViewport(0, 0, w, h);  // bottom-left, 1/3 of screen
         
         glDisable(GL_DEPTH_TEST);
@@ -342,6 +344,7 @@ class ScenePass : public IRenderPass {
     }
 
    private:
+    int _fbwidth{ 0 }, _fbheight{ 0 };
     const GLsizei SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
     std::uint32_t _shaderIndex{Shader::invalidID()};
     std::uint32_t _materialIndex{Material::invalidID()};
