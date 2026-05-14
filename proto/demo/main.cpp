@@ -67,12 +67,12 @@ static void __gameInitialize() {
 
     okay::ecs::registerBuiltins();
 
-    glm::vec3 ldirection = glm::normalize(glm::vec3(-1.0f, -1.0f, -1.0f));
+    glm::vec3 ldirection = glm::normalize(glm::vec3(-3.0f, -2.0f, 0.0f));
     glm::quat rotation = glm::quatLookAt(ldirection, glm::vec3(0.0f, 1.0f, 0.0f));
 
     s_light = okay::ecs::entity()
                   .addComponent<okay::TransformComponent>(
-                      glm::vec3{3.0f, 3.0f, 3.0f},
+                      glm::vec3{6.0f, 4.0f, 0.0f},
                       glm::vec3{1.0f},
                       rotation)
                   .addComponent<okay::LightComponent>(
@@ -91,7 +91,7 @@ static void __gameInitialize() {
             glm::angleAxis(glm::radians(0.0f), glm::vec3{0.0f, 1.0f, 0.0f}))
         .addComponent<okay::MeshRendererComponent>(object, material);
 
-    glm::vec3 pos2 = glm::vec3(3.0f, 2.0f, 0.0f);
+    glm::vec3 pos2 = glm::vec3(3.0f, 1.0f, 0.0f);
     okay::ecs::entity()
         .addComponent<okay::TransformComponent>(
             pos2,
