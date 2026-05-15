@@ -24,7 +24,7 @@ namespace okay {
 
 class Camera {
    public:
-    enum class ProjectionType { PERPSECTIVE, ORTHOGRAPHIC };
+    enum class ProjectionType { PERSPECTIVE, ORTHOGRAPHIC };
 
     struct PerspectiveLens {
         float fov{45.0f};
@@ -64,12 +64,12 @@ class Camera {
     Lens lens{PerspectiveLens{}};
 
     ProjectionType projectionType() const {
-        return std::holds_alternative<PerspectiveLens>(lens) ? ProjectionType::PERPSECTIVE
+        return std::holds_alternative<PerspectiveLens>(lens) ? ProjectionType::PERSPECTIVE
                                                              : ProjectionType::ORTHOGRAPHIC;
     }
 
     glm::mat4 projectionMatrix(float aspectRatio) const {
-        if (projectionType() == ProjectionType::PERPSECTIVE) {
+        if (projectionType() == ProjectionType::PERSPECTIVE) {
             const PerspectiveLens& p = std::get<PerspectiveLens>(lens);
             return glm::perspective(glm::radians(p.fov), aspectRatio, p.near, p.far);
         } else {
