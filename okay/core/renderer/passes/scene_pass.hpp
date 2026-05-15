@@ -114,12 +114,42 @@ class ScenePass : public IRenderPass {
                     continue;
                 case Light::Type::DIRECTIONAL: {
                     glm::vec3 lightDir = glm::normalize(glm::vec3(l.direction));
-                    glm::vec3 sceneCenter(0.0f);
-                    glm::vec3 lightEye = sceneCenter - lightDir * 5.0f;
+                    // glm::vec3 sceneCenter(0.0f);
+                    // glm::vec3 lightEye = sceneCenter - lightDir * 5.0f;
                     
-                    float nearPlane = 0.1f, farPlane = 15.0f;
-                    glm::mat4 lightProjection = glm::ortho(-5.0f, 5.0f, -5.0f, 5.0f, nearPlane, farPlane);
-                    glm::mat4 lightView = glm::lookAt(lightEye, sceneCenter, glm::vec3(0.0f, 1.0f, 0.0f));
+                    // glm::mat4 lightView = glm::lookAt(lightEye, sceneCenter, glm::vec3(0.0f, 1.0f, 0.0f));
+
+                    
+                    // Center of the frustum in world space
+                    float shadowDist = 20.0;
+
+                    std::array<glm::vec3, 8> worldSpaceCoords = context.world.camera().frustumCornersWorld(aspect, shadowDist);
+                    glm::vec3 frustumCenter(0.0f);
+                    for (const auto& c : worldSpaceCoords) frustumCenter += c;
+                    frustumCenter /= 8.0f;
+
+                    glm::vec3 lightEye = frustumCenter - lightDir * 1.0f;  // distance here doesn't matter much for ortho
+                    glm::mat4 lightView = glm::lookAt(lightEye, frustumCenter, glm::vec3(0.0f, 1.0f, 0.0f));
+                    glm::vec3 minCoords;
+                    glm::vec3 maxCoords;
+
+                    for (size_t i = 0; i < 8; ++i) {
+                        glm::vec3 lightSpaceCoord = glm::vec3(lightView * glm::vec4(worldSpaceCoords[i], 1.0));
+                        if (i == 0) {
+                            minCoords = lightSpaceCoord;
+                            maxCoords = lightSpaceCoord;
+                        } else {
+                            minCoords = glm::min(minCoords, lightSpaceCoord);
+                            maxCoords = glm::max(maxCoords, lightSpaceCoord);
+                        }
+                    }
+                    _left = minCoords.x; _right = maxCoords.x;
+                    _bottom = minCoords.y; _top = maxCoords.y;
+                    _near = -maxCoords.z; _far = -minCoords.z;
+
+                    // Engine.logger.debug("Left: {}, Right: {}, Bottom: {}, Top: {}, Near: {}, Far: {}", _left, _right, _bottom, _top, _near, _far);
+                    
+                    glm::mat4 lightProjection = glm::ortho(_left, _right, _bottom, _top, _near, _far);
                     _lightSpaceMatrix = lightProjection * lightView;
 
                     // --- Depth pass ---
@@ -217,7 +247,7 @@ class ScenePass : public IRenderPass {
             applyMaterialFlags(item.material);
             context.renderer.meshBuffer().drawMesh(item.mesh);
         }
-        // displayDepthMap(context);
+        displayDepthMap(context);
         
     }        
 
@@ -356,6 +386,11 @@ class ScenePass : public IRenderPass {
     std::uint32_t _materialIndex{Material::invalidID()};
     unsigned int _depthMapFBO { 0 };
     unsigned int _depthMap { 0 };
+
+    float _left = 0.0f, _right = 0.0f;
+    float _bottom = 0.0f, _top = 0.0f; 
+    float _near = 0.0f, _far = 0.0f;
+
     glm::mat4 _lightSpaceMatrix;
     MaterialHandle _depthMapMaterial;
     Texture _depthMapTexture;

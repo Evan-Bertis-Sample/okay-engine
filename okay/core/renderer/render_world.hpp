@@ -1,6 +1,7 @@
 #ifndef __RENDER_WORLD_H__
 #define __RENDER_WORLD_H__
 
+#include "glm/ext/quaternion_common.hpp"
 #include "glm/ext/vector_float3.hpp"
 #include "glm/ext/vector_float4.hpp"
 #include "math_types.hpp"
@@ -112,6 +113,42 @@ class Camera {
 
     bool operator!=(const Camera& other) const {
         return !(*this == other);
+    }
+
+    std::array<glm::vec3, 8> frustumCornersWorld(float aspectRatio) {
+        return frustumCornersWorld(aspectRatio, getFar(aspectRatio));
+    }
+
+    std::array<glm::vec3, 8> frustumCornersWorld(float aspectRatio, float customFar) {
+        glm::mat4 customProj;
+        if (auto* p = std::get_if<PerspectiveLens>(&lens)) {
+            customProj = glm::perspective(glm::radians(p->fov), aspectRatio, p->near, customFar);
+        } else {
+            // ortho: just use the normal projection, customFar doesn't really apply
+            customProj = projectionMatrix(aspectRatio);
+        }
+        
+        std::array<glm::vec3, 8> worldCoords{};
+        int count{ 0 };
+        glm::mat4 inverseMat = glm::inverse(customProj * viewMatrix());
+        for (int x = -1; x <= 1; x+=2) {
+            for (int y = -1; y <= 1; y+=2) {
+                for (int z = -1; z <= 1; z+=2) {
+                    glm::vec4 ndc = glm::vec4(x, y, z, 1.0);
+                    glm::vec4 worldSpacePos = inverseMat * ndc;
+                    worldCoords[count] = worldSpacePos / worldSpacePos.w;
+                    count++;
+                }
+            }
+        }
+        return worldCoords;
+    }
+
+   private:
+    float getFar(float aspectRatio) const {
+        if (auto* p = std::get_if<PerspectiveLens>(&lens)) return p->far;
+        if (auto* o = std::get_if<OrthographicLens>(&lens)) return o->far;
+        return 1000.0f;
     }
 };
 
