@@ -105,6 +105,8 @@ class ScenePass : public IRenderPass {
         auto camPos = context.world.camera().position();
         auto camDir = context.world.camera().direction();
 
+        glCullFace(GL_FRONT);
+
         for (const Light& l : context.world.lights()) {
             switch (l.type()) {
                 case Light::Type::POINT:
@@ -149,6 +151,8 @@ class ScenePass : public IRenderPass {
                 }
             }
         }
+
+        glCullFace(GL_BACK);
 
         // render the skybox
         MaterialHandle skyboxMaterial = context.renderer.skyboxMaterial();

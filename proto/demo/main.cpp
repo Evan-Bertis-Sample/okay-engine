@@ -124,7 +124,8 @@ static void __gameUpdate() {
     // move the camera in a circle, always looking at the origin
     float theta = okay::Engine.time->timeSinceStartSec() * 0.05f * glm::pi<float>();
     // float theta = 0.0f;
-    glm::vec3 pos = glm::vec3(sin(theta) * 10.0f, 2.0f, cos(theta) * 10.0f);
+    float dist = 7.0f;
+    glm::vec3 pos = glm::vec3(sin(theta) * dist, 2.0f, cos(theta) * dist);
     // glm::vec3 pos = glm::vec3(5.0, 5.0, -10.0);
     // rotation much look at origin
     auto& cameraTransform = s_camera.getComponent<okay::TransformComponent>().value();
