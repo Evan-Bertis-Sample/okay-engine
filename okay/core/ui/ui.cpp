@@ -420,18 +420,14 @@ void UI::renderNode(const UINode& node, Renderer& renderer, int layerBase) {
                 renderer.world().removeRenderEntity(renderInfo.rectEntity);
             }
         } else {
-            createTextRenderEntity(node, renderer);
+            createRectRenderEntity(node, renderer);
         }
 
         if (renderInfo.textEntity.isValid()) {
             // Replace the text mesh
-            Mesh oldMesh = renderInfo.textEntity->mesh;
-            renderInfo.textEntity->mesh = getTextMesh(node, renderer);
-            // Engine.logger.debug("Switching mesh from ({}, {}), to mesh ({}, {})",
-            //     oldMesh.vertexOffset,
-            //     oldMesh.vertexCount,
-            //     renderInfo.textEntity->mesh.vertexOffset,
-            //     renderInfo.textEntity->mesh.vertexCount);
+            RenderEntity::Properties props = renderInfo.textEntity.prop();
+            Mesh newMesh = getTextMesh(node, renderer);
+            props.mesh = newMesh;
         } else {
             createTextRenderEntity(node, renderer);
         }

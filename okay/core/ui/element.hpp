@@ -282,6 +282,11 @@ struct UIElement {
         return *this;
     }
 
+    UIElement& fontSet(FontManager::FontHandle font) {
+        textStyle.font = font;
+        return *this;
+    }
+
     UIElement& alignment(
         TextStyle::HorizontalAlignment horizontal, TextStyle::VerticalAlignment vertical) {
         alignTextHorizontal(horizontal);

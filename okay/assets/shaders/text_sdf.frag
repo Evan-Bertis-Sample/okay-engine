@@ -20,9 +20,5 @@ void main() {
     float alpha = clamp((sd - 0.5) * screenPxRange + 0.5, 0.0, 1.0);
     alpha *= u_color.a;
 
-    if (alpha < 0.01) {
-        discard;
-    }
-
     FragColor = vec4(u_color.rgb, alpha);
 }
