@@ -1,6 +1,7 @@
 #include "glm/gtc/quaternion.hpp"
 #include "okay/core/ecs/ecs_util.hpp"
 #include "okay/core/renderer/material.hpp"
+#include "okay/core/renderer/materials/lit.hpp"
 #include "okay/core/renderer/uniform.hpp"
 
 #include <okay/okay.hpp>
@@ -8,6 +9,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/random.hpp>
 #include <imgui.h>
+#include <memory>
 #include <utility>
 
 namespace ui = okay::ui;
@@ -49,11 +51,13 @@ int main() {
 static void __gameInitialize() {
     // Additional game initialization logic
     okay::Texture texture = okay::load::engineTexture("textures/uv_test.jpg");
+    okay::Texture floorTex = okay::load::engineTexture("textures/WoodFlooring.jpg");
     okay::Mesh object = okay::mesh(okay::load::engineMeshData("models/teapot.obj"));
-    
-    // okay::primitives::BoxBuilder box = okay::primitives::box().build()
-    //     .sizeSet(glm::vec3(10.0f, 10.0f, 1.0f)
-    //     .build()
+
+    okay::Mesh floor = okay::mesh(
+        okay::primitives::box()
+        .sizeSet(glm::vec3(10.0f, 0.3f, 10.0f))
+        .build());
 
     okay::Mesh cube = okay::mesh(okay::primitives::box().build());
     okay::ShaderHandle shader = okay::shaderHandle(okay::load::engineShader("shaders/lit"));
@@ -62,8 +66,14 @@ static void __gameInitialize() {
     props->color.set(glm::vec3(0.8, 0.8, 0.8)); 
     props->albedo = texture;
     props->roughness.set(0.75f);
+    // props->metallic.set(0.75f);
     props->clearcoat.set(0.75f);
     okay::MaterialHandle material = okay::materialHandle(shader, std::move(props));
+
+    auto floorProps = std::make_unique<okay::LitMaterial>();
+    floorProps->albedo = floorTex;
+    floorProps->roughness.set(0.75f);
+    okay::MaterialHandle floorMat = okay::materialHandle(shader, std::move(floorProps));
 
     okay::ecs::registerBuiltins();
 
@@ -83,7 +93,7 @@ static void __gameInitialize() {
                    .addComponent<okay::CameraComponent>(
                        okay::CameraComponent{okay::Camera::PerspectiveLens{45.0f, 0.1f, 100.0f}});
 
-    glm::vec3 pos1 = glm::vec3(0.0f, 0.0f, 0.0f);
+    glm::vec3 pos1 = glm::vec3(0.0f, 0.0f, 2.0f);
     okay::ecs::entity()
         .addComponent<okay::TransformComponent>(
             pos1,
@@ -91,13 +101,20 @@ static void __gameInitialize() {
             glm::angleAxis(glm::radians(0.0f), glm::vec3{0.0f, 1.0f, 0.0f}))
         .addComponent<okay::MeshRendererComponent>(object, material);
 
-    glm::vec3 pos2 = glm::vec3(3.0f, 1.0f, 0.0f);
+    glm::vec3 pos2 = glm::vec3(3.0f, 1.0f, 1.0f);
     okay::ecs::entity()
         .addComponent<okay::TransformComponent>(
             pos2,
             glm::vec3{0.1f},
             glm::angleAxis(glm::radians(0.0f), glm::vec3{0.0f, 1.0f, 0.0f}))
         .addComponent<okay::MeshRendererComponent>(object, material);
+
+    okay::ecs::entity()
+        .addComponent<okay::TransformComponent>(
+            glm::vec3(0.0, -2.0, 0.0),
+            glm::vec3{3.0f},
+            glm::angleAxis(glm::radians(0.0f), glm::vec3{0.0f, 1.0f, 0.0f}))
+        .addComponent<okay::MeshRendererComponent>(floor, floorMat);
 
     
 
@@ -107,8 +124,8 @@ static void __gameUpdate() {
     // move the camera in a circle, always looking at the origin
     float theta = okay::Engine.time->timeSinceStartSec() * 0.05f * glm::pi<float>();
     // float theta = 0.0f;
-    // glm::vec3 pos = glm::vec3(sin(theta) * 5.0f, 0.0f, cos(theta) * 5.0f);
-    glm::vec3 pos = glm::vec3(5.0, 5.0, -10.0);
+    glm::vec3 pos = glm::vec3(sin(theta) * 10.0f, 2.0f, cos(theta) * 10.0f);
+    // glm::vec3 pos = glm::vec3(5.0, 5.0, -10.0);
     // rotation much look at origin
     auto& cameraTransform = s_camera.getComponent<okay::TransformComponent>().value();
     cameraTransform->position = pos;
