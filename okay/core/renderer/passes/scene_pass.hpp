@@ -2,6 +2,7 @@
 #define __SCENE_PASS_H__
 
 #include "glm/ext/matrix_transform.hpp"
+#include "glm/ext/scalar_common.hpp"
 #include "okay/core/engine/system.hpp"
 #include "okay/core/renderer/material.hpp"
 #include "okay/core/renderer/render_world.hpp"
@@ -17,6 +18,7 @@
 #include <okay/core/renderer/uniform.hpp>
 
 #include "GLFW/glfw3.h"
+#include <algorithm>
 #include <chrono>
 #include <memory>
 #include <thread>
@@ -112,45 +114,63 @@ class ScenePass : public IRenderPass {
                 case Light::Type::POINT:
                 case Light::Type::SPOT:
                     continue;
-                case Light::Type::DIRECTIONAL: {
-                    glm::vec3 lightDir = glm::normalize(glm::vec3(l.direction));
-                    // glm::vec3 sceneCenter(0.0f);
-                    // glm::vec3 lightEye = sceneCenter - lightDir * 5.0f;
-                    
-                    // glm::mat4 lightView = glm::lookAt(lightEye, sceneCenter, glm::vec3(0.0f, 1.0f, 0.0f));
-
-                    
-                    // Center of the frustum in world space
-                    float shadowDist = 20.0;
-
-                    std::array<glm::vec3, 8> worldSpaceCoords = context.world.camera().frustumCornersWorld(aspect, shadowDist);
+                case Light::Type::DIRECTIONAL: {                    
+                    std::array<glm::vec3, 8> worldSpaceCoords = context.world.camera().frustumCornersWorld(aspect, _shadowDist);
                     glm::vec3 frustumCenter(0.0f);
                     for (const auto& c : worldSpaceCoords) frustumCenter += c;
                     frustumCenter /= 8.0f;
-
-                    glm::vec3 lightEye = frustumCenter - lightDir * 1.0f;  // distance here doesn't matter much for ortho
+                    
+                    glm::vec3 lightDir = glm::normalize(glm::vec3(l.direction));
+                    glm::vec3 lightEye = frustumCenter - lightDir * 15.0f;  // distance here doesn't matter much for ortho
                     glm::mat4 lightView = glm::lookAt(lightEye, frustumCenter, glm::vec3(0.0f, 1.0f, 0.0f));
-                    glm::vec3 minCoords;
-                    glm::vec3 maxCoords;
 
-                    for (size_t i = 0; i < 8; ++i) {
-                        glm::vec3 lightSpaceCoord = glm::vec3(lightView * glm::vec4(worldSpaceCoords[i], 1.0));
-                        if (i == 0) {
-                            minCoords = lightSpaceCoord;
-                            maxCoords = lightSpaceCoord;
-                        } else {
-                            minCoords = glm::min(minCoords, lightSpaceCoord);
-                            maxCoords = glm::max(maxCoords, lightSpaceCoord);
+                    bool needsRefit = !_validMatrix;
+
+                    if (_validMatrix) {
+                        for (auto wsc : worldSpaceCoords) {
+                            glm::vec3 lsc = _cachedLightView * glm::vec4(wsc, 1.0);
+                            if (lsc.x < _left || lsc.x > _right || 
+                                lsc.y < _bottom || lsc.y > _top || 
+                                -lsc.z > _far) {
+                                needsRefit = true;
+                                break;
+                            }
                         }
                     }
-                    _left = minCoords.x; _right = maxCoords.x;
-                    _bottom = minCoords.y; _top = maxCoords.y;
-                    _near = -maxCoords.z; _far = -minCoords.z;
 
-                    // Engine.logger.debug("Left: {}, Right: {}, Bottom: {}, Top: {}, Near: {}, Far: {}", _left, _right, _bottom, _top, _near, _far);
+                    if (dot(_cachedLightDir, lightDir) < 0.9999) needsRefit = true;
+                    
+                    if (needsRefit) {
+                        Engine.logger.debug("{}: Refit!!!", _count++);
+                        _cachedLightDir = lightDir;
+                        _cachedLightView = lightView;
+                        glm::vec3 minCoords{};
+                        glm::vec3 maxCoords{};
+                        for (size_t i = 0; i < 8; ++i) {
+                            glm::vec3 lightSpaceCoord = glm::vec3(_cachedLightView * glm::vec4(worldSpaceCoords[i], 1.0));
+                            if (i == 0) {
+                                minCoords = lightSpaceCoord;
+                                maxCoords = lightSpaceCoord;
+                            } else {
+                                minCoords = glm::min(minCoords, lightSpaceCoord);
+                                maxCoords = glm::max(maxCoords, lightSpaceCoord);
+                            }
+                        }
+    
+                        glm::vec3 size = maxCoords - minCoords;
+                        glm::vec3 padding = size * _margin;
+                        _left = minCoords.x - padding.x; _right = maxCoords.x + padding.x;
+                        _bottom = minCoords.y - padding.y; _top = maxCoords.y + padding.y;
+                        _far = -minCoords.z + padding.z;
+
+                        _validMatrix = true;
+                    }
+
+
+                    Engine.logger.debug("Left: {}, Right: {}, Bottom: {}, Top: {}, Near: {}, Far: {}", _left, _right, _bottom, _top, _near, _far);
                     
                     glm::mat4 lightProjection = glm::ortho(_left, _right, _bottom, _top, _near, _far);
-                    _lightSpaceMatrix = lightProjection * lightView;
+                    _lightSpaceMatrix = lightProjection * _cachedLightView;
 
                     // --- Depth pass ---
                     glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
@@ -380,16 +400,22 @@ class ScenePass : public IRenderPass {
     }
 
    private:
+    int _count{ 0 };
     int _fbwidth{ 0 }, _fbheight{ 0 };
+    float _shadowDist = 20.0;
+    float _margin = 0.2;
     const GLsizei SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
     std::uint32_t _shaderIndex{Shader::invalidID()};
     std::uint32_t _materialIndex{Material::invalidID()};
     unsigned int _depthMapFBO { 0 };
     unsigned int _depthMap { 0 };
 
-    float _left = 0.0f, _right = 0.0f;
-    float _bottom = 0.0f, _top = 0.0f; 
-    float _near = 0.0f, _far = 0.0f;
+    bool _validMatrix { false };
+    glm::mat4 _cachedLightView{};
+    glm::vec3 _cachedLightDir{};
+    float _left{}, _right{};
+    float _bottom{}, _top{}; 
+    float _near{ 0.1f }, _far{};
 
     glm::mat4 _lightSpaceMatrix;
     MaterialHandle _depthMapMaterial;

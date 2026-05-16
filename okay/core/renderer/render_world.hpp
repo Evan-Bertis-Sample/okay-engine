@@ -119,18 +119,17 @@ class Camera {
         return frustumCornersWorld(aspectRatio, getFar(aspectRatio));
     }
 
-    std::array<glm::vec3, 8> frustumCornersWorld(float aspectRatio, float customFar) {
-        glm::mat4 customProj;
+    std::array<glm::vec3, 8> frustumCornersWorld(float aspectRatio, float shadowFar) {
+        glm::mat4 shadowProj;
         if (auto* p = std::get_if<PerspectiveLens>(&lens)) {
-            customProj = glm::perspective(glm::radians(p->fov), aspectRatio, p->near, customFar);
+            shadowProj = glm::perspective(glm::radians(p->fov), aspectRatio, p->near, shadowFar);
         } else {
-            // ortho: just use the normal projection, customFar doesn't really apply
-            customProj = projectionMatrix(aspectRatio);
+            shadowProj = projectionMatrix(aspectRatio);
         }
         
         std::array<glm::vec3, 8> worldCoords{};
         int count{ 0 };
-        glm::mat4 inverseMat = glm::inverse(customProj * viewMatrix());
+        glm::mat4 inverseMat = glm::inverse(shadowProj * viewMatrix());
         for (int x = -1; x <= 1; x+=2) {
             for (int y = -1; y <= 1; y+=2) {
                 for (int z = -1; z <= 1; z+=2) {
