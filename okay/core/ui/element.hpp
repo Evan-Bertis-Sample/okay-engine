@@ -12,6 +12,7 @@
 #include <okay/core/util/object_pool.hpp>
 #include <okay/core/util/option.hpp>
 
+#include <glm/gtx/hash.hpp>
 #include <unordered_map>
 #include <utility>
 #include <variant>
@@ -327,7 +328,10 @@ struct UIElement {
         std::size_t textHash = (text.isSome()) ? std::hash<std::string>{}(text.value()) : 0;
         std::size_t backgroundHash =
             (backgroundImage.isSome()) ? backgroundImage.value().handle.start : 0;
-        return hashCombine(textHash, backgroundHash);
+        std::size_t contentHash = hashCombine(textHash, backgroundHash);
+        auto colorHasher = std::hash<glm::vec4>{};
+        std::size_t colorHash = hashCombine(colorHasher(backgroundColor), colorHasher(textColor));
+        return hashCombine(contentHash, colorHash);
     }
 };
 
