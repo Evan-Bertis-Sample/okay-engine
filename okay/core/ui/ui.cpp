@@ -415,10 +415,9 @@ void UI::renderNode(const UINode& node, Renderer& renderer, int layerBase) {
     if (renderInfo.contentHash != elementContentHash) {
         // Engine.logger.debug("Creating render entities for UI node {}", node.id);
         if (renderInfo.rectEntity.isValid()) {
-            if (!(element.backgroundImage.isSome() || element.backgroundColor.a > 0.0f)) {
-                // delete this guy
-                renderer.world().removeRenderEntity(renderInfo.rectEntity);
-            }
+            Engine.logger.debug("updateing render entity rect");
+            renderer.world().removeRenderEntity(renderInfo.rectEntity);
+            createRectRenderEntity(node, renderer);
         } else {
             createRectRenderEntity(node, renderer);
         }
