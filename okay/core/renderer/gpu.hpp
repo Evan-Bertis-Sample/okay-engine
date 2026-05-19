@@ -12,6 +12,7 @@
 #include <string_view>
 #include <unordered_map>
 #include <utility>
+#include <variant>
 
 namespace okay {
 
@@ -155,7 +156,7 @@ class TextureManager {
     struct GPUTextureInfo {
         GLuint id = 0;
         OkayTextureMeta meta{};
-        Texture::TextureParameters params{};
+        TextureParameters params{};
         bool paramsInitialized = false;
     };
 
@@ -185,16 +186,20 @@ class TextureManager {
         return _textures.at(key);
     }
 
+    Failable ensureUploaded2D(const RenderTexture& tex,
+                              const TextureParameters& params,
+                              GLuint& outTextureId) {
+        outTextureId = tex.getGLTextureID();
+        return outTextureId != 0
+            ? Failable::ok({})
+            : Failable::errorResult("External texture has no GL id");
+                
+    }
+
     // Ensure a GL texture exists and is uploaded; returns GL id.
     Failable ensureUploaded2D(const Texture& tex,
-                              const Texture::TextureParameters& params,
+                              const TextureParameters& params,
                               GLuint& outTextureId) {
-        if (tex.isExternal()) {
-            outTextureId = tex.getGLTextureID();
-            return outTextureId != 0
-                ? Failable::ok({})
-                : Failable::errorResult("External texture has no GL id");
-        }
         
         if (!tex.store || TextureDataStore::TextureHandle::isNone(tex.handle)) {
             outTextureId = 1;  // the first
@@ -295,17 +300,21 @@ class TextureManager {
     // Bind a 2D texture to a unit and set sampler uniform = unit.
     Failable bindSampler2D(GLuint program,
         GLuint samplerLoc,
-        const Texture& tex,
-        const Texture::TextureParameters& params,
+        const std::variant<std::monostate, Texture, RenderTexture>& tex,
+        const TextureParameters& params,
         GLuint unit) {
-        // if (!tex.store || TextureDataStore::TextureHandle::isNone(tex.handle)) {
-        // return Failable::errorResult("Tried to bind an empty texture.");
-        // }
 
         GLuint id = 0;
-        auto r = ensureUploaded2D(tex, params, id);
-        if (r.isError())
-            return r;
+        Failable r = std::visit([&](const auto& t) -> Failable {
+            using T = std::decay_t<decltype(t)>;
+            if constexpr (std::is_same_v<T, std::monostate>) {
+                id = 1;
+                return Failable::ok({});
+            } else {
+                return ensureUploaded2D(t, params, id);
+            }
+        }, tex);
+        if (r.isError()) return r;
         GL_CHECK_FAILABLE(glUseProgram(program));
         GL_CHECK_FAILABLE(glActiveTexture(GL_TEXTURE0 + unit));
         GL_CHECK_FAILABLE(glBindTexture(GL_TEXTURE_2D, id));
@@ -334,7 +343,7 @@ class TextureManager {
     };
 
     static bool sameParams(
-        const Texture::TextureParameters& a, const Texture::TextureParameters& b) {
+        const TextureParameters& a, const TextureParameters& b) {
         return a.minFilter == b.minFilter && a.magFilter == b.magFilter && a.wrapS == b.wrapS &&
                a.wrapT == b.wrapT;
     }

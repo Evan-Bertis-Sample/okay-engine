@@ -45,7 +45,7 @@ void Renderer::initialize() {
     TextureLoadSettings tLoad(TextureDataStore::mainStore());
     Texture white = okay::load::engineTexture("textures/white.jpg");
 
-    Texture::TextureParameters params{
+    TextureParameters params{
         .minFilter = GL_LINEAR,
         .magFilter = GL_LINEAR,
         .wrapS = GL_REPEAT,

@@ -66,7 +66,7 @@ class ScenePass : public IRenderPass {
             .mipLevels = 1,
             .format = okay::OkayTextureMeta::Format::DEPTH_COMPONENT,
         };
-        _depthMapTexture = Texture::fromGLTexture(_depthMap, depthMeta);
+        _depthMapTexture = okay::RenderTexture(_depthMap, depthMeta);
         
         _skyboxMesh = Engine.systems.getSystemChecked<Renderer>()->meshBuffer().addMesh(
             okay::primitives::box()
@@ -419,7 +419,7 @@ class ScenePass : public IRenderPass {
 
     glm::mat4 _lightSpaceMatrix;
     MaterialHandle _depthMapMaterial;
-    Texture _depthMapTexture;
+    RenderTexture _depthMapTexture;
     glm::mat4 _screenSpaceProjectionMat{};
     Mesh _skyboxMesh;
 };

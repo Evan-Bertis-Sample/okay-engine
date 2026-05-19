@@ -165,15 +165,15 @@ class TextureDataStore {
     }
 };
 
+struct TextureParameters {
+    GLenum minFilter{GL_LINEAR};
+    GLenum magFilter{GL_LINEAR};
+    GLenum wrapS{GL_REPEAT};
+    GLenum wrapT{GL_REPEAT};
+};
+
 class Texture {
    public:
-    struct TextureParameters {
-        GLenum minFilter{GL_LINEAR};
-        GLenum magFilter{GL_LINEAR};
-        GLenum wrapS{GL_REPEAT};
-        GLenum wrapT{GL_REPEAT};
-    };
-
     std::shared_ptr<TextureDataStore> store;
     TextureDataStore::TextureHandle handle;
 
@@ -182,25 +182,12 @@ class Texture {
     Texture(std::shared_ptr<TextureDataStore> store, TextureDataStore::TextureHandle handle)
         : store(store), handle(handle) {}
 
-    static Texture fromGLTexture(GLuint glID, OkayTextureMeta meta) {
-        Texture t;
-        t._glTextureID = glID;
-        t._externalMeta = meta;
-        t._isExternal = true;
-        return t;
-    }
-
-    bool isExternal() const { return _isExternal; }
-
     std::span<const std::byte> getData() const {
-        if (_isExternal) {
-            Engine.logger.error("Store is null for externally created textures");
-        }
         return store->getTextureData(handle); 
     }
 
     OkayTextureMeta getMeta() const {
-        return _isExternal ? _externalMeta : store->getTextureMeta(handle); 
+        return store->getTextureMeta(handle); 
     }
 
     bool hasBeenUploadedToGPU() const { return _glTextureID != 0; }
@@ -208,7 +195,6 @@ class Texture {
     GLuint getGLTextureID() const { return _glTextureID; }
 
     Failable uploadToGPU(const TextureParameters& params) {
-        if (_isExternal) return Failable::ok({});
         const auto meta = getMeta();
         const auto data = getData();
 
@@ -292,8 +278,43 @@ class Texture {
 
    private:
     GLuint _glTextureID{ 0 };
-    bool _isExternal{ false };
-    OkayTextureMeta _externalMeta{};
+};
+
+class RenderTexture {
+   public:
+    RenderTexture() = default;
+
+    RenderTexture(GLuint glID, OkayTextureMeta meta)
+        : _glTextureID(glID), _meta(meta)
+    {}
+
+    std::span<const std::byte> getData() const { return {}; }
+
+    OkayTextureMeta getMeta() const {
+        return _meta; 
+    }
+
+    bool hasBeenUploadedToGPU() const { return _glTextureID != 0; }
+
+    GLuint getGLTextureID() const { return _glTextureID; }
+
+    Failable uploadToGPU(const TextureParameters& params) {
+        return Failable::ok({});
+    }
+
+    bool operator==(const RenderTexture& other) const {
+        return _glTextureID == other.getGLTextureID();
+    }
+    bool operator!=(const RenderTexture& other) const {
+        return !(*this == other);
+    }
+    bool operator<(const RenderTexture& other) const {
+        return _glTextureID < other.getGLTextureID();
+    }
+
+   private:
+    GLuint _glTextureID{ 0 };
+    OkayTextureMeta _meta{};
 };
 
 }  // namespace okay
