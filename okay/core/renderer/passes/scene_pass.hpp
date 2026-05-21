@@ -132,7 +132,7 @@ class ScenePass : public IRenderPass {
         glEnable(GL_MULTISAMPLE);
     }
     
-    bool checkIfNeedsRefit(const RendererContext& context, glm::vec3 lightDir) {
+    bool checkIfNeedsRefit(const RendererContext& context, const glm::vec3& lightDir) {
         if (dot(_cachedLightDir, lightDir) < 0.9999) return true;
 
         for (const RenderItemHandle& handle : context.world.getRenderItems()) {
@@ -152,7 +152,7 @@ class ScenePass : public IRenderPass {
         return false;
     }
 
-    void refit(glm::vec3 lightDir, glm::vec3 lightEye, glm::mat4 lightView, const std::array<glm::vec3, 8>& worldSpaceCoords, const RendererContext& context) {
+    void refit(const RendererContext& context, const glm::vec3& lightDir, const glm::vec3& lightEye, const glm::mat4& lightView, const std::array<glm::vec3, 8>& worldSpaceCoords) {
         _cachedLightDir = lightDir;
         _cachedLightEye = lightEye;
         _cachedLightView = lightView;
@@ -212,7 +212,7 @@ class ScenePass : public IRenderPass {
                     }
                     
                     if (needsRefit) {
-                        refit(lightDir, lightEye, lightView, worldSpaceCoords, context);
+                        refit(context, lightEye, lightView, worldSpaceCoords, lightDir);
                     }
 
                     _orthoCamera.transform.position = _cachedLightEye;
@@ -267,7 +267,7 @@ class ScenePass : public IRenderPass {
         }
     }
 
-    void renderSkybox(const RendererContext& context, float aspect, glm::mat4 projection, glm::mat4 view) {
+    void renderSkybox(const RendererContext& context, float aspect, const glm::mat4& projection, const glm::mat4& view) {
         MaterialHandle skyboxMaterial = context.renderer.skyboxMaterial();
         if (skyboxMaterial.isValid()) {
             handleMaterialSwitch(context,
@@ -291,7 +291,7 @@ class ScenePass : public IRenderPass {
         }
     }
 
-    void renderItems(const RendererContext& context, float aspect, glm::mat4 projection, glm::mat4 view, glm::vec3 camPos, glm::vec3 camDir) {
+    void renderItems(const RendererContext& context, float aspect, const glm::mat4& projection, const glm::mat4& view, const glm::vec3& camPos, const glm::vec3& camDir) {
         for (const RenderItemHandle& handle : context.world.getRenderItems()) {
             RenderItem& item = context.world.getRenderItem(handle);
             if (item.mesh.isEmpty())
