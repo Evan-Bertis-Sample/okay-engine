@@ -109,6 +109,14 @@ static void __gameInitialize() {
             glm::angleAxis(glm::radians(0.0f), glm::vec3{0.0f, 1.0f, 0.0f}))
         .addComponent<okay::MeshRendererComponent>(object, material);
 
+    glm::vec3 pos3 = glm::vec3(15.0f, 1.0f, 0.0f);
+    okay::ecs::entity()
+        .addComponent<okay::TransformComponent>(
+            pos3,
+            glm::vec3{0.1f},
+            glm::angleAxis(glm::radians(0.0f), glm::vec3{0.0f, 1.0f, 0.0f}))
+        .addComponent<okay::MeshRendererComponent>(object, material);
+
     okay::ecs::entity()
         .addComponent<okay::TransformComponent>(
             glm::vec3(0.0, -2.0, 0.0),
@@ -123,9 +131,12 @@ static void __gameInitialize() {
 static void __gameUpdate() {
     // move the camera in a circle, always looking at the origin
     float theta = okay::Engine.time->timeSinceStartSec() * 0.05f * glm::pi<float>();
+    float time = okay::Engine.time->timeSinceStartSec();
     // float theta = 0.0f;
     float dist = 7.0f;
     glm::vec3 pos = glm::vec3(sin(theta) * dist, 2.0f, cos(theta) * dist);
+    // glm::vec3 pos = glm::vec3(0.0, 2.0f, time * dist);
+
     // glm::vec3 pos = glm::vec3(5.0, 5.0, -10.0);
     // rotation much look at origin
     auto& cameraTransform = s_camera.getComponent<okay::TransformComponent>().value();

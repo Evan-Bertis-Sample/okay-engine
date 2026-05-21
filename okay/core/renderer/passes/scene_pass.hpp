@@ -3,6 +3,8 @@
 
 #include "glm/ext/matrix_transform.hpp"
 #include "glm/ext/scalar_common.hpp"
+#include "okay/core/ecs/components/camera_component.hpp"
+#include "okay/core/ecs/ecs_util.hpp"
 #include "okay/core/engine/system.hpp"
 #include "okay/core/renderer/material.hpp"
 #include "okay/core/renderer/render_world.hpp"
@@ -123,24 +125,24 @@ class ScenePass : public IRenderPass {
                     glm::vec3 lightDir = glm::normalize(glm::vec3(l.direction));
                     glm::vec3 lightEye = frustumCenter - lightDir * 15.0f;  // distance here doesn't matter much for ortho
                     glm::mat4 lightView = glm::lookAt(lightEye, frustumCenter, glm::vec3(0.0f, 1.0f, 0.0f));
+                    
 
-                    bool needsRefit = !_validMatrix;
-
-                    if (_validMatrix) {
-                        for (auto wsc : worldSpaceCoords) {
-                            glm::vec3 lsc = _cachedLightView * glm::vec4(wsc, 1.0);
-                            if (lsc.x < _left || lsc.x > _right || 
-                                lsc.y < _bottom || lsc.y > _top || 
-                                -lsc.z > _far) {
-                                needsRefit = true;
-                                break;
-                            }
+                    _orthoCamera.transform.position = glm::vec3(lightEye);
+                    _orthoCamera.transform.rotation = lightDir;
+                    _orthoCamera.lens = okay::Camera::OrthographicLens { _left, _right, _bottom, _top, _near, _far };
+                    glm::vec3 minCoords{};
+                    glm::vec3 maxCoords{};
+                    for (size_t i = 0; i < 8; ++i) {
+                        if (i == 0) {
+                            minCoords = worldSpaceCoords[i];
+                            maxCoords = worldSpaceCoords[i];
+                        } else {
+                            minCoords = glm::min(minCoords, worldSpaceCoords[i]);
+                            maxCoords = glm::max(maxCoords, worldSpaceCoords[i]);
                         }
                     }
-
-                    if (dot(_cachedLightDir, lightDir) < 0.9999) needsRefit = true;
                     
-                    if (needsRefit) {
+                    if(!_orthoCamera.isInFrustum(Bounds(minCoords, maxCoords), aspect) || dot(_cachedLightDir, lightDir) < 0.9999) {
                         Engine.logger.debug("{}: Refit!!!", _count++);
                         _cachedLightDir = lightDir;
                         _cachedLightView = lightView;
@@ -162,14 +164,12 @@ class ScenePass : public IRenderPass {
                         _left = minCoords.x - padding.x; _right = maxCoords.x + padding.x;
                         _bottom = minCoords.y - padding.y; _top = maxCoords.y + padding.y;
                         _far = -minCoords.z + padding.z;
-
-                        _validMatrix = true;
                     }
-
 
                     Engine.logger.debug("Left: {}, Right: {}, Bottom: {}, Top: {}, Near: {}, Far: {}", _left, _right, _bottom, _top, _near, _far);
                     
-                    glm::mat4 lightProjection = glm::ortho(_left, _right, _bottom, _top, _near, _far);
+                    // glm::mat4 lightProjection = glm::ortho(_left, _right, _bottom, _top, _near, _far);
+                    glm::mat4 lightProjection = _orthoCamera.projectionMatrix(aspect);
                     _lightSpaceMatrix = lightProjection * _cachedLightView;
 
                     // --- Depth pass ---
@@ -410,6 +410,7 @@ class ScenePass : public IRenderPass {
     unsigned int _depthMapFBO { 0 };
     unsigned int _depthMap { 0 };
 
+    okay::Camera _orthoCamera{};
     bool _validMatrix { false };
     glm::mat4 _cachedLightView{};
     glm::vec3 _cachedLightDir{};
