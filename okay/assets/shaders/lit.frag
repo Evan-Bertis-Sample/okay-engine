@@ -358,15 +358,16 @@ vec3 calcDisneySpecTransmission(vec3 baseColor, vec3 N, vec3 wi, vec3 wo, vec3 w
 /***************/
 
 // Second specular layer on top of the base material
-float disneyClearcoat(vec3 N, vec3 wo, vec3 wm, vec3 wi) {
+float disneyClearcoat(vec3 N, vec3 wo, vec3 wm, vec3 wi, float normalVariance) {
     if (u_clearcoat <= 0.0f) return 0.0f;
 
     float absDotNH = abs(dot(N, wm));
     float dotHV = dot(wm, wo);
 
-    float clearcoatGloss = u_clearcoatGloss;
+    float alpha = mix(0.1, 0.001, u_clearcoatGloss);
+    alpha = clamp(sqrt(alpha * alpha + 0.25 * normalVariance), alpha, 1.0);
 
-    float d = GTR1(absDotNH, mix(0.1, 0.001, clearcoatGloss));
+    float d = GTR1(absDotNH, alpha);
     float f = schlickFresnel(0.04f, dotHV);
     float gl = GGXG1(wi, 0.25f);
     float gv = GGXG1(wo, 0.25f);
@@ -378,7 +379,7 @@ float disneyClearcoat(vec3 N, vec3 wo, vec3 wm, vec3 wi) {
 /** Disney BSDF **/
 /*****************/
 
-vec3 evaluateDisney(vec3 N, vec3 wi, vec3 wm, vec3 wo, vec3 baseColor) {    
+vec3 evaluateDisney(vec3 N, vec3 wi, vec3 wm, vec3 wo, vec3 baseColor, float normalVariance) {
     float dotNV = dot(N, wo);
     float dotNL = max(dot(N, wi), 0.0f);
     if (dotNL <= 0.0f) return vec3(0.0f);
@@ -397,7 +398,7 @@ vec3 evaluateDisney(vec3 N, vec3 wi, vec3 wm, vec3 wo, vec3 baseColor) {
     // clearcoat
     bool upperHemisphere = dotNL > 0.0f && dotNV > 0.0f;
     if (upperHemisphere && u_clearcoat > 0.0f) {
-        float clearcoat = disneyClearcoat(N, wo, wm, wi);
+        float clearcoat = disneyClearcoat(N, wo, wm, wi, normalVariance);
         reflectance += vec3(clearcoat);
     }
 
@@ -440,13 +441,9 @@ float ShadowCalculation(vec4 fragPosLightSpace, vec3 N, vec3 L)
     if (projCoords.z > 1.0) {
         return 0.0;
     }
-    // get closest depth value from light's perspective (using [0,1] range fragPosLight as coords)
-    float closestDepth = texture(u_shadowMap, projCoords.xy).r; 
     // get depth of current fragment from light's perspective
     float currentDepth = projCoords.z;
-    // check whether current frag pos is in shadow
-    float bias = max(0.05 * (1.0 - dot(N, L)), 0.005);
-    // float bias = 0.0;
+    float bias = max(0.05 * (1.0 - dot(N, L)), 0.01);
 
     float shadow = 0.0;
     vec2 texelSize = vec2(1.0) / vec2(textureSize(u_shadowMap, 0));
@@ -464,7 +461,8 @@ float ShadowCalculation(vec4 fragPosLightSpace, vec3 N, vec3 L)
 
 void main() {
     vec3 N = safeNormalize(v_worldNormal);
-    vec3 V = safeNormalize(u_cameraPosition - v_worldPos); // view vector
+    vec3 V = safeNormalize(u_cameraPosition - v_worldPos);
+    float normalVariance = dot(dFdx(N), dFdx(N)) + dot(dFdy(N), dFdy(N));
     
     vec4 texAlbedo = texture(u_albedo, v_uv);
     vec3 baseColor = mon2lin(texAlbedo.rgb) * v_color;
@@ -523,7 +521,7 @@ void main() {
         vec3 wm = safeNormalize(wo + wi); // half vector
         
         shadow = (i == 0) ? ShadowCalculation(v_fragPosLightSpace, N, L) : 0.0;
-        colorOut += evaluateDisney(nt, wi, wm, wo, baseColor) * Lrgb * intensity * att * (1.0 - shadow);
+        colorOut += evaluateDisney(nt, wi, wm, wo, baseColor, normalVariance) * Lrgb * intensity * att * (1.0 - shadow);
     
     }
     FragColor = vec4(colorOut, texAlbedo.a);
