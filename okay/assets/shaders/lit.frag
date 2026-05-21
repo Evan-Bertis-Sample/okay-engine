@@ -37,6 +37,7 @@ uniform float u_clearcoatGloss; // controls clearcoat glossiness (0 = satin, 1 =
 uniform float u_specularTrans;  // transmission fraction (glass/translucency)
 uniform float u_flatness;       // blends in Hanrahan-Krueger subsurface for thin surfaces
 uniform int u_thin;             // 0 = solid, 1 = thin surface (leaves, paper)
+uniform float u_shadowStrength;
 
 const float PI = 3.1415926535897932384626433832795;
 
@@ -443,7 +444,7 @@ float ShadowCalculation(vec4 fragPosLightSpace, vec3 N, vec3 L)
     }
     // get depth of current fragment from light's perspective
     float currentDepth = projCoords.z;
-    float bias = max(0.05 * (1.0 - dot(N, L)), 0.01);
+    float bias = max(0.05 * (1.0 - dot(N, L)), 0.001);
 
     float shadow = 0.0;
     vec2 texelSize = vec2(1.0) / vec2(textureSize(u_shadowMap, 0));
@@ -454,7 +455,7 @@ float ShadowCalculation(vec4 fragPosLightSpace, vec3 N, vec3 L)
         }
     }
     
-    return shadow / 9.0;
+    return shadow / 9.0 * u_shadowStrength;
 }
 
 
