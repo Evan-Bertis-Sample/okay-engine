@@ -2,10 +2,7 @@
 #define __SCENE_PASS_H__
 
 #include "glm/ext/matrix_transform.hpp"
-#include "glm/ext/scalar_common.hpp"
 #include "glm/gtc/quaternion.hpp"
-#include "okay/core/ecs/components/camera_component.hpp"
-#include "okay/core/ecs/ecs_util.hpp"
 #include "okay/core/engine/system.hpp"
 #include "okay/core/renderer/material.hpp"
 #include "okay/core/renderer/math_types.hpp"
@@ -22,11 +19,8 @@
 #include <okay/core/renderer/uniform.hpp>
 
 #include "GLFW/glfw3.h"
-#include <algorithm>
-#include <chrono>
 #include <cstdint>
 #include <memory>
-#include <thread>
 
 namespace okay {
 
@@ -39,18 +33,53 @@ class ScenePass : public IRenderPass {
     }
 
     virtual void initialize() override {
+        initializeDepthMap();
+        initializeDepthTexture();
+        initializeSkyboxMesh();
+
+        _shadowDist = 40;
+        _shadowWidth = 2048;
+        _shadowHeight = 2048;
+        _margin = 0.5;
+        _screenSpaceProjectionMat = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, 0.0f, 10.0f);
+    }
+
+    virtual void resize(int newWidth, int newHeight) override {}
+
+    virtual void render(const RendererContext& context) override {
+        glfwGetFramebufferSize((GLFWwindow*)context.renderer.getSurfaceWindow(), &_fbwidth, &_fbheight);
+        renderSettings();
+
+        float aspect = float(_fbwidth) / float(_fbheight);
+        auto view = context.world.camera().viewMatrix();
+        auto projection = context.world.camera().projectionMatrix(aspect);
+        auto camPos = context.world.camera().position();
+        auto camDir = context.world.camera().direction();
+
+        glCullFace(GL_FRONT);
+        renderDepthMap(context, aspect);
+        glCullFace(GL_BACK);
+
+        renderSkybox(context, aspect, projection, view);
+
+        renderItems(context, aspect, projection, view, camPos, camDir);
+
+        displayDepthMap(context);
+    }
+
+    void initializeDepthMap() {
         Shader depthMapShader = load::engineShader("shaders/depth_map");
         auto depthMapProperties = std::make_unique<DepthMapMaterial>();
         Renderer * r = Engine.systems.getSystemChecked<Renderer>();
         ShaderHandle shader = r->materialRegistry().registerShader(depthMapShader.vertexShader,
                                                                 depthMapShader.fragmentShader);
         _depthMapMaterial = r->materialRegistry().registerMaterial(shader, std::move(depthMapProperties));
-        glGenFramebuffers(1, &_depthMapFBO); 
 
+        glGenFramebuffers(1, &_depthMapFBO); 
         glGenTextures(1, &_depthMap);
         glBindTexture(GL_TEXTURE_2D, _depthMap);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 
-                    SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+                    _shadowWidth, _shadowHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER); 
@@ -63,27 +92,27 @@ class ScenePass : public IRenderPass {
         glDrawBuffer(GL_NONE);
         glReadBuffer(GL_NONE);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        
+    }
+
+    void initializeDepthTexture() {
         okay::OkayTextureMeta depthMeta {
-            .width = (uint32_t) SHADOW_WIDTH,
-            .height = (uint32_t) SHADOW_HEIGHT,
+            .width = (uint32_t) _shadowWidth,
+            .height = (uint32_t) _shadowHeight,
             .channels = 1,
             .mipLevels = 1,
             .format = okay::OkayTextureMeta::Format::DEPTH_COMPONENT,
         };
         _depthMapTexture = okay::RenderTexture(_depthMap, depthMeta);
-        
+    }
+
+    void initializeSkyboxMesh() {
         _skyboxMesh = Engine.systems.getSystemChecked<Renderer>()->meshBuffer().addMesh(
             okay::primitives::box()
                 .sizeSet(glm::vec3{2.0f, 2.0f, 2.0f})  // to span -1.0 to 1.0
                 .build());
     }
 
-    virtual void resize(int newWidth, int newHeight) override {}
-
-    virtual void render(const RendererContext& context) override {
-        glfwGetFramebufferSize((GLFWwindow*)context.renderer.getSurfaceWindow(), &_fbwidth, &_fbheight);
-
+    void renderSettings() {
         // GL_CHECK(glClearColor(0.113f, 0.008, 0.208, 1.0f));
         GL_CHECK(glClearColor(0.580, 0.580, 0.580, 1.0));
         GL_CHECK(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
@@ -101,19 +130,66 @@ class ScenePass : public IRenderPass {
 
         // doesn't need MSAA, but should if the platform can support it
         glEnable(GL_MULTISAMPLE);
+    }
+    
+    bool checkIfNeedsRefit(const RendererContext& context, glm::vec3 lightDir) {
+        if (dot(_cachedLightDir, lightDir) < 0.9999) return true;
 
-        _shaderIndex = Shader::invalidID();
-        _materialIndex = Material::invalidID();
-        _screenSpaceProjectionMat = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, 0.0f, 10.0f);
+        for (const RenderItemHandle& handle : context.world.getRenderItems()) {
+            RenderItem& item = context.world.getRenderItem(handle);
+            if (item.mesh.isEmpty()) continue;
+            if (!item.material->properties()->flags().hasFlag(MaterialFlags::CAST_SHADOWS)) continue;
 
-        float aspect = float(_fbwidth) / float(_fbheight);
-        auto view = context.world.camera().viewMatrix();
-        auto projection = context.world.camera().projectionMatrix(aspect);
-        auto camPos = context.world.camera().position();
-        auto camDir = context.world.camera().direction();
+            for (const glm::vec3& corner : item.mesh.bounds.transform(item.worldMatrix).corners()) {
+                glm::vec3 lsc = _cachedLightView * glm::vec4(corner, 1.0);
+                if (lsc.x < _left || lsc.x > _right || 
+                    lsc.y < _bottom || lsc.y > _top || 
+                    -lsc.z > _far) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 
-        glCullFace(GL_FRONT);
+    void refit(glm::vec3 lightDir, glm::vec3 lightEye, glm::mat4 lightView, const std::array<glm::vec3, 8>& worldSpaceCoords, const RendererContext& context) {
+        _cachedLightDir = lightDir;
+        _cachedLightEye = lightEye;
+        _cachedLightView = lightView;
+        glm::vec3 minLightCoords(FLT_MAX), maxLightCoords(-FLT_MAX);
+        bool hasCasters = false;
+        for (const RenderItemHandle& handle : context.world.getRenderItems()) {
+            RenderItem& item = context.world.getRenderItem(handle);
+            if (item.mesh.isEmpty()) continue;
+            if (!item.material->properties()->flags().hasFlag(MaterialFlags::CAST_SHADOWS)) continue;
 
+            for (const glm::vec3& corner : item.mesh.bounds.transform(item.worldMatrix).corners()) {
+                glm::vec3 lsc = glm::vec3(_cachedLightView * glm::vec4(corner, 1.0f));
+                minLightCoords = glm::min(minLightCoords, lsc);
+                maxLightCoords = glm::max(maxLightCoords, lsc);
+                hasCasters = true;
+            }
+        }
+
+        if (!hasCasters) {
+            minLightCoords = glm::vec3(FLT_MAX);
+            maxLightCoords = glm::vec3(-FLT_MAX);
+            for (const glm::vec3& c : worldSpaceCoords) {
+                glm::vec3 lsc = glm::vec3(_cachedLightView * glm::vec4(c, 1.0f));
+                minLightCoords = glm::min(minLightCoords, lsc);
+                maxLightCoords = glm::max(maxLightCoords, lsc);
+            }
+        }
+
+        glm::vec3 size = maxLightCoords - minLightCoords;
+        glm::vec3 padding = size * _margin;
+        _left = minLightCoords.x - padding.x; _right = maxLightCoords.x + padding.x;
+        _bottom = minLightCoords.y - padding.y; _top = maxLightCoords.y + padding.y;
+        _far = -minLightCoords.z + padding.z;
+        _validMatrix = true;
+    }
+
+    void renderDepthMap(const RendererContext& context, float aspect) {
         for (const Light& l : context.world.lights()) {
             switch (l.type()) {
                 case Light::Type::POINT:
@@ -125,33 +201,15 @@ class ScenePass : public IRenderPass {
                     for (const auto& c : worldSpaceCoords) frustumCenter += c;
                     frustumCenter /= 8.0f;
 
-
                     glm::vec3 lightDir = glm::normalize(glm::vec3(l.direction));
-                    glm::vec3 lightEye = frustumCenter - lightDir * 25.0f;  // distance here doesn't matter much for ortho
+                    glm::vec3 lightEye = frustumCenter - lightDir * 25.0f;
                     glm::mat4 lightView = glm::lookAt(lightEye, frustumCenter, glm::vec3(0.0f, 1.0f, 0.0f));
-                    
                     
                     bool needsRefit = !_validMatrix;
 
                     if (_validMatrix) {
-                        for (const RenderItemHandle& handle : context.world.getRenderItems()) {
-                            RenderItem& item = context.world.getRenderItem(handle);
-                            if (item.mesh.isEmpty()) continue;
-                            if (!item.material->properties()->flags().hasFlag(MaterialFlags::CAST_SHADOWS)) continue;
-
-                            for (const glm::vec3& corner : item.mesh.bounds.transform(item.worldMatrix).corners()) {
-                                glm::vec3 lsc = _cachedLightView * glm::vec4(corner, 1.0);
-                                if (lsc.x < _left || lsc.x > _right || 
-                                    lsc.y < _bottom || lsc.y > _top || 
-                                    -lsc.z > _far) {
-                                    needsRefit = true;
-                                    break;
-                                }
-                            }
-                        }
+                        needsRefit = checkIfNeedsRefit(context, lightDir);
                     }
-
-                    if (dot(_cachedLightDir, lightDir) < 0.9999) needsRefit = true;
                     
                     if (needsRefit) {
                         refit(lightDir, lightEye, lightView, worldSpaceCoords, context);
@@ -167,7 +225,7 @@ class ScenePass : public IRenderPass {
                     _lightSpaceMatrix = lightProjection * _cachedLightView;
 
                     // --- Depth pass ---
-                    glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+                    glViewport(0, 0, _shadowWidth, _shadowHeight);
                     glBindFramebuffer(GL_FRAMEBUFFER, _depthMapFBO);
                     glClear(GL_DEPTH_BUFFER_BIT);
 
@@ -178,23 +236,8 @@ class ScenePass : public IRenderPass {
                     auto* depthProps = dynamic_cast<DepthMapMaterial*>(_depthMapMaterial->properties().get());
                     if (depthProps) depthProps->lightSpaceMatrix.set(_lightSpaceMatrix);
 
-                    for (const RenderItemHandle& handle : context.world.getRenderItems()) {
-                        RenderItem& item = context.world.getRenderItem(handle);
-                        if (item.mesh.isEmpty()) continue;
-
-                        if (!item.material->properties()->flags().hasFlag(MaterialFlags::CAST_SHADOWS)) continue;
-
-                        if (depthProps) depthProps->modelMatrix.set(item.worldMatrix);
-
-                        if(!_orthoCamera.isInFrustum(item.mesh.bounds.transform(item.worldMatrix), aspect)) {
-                            continue;
-                        }
-
-                        Failable df = _depthMapMaterial->passUniforms();
-                        if (df.isError()) Engine.logger.error("depth passUniforms: {}", df.error());
-                        
-                        context.renderer.meshBuffer().drawMesh(item.mesh);
-                    }
+                    // render depth map
+                    drawDepthMesh(context, aspect, depthProps);
 
                     glBindFramebuffer(GL_FRAMEBUFFER, 0);
                     glViewport(0, 0, _fbwidth, _fbheight);
@@ -202,10 +245,29 @@ class ScenePass : public IRenderPass {
                 }
             }
         }
+    }
 
-        glCullFace(GL_BACK);
+    void drawDepthMesh(const RendererContext& context, float aspect, DepthMapMaterial* depthProps) {
+        for (const RenderItemHandle& handle : context.world.getRenderItems()) {
+            RenderItem& item = context.world.getRenderItem(handle);
+            if (item.mesh.isEmpty()) continue;
 
-        // render the skybox
+            if (!item.material->properties()->flags().hasFlag(MaterialFlags::CAST_SHADOWS)) continue;
+
+            if (depthProps) depthProps->modelMatrix.set(item.worldMatrix);
+
+            if(!_orthoCamera.isInFrustum(item.mesh.bounds.transform(item.worldMatrix), aspect)) {
+                continue;
+            }
+
+            Failable df = _depthMapMaterial->passUniforms();
+            if (df.isError()) Engine.logger.error("depth passUniforms: {}", df.error());
+            
+            context.renderer.meshBuffer().drawMesh(item.mesh);
+        }
+    }
+
+    void renderSkybox(const RendererContext& context, float aspect, glm::mat4 projection, glm::mat4 view) {
         MaterialHandle skyboxMaterial = context.renderer.skyboxMaterial();
         if (skyboxMaterial.isValid()) {
             handleMaterialSwitch(context,
@@ -227,7 +289,9 @@ class ScenePass : public IRenderPass {
                 context.renderer.meshBuffer().drawMesh(_skyboxMesh);
             }
         }
+    }
 
+    void renderItems(const RendererContext& context, float aspect, glm::mat4 projection, glm::mat4 view, glm::vec3 camPos, glm::vec3 camDir) {
         for (const RenderItemHandle& handle : context.world.getRenderItems()) {
             RenderItem& item = context.world.getRenderItem(handle);
             if (item.mesh.isEmpty())
@@ -268,98 +332,6 @@ class ScenePass : public IRenderPass {
             applyMaterialFlags(item.material);
             context.renderer.meshBuffer().drawMesh(item.mesh);
         }
-        displayDepthMap(context);
-        
-    }
-
-    void refit(glm::vec3 lightDir, glm::vec3 lightEye, glm::mat4 lightView, const std::array<glm::vec3, 8>& worldSpaceCoords, const RendererContext& context) {
-        Engine.logger.debug("{}: Refit!!!", _count++);
-        _cachedLightDir = lightDir;
-        _cachedLightEye = lightEye;
-        _cachedLightView = lightView;
-        glm::vec3 minLightCoords(FLT_MAX), maxLightCoords(-FLT_MAX);
-        bool hasCasters = false;
-        for (const RenderItemHandle& handle : context.world.getRenderItems()) {
-            RenderItem& item = context.world.getRenderItem(handle);
-            if (item.mesh.isEmpty()) continue;
-            if (!item.material->properties()->flags().hasFlag(MaterialFlags::CAST_SHADOWS)) continue;
-
-            for (const glm::vec3& corner : item.mesh.bounds.transform(item.worldMatrix).corners()) {
-                glm::vec3 lsc = glm::vec3(_cachedLightView * glm::vec4(corner, 1.0f));
-                minLightCoords = glm::min(minLightCoords, lsc);
-                maxLightCoords = glm::max(maxLightCoords, lsc);
-                hasCasters = true;
-            }
-        }
-
-        if (!hasCasters) {
-            minLightCoords = glm::vec3(FLT_MAX);
-            maxLightCoords = glm::vec3(-FLT_MAX);
-            for (const glm::vec3& c : worldSpaceCoords) {
-                glm::vec3 lsc = glm::vec3(_cachedLightView * glm::vec4(c, 1.0f));
-                minLightCoords = glm::min(minLightCoords, lsc);
-                maxLightCoords = glm::max(maxLightCoords, lsc);
-            }
-        }
-
-        glm::vec3 size = maxLightCoords - minLightCoords;
-        glm::vec3 padding = size * _margin;
-        _left = minLightCoords.x - padding.x; _right = maxLightCoords.x + padding.x;
-        _bottom = minLightCoords.y - padding.y; _top = maxLightCoords.y + padding.y;
-        _far = -minLightCoords.z + padding.z;
-        _validMatrix = true;
-    }
-    
-
-    void displayDepthMap(const RendererContext& context) {
-        static GLuint program = 0;
-        static GLuint depthmapVAO = 0;
-        if (program == 0) {
-            const char* depthVert = R"(
-                #version 330 core
-                out vec2 TexCoords;
-                void main() {
-                    TexCoords = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2);
-                    gl_Position = vec4(TexCoords * 2.0 - 1.0, 0.0, 1.0);
-                }
-            )";
-            const char* depthFrag = R"(
-                #version 330 core
-                in vec2 TexCoords;
-                out vec4 FragColor;
-                uniform sampler2D depthMap;
-                void main() {
-                    float d = texture(depthMap, TexCoords).r;
-                    FragColor = vec4(vec3(d), 1.0);
-                }
-            )";
-            GLuint vs = glCreateShader(GL_VERTEX_SHADER);
-            glShaderSource(vs, 1, &depthVert, nullptr); glCompileShader(vs);
-            GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
-            glShaderSource(fs, 1, &depthFrag, nullptr); glCompileShader(fs);
-            program = glCreateProgram();
-            glAttachShader(program, vs);
-            glAttachShader(program, fs);
-            glLinkProgram(program);
-            glDeleteShader(vs); glDeleteShader(fs);
-            glGenVertexArrays(1, &depthmapVAO);
-        }
-        
-        int w = _fbwidth / 3;
-        int h = _fbheight / 3;
-        glViewport(0, 0, w, h);  // bottom-left, 1/3 of screen
-        
-        glDisable(GL_DEPTH_TEST);
-        glUseProgram(program);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, _depthMap);
-        glUniform1i(glGetUniformLocation(program, "depthMap"), 0);
-        
-        glBindVertexArray(depthmapVAO);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
-        
-        glViewport(0, 0, w, h);  // restore
-        glEnable(GL_DEPTH_TEST);
     }
 
     void handleMaterialSwitch(const RendererContext& context,
@@ -439,12 +411,64 @@ class ScenePass : public IRenderPass {
         }
     }
 
+    // display the depth map onto the screen
+    void displayDepthMap(const RendererContext& context) {
+        static GLuint program = 0;
+        static GLuint depthmapVAO = 0;
+        if (program == 0) {
+            const char* depthVert = R"(
+                #version 330 core
+                out vec2 TexCoords;
+                void main() {
+                    TexCoords = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2);
+                    gl_Position = vec4(TexCoords * 2.0 - 1.0, 0.0, 1.0);
+                }
+            )";
+            const char* depthFrag = R"(
+                #version 330 core
+                in vec2 TexCoords;
+                out vec4 FragColor;
+                uniform sampler2D depthMap;
+                void main() {
+                    float d = texture(depthMap, TexCoords).r;
+                    FragColor = vec4(vec3(d), 1.0);
+                }
+            )";
+            GLuint vs = glCreateShader(GL_VERTEX_SHADER);
+            glShaderSource(vs, 1, &depthVert, nullptr); glCompileShader(vs);
+            GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
+            glShaderSource(fs, 1, &depthFrag, nullptr); glCompileShader(fs);
+            program = glCreateProgram();
+            glAttachShader(program, vs);
+            glAttachShader(program, fs);
+            glLinkProgram(program);
+            glDeleteShader(vs); glDeleteShader(fs);
+            glGenVertexArrays(1, &depthmapVAO);
+        }
+        
+        int w = _fbwidth / 3;
+        int h = _fbheight / 3;
+        glViewport(0, 0, w, h);  // bottom-left, 1/3 of screen
+        
+        glDisable(GL_DEPTH_TEST);
+        glUseProgram(program);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, _depthMap);
+        glUniform1i(glGetUniformLocation(program, "depthMap"), 0);
+        
+        glBindVertexArray(depthmapVAO);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+        
+        glViewport(0, 0, _fbwidth, _fbheight);  // restore
+        glEnable(GL_DEPTH_TEST);
+    }
+
    private:
-    int _count{ 0 };
     int _fbwidth{ 0 }, _fbheight{ 0 };
     float _shadowDist = 40.0;
+    GLsizei _shadowWidth = 2048, _shadowHeight = 2048;
     float _margin = 0.5;
-    const GLsizei SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
+
     std::uint32_t _shaderIndex{Shader::invalidID()};
     std::uint32_t _materialIndex{Material::invalidID()};
     unsigned int _depthMapFBO { 0 };
