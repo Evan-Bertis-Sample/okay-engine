@@ -73,7 +73,9 @@ static void __gameInitialize() {
     auto floorProps = std::make_unique<okay::LitMaterial>();
     floorProps->albedo = floorTex;
     floorProps->roughness.set(0.75f);
+    floorProps->castsShadows = false;
     okay::MaterialHandle floorMat = okay::materialHandle(shader, std::move(floorProps));
+    
 
     okay::ecs::registerBuiltins();
 

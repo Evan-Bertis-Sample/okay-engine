@@ -8,6 +8,7 @@
 #include "okay/core/ecs/ecs_util.hpp"
 #include "okay/core/engine/system.hpp"
 #include "okay/core/renderer/material.hpp"
+#include "okay/core/renderer/math_types.hpp"
 #include "okay/core/renderer/render_world.hpp"
 #include "okay/core/renderer/texture.hpp"
 
@@ -23,6 +24,7 @@
 #include "GLFW/glfw3.h"
 #include <algorithm>
 #include <chrono>
+#include <cstdint>
 #include <memory>
 #include <thread>
 
@@ -119,26 +121,32 @@ class ScenePass : public IRenderPass {
                     continue;
                 case Light::Type::DIRECTIONAL: {                    
                     glm::vec3 frustumCenter(0.0f);
-                    auto worldSpaceCoords = _orthoCamera.frustumCornersWorld(aspect);
+                    auto worldSpaceCoords = context.world.camera().frustumCornersWorld(aspect, _shadowDist);
                     for (const auto& c : worldSpaceCoords) frustumCenter += c;
                     frustumCenter /= 8.0f;
 
 
                     glm::vec3 lightDir = glm::normalize(glm::vec3(l.direction));
-                    glm::vec3 lightEye = frustumCenter - lightDir * 15.0f;  // distance here doesn't matter much for ortho
+                    glm::vec3 lightEye = frustumCenter - lightDir * 25.0f;  // distance here doesn't matter much for ortho
                     glm::mat4 lightView = glm::lookAt(lightEye, frustumCenter, glm::vec3(0.0f, 1.0f, 0.0f));
                     
                     
                     bool needsRefit = !_validMatrix;
 
                     if (_validMatrix) {
-                        for (auto wsc : worldSpaceCoords) {
-                            glm::vec3 lsc = _cachedLightView * glm::vec4(wsc, 1.0);
-                            if (lsc.x < _left || lsc.x > _right || 
-                                lsc.y < _bottom || lsc.y > _top || 
-                                -lsc.z > _far) {
-                                needsRefit = true;
-                                break;
+                        for (const RenderItemHandle& handle : context.world.getRenderItems()) {
+                            RenderItem& item = context.world.getRenderItem(handle);
+                            if (item.mesh.isEmpty()) continue;
+                            if (!item.material->properties()->flags().hasFlag(MaterialFlags::CAST_SHADOWS)) continue;
+
+                            for (const glm::vec3& corner : item.mesh.bounds.transform(item.worldMatrix).corners()) {
+                                glm::vec3 lsc = _cachedLightView * glm::vec4(corner, 1.0);
+                                if (lsc.x < _left || lsc.x > _right || 
+                                    lsc.y < _bottom || lsc.y > _top || 
+                                    -lsc.z > _far) {
+                                    needsRefit = true;
+                                    break;
+                                }
                             }
                         }
                     }
@@ -146,37 +154,15 @@ class ScenePass : public IRenderPass {
                     if (dot(_cachedLightDir, lightDir) < 0.9999) needsRefit = true;
                     
                     if (needsRefit) {
-                        Engine.logger.debug("{}: Refit!!!", _count++);
-                        _cachedLightDir = lightDir;
-                        _cachedLightView = lightView;
-                        glm::vec3 minLightCoords{};
-                        glm::vec3 maxLightCoords{};
-                        for (size_t i = 0; i < 8; ++i) {
-                            glm::vec3 lightSpaceCoord = glm::vec3(_cachedLightView * glm::vec4(worldSpaceCoords[i], 1.0));
-                            if (i == 0) {
-                                minLightCoords = lightSpaceCoord;
-                                maxLightCoords = lightSpaceCoord;
-                            } else {
-                                minLightCoords = glm::min(minLightCoords, lightSpaceCoord);
-                                maxLightCoords = glm::max(maxLightCoords, lightSpaceCoord);
-                            }
-                        }
-    
-                        glm::vec3 size = maxLightCoords - minLightCoords;
-                        glm::vec3 padding = size * _margin;
-                        _left = minLightCoords.x - padding.x; _right = maxLightCoords.x + padding.x;
-                        _bottom = minLightCoords.y - padding.y; _top = maxLightCoords.y + padding.y;
-                        _far = -minLightCoords.z + padding.z;
-                        _validMatrix = true;
+                        refit(lightDir, lightEye, lightView, worldSpaceCoords, context);
                     }
 
-                    _orthoCamera.transform.position = glm::vec3(lightEye);
-                    _orthoCamera.transform.rotation = glm::quat_cast(_cachedLightView);
+                    _orthoCamera.transform.position = _cachedLightEye;
+                    _orthoCamera.transform.rotation = glm::quat_cast(glm::transpose(glm::mat3(_cachedLightView)));
                     _orthoCamera.lens = okay::Camera::OrthographicLens { _left, _right, _bottom, _top, _near, _far };
 
-                    // Engine.logger.debug("Left: {}, Right: {}, Bottom: {}, Top: {}, Near: {}, Far: {}", _left, _right, _bottom, _top, _near, _far);
+                    Engine.logger.debug("Left: {}, Right: {}, Bottom: {}, Top: {}, Near: {}, Far: {}", _left, _right, _bottom, _top, _near, _far);
                     
-                    // glm::mat4 lightProjection = glm::ortho(_left, _right, _bottom, _top, _near, _far);
                     glm::mat4 lightProjection = _orthoCamera.projectionMatrix(aspect);
                     _lightSpaceMatrix = lightProjection * _cachedLightView;
 
@@ -196,10 +182,12 @@ class ScenePass : public IRenderPass {
                         RenderItem& item = context.world.getRenderItem(handle);
                         if (item.mesh.isEmpty()) continue;
 
+                        if (!item.material->properties()->flags().hasFlag(MaterialFlags::CAST_SHADOWS)) continue;
+
                         if (depthProps) depthProps->modelMatrix.set(item.worldMatrix);
 
                         if(!_orthoCamera.isInFrustum(item.mesh.bounds.transform(item.worldMatrix), aspect)) {
-                            Engine.logger.debug("Out of bounds!");
+                            continue;
                         }
 
                         Failable df = _depthMapMaterial->passUniforms();
@@ -284,20 +272,33 @@ class ScenePass : public IRenderPass {
         
     }
 
-    void refit(glm::vec3 lightDir, glm::mat4 lightView, std::array<glm::vec3, 8> worldSpaceCoords) {
+    void refit(glm::vec3 lightDir, glm::vec3 lightEye, glm::mat4 lightView, const std::array<glm::vec3, 8>& worldSpaceCoords, const RendererContext& context) {
         Engine.logger.debug("{}: Refit!!!", _count++);
         _cachedLightDir = lightDir;
+        _cachedLightEye = lightEye;
         _cachedLightView = lightView;
-        glm::vec3 minLightCoords{};
-        glm::vec3 maxLightCoords{};
-        for (size_t i = 0; i < 8; ++i) {
-            glm::vec3 lightSpaceCoord = glm::vec3(_cachedLightView * glm::vec4(worldSpaceCoords[i], 1.0));
-            if (i == 0) {
-                minLightCoords = lightSpaceCoord;
-                maxLightCoords = lightSpaceCoord;
-            } else {
-                minLightCoords = glm::min(minLightCoords, lightSpaceCoord);
-                maxLightCoords = glm::max(maxLightCoords, lightSpaceCoord);
+        glm::vec3 minLightCoords(FLT_MAX), maxLightCoords(-FLT_MAX);
+        bool hasCasters = false;
+        for (const RenderItemHandle& handle : context.world.getRenderItems()) {
+            RenderItem& item = context.world.getRenderItem(handle);
+            if (item.mesh.isEmpty()) continue;
+            if (!item.material->properties()->flags().hasFlag(MaterialFlags::CAST_SHADOWS)) continue;
+
+            for (const glm::vec3& corner : item.mesh.bounds.transform(item.worldMatrix).corners()) {
+                glm::vec3 lsc = glm::vec3(_cachedLightView * glm::vec4(corner, 1.0f));
+                minLightCoords = glm::min(minLightCoords, lsc);
+                maxLightCoords = glm::max(maxLightCoords, lsc);
+                hasCasters = true;
+            }
+        }
+
+        if (!hasCasters) {
+            minLightCoords = glm::vec3(FLT_MAX);
+            maxLightCoords = glm::vec3(-FLT_MAX);
+            for (const glm::vec3& c : worldSpaceCoords) {
+                glm::vec3 lsc = glm::vec3(_cachedLightView * glm::vec4(c, 1.0f));
+                minLightCoords = glm::min(minLightCoords, lsc);
+                maxLightCoords = glm::max(maxLightCoords, lsc);
             }
         }
 
@@ -306,7 +307,7 @@ class ScenePass : public IRenderPass {
         _left = minLightCoords.x - padding.x; _right = maxLightCoords.x + padding.x;
         _bottom = minLightCoords.y - padding.y; _top = maxLightCoords.y + padding.y;
         _far = -minLightCoords.z + padding.z;
-
+        _validMatrix = true;
     }
     
 
@@ -441,8 +442,8 @@ class ScenePass : public IRenderPass {
    private:
     int _count{ 0 };
     int _fbwidth{ 0 }, _fbheight{ 0 };
-    float _shadowDist = 20.0;
-    float _margin = 0.2;
+    float _shadowDist = 40.0;
+    float _margin = 0.5;
     const GLsizei SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
     std::uint32_t _shaderIndex{Shader::invalidID()};
     std::uint32_t _materialIndex{Material::invalidID()};
@@ -453,6 +454,7 @@ class ScenePass : public IRenderPass {
     bool _validMatrix { false };
     glm::mat4 _cachedLightView{};
     glm::vec3 _cachedLightDir{};
+    glm::vec3 _cachedLightEye{};
     float _left{}, _right{};
     float _bottom{}, _top{}; 
     float _near{ 0.1f }, _far{};
