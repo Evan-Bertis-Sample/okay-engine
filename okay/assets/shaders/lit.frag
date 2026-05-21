@@ -37,7 +37,7 @@ uniform float u_clearcoatGloss; // controls clearcoat glossiness (0 = satin, 1 =
 uniform float u_specularTrans;  // transmission fraction (glass/translucency)
 uniform float u_flatness;       // blends in Hanrahan-Krueger subsurface for thin surfaces
 uniform int u_thin;             // 0 = solid, 1 = thin surface (leaves, paper)
-uniform float u_shadowStrength;
+uniform float u_shadowStrength; // 0 = no shadow, 1 = black shadow
 
 const float PI = 3.1415926535897932384626433832795;
 

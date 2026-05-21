@@ -40,7 +40,7 @@ class ScenePass : public IRenderPass {
         _shadowDist = 40;
         _shadowWidth = 2048;
         _shadowHeight = 2048;
-        _margin = 0.5;
+        _margin = 1;
         _screenSpaceProjectionMat = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, 0.0f, 10.0f);
     }
 
@@ -132,7 +132,7 @@ class ScenePass : public IRenderPass {
         glEnable(GL_MULTISAMPLE);
     }
     
-    bool checkIfNeedsRefit(const RendererContext& context, const glm::vec3& lightDir) {
+    bool checkIfNeedsRefit(const RendererContext& context, const glm::vec3& lightDir, float aspect) {
         if (dot(_cachedLightDir, lightDir) < 0.9999) return true;
 
         for (const RenderItemHandle& handle : context.world.getRenderItems()) {
@@ -140,14 +140,15 @@ class ScenePass : public IRenderPass {
             if (item.mesh.isEmpty()) continue;
             if (!item.material->properties()->flags().hasFlag(MaterialFlags::CAST_SHADOWS)) continue;
 
-            for (const glm::vec3& corner : item.mesh.bounds.transform(item.worldMatrix).corners()) {
-                glm::vec3 lsc = _cachedLightView * glm::vec4(corner, 1.0);
-                if (lsc.x < _left || lsc.x > _right || 
-                    lsc.y < _bottom || lsc.y > _top || 
-                    -lsc.z > _far) {
-                    return true;
-                }
-            }
+            if (!_orthoCamera.isInFrustum(item.mesh.bounds.transform(item.worldMatrix), aspect)) return true;
+            // for (const glm::vec3& corner : item.mesh.bounds.transform(item.worldMatrix).corners()) {
+            //     glm::vec3 lsc = _cachedLightView * glm::vec4(corner, 1.0);
+            //     if (lsc.x < _left || lsc.x > _right || 
+            //         lsc.y < _bottom || lsc.y > _top || 
+            //         -lsc.z > _far) {
+            //         return true;
+            //     }
+            // }
         }
         return false;
     }
@@ -181,7 +182,7 @@ class ScenePass : public IRenderPass {
             }
         }
 
-        glm::vec3 size = maxLightCoords - minLightCoords;
+        glm::vec3 size = abs(maxLightCoords - minLightCoords);
         glm::vec3 padding = size * _margin;
         _left = minLightCoords.x - padding.x; _right = maxLightCoords.x + padding.x;
         _bottom = minLightCoords.y - padding.y; _top = maxLightCoords.y + padding.y;
@@ -208,7 +209,7 @@ class ScenePass : public IRenderPass {
                     bool needsRefit = !_validMatrix;
 
                     if (_validMatrix) {
-                        needsRefit = checkIfNeedsRefit(context, lightDir);
+                        needsRefit = checkIfNeedsRefit(context, lightDir, aspect);
                     }
                     
                     if (needsRefit) {
@@ -219,7 +220,7 @@ class ScenePass : public IRenderPass {
                     _orthoCamera.transform.rotation = glm::quat_cast(glm::transpose(glm::mat3(_cachedLightView)));
                     _orthoCamera.lens = okay::Camera::OrthographicLens { _left, _right, _bottom, _top, _near, _far };
 
-                    Engine.logger.debug("Left: {}, Right: {}, Bottom: {}, Top: {}, Near: {}, Far: {}", _left, _right, _bottom, _top, _near, _far);
+                    // Engine.logger.debug("Left: {}, Right: {}, Bottom: {}, Top: {}, Near: {}, Far: {}", _left, _right, _bottom, _top, _near, _far);
                     
                     glm::mat4 lightProjection = _orthoCamera.projectionMatrix(aspect);
                     _lightSpaceMatrix = lightProjection * _cachedLightView;

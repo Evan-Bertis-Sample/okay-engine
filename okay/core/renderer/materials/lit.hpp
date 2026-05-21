@@ -25,6 +25,7 @@ struct LitMaterial : public SceneMaterialProperties, public OkayMaterialProperti
 
     LitMaterial() {
         lights.setBindingPoint(0);
+        castsShadows = true;
     }
     UniformProperty<float, FixedString("u_ambient")> ambient{0.05f};
     TextureProperty<FixedString("u_albedo")> albedo;
@@ -97,7 +98,8 @@ struct LitMaterial : public SceneMaterialProperties, public OkayMaterialProperti
 
     MaterialFlagCollection flags() {
         MaterialFlagCollection flags = SceneMaterialProperties::flags();
-        flags.addFlag(MaterialFlags::RECEIVE_SHADOWS).addFlag(MaterialFlags::CAST_SHADOWS);
+        flags.addFlag(MaterialFlags::RECEIVE_SHADOWS);
+        if (castsShadows) flags.addFlag(MaterialFlags::CAST_SHADOWS);
         return flags;
     }
 };
