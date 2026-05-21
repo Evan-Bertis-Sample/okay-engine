@@ -212,7 +212,7 @@ class ScenePass : public IRenderPass {
                     }
                     
                     if (needsRefit) {
-                        refit(context, lightEye, lightView, worldSpaceCoords, lightDir);
+                        refit(context, lightDir, lightEye, lightView, worldSpaceCoords);
                     }
 
                     _orthoCamera.transform.position = _cachedLightEye;
