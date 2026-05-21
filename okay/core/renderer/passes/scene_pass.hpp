@@ -3,6 +3,7 @@
 
 #include "glm/ext/matrix_transform.hpp"
 #include "glm/ext/scalar_common.hpp"
+#include "glm/gtc/quaternion.hpp"
 #include "okay/core/ecs/components/camera_component.hpp"
 #include "okay/core/ecs/ecs_util.hpp"
 #include "okay/core/engine/system.hpp"
@@ -117,56 +118,63 @@ class ScenePass : public IRenderPass {
                 case Light::Type::SPOT:
                     continue;
                 case Light::Type::DIRECTIONAL: {                    
-                    std::array<glm::vec3, 8> worldSpaceCoords = context.world.camera().frustumCornersWorld(aspect, _shadowDist);
                     glm::vec3 frustumCenter(0.0f);
+                    auto worldSpaceCoords = _orthoCamera.frustumCornersWorld(aspect);
                     for (const auto& c : worldSpaceCoords) frustumCenter += c;
                     frustumCenter /= 8.0f;
-                    
+
+
                     glm::vec3 lightDir = glm::normalize(glm::vec3(l.direction));
                     glm::vec3 lightEye = frustumCenter - lightDir * 15.0f;  // distance here doesn't matter much for ortho
                     glm::mat4 lightView = glm::lookAt(lightEye, frustumCenter, glm::vec3(0.0f, 1.0f, 0.0f));
                     
+                    
+                    bool needsRefit = !_validMatrix;
 
-                    _orthoCamera.transform.position = glm::vec3(lightEye);
-                    _orthoCamera.transform.rotation = lightDir;
-                    _orthoCamera.lens = okay::Camera::OrthographicLens { _left, _right, _bottom, _top, _near, _far };
-                    glm::vec3 minCoords{};
-                    glm::vec3 maxCoords{};
-                    for (size_t i = 0; i < 8; ++i) {
-                        if (i == 0) {
-                            minCoords = worldSpaceCoords[i];
-                            maxCoords = worldSpaceCoords[i];
-                        } else {
-                            minCoords = glm::min(minCoords, worldSpaceCoords[i]);
-                            maxCoords = glm::max(maxCoords, worldSpaceCoords[i]);
+                    if (_validMatrix) {
+                        for (auto wsc : worldSpaceCoords) {
+                            glm::vec3 lsc = _cachedLightView * glm::vec4(wsc, 1.0);
+                            if (lsc.x < _left || lsc.x > _right || 
+                                lsc.y < _bottom || lsc.y > _top || 
+                                -lsc.z > _far) {
+                                needsRefit = true;
+                                break;
+                            }
                         }
                     }
+
+                    if (dot(_cachedLightDir, lightDir) < 0.9999) needsRefit = true;
                     
-                    if(!_orthoCamera.isInFrustum(Bounds(minCoords, maxCoords), aspect) || dot(_cachedLightDir, lightDir) < 0.9999) {
+                    if (needsRefit) {
                         Engine.logger.debug("{}: Refit!!!", _count++);
                         _cachedLightDir = lightDir;
                         _cachedLightView = lightView;
-                        glm::vec3 minCoords{};
-                        glm::vec3 maxCoords{};
+                        glm::vec3 minLightCoords{};
+                        glm::vec3 maxLightCoords{};
                         for (size_t i = 0; i < 8; ++i) {
                             glm::vec3 lightSpaceCoord = glm::vec3(_cachedLightView * glm::vec4(worldSpaceCoords[i], 1.0));
                             if (i == 0) {
-                                minCoords = lightSpaceCoord;
-                                maxCoords = lightSpaceCoord;
+                                minLightCoords = lightSpaceCoord;
+                                maxLightCoords = lightSpaceCoord;
                             } else {
-                                minCoords = glm::min(minCoords, lightSpaceCoord);
-                                maxCoords = glm::max(maxCoords, lightSpaceCoord);
+                                minLightCoords = glm::min(minLightCoords, lightSpaceCoord);
+                                maxLightCoords = glm::max(maxLightCoords, lightSpaceCoord);
                             }
                         }
     
-                        glm::vec3 size = maxCoords - minCoords;
+                        glm::vec3 size = maxLightCoords - minLightCoords;
                         glm::vec3 padding = size * _margin;
-                        _left = minCoords.x - padding.x; _right = maxCoords.x + padding.x;
-                        _bottom = minCoords.y - padding.y; _top = maxCoords.y + padding.y;
-                        _far = -minCoords.z + padding.z;
+                        _left = minLightCoords.x - padding.x; _right = maxLightCoords.x + padding.x;
+                        _bottom = minLightCoords.y - padding.y; _top = maxLightCoords.y + padding.y;
+                        _far = -minLightCoords.z + padding.z;
+                        _validMatrix = true;
                     }
 
-                    Engine.logger.debug("Left: {}, Right: {}, Bottom: {}, Top: {}, Near: {}, Far: {}", _left, _right, _bottom, _top, _near, _far);
+                    _orthoCamera.transform.position = glm::vec3(lightEye);
+                    _orthoCamera.transform.rotation = glm::quat_cast(_cachedLightView);
+                    _orthoCamera.lens = okay::Camera::OrthographicLens { _left, _right, _bottom, _top, _near, _far };
+
+                    // Engine.logger.debug("Left: {}, Right: {}, Bottom: {}, Top: {}, Near: {}, Far: {}", _left, _right, _bottom, _top, _near, _far);
                     
                     // glm::mat4 lightProjection = glm::ortho(_left, _right, _bottom, _top, _near, _far);
                     glm::mat4 lightProjection = _orthoCamera.projectionMatrix(aspect);
@@ -189,6 +197,11 @@ class ScenePass : public IRenderPass {
                         if (item.mesh.isEmpty()) continue;
 
                         if (depthProps) depthProps->modelMatrix.set(item.worldMatrix);
+
+                        if(!_orthoCamera.isInFrustum(item.mesh.bounds.transform(item.worldMatrix), aspect)) {
+                            Engine.logger.debug("Out of bounds!");
+                        }
+
                         Failable df = _depthMapMaterial->passUniforms();
                         if (df.isError()) Engine.logger.error("depth passUniforms: {}", df.error());
                         
@@ -269,7 +282,33 @@ class ScenePass : public IRenderPass {
         }
         displayDepthMap(context);
         
-    }        
+    }
+
+    void refit(glm::vec3 lightDir, glm::mat4 lightView, std::array<glm::vec3, 8> worldSpaceCoords) {
+        Engine.logger.debug("{}: Refit!!!", _count++);
+        _cachedLightDir = lightDir;
+        _cachedLightView = lightView;
+        glm::vec3 minLightCoords{};
+        glm::vec3 maxLightCoords{};
+        for (size_t i = 0; i < 8; ++i) {
+            glm::vec3 lightSpaceCoord = glm::vec3(_cachedLightView * glm::vec4(worldSpaceCoords[i], 1.0));
+            if (i == 0) {
+                minLightCoords = lightSpaceCoord;
+                maxLightCoords = lightSpaceCoord;
+            } else {
+                minLightCoords = glm::min(minLightCoords, lightSpaceCoord);
+                maxLightCoords = glm::max(maxLightCoords, lightSpaceCoord);
+            }
+        }
+
+        glm::vec3 size = maxLightCoords - minLightCoords;
+        glm::vec3 padding = size * _margin;
+        _left = minLightCoords.x - padding.x; _right = maxLightCoords.x + padding.x;
+        _bottom = minLightCoords.y - padding.y; _top = maxLightCoords.y + padding.y;
+        _far = -minLightCoords.z + padding.z;
+
+    }
+    
 
     void displayDepthMap(const RendererContext& context) {
         static GLuint program = 0;
