@@ -87,10 +87,9 @@ static void __gameInitialize() {
                    .addComponent<okay::CameraComponent>(
                        okay::CameraComponent{okay::Camera::PerspectiveLens{45.0f, 0.1f, 100.0f}});
 
-    // Teapots — each slides along a different axis, staggered so they don't move in sync
     glm::quat noRot = glm::angleAxis(glm::radians(0.0f), glm::vec3{0.0f, 1.0f, 0.0f});
 
-    s_pos1 = glm::vec3(0.0f, -1.0f, 0.0f);
+    s_pos1 = glm::vec3(0.0f, 0.0f, 0.0f);
     s_teapot1 = okay::ecs::entity()
         .addComponent<okay::TransformComponent>(s_pos1, glm::vec3{0.1f}, noRot)
         .addComponent<okay::MeshRendererComponent>(object, material);
@@ -160,8 +159,7 @@ static void __gameInitialize() {
 
 static void __gameUpdate() {
     // Camera orbits around origin
-    // float theta = okay::Engine.time->timeSinceStartSec() * 0.05f * glm::pi<float>() * 2.0f;
-    float theta = 0.0f;
+    float theta = okay::Engine.time->timeSinceStartSec() * 0.05f * glm::pi<float>() * 2.0f;
     float dist = 15.0f;
     glm::vec3 camPos = glm::vec3(sin(theta) * dist, 2.0f, cos(theta) * dist);
 
