@@ -37,8 +37,8 @@ class ScenePass : public IRenderPass {
         _shadowDist = 100;
         _shadowWidth = 2048;
         _shadowHeight = 2048;
-        _xymargin = 0.5;
-        _zmargin = 0.5;
+        _xymargin = 0.6;
+        _zmargin = 0.6;
         _screenSpaceProjectionMat = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, 0.0f, 10.0f);
 
         initializeDepthMap();
@@ -227,7 +227,7 @@ class ScenePass : public IRenderPass {
                     frustumCenter /= 8.0f;
 
                     glm::vec3 lightDir = glm::normalize(glm::vec3(l.direction));
-                    glm::vec3 lightEye = frustumCenter - lightDir * 25.0f;
+                    glm::vec3 lightEye = frustumCenter - lightDir * 1000000.0f;
                     glm::mat4 lightView = glm::lookAt(lightEye, frustumCenter, glm::vec3(0.0f, 1.0f, 0.0f));
                     
                     bool needsRefit = !_validMatrix;
@@ -492,8 +492,8 @@ class ScenePass : public IRenderPass {
     int _fbwidth{ 0 }, _fbheight{ 0 };
     float _shadowDist { 100.0 };
     GLsizei _shadowWidth { 2048 }, _shadowHeight = { 2048 };
-    float _xymargin = { 0.5 };
-    float _zmargin{ 0.5 };
+    float _xymargin = { 0.6 };
+    float _zmargin{ 0.6 };
     glm::vec3 _padding{};
     glm::vec3 _casterMinLS{ FLT_MAX};
     glm::vec3 _casterMaxLS{-FLT_MAX};
