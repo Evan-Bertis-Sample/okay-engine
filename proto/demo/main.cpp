@@ -162,7 +162,7 @@ static void __gameUpdate() {
     // Camera orbits around origin
     // float theta = okay::Engine.time->timeSinceStartSec() * 0.05f * glm::pi<float>() * 2.0f;
     float theta = 0.0f;
-    float dist = 10.0f;
+    float dist = 15.0f;
     glm::vec3 camPos = glm::vec3(sin(theta) * dist, 2.0f, cos(theta) * dist);
 
     auto& cameraTransform = s_camera.getComponent<okay::TransformComponent>().value();

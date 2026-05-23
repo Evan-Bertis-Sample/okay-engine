@@ -146,7 +146,10 @@ class ScenePass : public IRenderPass {
                 glm::vec3 lsc = glm::vec3(_cachedLightView * glm::vec4(corner, 1.0f));
                 if (lsc.x < _casterMinLS.x - _padding.x * 0.5f || lsc.x > _casterMaxLS.x + _padding.x * 0.5f ||
                     lsc.y < _casterMinLS.y - _padding.y * 0.5f || lsc.y > _casterMaxLS.y + _padding.y * 0.5f ||
-                    lsc.z < _casterMinLS.z - _padding.z * 0.5f || lsc.z > _casterMaxLS.z + _padding.z * 0.5f) {
+                    lsc.z > _casterMaxLS.z + _padding.z * 0.5f || lsc.z < _casterMinLS.z - _padding.z * 0.5f) {
+                    Engine.logger.debug("lsc: ({}, {}, {})", lsc.x, lsc.y, lsc.z);
+                    Engine.logger.debug("casterMin: ({}, {}, {})", _casterMinLS.x, _casterMinLS.y, _casterMinLS.z);
+                    Engine.logger.debug("casterMax: ({}, {}, {})", _casterMaxLS.x, _casterMaxLS.y, _casterMaxLS.z);
                     Engine.logger.debug("Refitting larger!!");
                     return true;
                 }
@@ -156,7 +159,7 @@ class ScenePass : public IRenderPass {
                 glm::vec3 lsc = glm::vec3(_cachedLightView * glm::vec4(corner, 1.0f));
                 if (lsc.x < _casterMinLS.x + _padding.x || lsc.x > _casterMaxLS.x - _padding.x ||
                     lsc.y < _casterMinLS.y + _padding.y || lsc.y > _casterMaxLS.y - _padding.y ||
-                    lsc.z < _casterMinLS.z + _padding.z || lsc.z > _casterMaxLS.z - _padding.z) {
+                    lsc.z < _casterMaxLS.z - _padding.z || lsc.z > _casterMinLS.z + _padding.z) {
                     return false;
                 }
             }
@@ -165,8 +168,8 @@ class ScenePass : public IRenderPass {
         return true;
     }
 
-    void refit(const RendererContext& context, const glm::vec3& frustumCenter, const glm::vec3& lightDir, const glm::vec3& lightEye, const glm::mat4& lightView, const std::array<glm::vec3, 8>& worldSpaceCoords) {
-        // Engine.logger.debug("Refit!!");
+    void refit(const RendererContext& context, const glm::vec3& frustumCenter, const glm::vec3& lightDir, 
+               const glm::vec3& lightEye, const glm::mat4& lightView, const std::array<glm::vec3, 8>& worldSpaceCoords) {
         _cachedLightDir = lightDir;
         _cachedLightEye = lightEye;
         _cachedLightView = lightView;
@@ -194,7 +197,6 @@ class ScenePass : public IRenderPass {
             }
         }
 
-        // Store tight (pre-padding) caster bounds for use in checkIfNeedsRefit
         _casterMinLS = minLightCoords;
         _casterMaxLS = maxLightCoords;
 
@@ -322,9 +324,6 @@ class ScenePass : public IRenderPass {
             Camera& camera = context.world.camera();
             bool isScreenSpace =
                 item.material->properties()->flags().hasFlag(MaterialFlags::SCREEN_SPACE);
-            // Engine.logger.debug("local bounds min=({},{},{}) max=({},{},{})",
-            //     item.mesh.bounds.minBound.x, item.mesh.bounds.minBound.y, item.mesh.bounds.minBound.z,
-            //     item.mesh.bounds.maxBound.x, item.mesh.bounds.maxBound.y, item.mesh.bounds.maxBound.z);
             if (!isScreenSpace &&
                 !camera.isVisible(item.mesh.bounds.transform(item.worldMatrix), aspect)) {
                 continue;
