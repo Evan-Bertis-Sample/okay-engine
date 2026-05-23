@@ -433,14 +433,14 @@ vec3 evaluateDisney(vec3 N, vec3 wi, vec3 wm, vec3 wo, vec3 baseColor, float nor
     return reflectance;
 }
 
-float ShadowCalculation(vec4 fragPosLightSpace, vec3 N, vec3 L)
+float ShadowCalculation(vec4 fragPosLightSpace)
 {
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
     projCoords = projCoords * 0.5 + 0.5;
     if (projCoords.z > 1.0) return 0.0;
 
     float currentDepth = projCoords.z;
-    float bias = max(0.05 * (1.0 - dot(N, L)), 0.005);
+    float bias = 0.001;
     vec2 texelSize = vec2(1.0) / vec2(textureSize(u_shadowMap, 0));
 
     // precomputed using Poisson disk algo
@@ -459,7 +459,7 @@ float ShadowCalculation(vec4 fragPosLightSpace, vec3 N, vec3 L)
     float ca = cos(angle), sa = sin(angle);
 
     float shadow = 0.0;
-    float spread = 5.0; // texel radius
+    float spread = 50.0; // texel radius
     for (int i = 0; i < 16; ++i) {
         vec2 offset = vec2(ca * disk[i].x - sa * disk[i].y,
                            sa * disk[i].x + ca * disk[i].y) * texelSize * spread;
@@ -533,7 +533,7 @@ void main() {
         vec3 wi = safeNormalize(v_worldToTangent * L);
         vec3 wm = safeNormalize(wo + wi); // half vector
         
-        shadow = (i == 0) ? ShadowCalculation(v_fragPosLightSpace, N, L) : 0.0;
+        shadow = (i == 0) ? ShadowCalculation(v_fragPosLightSpace) : 0.0;
         colorOut += evaluateDisney(nt, wi, wm, wo, baseColor, normalVariance) * Lrgb * intensity * att * (1.0 - shadow);
     
     }

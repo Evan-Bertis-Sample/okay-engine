@@ -44,7 +44,7 @@ void main() {
     mat3 TBN = mat3(v_tangent, v_worldNormal, v_bitangent);
     v_worldToTangent = transpose(TBN);
     v_texCoords = a_texCoords;
-    v_fragPosLightSpace = u_lightSpaceMatrix * vec4(v_worldPos, 1.0);
+    v_fragPosLightSpace = u_lightSpaceMatrix * vec4(v_worldPos + v_worldNormal * 0.01, 1.0);
 
     gl_Position = u_projectionMatrix * u_viewMatrix * worldPos4;
 }
