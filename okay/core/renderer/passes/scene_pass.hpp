@@ -37,8 +37,8 @@ class ScenePass : public IRenderPass {
         _shadowDist = 100;
         _shadowWidth = 2048;
         _shadowHeight = 2048;
-        _xymargin = 0.3;
-        _zmargin = 0.3;
+        _xymargin = 0.5;
+        _zmargin = 0.5;
         _screenSpaceProjectionMat = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, 0.0f, 10.0f);
 
         initializeDepthMap();
@@ -142,9 +142,27 @@ class ScenePass : public IRenderPass {
             if (item.mesh.isEmpty()) continue;
             if (!item.material->properties()->flags().hasFlag(MaterialFlags::CAST_SHADOWS)) continue;
 
-            if (!_orthoCamera.isVisible(item.mesh.bounds.transform(item.worldMatrix), aspect)) return true;
+            for (const glm::vec3& corner : item.mesh.bounds.transform(item.worldMatrix).corners()) {
+                glm::vec3 lsc = glm::vec3(_cachedLightView * glm::vec4(corner, 1.0f));
+                if (lsc.x < _casterMinLS.x - _padding.x * 0.5f || lsc.x > _casterMaxLS.x + _padding.x * 0.5f ||
+                    lsc.y < _casterMinLS.y - _padding.y * 0.5f || lsc.y > _casterMaxLS.y + _padding.y * 0.5f ||
+                    lsc.z < _casterMinLS.z - _padding.z * 0.5f || lsc.z > _casterMaxLS.z + _padding.z * 0.5f) {
+                    Engine.logger.debug("Refitting larger!!");
+                    return true;
+                }
+            }
+
+            for (const glm::vec3& corner: item.mesh.bounds.transform(item.worldMatrix).corners()) {
+                glm::vec3 lsc = glm::vec3(_cachedLightView * glm::vec4(corner, 1.0f));
+                if (lsc.x < _casterMinLS.x + _padding.x || lsc.x > _casterMaxLS.x - _padding.x ||
+                    lsc.y < _casterMinLS.y + _padding.y || lsc.y > _casterMaxLS.y - _padding.y ||
+                    lsc.z < _casterMinLS.z + _padding.z || lsc.z > _casterMaxLS.z - _padding.z) {
+                    return false;
+                }
+            }
         }
-        return false;
+        Engine.logger.debug("Refitting smaller!!");
+        return true;
     }
 
     void refit(const RendererContext& context, const glm::vec3& frustumCenter, const glm::vec3& lightDir, const glm::vec3& lightEye, const glm::mat4& lightView, const std::array<glm::vec3, 8>& worldSpaceCoords) {
@@ -176,15 +194,18 @@ class ScenePass : public IRenderPass {
             }
         }
 
+        // Store tight (pre-padding) caster bounds for use in checkIfNeedsRefit
+        _casterMinLS = minLightCoords;
+        _casterMaxLS = maxLightCoords;
+
         // add padding
 
         glm::vec3 size = maxLightCoords - minLightCoords;
-        glm::vec3 xypadding = size * _xymargin;
-        glm::vec3 zpadding = size * _zmargin;
-        _left = minLightCoords.x - xypadding.x; _right = maxLightCoords.x + xypadding.x;
-        _bottom = minLightCoords.y - xypadding.y; _top = maxLightCoords.y + xypadding.y;
-        _near = std::max(0.1f, -maxLightCoords.z - zpadding.z);
-        _far = -minLightCoords.z + zpadding.z;
+        _padding = glm::vec3(size.x * _xymargin, size.y * _xymargin, size.z * _zmargin);
+        _left = minLightCoords.x - _padding.x; _right = maxLightCoords.x + _padding.x;
+        _bottom = minLightCoords.y - _padding.y; _top = maxLightCoords.y + _padding.y;
+        _near = std::max(0.1f, -maxLightCoords.z - _padding.z);
+        _far = -minLightCoords.z + _padding.z;
         _validMatrix = true;
     }
 
@@ -467,10 +488,13 @@ class ScenePass : public IRenderPass {
 
    private:
     int _fbwidth{ 0 }, _fbheight{ 0 };
-    float _shadowDist = 40.0;
-    GLsizei _shadowWidth = 2048, _shadowHeight = 2048;
-    float _xymargin = 0.5;
-    float _zmargin = 0.1;
+    float _shadowDist { 100.0 };
+    GLsizei _shadowWidth { 2048 }, _shadowHeight = { 2048 };
+    float _xymargin = { 0.5 };
+    float _zmargin{ 0.5 };
+    glm::vec3 _padding{};
+    glm::vec3 _casterMinLS{ FLT_MAX};
+    glm::vec3 _casterMaxLS{-FLT_MAX};
 
     std::uint32_t _shaderIndex{Shader::invalidID()};
     std::uint32_t _materialIndex{Material::invalidID()};
