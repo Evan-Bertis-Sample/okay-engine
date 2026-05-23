@@ -63,8 +63,6 @@ class ScenePass : public IRenderPass {
         renderSkybox(context, aspect, projection, view);
 
         renderItems(context, aspect, projection, view, camPos, camDir);
-
-        displayDepthMap(context);
     }
 
     void initializeDepthMap() {
@@ -130,7 +128,32 @@ class ScenePass : public IRenderPass {
         // doesn't need MSAA, but should if the platform can support it
         glEnable(GL_MULTISAMPLE);
     }
+
+    std::array<glm::vec3, 8> frustumCornersWorld(const RendererContext& context, float aspectRatio, float shadowFar) {
+        glm::mat4 shadowProj;
+        if (auto* p = std::get_if<okay::Camera::PerspectiveLens>(&context.world.camera().lens)) {
+            shadowProj = glm::perspective(glm::radians(p->fov), aspectRatio, p->near, shadowFar);
+        } else {
+            shadowProj = context.world.camera().projectionMatrix(aspectRatio);
+        }
+        
+        std::array<glm::vec3, 8> worldCoords{};
+        int count{ 0 };
+        glm::mat4 inverseMat = glm::inverse(shadowProj * context.world.camera().viewMatrix());
+        for (int x = -1; x <= 1; x+=2) {
+            for (int y = -1; y <= 1; y+=2) {
+                for (int z = -1; z <= 1; z+=2) {
+                    glm::vec4 ndc = glm::vec4(x, y, z, 1.0);
+                    glm::vec4 worldSpacePos = inverseMat * ndc;
+                    worldCoords[count] = worldSpacePos / worldSpacePos.w;
+                    count++;
+                }
+            }
+        }
+        return worldCoords;
+    }
     
+
     bool checkIfNeedsRefit(const RendererContext& context, const glm::vec3& lightDir, float aspect) {
         if (dot(_cachedLightDir, lightDir) < 0.9999) return true;
 
@@ -221,7 +244,7 @@ class ScenePass : public IRenderPass {
                     continue;
                 case Light::Type::DIRECTIONAL: {                    
                     glm::vec3 frustumCenter(0.0f);
-                    auto worldSpaceCoords = context.world.camera().frustumCornersWorld(aspect, _shadowDist);
+                    auto worldSpaceCoords = frustumCornersWorld(context, aspect, _shadowDist);
                     for (const auto& c : worldSpaceCoords) frustumCenter += c;
                     frustumCenter /= 8.0f;
 
@@ -432,58 +455,6 @@ class ScenePass : public IRenderPass {
         } else {
             glEnable(GL_DEPTH_TEST);
         }
-    }
-
-    // display the depth map onto the screen
-    void displayDepthMap(const RendererContext& context) {
-        static GLuint program = 0;
-        static GLuint depthmapVAO = 0;
-        if (program == 0) {
-            const char* depthVert = R"(
-                #version 330 core
-                out vec2 TexCoords;
-                void main() {
-                    TexCoords = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2);
-                    gl_Position = vec4(TexCoords * 2.0 - 1.0, 0.0, 1.0);
-                }
-            )";
-            const char* depthFrag = R"(
-                #version 330 core
-                in vec2 TexCoords;
-                out vec4 FragColor;
-                uniform sampler2D depthMap;
-                void main() {
-                    float d = texture(depthMap, TexCoords).r;
-                    FragColor = vec4(vec3(d), 1.0);
-                }
-            )";
-            GLuint vs = glCreateShader(GL_VERTEX_SHADER);
-            glShaderSource(vs, 1, &depthVert, nullptr); glCompileShader(vs);
-            GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
-            glShaderSource(fs, 1, &depthFrag, nullptr); glCompileShader(fs);
-            program = glCreateProgram();
-            glAttachShader(program, vs);
-            glAttachShader(program, fs);
-            glLinkProgram(program);
-            glDeleteShader(vs); glDeleteShader(fs);
-            glGenVertexArrays(1, &depthmapVAO);
-        }
-        
-        int w = _fbwidth / 3;
-        int h = _fbheight / 3;
-        glViewport(0, 0, w, h);  // bottom-left, 1/3 of screen
-        
-        glDisable(GL_DEPTH_TEST);
-        glUseProgram(program);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, _depthMap);
-        glUniform1i(glGetUniformLocation(program, "depthMap"), 0);
-        
-        glBindVertexArray(depthmapVAO);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
-        
-        glViewport(0, 0, _fbwidth, _fbheight);  // restore
-        glEnable(GL_DEPTH_TEST);
     }
 
    private:
