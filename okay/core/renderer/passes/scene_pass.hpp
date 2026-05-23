@@ -115,8 +115,7 @@ class ScenePass : public IRenderPass {
     }
 
     void renderSettings() {
-        // GL_CHECK(glClearColor(0.113f, 0.008, 0.208, 1.0f));
-        GL_CHECK(glClearColor(0.580, 0.580, 0.580, 1.0));
+        GL_CHECK(glClearColor(0.113f, 0.008, 0.208, 1.0f));
         GL_CHECK(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
         GL_CHECK(glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE));
 
@@ -137,6 +136,9 @@ class ScenePass : public IRenderPass {
     bool checkIfNeedsRefit(const RendererContext& context, const glm::vec3& lightDir, float aspect) {
         if (dot(_cachedLightDir, lightDir) < 0.9999) return true;
 
+        bool hasCasters = false;
+        glm::vec3 currMin{ FLT_MAX };
+        glm::vec3 currMax{ -FLT_MAX };
         for (const RenderItemHandle& handle : context.world.getRenderItems()) {
             RenderItem& item = context.world.getRenderItem(handle);
             if (item.mesh.isEmpty()) continue;
@@ -144,28 +146,29 @@ class ScenePass : public IRenderPass {
 
             for (const glm::vec3& corner : item.mesh.bounds.transform(item.worldMatrix).corners()) {
                 glm::vec3 lsc = glm::vec3(_cachedLightView * glm::vec4(corner, 1.0f));
-                if (lsc.x < _casterMinLS.x - _padding.x * 0.5f || lsc.x > _casterMaxLS.x + _padding.x * 0.5f ||
-                    lsc.y < _casterMinLS.y - _padding.y * 0.5f || lsc.y > _casterMaxLS.y + _padding.y * 0.5f ||
-                    lsc.z > _casterMaxLS.z + _padding.z * 0.5f || lsc.z < _casterMinLS.z - _padding.z * 0.5f) {
-                    Engine.logger.debug("lsc: ({}, {}, {})", lsc.x, lsc.y, lsc.z);
-                    Engine.logger.debug("casterMin: ({}, {}, {})", _casterMinLS.x, _casterMinLS.y, _casterMinLS.z);
-                    Engine.logger.debug("casterMax: ({}, {}, {})", _casterMaxLS.x, _casterMaxLS.y, _casterMaxLS.z);
-                    Engine.logger.debug("Refitting larger!!");
-                    return true;
-                }
+                currMin = glm::min(currMin, lsc);
+                currMax = glm::max(currMax, lsc);
             }
-
-            for (const glm::vec3& corner: item.mesh.bounds.transform(item.worldMatrix).corners()) {
-                glm::vec3 lsc = glm::vec3(_cachedLightView * glm::vec4(corner, 1.0f));
-                if (lsc.x < _casterMinLS.x + _padding.x || lsc.x > _casterMaxLS.x - _padding.x ||
-                    lsc.y < _casterMinLS.y + _padding.y || lsc.y > _casterMaxLS.y - _padding.y ||
-                    lsc.z < _casterMaxLS.z - _padding.z || lsc.z > _casterMinLS.z + _padding.z) {
-                    return false;
-                }
-            }
+            hasCasters = true;
         }
-        Engine.logger.debug("Refitting smaller!!");
-        return true;
+        if (!hasCasters) return false;
+
+        glm::vec3 minThreshold = _casterMinLS - _padding * 0.5f;
+        glm::vec3 maxThreshold = _casterMaxLS + _padding * 0.5f;
+
+        if (glm::any(glm::lessThan(currMin, minThreshold)) || glm::any(glm::greaterThan(currMax , maxThreshold))) return true;
+        
+        glm::vec3 boxMin = _casterMinLS - _padding;
+        glm::vec3 boxMax = _casterMaxLS + _padding;
+        glm::vec3 extraSpaceL  = currMin - boxMin;
+        glm::vec3 extraSpaceH = boxMax - currMax;
+
+        float threshold = 1.5f;
+        if (glm::any(glm::greaterThan(extraSpaceL,  _padding * threshold)) ||
+            glm::any(glm::greaterThan(extraSpaceH, _padding * threshold))) {
+            return true;
+        }
+        return false;
     }
 
     void refit(const RendererContext& context, const glm::vec3& frustumCenter, const glm::vec3& lightDir, 
@@ -232,7 +235,7 @@ class ScenePass : public IRenderPass {
                     if (_validMatrix) {
                         needsRefit = checkIfNeedsRefit(context, lightDir, aspect);
                     }
-                    
+                    // refit(context, frustumCenter, lightDir, lightEye, lightView, worldSpaceCoords);
                     if (needsRefit) {
                         refit(context, frustumCenter, lightDir, lightEye, lightView, worldSpaceCoords);
                     }
