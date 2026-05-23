@@ -234,7 +234,7 @@ class ScenePass : public IRenderPass {
                     if (_validMatrix) {
                         needsRefit = checkIfNeedsRefit(context, lightDir, aspect);
                     }
-                    // refit(context, frustumCenter, lightDir, lightEye, lightView, worldSpaceCoords);
+                    
                     if (needsRefit) {
                         refit(context, frustumCenter, lightDir, lightEye, lightView, worldSpaceCoords);
                     }
@@ -242,8 +242,6 @@ class ScenePass : public IRenderPass {
                     _orthoCamera.transform.position = _cachedLightEye;
                     _orthoCamera.transform.rotation = glm::quat_cast(glm::transpose(glm::mat3(_cachedLightView)));
                     _orthoCamera.lens = okay::Camera::OrthographicLens { _left, _right, _bottom, _top, _near, _far };
-
-                    // Engine.logger.debug("Left: {}, Right: {}, Bottom: {}, Top: {}, Near: {}, Far: {}", _left, _right, _bottom, _top, _near, _far);
                     
                     glm::mat4 lightProjection = _orthoCamera.projectionMatrix(aspect);
                     _lightSpaceMatrix = lightProjection * _cachedLightView;
