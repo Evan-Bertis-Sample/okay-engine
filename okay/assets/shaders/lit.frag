@@ -459,7 +459,7 @@ float ShadowCalculation(vec4 fragPosLightSpace)
     float ca = cos(angle), sa = sin(angle);
 
     float shadow = 0.0;
-    float spread = 50.0; // texel radius
+    float spread = 5.0; // texel radius
     for (int i = 0; i < 16; ++i) {
         vec2 offset = vec2(ca * disk[i].x - sa * disk[i].y,
                            sa * disk[i].x + ca * disk[i].y) * texelSize * spread;
