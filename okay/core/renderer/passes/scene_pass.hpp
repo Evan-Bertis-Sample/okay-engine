@@ -19,6 +19,7 @@
 #include <okay/core/renderer/uniform.hpp>
 
 #include "GLFW/glfw3.h"
+#include <algorithm>
 #include <cstdint>
 #include <memory>
 
@@ -33,15 +34,16 @@ class ScenePass : public IRenderPass {
     }
 
     virtual void initialize() override {
+        _shadowDist = 100;
+        _shadowWidth = 2048;
+        _shadowHeight = 2048;
+        _xymargin = 0.3;
+        _zmargin = 0.3;
+        _screenSpaceProjectionMat = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, 0.0f, 10.0f);
+
         initializeDepthMap();
         initializeDepthTexture();
         initializeSkyboxMesh();
-
-        _shadowDist = 40;
-        _shadowWidth = 2048;
-        _shadowHeight = 2048;
-        _margin = 1;
-        _screenSpaceProjectionMat = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, 0.0f, 10.0f);
     }
 
     virtual void resize(int newWidth, int newHeight) override {}
@@ -140,30 +142,24 @@ class ScenePass : public IRenderPass {
             if (item.mesh.isEmpty()) continue;
             if (!item.material->properties()->flags().hasFlag(MaterialFlags::CAST_SHADOWS)) continue;
 
-            if (!_orthoCamera.isInFrustum(item.mesh.bounds.transform(item.worldMatrix), aspect)) return true;
-            // for (const glm::vec3& corner : item.mesh.bounds.transform(item.worldMatrix).corners()) {
-            //     glm::vec3 lsc = _cachedLightView * glm::vec4(corner, 1.0);
-            //     if (lsc.x < _left || lsc.x > _right || 
-            //         lsc.y < _bottom || lsc.y > _top || 
-            //         -lsc.z > _far) {
-            //         return true;
-            //     }
-            // }
+            if (!_orthoCamera.isVisible(item.mesh.bounds.transform(item.worldMatrix), aspect)) return true;
         }
         return false;
     }
 
-    void refit(const RendererContext& context, const glm::vec3& lightDir, const glm::vec3& lightEye, const glm::mat4& lightView, const std::array<glm::vec3, 8>& worldSpaceCoords) {
+    void refit(const RendererContext& context, const glm::vec3& frustumCenter, const glm::vec3& lightDir, const glm::vec3& lightEye, const glm::mat4& lightView, const std::array<glm::vec3, 8>& worldSpaceCoords) {
+        // Engine.logger.debug("Refit!!");
         _cachedLightDir = lightDir;
         _cachedLightEye = lightEye;
         _cachedLightView = lightView;
-        glm::vec3 minLightCoords(FLT_MAX), maxLightCoords(-FLT_MAX);
+
+        glm::vec3 minLightCoords = glm::vec3(FLT_MAX);
+        glm::vec3 maxLightCoords = glm::vec3(-FLT_MAX);
         bool hasCasters = false;
         for (const RenderItemHandle& handle : context.world.getRenderItems()) {
             RenderItem& item = context.world.getRenderItem(handle);
             if (item.mesh.isEmpty()) continue;
             if (!item.material->properties()->flags().hasFlag(MaterialFlags::CAST_SHADOWS)) continue;
-
             for (const glm::vec3& corner : item.mesh.bounds.transform(item.worldMatrix).corners()) {
                 glm::vec3 lsc = glm::vec3(_cachedLightView * glm::vec4(corner, 1.0f));
                 minLightCoords = glm::min(minLightCoords, lsc);
@@ -173,8 +169,6 @@ class ScenePass : public IRenderPass {
         }
 
         if (!hasCasters) {
-            minLightCoords = glm::vec3(FLT_MAX);
-            maxLightCoords = glm::vec3(-FLT_MAX);
             for (const glm::vec3& c : worldSpaceCoords) {
                 glm::vec3 lsc = glm::vec3(_cachedLightView * glm::vec4(c, 1.0f));
                 minLightCoords = glm::min(minLightCoords, lsc);
@@ -182,11 +176,15 @@ class ScenePass : public IRenderPass {
             }
         }
 
-        glm::vec3 size = abs(maxLightCoords - minLightCoords);
-        glm::vec3 padding = size * _margin;
-        _left = minLightCoords.x - padding.x; _right = maxLightCoords.x + padding.x;
-        _bottom = minLightCoords.y - padding.y; _top = maxLightCoords.y + padding.y;
-        _far = -minLightCoords.z + padding.z;
+        // add padding
+
+        glm::vec3 size = maxLightCoords - minLightCoords;
+        glm::vec3 xypadding = size * _xymargin;
+        glm::vec3 zpadding = size * _zmargin;
+        _left = minLightCoords.x - xypadding.x; _right = maxLightCoords.x + xypadding.x;
+        _bottom = minLightCoords.y - xypadding.y; _top = maxLightCoords.y + xypadding.y;
+        _near = std::max(0.1f, -maxLightCoords.z - zpadding.z);
+        _far = -minLightCoords.z + zpadding.z;
         _validMatrix = true;
     }
 
@@ -213,7 +211,7 @@ class ScenePass : public IRenderPass {
                     }
                     
                     if (needsRefit) {
-                        refit(context, lightDir, lightEye, lightView, worldSpaceCoords);
+                        refit(context, frustumCenter, lightDir, lightEye, lightView, worldSpaceCoords);
                     }
 
                     _orthoCamera.transform.position = _cachedLightEye;
@@ -257,7 +255,7 @@ class ScenePass : public IRenderPass {
 
             if (depthProps) depthProps->modelMatrix.set(item.worldMatrix);
 
-            if(!_orthoCamera.isInFrustum(item.mesh.bounds.transform(item.worldMatrix), aspect)) {
+            if(!_orthoCamera.isVisible(item.mesh.bounds.transform(item.worldMatrix), aspect)) {
                 continue;
             }
 
@@ -303,8 +301,11 @@ class ScenePass : public IRenderPass {
             Camera& camera = context.world.camera();
             bool isScreenSpace =
                 item.material->properties()->flags().hasFlag(MaterialFlags::SCREEN_SPACE);
+            // Engine.logger.debug("local bounds min=({},{},{}) max=({},{},{})",
+            //     item.mesh.bounds.minBound.x, item.mesh.bounds.minBound.y, item.mesh.bounds.minBound.z,
+            //     item.mesh.bounds.maxBound.x, item.mesh.bounds.maxBound.y, item.mesh.bounds.maxBound.z);
             if (!isScreenSpace &&
-                !camera.isInFrustum(item.mesh.bounds.transform(item.worldMatrix), aspect)) {
+                !camera.isVisible(item.mesh.bounds.transform(item.worldMatrix), aspect)) {
                 continue;
             }
 
@@ -468,7 +469,8 @@ class ScenePass : public IRenderPass {
     int _fbwidth{ 0 }, _fbheight{ 0 };
     float _shadowDist = 40.0;
     GLsizei _shadowWidth = 2048, _shadowHeight = 2048;
-    float _margin = 0.5;
+    float _xymargin = 0.5;
+    float _zmargin = 0.1;
 
     std::uint32_t _shaderIndex{Shader::invalidID()};
     std::uint32_t _materialIndex{Material::invalidID()};

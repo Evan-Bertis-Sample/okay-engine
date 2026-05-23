@@ -104,6 +104,14 @@ class Camera {
         return true;
     }
 
+    bool isVisible(const Bounds& bounds, float aspectRatio) {
+        for (const glm::vec3& p : bounds.corners()) {
+            if (isInFrustum(p, aspectRatio))
+                return true;
+        }
+        return false;
+    }
+
     operator Transform() const {
         return transform;
     }
