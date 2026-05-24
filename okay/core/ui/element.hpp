@@ -246,6 +246,13 @@ struct UIElement {
         return *this;
     }
 
+    UIElement& widthFixed(size::Fixed width) {
+        return widthSet(width);
+    }
+    UIElement& heightFixed(size::Fixed height) {
+        return heightSet(height);
+    }
+
     UIElement& widthGrow() {
         return widthSet(size::Grow{});
     }
@@ -262,6 +269,7 @@ struct UIElement {
     UIElement& heightFit() {
         return heightSet(size::Fit{});
     }
+
     UIElement& fit() {
         return widthFit().heightFit();
     }

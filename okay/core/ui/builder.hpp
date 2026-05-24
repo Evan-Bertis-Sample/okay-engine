@@ -136,11 +136,11 @@ inline UIElement growbox(UIAxis axis = UIAxis::Parent) {
 }
 
 inline UIElement row() {
-    return UIElement{.axis = UIAxis::Horizontal}.widthGrow();
+    return UIElement{.axis = UIAxis::Horizontal}.widthGrow().heightFit();
 }
 
 inline UIElement column() {
-    return UIElement{.axis = UIAxis::Vertical}.heightGrow();
+    return UIElement{.axis = UIAxis::Vertical}.widthGrow().heightFit();
 }
 
 inline UIElement stack() {
@@ -158,7 +158,7 @@ inline UIElement hspacer(size::Fixed width) {
 inline UIElement vspacer(size::Fixed height) {
     return UIElement{
         .width = size::Grow{},
-        .height = size::Grow{},
+        .height = height,
     };
 }
 

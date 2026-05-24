@@ -425,8 +425,12 @@ void UI::renderNode(const UINode& node, Renderer& renderer, int layerBase) {
         if (renderInfo.textEntity.isValid()) {
             // Replace the text mesh
             RenderEntity::Properties props = renderInfo.textEntity.prop();
-            Mesh newMesh = getTextMesh(node, renderer);
-            props.mesh = newMesh;
+            props.mesh = getTextMesh(node, renderer);
+            Option<MaterialHandle> material = UIRenderResoruces::get().getTextMaterial(element);
+            if (material.isSome()) {
+                props.material = material.value();
+            }
+
         } else {
             createTextRenderEntity(node, renderer);
         }
