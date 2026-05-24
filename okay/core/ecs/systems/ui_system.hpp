@@ -32,7 +32,10 @@ class UISystem : public ECSSystem<query::Get<TransformComponent, UIComponent>> {
         ui.ui.render(transform->position, ui.uiLayer, renderer);
     };
 
-    void onEntityRemoved(QueryT::Item& item) override {};
+    void onEntityRemoved(QueryT::Item& item) override {
+        auto& [transform, ui] = item.components;
+        ui.ui.cleanup();
+    };
 };
 
 }  // namespace okay

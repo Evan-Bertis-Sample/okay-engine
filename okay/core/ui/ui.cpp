@@ -598,6 +598,13 @@ void UI::createTextRenderEntity(const UINode& node, Renderer& renderer) {
     }
 }
 
+void UI::cleanup() {
+    for (auto& [id, renderInfo] : _nodeRenderInfo) {
+        renderInfo.rectEntity.remove();
+        renderInfo.textEntity.remove();
+    }
+}
+
 Mesh UI::getTextMesh(const UINode& node, Renderer& renderer) {
     const UIElement& element = node.element;
     if (element.text.isSome()) {

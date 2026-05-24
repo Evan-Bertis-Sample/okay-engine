@@ -101,6 +101,7 @@ class UI {
         std::uint8_t uiLayer = 0,
         SystemParameter<Renderer> renderer = nullptr);
     void update(UIElement newRoot);
+    void cleanup();
 
    private:
     UINode _root;
