@@ -385,12 +385,13 @@ void UILayout::toString(std::stringstream& ss, const UINode& node, int indent) c
 
 // UI
 
-void UI::render(glm::vec2 screenPosition, SystemParameter<Renderer> renderer) {
+void UI::render(
+    glm::vec2 screenPosition, std::uint8_t uiLayer, SystemParameter<Renderer> renderer) {
     UILayout::Context layoutContext{
         .screenSize = glm::ivec2(renderer->width(), renderer->height()),
     };
     _layout.layout(layoutContext);
-    renderNode(_root, *renderer, (0x1 << 7) + 1);
+    renderNode(_root, *renderer, (0x1 << 7) + 1 + (uiLayer * 24));
 }
 
 void UI::update(UIElement newRoot) {
@@ -414,23 +415,22 @@ void UI::renderNode(const UINode& node, Renderer& renderer, int layerBase) {
     if (renderInfo.contentHash != elementContentHash) {
         // Engine.logger.debug("Creating render entities for UI node {}", node.id);
         if (renderInfo.rectEntity.isValid()) {
-            if (!(element.backgroundImage.isSome() || element.backgroundColor.a > 0.0f)) {
-                // delete this guy
-                renderer.world().removeRenderEntity(renderInfo.rectEntity);
-            }
+            Engine.logger.debug("updateing render entity rect");
+            renderer.world().removeRenderEntity(renderInfo.rectEntity);
+            createRectRenderEntity(node, renderer);
         } else {
-            createTextRenderEntity(node, renderer);
+            createRectRenderEntity(node, renderer);
         }
 
         if (renderInfo.textEntity.isValid()) {
             // Replace the text mesh
-            Mesh oldMesh = renderInfo.textEntity->mesh;
-            renderInfo.textEntity->mesh = getTextMesh(node, renderer);
-            // Engine.logger.debug("Switching mesh from ({}, {}), to mesh ({}, {})",
-            //     oldMesh.vertexOffset,
-            //     oldMesh.vertexCount,
-            //     renderInfo.textEntity->mesh.vertexOffset,
-            //     renderInfo.textEntity->mesh.vertexCount);
+            RenderEntity::Properties props = renderInfo.textEntity.prop();
+            props.mesh = getTextMesh(node, renderer);
+            Option<MaterialHandle> material = UIRenderResoruces::get().getTextMaterial(element);
+            if (material.isSome()) {
+                props.material = material.value();
+            }
+
         } else {
             createTextRenderEntity(node, renderer);
         }
@@ -598,6 +598,13 @@ void UI::createTextRenderEntity(const UINode& node, Renderer& renderer) {
     }
 }
 
+void UI::cleanup() {
+    for (auto& [id, renderInfo] : _nodeRenderInfo) {
+        renderInfo.rectEntity.remove();
+        renderInfo.textEntity.remove();
+    }
+}
+
 Mesh UI::getTextMesh(const UINode& node, Renderer& renderer) {
     const UIElement& element = node.element;
     if (element.text.isSome()) {
@@ -626,6 +633,7 @@ LayoutRect& UILayout::getOrMakeRect(const UINode& node) {
     }
     return _layoutMap[node.id];
 }
+
 int UILayout::computeSize(ElementRealSize size, int parentSize) const {
     if (std::holds_alternative<size::Percent>(size)) {
         float percent = std::get<size::Percent>(size).percent;
@@ -635,16 +643,19 @@ int UILayout::computeSize(ElementRealSize size, int parentSize) const {
     }
     return 0;
 }
+
 UI::NodeRenderInfo& UI::getNodeRenderInfo(UINode::ID nodeID) {
     if (!_nodeRenderInfo.contains(nodeID)) {
         _nodeRenderInfo[nodeID] = NodeRenderInfo{};
     }
     return _nodeRenderInfo[nodeID];
 }
+
 Option<LayoutRect> UILayout::getLayout(UINode::ID nodeID) const {
     if (!_layoutMap.contains(nodeID)) {
         return Option<LayoutRect>::none();
     }
     return _layoutMap.at(nodeID);
 }
+
 }  // namespace okay

@@ -152,6 +152,13 @@ class UniformBlockManager {
 
 class TextureManager {
    public:
+    struct GPUTextureInfo {
+        GLuint id = 0;
+        OkayTextureMeta meta{};
+        Texture::TextureParameters params{};
+        bool paramsInitialized = false;
+    };
+
     TextureManager() = default;
     ~TextureManager() {
         destroyAll();
@@ -170,15 +177,24 @@ class TextureManager {
         _textures.clear();
     }
 
+    Option<GPUTextureInfo> getGPUTextureInfo(const Texture& tex) {
+        TextureKey key{tex.store.get(), tex.handle};
+        if (!_textures.contains(key)) {
+            return Option<GPUTextureInfo>::none();
+        }
+        return _textures.at(key);
+    }
+
     // Ensure a GL texture exists and is uploaded; returns GL id.
     Failable ensureUploaded2D(
         const Texture& tex, const Texture::TextureParameters& params, GLuint& outTextureId) {
         if (!tex.store || TextureDataStore::TextureHandle::isNone(tex.handle)) {
+            outTextureId = 1;  // the first
             return Failable::ok();
         }
 
         TextureKey key{tex.store.get(), tex.handle};
-        GpuTexture2D& gt = _textures[key];
+        GPUTextureInfo& gt = _textures[key];
 
         if (gt.id == 0) {
             // Create + upload once
@@ -274,11 +290,14 @@ class TextureManager {
         const Texture& tex,
         const Texture::TextureParameters& params,
         GLuint unit) {
+        // if (!tex.store || TextureDataStore::TextureHandle::isNone(tex.handle)) {
+        // return Failable::errorResult("Tried to bind an empty texture.");
+        // }
+
         GLuint id = 0;
         auto r = ensureUploaded2D(tex, params, id);
         if (r.isError())
             return r;
-
         GL_CHECK_FAILABLE(glUseProgram(program));
         GL_CHECK_FAILABLE(glActiveTexture(GL_TEXTURE0 + unit));
         GL_CHECK_FAILABLE(glBindTexture(GL_TEXTURE_2D, id));
@@ -306,20 +325,13 @@ class TextureManager {
         }
     };
 
-    struct GpuTexture2D {
-        GLuint id = 0;
-        OkayTextureMeta meta{};
-        Texture::TextureParameters params{};
-        bool paramsInitialized = false;
-    };
-
     static bool sameParams(
         const Texture::TextureParameters& a, const Texture::TextureParameters& b) {
         return a.minFilter == b.minFilter && a.magFilter == b.magFilter && a.wrapS == b.wrapS &&
                a.wrapT == b.wrapT;
     }
 
-    std::unordered_map<TextureKey, GpuTexture2D, TextureKeyHash> _textures;
+    std::unordered_map<TextureKey, GPUTextureInfo, TextureKeyHash> _textures;
 };
 
 class GPUState {

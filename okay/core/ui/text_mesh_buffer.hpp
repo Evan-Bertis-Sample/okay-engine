@@ -55,7 +55,7 @@ class TextMeshBuffer {
         const std::size_t quadsUsed = text.size();
         TextMeshMeta& meta = _textMeshPool.get(handle);
 
-        if (quadsUsed < meta.maxQuads) {
+        if (quadsUsed <= meta.maxQuads) {
             // this is easy, we can simply reuse the mesh
             MeshData textMeshData = TextMeshBuilder::build(text, style, false);
             Result<Mesh> updated = _renderer->meshBuffer().updateMesh(meta.mesh, textMeshData);

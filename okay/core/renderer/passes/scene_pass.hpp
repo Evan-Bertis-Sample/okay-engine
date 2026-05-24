@@ -28,7 +28,12 @@ class ScenePass : public IRenderPass {
         return "ScenePass";
     }
 
-    virtual void initialize() override {}
+    virtual void initialize() override {
+        _skyboxMesh = Engine.systems.getSystemChecked<Renderer>()->meshBuffer().addMesh(
+            okay::primitives::box()
+                .sizeSet(glm::vec3{2.0f, 2.0f, 2.0f})  // to span -1.0 to 1.0
+                .build());
+    }
 
     virtual void resize(int newWidth, int newHeight) override {}
 
@@ -46,14 +51,37 @@ class ScenePass : public IRenderPass {
 
         _shaderIndex = Shader::invalidID();
         _materialIndex = Material::invalidID();
-
-        _ndcProjectionPmatrix = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, 0.0f, 1.0f);
+        _screenSpaceProjectionMat = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, 0.0f, 10.0f);
 
         float aspect = float(context.renderer.width()) / float(context.renderer.height());
         auto view = context.world.camera().viewMatrix();
         auto projection = context.world.camera().projectionMatrix(aspect);
         auto camPos = context.world.camera().position();
         auto camDir = context.world.camera().direction();
+
+        // render the skybox
+        MaterialHandle skyboxMaterial = context.renderer.skyboxMaterial();
+        if (skyboxMaterial.isValid()) {
+            handleMaterialSwitch(context,
+                skyboxMaterial,
+                projection,
+                view,
+                context.world.camera().position(),
+                context.world.camera().direction());
+
+            if (auto* props =
+                    dynamic_cast<SceneMaterialProperties*>(skyboxMaterial->properties().get())) {
+                props->modelMatrix = glm::identity<glm::mat4>();
+            }
+
+            Failable f = skyboxMaterial->passUniforms();
+
+            if (f.isError()) {
+                Engine.logger.error("Failed to pass skybox uniforms! Error: {}", f.error());
+            } else {
+                context.renderer.meshBuffer().drawMesh(_skyboxMesh);
+            }
+        }
 
         for (const RenderItemHandle& handle : context.world.getRenderItems()) {
             RenderItem& item = context.world.getRenderItem(handle);
@@ -72,7 +100,7 @@ class ScenePass : public IRenderPass {
 
             // Shader switch: bind program + per-frame stuff
             if (_materialIndex != item.material->id()) {
-                handleMaterialSwitch(context, item, projection, view, camPos, camDir);
+                handleMaterialSwitch(context, item.material, projection, view, camPos, camDir);
                 _materialIndex = item.material->id();
             }
 
@@ -84,36 +112,33 @@ class ScenePass : public IRenderPass {
             if (f.isError())
                 Engine.logger.error("Failed to pass uniforms : {}", f.error());
 
-            // Engine.logger.info("Drawing item with transform {}", item.transform);
-            applyMaterialFlags(item);
+            applyMaterialFlags(item.material);
             context.renderer.meshBuffer().drawMesh(item.mesh);
-
-            // Engine.logger.debug("Render layer {}", item.renderLayer);
         }
     }
 
     void handleMaterialSwitch(const RendererContext& context,
-        RenderItem& item,
+        MaterialHandle material,
         const glm::mat4& projection,
         const glm::mat4& view,
         const glm::vec3& camPos,
         const glm::vec3& camDir) {
-        applyMaterialFlags(item);
+        applyMaterialFlags(material);
 
-        if (_shaderIndex != item.material->shaderID()) {
-            if (auto f = item.material->setShader(); f.isError()) {
+        if (_shaderIndex != material->shaderID()) {
+            if (auto f = material->setShader(); f.isError()) {
                 Engine.logger.error("Failed to set shader : {}", f.error());
                 return;
             }
-            _shaderIndex = item.material->shaderID();
+            _shaderIndex = material->shaderID();
         }
 
-        auto& uniforms = item.material->properties();
-        MaterialFlagCollection flags = uniforms->flags();
+        auto& properties = material->properties();
+        MaterialFlagCollection flags = properties->flags();
 
-        if (auto* sceneProps = dynamic_cast<okay::SceneMaterialProperties*>(uniforms.get())) {
+        if (auto* sceneProps = dynamic_cast<okay::SceneMaterialProperties*>(properties.get())) {
             if (flags.hasFlag(MaterialFlags::SCREEN_SPACE)) {
-                sceneProps->projectionMatrix.set(_ndcProjectionPmatrix);
+                sceneProps->projectionMatrix.set(_screenSpaceProjectionMat);
                 sceneProps->viewMatrix.set(glm::identity<glm::mat4>());
             } else {
                 sceneProps->projectionMatrix.set(projection);
@@ -124,7 +149,7 @@ class ScenePass : public IRenderPass {
             sceneProps->timeMs.set(static_cast<float>(Engine.time->timeSinceStartMs()));
         }
 
-        if (auto* lit = dynamic_cast<okay::LitMaterial*>(uniforms.get())) {
+        if (auto* lit = dynamic_cast<okay::LitMaterial*>(properties.get())) {
             // per-frame lighting setup
             DefaultLightBlock& block = lit->lights.edit();
             block.meta.x = static_cast<float>(context.world.lights().size());
@@ -142,8 +167,8 @@ class ScenePass : public IRenderPass {
         }
     }
 
-    void applyMaterialFlags(RenderItem& item) {
-        auto& uniforms = item.material->properties();
+    void applyMaterialFlags(MaterialHandle mat) {
+        auto& uniforms = mat->properties();
         MaterialFlagCollection flags = uniforms->flags();
 
         if (flags.hasFlag(MaterialFlags::DOUBLE_SIDED)) {
@@ -172,8 +197,8 @@ class ScenePass : public IRenderPass {
    private:
     std::uint32_t _shaderIndex{Shader::invalidID()};
     std::uint32_t _materialIndex{Material::invalidID()};
-
-    glm::mat4 _ndcProjectionPmatrix{};
+    glm::mat4 _screenSpaceProjectionMat{};
+    Mesh _skyboxMesh;
 };
 
 };  // namespace okay

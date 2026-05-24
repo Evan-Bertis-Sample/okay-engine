@@ -5,6 +5,7 @@
 
 // okay/core/asset
 #include <okay/core/asset/asset.hpp>
+#include <okay/core/asset/asset_ref.hpp>
 #include <okay/core/asset/asset_util.hpp>
 
 // okay/core/asset/generic

@@ -4,6 +4,11 @@
 #include "okay/core/util/result.hpp"
 #include "render_pipeline.hpp"
 
+#include <okay/core/asset/asset_util.hpp>
+#include <okay/core/engine/engine.hpp>
+#include <okay/core/renderer/gpu.hpp>
+#include <okay/core/renderer/texture.hpp>
+
 #include <imgui.h>
 
 using namespace okay;
@@ -34,6 +39,33 @@ void Renderer::initialize() {
     _pipeline.resize(_surfaceConfig.width, _surfaceConfig.height);
 
     Engine.logger.debug("Renderer initialized");
+
+    // bind a white texture by default
+    AssetManager* am = Engine.systems.getSystemChecked<AssetManager>();
+    TextureLoadSettings tLoad(TextureDataStore::mainStore());
+    Texture white = okay::load::engineTexture("textures/white.jpg");
+
+    Texture::TextureParameters params{
+        .minFilter = GL_LINEAR,
+        .magFilter = GL_LINEAR,
+        .wrapS = GL_REPEAT,
+        .wrapT = GL_REPEAT,
+    };
+    GLuint whiteID = 0;
+    Failable uploadRes = GPUState::instance().textures.ensureUploaded2D(white, params, whiteID);
+    if (uploadRes.isError()) {
+        Engine.logger.error("Unable to upload white texture to GPU! Error: {}", uploadRes.error());
+    } else {
+        if (whiteID != 1) {
+            Engine.logger.warn(
+                "White texture is not uploaded at 1, "
+                "it is located at {}. "
+                "For texture defaults to work properly,"
+                "ensure no texture is uploaded before "
+                "render initialization.",
+                whiteID);
+        }
+    }
 
     if (_imguiImpl->imguiSupported() && _imguiEnabled) {
         Engine.logger.info("Initializing ImGui");

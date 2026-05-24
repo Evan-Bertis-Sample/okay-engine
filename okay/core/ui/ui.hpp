@@ -97,8 +97,11 @@ class UI {
     UI(UIElement root);
 
    public:
-    void render(glm::vec2 screenPosition, SystemParameter<Renderer> renderer = nullptr);
+    void render(glm::vec2 screenPosition,
+        std::uint8_t uiLayer = 0,
+        SystemParameter<Renderer> renderer = nullptr);
     void update(UIElement newRoot);
+    void cleanup();
 
    private:
     UINode _root;

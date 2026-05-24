@@ -315,19 +315,22 @@ class OkayMaterialProperties : public IMaterialPropertyCollection {
             }
         });
 
-        // textures (GPU manager owns GL textures + param cache)
+        GLuint textureUnit = 0;
         tupleForEach(d.textureRefs(), [&](auto& t) {
             GLuint loc = shader->findUniformLocation(t.name());
             if (loc == uni::inactiveLocation()) {
-                return;  // optimized out / not present
+                return;
             }
 
-            auto r =
-                gpu.textures.bindSampler2D(shader->programID(), loc, t.get(), t.params(), t.unit());
+            auto r = gpu.textures.bindSampler2D(
+                shader->programID(), loc, t.get(), t.params(), textureUnit);
+
             if (r.isError()) {
                 errorMessages << r.error() << '\n';
                 anyErrors = true;
             }
+
+            ++textureUnit;
         });
 
         return anyErrors ? Failable::errorResult(errorMessages.str()) : Failable::ok({});

@@ -269,6 +269,7 @@ struct RenderEntity {
         return **this;
     }
     bool isValid() const;
+    void remove();
 
    private:
     RenderWorld* _owner{nullptr};

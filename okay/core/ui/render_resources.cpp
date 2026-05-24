@@ -14,6 +14,7 @@ Option<MaterialHandle> UIRenderResoruces::getRectMaterial(const UIElement& eleme
     if (_rectMaterialCache.contains(*key)) {
         return Option<MaterialHandle>::some(_rectMaterialCache.at(*key));
     }
+
     Renderer* renderer = Engine.systems.getSystemChecked<Renderer>();
 
     // create a material
@@ -154,7 +155,6 @@ void UIRenderResoruces::loadResoruces() {
         rectShader.vertexShader, rectShader.fragmentShader);
 
     _quadMesh = renderer->meshBuffer().addMesh(
-
         primitives::rect().sizeSet(glm::vec2(1.0f, 1.0f)).twoSidedSet(true).build());
 }
 
@@ -181,7 +181,7 @@ Option<UIRenderResoruces::TextMaterialKey> UIRenderResoruces::getTextMaterialKey
 
 Option<UIRenderResoruces::RectMaterialKey> UIRenderResoruces::getRectMaterialKey(
     const UIElement& element) const {
-    if (element.backgroundColor.a < 0.0001f) {
+    if (element.backgroundColor.a < 0.0f) {
         return Option<RectMaterialKey>::none();
     }
 
@@ -200,7 +200,7 @@ Texture UIRenderResoruces::getElementTexture(const UIElement& element) const {
         return element.backgroundImage.value();
     }
 
-    // Engine.logger.debug("Using white texture for UI element with no background image");
+    Engine.logger.debug("Using white texture for UI element with no background image");
     return _whiteTexture;
 }
 
