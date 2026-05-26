@@ -392,6 +392,18 @@ void UI::render(
     };
     _layout.layout(layoutContext);
     renderNode(_root, *renderer, (0x1 << 7) + 1 + (uiLayer * 24));
+
+    for (auto it = _nodeRenderInfo.begin(); it != _nodeRenderInfo.end();) {
+        UINode::ID id = it->first;
+
+        if (id >= _nextNodeID) {
+            it->second.rectEntity.remove();
+            it->second.textEntity.remove();
+            it = _nodeRenderInfo.erase(it);
+        } else {
+            ++it;
+        }
+    }
 }
 
 void UI::update(UIElement newRoot) {
