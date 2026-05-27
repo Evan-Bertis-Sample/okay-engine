@@ -59,6 +59,11 @@ bool RenderEntity::isValid() const {
            _owner->isValidEntity(*this);
 }
 
+void RenderEntity::remove() {
+    if (isValid())
+        _owner->removeRenderEntity(*this);
+}
+
 // OkayRenderWorld
 
 RenderWorld::ChildRange RenderWorld::children(RenderEntity parent) {

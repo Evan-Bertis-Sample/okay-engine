@@ -12,6 +12,7 @@
 #include <okay/core/util/object_pool.hpp>
 #include <okay/core/util/option.hpp>
 
+#include <glm/gtx/hash.hpp>
 #include <unordered_map>
 #include <utility>
 #include <variant>
@@ -245,6 +246,13 @@ struct UIElement {
         return *this;
     }
 
+    UIElement& widthFixed(size::Fixed width) {
+        return widthSet(width);
+    }
+    UIElement& heightFixed(size::Fixed height) {
+        return heightSet(height);
+    }
+
     UIElement& widthGrow() {
         return widthSet(size::Grow{});
     }
@@ -261,6 +269,7 @@ struct UIElement {
     UIElement& heightFit() {
         return heightSet(size::Fit{});
     }
+
     UIElement& fit() {
         return widthFit().heightFit();
     }
@@ -279,6 +288,11 @@ struct UIElement {
 
     UIElement& alignTextVertical(TextStyle::VerticalAlignment alignment) {
         textStyle.verticalAlignment = alignment;
+        return *this;
+    }
+
+    UIElement& fontSet(FontManager::FontHandle font) {
+        textStyle.font = font;
         return *this;
     }
 
@@ -322,7 +336,10 @@ struct UIElement {
         std::size_t textHash = (text.isSome()) ? std::hash<std::string>{}(text.value()) : 0;
         std::size_t backgroundHash =
             (backgroundImage.isSome()) ? backgroundImage.value().handle.start : 0;
-        return hashCombine(textHash, backgroundHash);
+        std::size_t contentHash = hashCombine(textHash, backgroundHash);
+        auto colorHasher = std::hash<glm::vec4>{};
+        std::size_t colorHash = hashCombine(colorHasher(backgroundColor), colorHasher(textColor));
+        return hashCombine(contentHash, colorHash);
     }
 };
 

@@ -33,13 +33,13 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # do some initial checking
 if(NOT DEFINED PROJECT)
-  message(FATAL_ERROR "PROJECT not defined.")
+    message(FATAL_ERROR "PROJECT not defined.")
 endif()
 if(NOT DEFINED OKAY_PROJECT_ROOT_DIR)
-  message(FATAL_ERROR "OKAY_PROJECT_ROOT_DIR not defined.")
+    message(FATAL_ERROR "OKAY_PROJECT_ROOT_DIR not defined.")
 endif()
 if(NOT EXISTS ${OKAY_PROJECT_ROOT_DIR}/okay.cmake)
-  message(FATAL_ERROR "okay.cmake not found in project root directory.")
+    message(FATAL_ERROR "okay.cmake not found in project root directory.")
 endif()
 
 # engine paths
@@ -68,19 +68,19 @@ target_compile_features(${PROJECT} PUBLIC cxx_std_20)
 
 # Version guards for C++20 features
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 11)
-    message(FATAL_ERROR "GCC >= 11 required for C++20 features")
-  endif()
+    if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 11)
+        message(FATAL_ERROR "GCC >= 11 required for C++20 features")
+    endif()
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-  # libc++/libstdc++ version also matters, but this is a decent floor
-  if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 13)
-    message(FATAL_ERROR "Clang >= 13 required for C++20")
-  endif()
+    # libc++/libstdc++ version also matters, but this is a decent floor
+    if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 13)
+        message(FATAL_ERROR "Clang >= 13 required for C++20")
+    endif()
 elseif(MSVC)
-  # 1929 corresponds to VS 2019 16.10 (v19.29); VS 2022 is newer
-  if(MSVC_VERSION LESS 1929)
-    message(FATAL_ERROR "MSVC v19.29 (VS 2019 16.10) or newer required for C++20 features")
-  endif()
+    # 1929 corresponds to VS 2019 16.10 (v19.29); VS 2022 is newer
+    if(MSVC_VERSION LESS 1929)
+        message(FATAL_ERROR "MSVC v19.29 (VS 2019 16.10) or newer required for C++20 features")
+    endif()
 endif()
 
 # common include paths for okay
@@ -100,6 +100,7 @@ set(OKAY_ENGINE_LIBRARIES glm)
 option(GLM_SHARED "Shared build" ON)
 option(GLM_STATIC "Static build" OFF)
 option(GLM_USE_TEST "Enable Tests" OFF)
+add_compile_definitions(GLM_ENABLE_EXPERIMENTAL)
 add_subdirectory(${OKAY_VENDOR_DIR}/glm)
 
 # freetype
@@ -145,9 +146,9 @@ add_subdirectory(${OKAY_ENGINE_DIR}/platform)
 
 # define verbosity settings for Release Builds
 if(OKAY_BUILD_TYPE STREQUAL "Release")
-  target_compile_definitions(okay PUBLIC -DOKAY_RELEASE)
-  target_compile_definitions(okay PUBLIC -DOKAY_COMPILED_MIN_SEVERITY=2)
-  target_compile_definitions(okay PUBLIC -DOKAY_COMPILED_MIN_VERBOSITY=3)
+    target_compile_definitions(okay PUBLIC -DOKAY_RELEASE)
+    target_compile_definitions(okay PUBLIC -DOKAY_COMPILED_MIN_SEVERITY=2)
+    target_compile_definitions(okay PUBLIC -DOKAY_COMPILED_MIN_VERBOSITY=3)
 endif()
 
 # link common libs and platform bundle into the engine
@@ -165,5 +166,3 @@ get_target_property(INCLUDE_DIRS okay INCLUDE_DIRECTORIES)
 message(STATUS "okay Include Directories: ${INCLUDE_DIRS}")
 
 target_link_libraries(${PROJECT} PRIVATE okay)
-
-

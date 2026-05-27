@@ -13,13 +13,13 @@ static glm::vec4 scaleMaintainA(glm::vec4 vec, float s) {
 UIStyle::UIStyle() {
     const glm::vec4 white = glm::vec4(1.0f);
 
-    text = UIElement().textColorSet(scaleMaintainA(white, 0.85)).textSizeSet(12.0f);
+    text = UIElement().textColorSet(scaleMaintainA(white, 0.85)).textSizeSet(12.0f).heightFit();
 
-    h1 = UIElement().textColorSet(scaleMaintainA(white, 0.95)).textSizeSet(24.0f);
+    h1 = UIElement().textColorSet(scaleMaintainA(white, 0.95)).textSizeSet(24.0f).heightFit();
 
-    h2 = UIElement().textColorSet(scaleMaintainA(white, 0.8)).textSizeSet(18.0f);
+    h2 = UIElement().textColorSet(scaleMaintainA(white, 0.8)).textSizeSet(18.0f).heightFit();
 
-    h3 = UIElement().textColorSet(scaleMaintainA(white, 0.85)).textSizeSet(14.0f);
+    h3 = UIElement().textColorSet(scaleMaintainA(white, 0.85)).textSizeSet(14.0f).heightFit();
 
     image = UIElement().backgroundColorSet(white);
 };

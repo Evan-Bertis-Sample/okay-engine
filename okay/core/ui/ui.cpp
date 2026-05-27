@@ -392,6 +392,18 @@ void UI::render(
     };
     _layout.layout(layoutContext);
     renderNode(_root, *renderer, (0x1 << 7) + 1 + (uiLayer * 24));
+
+    for (auto it = _nodeRenderInfo.begin(); it != _nodeRenderInfo.end();) {
+        UINode::ID id = it->first;
+
+        if (id >= _nextNodeID) {
+            it->second.rectEntity.remove();
+            it->second.textEntity.remove();
+            it = _nodeRenderInfo.erase(it);
+        } else {
+            ++it;
+        }
+    }
 }
 
 void UI::update(UIElement newRoot) {
@@ -415,23 +427,22 @@ void UI::renderNode(const UINode& node, Renderer& renderer, int layerBase) {
     if (renderInfo.contentHash != elementContentHash) {
         // Engine.logger.debug("Creating render entities for UI node {}", node.id);
         if (renderInfo.rectEntity.isValid()) {
-            if (!(element.backgroundImage.isSome() || element.backgroundColor.a > 0.0f)) {
-                // delete this guy
-                renderer.world().removeRenderEntity(renderInfo.rectEntity);
-            }
+            Engine.logger.debug("updateing render entity rect");
+            renderer.world().removeRenderEntity(renderInfo.rectEntity);
+            createRectRenderEntity(node, renderer);
         } else {
-            createTextRenderEntity(node, renderer);
+            createRectRenderEntity(node, renderer);
         }
 
         if (renderInfo.textEntity.isValid()) {
             // Replace the text mesh
-            Mesh oldMesh = renderInfo.textEntity->mesh;
-            renderInfo.textEntity->mesh = getTextMesh(node, renderer);
-            // Engine.logger.debug("Switching mesh from ({}, {}), to mesh ({}, {})",
-            //     oldMesh.vertexOffset,
-            //     oldMesh.vertexCount,
-            //     renderInfo.textEntity->mesh.vertexOffset,
-            //     renderInfo.textEntity->mesh.vertexCount);
+            RenderEntity::Properties props = renderInfo.textEntity.prop();
+            props.mesh = getTextMesh(node, renderer);
+            Option<MaterialHandle> material = UIRenderResoruces::get().getTextMaterial(element);
+            if (material.isSome()) {
+                props.material = material.value();
+            }
+
         } else {
             createTextRenderEntity(node, renderer);
         }
@@ -596,6 +607,13 @@ void UI::createTextRenderEntity(const UINode& node, Renderer& renderer) {
             renderer.world().addRenderEntity(glm::vec3(1.0f, 1.0f, 0.0f), handle, textMesh);
 
         renderInfo.textEntity = entity;
+    }
+}
+
+void UI::cleanup() {
+    for (auto& [id, renderInfo] : _nodeRenderInfo) {
+        renderInfo.rectEntity.remove();
+        renderInfo.textEntity.remove();
     }
 }
 
