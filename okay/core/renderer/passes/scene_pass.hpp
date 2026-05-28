@@ -63,12 +63,11 @@ class ScenePass : public IRenderPass {
         GL_CHECK(glDepthMask(GL_TRUE));
         // doesn't need MSAA, but should if the platform can support it
         glEnable(GL_MULTISAMPLE);
-        
+
         _width = context.renderer.width();
         _height = context.renderer.height();
         _shaderIndex = Shader::invalidID();
         _materialIndex = Material::invalidID();
-        
 
         float aspect = float(_width) / float(_height);
         auto view = context.world.camera().viewMatrix();
@@ -184,11 +183,8 @@ class ScenePass : public IRenderPass {
         glm::vec3 extraSpaceH = boxMax - currMax;
 
         float threshold = 1.5f;
-        if (glm::any(glm::greaterThan(extraSpaceL,  _padding * threshold)) ||
-            glm::any(glm::greaterThan(extraSpaceH, _padding * threshold))) {
-            return true;
-        }
-        return false;
+
+        return glm::any(glm::greaterThan(extraSpaceL,  _padding * threshold)) || glm::any(glm::greaterThan(extraSpaceH, _padding * threshold));
     }
 
     void refit(const RendererContext& context, const glm::vec3& frustumCenter, const glm::vec3& lightDir, 
@@ -337,20 +333,7 @@ class ScenePass : public IRenderPass {
     }
 
     void renderItems(const RendererContext& context, float aspect, const glm::mat4& projection, const glm::mat4& view, const glm::vec3& camPos, const glm::vec3& camDir) {
-        GL_CHECK(glViewport(0, 0, _width, _height));
-        GL_CHECK(glDepthFunc(GL_LESS)); 
-
         GL_CHECK(glClear(GL_DEPTH_BUFFER_BIT));
-        
-        GL_CHECK(glEnable(GL_DEPTH_TEST));
-        GL_CHECK(glEnable(GL_CULL_FACE));
-        GL_CHECK(glCullFace(GL_BACK));
-        GL_CHECK(glDisable(GL_BLEND));
-        GL_CHECK(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
-        GL_CHECK(glDepthMask(GL_TRUE));
-
-        // doesn't need MSAA, but should if the platform can support it
-        glEnable(GL_MULTISAMPLE);
 
         for (const RenderItemHandle& handle : context.world.getRenderItems()) {
             RenderItem& item = context.world.getRenderItem(handle);
