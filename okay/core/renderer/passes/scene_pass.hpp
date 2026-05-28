@@ -18,7 +18,6 @@
 #include <okay/core/renderer/renderer.hpp>
 #include <okay/core/renderer/uniform.hpp>
 
-#include "GLFW/glfw3.h"
 #include <algorithm>
 #include <cstdint>
 #include <memory>
@@ -49,10 +48,29 @@ class ScenePass : public IRenderPass {
     virtual void resize(int newWidth, int newHeight) override {}
 
     virtual void render(const RendererContext& context) override {
-        glfwGetFramebufferSize((GLFWwindow*)context.renderer.getSurfaceWindow(), &_fbwidth, &_fbheight);
-        renderSettings();
+        GL_CHECK(glClearColor(0.113f, 0.008, 0.208, 1.0f));
+        GL_CHECK(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+        GL_CHECK(glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE));
 
-        float aspect = float(_fbwidth) / float(_fbheight);
+        GL_CHECK(glViewport(0, 0, _width, _height));
+        GL_CHECK(glDepthFunc(GL_LESS)); 
+        
+        GL_CHECK(glEnable(GL_DEPTH_TEST));
+        GL_CHECK(glEnable(GL_CULL_FACE));
+        GL_CHECK(glCullFace(GL_BACK));
+        GL_CHECK(glDisable(GL_BLEND));
+        GL_CHECK(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+        GL_CHECK(glDepthMask(GL_TRUE));
+        // doesn't need MSAA, but should if the platform can support it
+        glEnable(GL_MULTISAMPLE);
+        
+        _width = context.renderer.width();
+        _height = context.renderer.height();
+        _shaderIndex = Shader::invalidID();
+        _materialIndex = Material::invalidID();
+        
+
+        float aspect = float(_width) / float(_height);
         auto view = context.world.camera().viewMatrix();
         auto projection = context.world.camera().projectionMatrix(aspect);
         auto camPos = context.world.camera().position();
@@ -108,25 +126,6 @@ class ScenePass : public IRenderPass {
             okay::primitives::box()
                 .sizeSet(glm::vec3{2.0f, 2.0f, 2.0f})  // to span -1.0 to 1.0
                 .build());
-    }
-
-    void renderSettings() {
-        GL_CHECK(glClearColor(0.113f, 0.008, 0.208, 1.0f));
-        GL_CHECK(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
-        GL_CHECK(glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE));
-
-        GL_CHECK(glViewport(0, 0, _fbwidth, _fbheight));
-        GL_CHECK(glDepthFunc(GL_LESS)); 
-        
-        GL_CHECK(glEnable(GL_DEPTH_TEST));
-        GL_CHECK(glEnable(GL_CULL_FACE));
-        GL_CHECK(glCullFace(GL_BACK));
-        GL_CHECK(glDisable(GL_BLEND));
-        GL_CHECK(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
-        GL_CHECK(glDepthMask(GL_TRUE));
-
-        // doesn't need MSAA, but should if the platform can support it
-        glEnable(GL_MULTISAMPLE);
     }
 
     std::array<glm::vec3, 8> frustumCornersWorld(const RendererContext& context, float aspectRatio, float shadowFar) {
@@ -285,7 +284,7 @@ class ScenePass : public IRenderPass {
                     drawDepthMesh(context, aspect, depthProps);
 
                     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-                    glViewport(0, 0, _fbwidth, _fbheight);
+                    glViewport(0, 0, _width, _height);
                     break;
                 }
             }
@@ -338,6 +337,21 @@ class ScenePass : public IRenderPass {
     }
 
     void renderItems(const RendererContext& context, float aspect, const glm::mat4& projection, const glm::mat4& view, const glm::vec3& camPos, const glm::vec3& camDir) {
+        GL_CHECK(glViewport(0, 0, _width, _height));
+        GL_CHECK(glDepthFunc(GL_LESS)); 
+
+        GL_CHECK(glClear(GL_DEPTH_BUFFER_BIT));
+        
+        GL_CHECK(glEnable(GL_DEPTH_TEST));
+        GL_CHECK(glEnable(GL_CULL_FACE));
+        GL_CHECK(glCullFace(GL_BACK));
+        GL_CHECK(glDisable(GL_BLEND));
+        GL_CHECK(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+        GL_CHECK(glDepthMask(GL_TRUE));
+
+        // doesn't need MSAA, but should if the platform can support it
+        glEnable(GL_MULTISAMPLE);
+
         for (const RenderItemHandle& handle : context.world.getRenderItems()) {
             RenderItem& item = context.world.getRenderItem(handle);
             if (item.mesh.isEmpty())
@@ -458,7 +472,7 @@ class ScenePass : public IRenderPass {
     }
 
    private:
-    int _fbwidth{ 0 }, _fbheight{ 0 };
+    uint32_t _width{ 0 }, _height{ 0 };
     float _shadowDist { 100.0 };
     GLsizei _shadowWidth { 2048 }, _shadowHeight = { 2048 };
     float _xymargin = { 0.6 };
