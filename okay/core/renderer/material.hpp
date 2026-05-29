@@ -81,6 +81,7 @@ struct MaterialFlagCollection {
 
 class IMaterialPropertyCollection {
    public:
+    virtual ~IMaterialPropertyCollection() {};
     virtual Failable init(ShaderHandle shader) = 0;
     virtual Failable pass(ShaderHandle shader) = 0;
     virtual MaterialFlagCollection flags() = 0;
@@ -162,6 +163,10 @@ class Material {
 
     std::unique_ptr<IMaterialPropertyCollection>& properties() {
         return _uniforms;
+    }
+
+    Shader &getShader() {
+        return *_shader.get();
     }
 
    private:

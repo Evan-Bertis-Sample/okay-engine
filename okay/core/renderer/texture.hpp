@@ -10,7 +10,7 @@
 namespace okay {
 
 struct OkayTextureMeta {
-    enum class Format : std::uint8_t { RGBA8, RGB8, RGBA16F, RGB16F, DEPTH24_STENCIL8 };
+    enum class Format : std::uint8_t { RGBA8, RGB8, RGBA16F, RGB16F, DEPTH24_STENCIL8, DEPTH_COMPONENT };
 
     std::uint32_t width;
     std::uint32_t height;
@@ -165,15 +165,15 @@ class TextureDataStore {
     }
 };
 
+struct TextureParameters {
+    GLenum minFilter{GL_LINEAR};
+    GLenum magFilter{GL_LINEAR};
+    GLenum wrapS{GL_REPEAT};
+    GLenum wrapT{GL_REPEAT};
+};
+
 class Texture {
    public:
-    struct TextureParameters {
-        GLenum minFilter{GL_LINEAR};
-        GLenum magFilter{GL_LINEAR};
-        GLenum wrapS{GL_REPEAT};
-        GLenum wrapT{GL_REPEAT};
-    };
-
     std::shared_ptr<TextureDataStore> store;
     TextureDataStore::TextureHandle handle;
 
@@ -183,11 +183,87 @@ class Texture {
         : store(store), handle(handle) {}
 
     std::span<const std::byte> getData() const {
-        return store->getTextureData(handle);
+        return store->getTextureData(handle); 
     }
 
     OkayTextureMeta getMeta() const {
-        return store->getTextureMeta(handle);
+        return store->getTextureMeta(handle); 
+    }
+
+    bool hasBeenUploadedToGPU() const { return _glTextureID != 0; }
+
+    GLuint getGLTextureID() const { return _glTextureID; }
+
+    Failable uploadToGPU(const TextureParameters& params) {
+        const auto meta = getMeta();
+        const auto data = getData();
+
+        Engine.logger.info("Uploading texture to GPU: width={}, height={}, format={}",
+                           meta.width,
+                           meta.height,
+                           static_cast<int>(meta.format));
+
+        if (meta.format == OkayTextureMeta::Format::DEPTH24_STENCIL8) {
+            GL_CHECK_FAILABLE(glGenTextures(1, &_glTextureID));
+            GL_CHECK_FAILABLE(glBindTexture(GL_TEXTURE_2D, _glTextureID));
+            GL_CHECK_FAILABLE(glTexImage2D(GL_TEXTURE_2D,
+                                           0,
+                                           GL_DEPTH24_STENCIL8,
+                                           meta.width,
+                                           meta.height,
+                                           0,
+                                           GL_DEPTH_STENCIL,
+                                           GL_UNSIGNED_INT_24_8,
+                                           nullptr));
+        } else {
+            GLenum glFormat;
+            GLenum glInternalFormat;
+            switch (meta.format) {
+                case OkayTextureMeta::Format::RGBA8:
+                    glFormat = GL_RGBA;
+                    glInternalFormat = GL_RGBA8;
+                    break;
+                case OkayTextureMeta::Format::RGB8:
+                    glFormat = GL_RGB;
+                    glInternalFormat = GL_RGB8;
+                    break;
+                case OkayTextureMeta::Format::RGBA16F:
+                    glFormat = GL_RGBA;
+                    glInternalFormat = GL_RGBA16F;
+                    break;
+                case OkayTextureMeta::Format::RGB16F:
+                    glFormat = GL_RGB;
+                    glInternalFormat = GL_RGB16F;
+                    break;
+                default:
+                    return Failable::errorResult("Unsupported texture format");
+            }
+
+            Engine.logger.debug(
+                "Texture format: glFormat={}, glInternalFormat={}", glFormat, glInternalFormat);
+
+            GL_CHECK_FAILABLE(glGenTextures(1, &_glTextureID));
+            GL_CHECK_FAILABLE(glBindTexture(GL_TEXTURE_2D, _glTextureID));
+            GL_CHECK_FAILABLE(glTexImage2D(GL_TEXTURE_2D,
+                                           0,
+                                           glFormat,
+                                           meta.width,
+                                           meta.height,
+                                           0,
+                                           glFormat,
+                                           GL_UNSIGNED_BYTE,
+                                           data.data()));
+        }
+
+        Engine.logger.debug("Texture uploaded to GPU with ID {}", _glTextureID);
+
+        // set parameters
+        GL_CHECK_FAILABLE(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, params.minFilter));
+        GL_CHECK_FAILABLE(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, params.magFilter));
+        GL_CHECK_FAILABLE(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, params.wrapS));
+        GL_CHECK_FAILABLE(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, params.wrapT));
+
+        return Failable::ok({});
     }
 
     bool operator==(const Texture& other) const {
@@ -199,6 +275,46 @@ class Texture {
     bool operator<(const Texture& other) const {
         return handle < other.handle;
     }
+
+   private:
+    GLuint _glTextureID{ 0 };
+};
+
+class RenderTexture {
+   public:
+    RenderTexture() = default;
+
+    RenderTexture(GLuint glID, OkayTextureMeta meta)
+        : _glTextureID(glID), _meta(meta)
+    {}
+
+    std::span<const std::byte> getData() const { return {}; }
+
+    OkayTextureMeta getMeta() const {
+        return _meta; 
+    }
+
+    bool hasBeenUploadedToGPU() const { return _glTextureID != 0; }
+
+    GLuint getGLTextureID() const { return _glTextureID; }
+
+    Failable uploadToGPU(const TextureParameters& params) {
+        return Failable::ok({});
+    }
+
+    bool operator==(const RenderTexture& other) const {
+        return _glTextureID == other.getGLTextureID();
+    }
+    bool operator!=(const RenderTexture& other) const {
+        return !(*this == other);
+    }
+    bool operator<(const RenderTexture& other) const {
+        return _glTextureID < other.getGLTextureID();
+    }
+
+   private:
+    GLuint _glTextureID{ 0 };
+    OkayTextureMeta _meta{};
 };
 
 }  // namespace okay

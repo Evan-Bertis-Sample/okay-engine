@@ -8,6 +8,10 @@ in vec3 v_worldNormal;
 in vec2 v_uv;
 in mat3 v_worldToTangent;
 
+in vec2 v_texCoords;
+in vec4 v_fragPosLightSpace;
+
+
 out vec4 FragColor;
 
 /* Camera */
@@ -16,7 +20,8 @@ uniform vec3 u_cameraPosition;
 /* Material */
 uniform float u_ambient;     // e.g. 0.05
 uniform sampler2D u_albedo;  // optional, can be ignored if not used
-
+uniform sampler2D u_shadowMap; 
+uniform sampler2D diffuseTexture; // optional, can be ignored if not used
 /* Disney BSDF Parameters */
 // All params are in [0, 1]
 
@@ -32,8 +37,10 @@ uniform float u_clearcoatGloss; // controls clearcoat glossiness (0 = satin, 1 =
 uniform float u_specularTrans;  // transmission fraction (glass/translucency)
 uniform float u_flatness;       // blends in Hanrahan-Krueger subsurface for thin surfaces
 uniform int u_thin;             // 0 = solid, 1 = thin surface (leaves, paper)
+uniform vec4 u_skyboxColor;    // alpha manages shadow strength: 0 = no shadow, 1 = black shadow
 
 const float PI = 3.1415926535897932384626433832795;
+
 
 struct Light {
     vec4 posType;    // xyz = position (POINT/SPOT), w = type (0 dir, 1 point, 2 spot)
@@ -352,15 +359,16 @@ vec3 calcDisneySpecTransmission(vec3 baseColor, vec3 N, vec3 wi, vec3 wo, vec3 w
 /***************/
 
 // Second specular layer on top of the base material
-float disneyClearcoat(vec3 N, vec3 wo, vec3 wm, vec3 wi) {
+float disneyClearcoat(vec3 N, vec3 wo, vec3 wm, vec3 wi, float normalVariance) {
     if (u_clearcoat <= 0.0f) return 0.0f;
 
     float absDotNH = abs(dot(N, wm));
     float dotHV = dot(wm, wo);
 
-    float clearcoatGloss = u_clearcoatGloss;
+    float alpha = mix(0.1, 0.001, u_clearcoatGloss);
+    alpha = clamp(sqrt(alpha * alpha + 0.25 * normalVariance), alpha, 1.0);
 
-    float d = GTR1(absDotNH, mix(0.1, 0.001, clearcoatGloss));
+    float d = GTR1(absDotNH, alpha);
     float f = schlickFresnel(0.04f, dotHV);
     float gl = GGXG1(wi, 0.25f);
     float gv = GGXG1(wo, 0.25f);
@@ -372,7 +380,7 @@ float disneyClearcoat(vec3 N, vec3 wo, vec3 wm, vec3 wi) {
 /** Disney BSDF **/
 /*****************/
 
-vec3 evaluateDisney(vec3 N, vec3 wi, vec3 wm, vec3 wo, vec3 baseColor) {    
+vec3 evaluateDisney(vec3 N, vec3 wi, vec3 wm, vec3 wo, vec3 baseColor, float normalVariance) {
     float dotNV = dot(N, wo);
     float dotNL = max(dot(N, wi), 0.0f);
     if (dotNL <= 0.0f) return vec3(0.0f);
@@ -391,7 +399,7 @@ vec3 evaluateDisney(vec3 N, vec3 wi, vec3 wm, vec3 wo, vec3 baseColor) {
     // clearcoat
     bool upperHemisphere = dotNL > 0.0f && dotNV > 0.0f;
     if (upperHemisphere && u_clearcoat > 0.0f) {
-        float clearcoat = disneyClearcoat(N, wo, wm, wi);
+        float clearcoat = disneyClearcoat(N, wo, wm, wi, normalVariance);
         reflectance += vec3(clearcoat);
     }
 
@@ -425,11 +433,49 @@ vec3 evaluateDisney(vec3 N, vec3 wi, vec3 wm, vec3 wo, vec3 baseColor) {
     return reflectance;
 }
 
+float ShadowCalculation(vec4 fragPosLightSpace)
+{
+    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    projCoords = projCoords * 0.5 + 0.5;
+    if (projCoords.z > 1.0) return 0.0;
+
+    float currentDepth = projCoords.z;
+    float bias = 0.001;
+    vec2 texelSize = vec2(1.0) / vec2(textureSize(u_shadowMap, 0));
+
+    // precomputed using Poisson disk algo
+    const vec2 disk[16] = vec2[16](
+        vec2(-0.94201624, -0.39906216), vec2( 0.94558609, -0.76890725),
+        vec2(-0.09418410, -0.92938870), vec2( 0.34495938,  0.29387760),
+        vec2(-0.91588581,  0.45771432), vec2(-0.81544232, -0.87912464),
+        vec2(-0.38277543,  0.27676845), vec2( 0.97484398,  0.75648379),
+        vec2( 0.44323325, -0.97511554), vec2( 0.53742981, -0.47373420),
+        vec2(-0.26496911, -0.41893023), vec2( 0.79197514,  0.19090188),
+        vec2(-0.24188840,  0.99706507), vec2(-0.81409955,  0.91437590),
+        vec2( 0.19984126,  0.78641367), vec2( 0.14383161, -0.14100790)
+    );
+
+    float angle = fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453) * 6.28318530;
+    float ca = cos(angle), sa = sin(angle);
+
+    float shadow = 0.0;
+    float spread = 5.0; // texel radius
+    for (int i = 0; i < 16; ++i) {
+        vec2 offset = vec2(ca * disk[i].x - sa * disk[i].y,
+                           sa * disk[i].x + ca * disk[i].y) * texelSize * spread;
+        float pcfDepth = texture(u_shadowMap, projCoords.xy + offset).r;
+        shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;
+    }
+
+    return shadow / 16.0 * u_skyboxColor.a;
+}
+
+
 
 void main() {
-    vec3 N = safeNormalize(v_worldNormal); // normal vector
-    vec3 V = safeNormalize(u_cameraPosition - v_worldPos); // view vector
-
+    vec3 N = safeNormalize(v_worldNormal);
+    vec3 V = safeNormalize(u_cameraPosition - v_worldPos);
+    float normalVariance = dot(dFdx(N), dFdx(N)) + dot(dFdy(N), dFdy(N));
     
     vec4 texAlbedo = texture(u_albedo, v_uv);
     vec3 baseColor = mon2lin(texAlbedo.rgb) * v_color;
@@ -437,7 +483,7 @@ void main() {
 
     int count = int(meta.x + 0.5);
     int maxLights = min(count, 16);
-
+    float shadow = 0.0;
     for (int i = 0; i < 16; ++i) {
         if (i >= maxLights) break;
 
@@ -486,10 +532,10 @@ void main() {
         vec3 wo = safeNormalize(v_worldToTangent * V);
         vec3 wi = safeNormalize(v_worldToTangent * L);
         vec3 wm = safeNormalize(wo + wi); // half vector
-
-        colorOut += evaluateDisney(nt, wi, wm, wo, baseColor) * Lrgb * intensity * att;
+        
+        shadow = (i == 0) ? ShadowCalculation(v_fragPosLightSpace) : 0.0;
+        colorOut += evaluateDisney(nt, wi, wm, wo, baseColor, normalVariance) * Lrgb * intensity * att * (1.0 - shadow);
+    
     }
-
     FragColor = vec4(colorOut, texAlbedo.a);
-
 }

@@ -14,7 +14,7 @@ struct CameraComponent {
 
     Camera::ProjectionType projectionType() const {
         return std::holds_alternative<Camera::PerspectiveLens>(lens)
-                   ? Camera::ProjectionType::PERPSECTIVE
+                   ? Camera::ProjectionType::PERSPECTIVE
                    : Camera::ProjectionType::ORTHOGRAPHIC;
     }
 
