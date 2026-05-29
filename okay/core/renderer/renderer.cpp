@@ -94,6 +94,10 @@ void Renderer::preTick() {
         _imguiImpl->newFrame();
         ImGui::NewFrame();
     }
+
+    if (_surface->shouldClose()) {
+        okay::Engine.shutdown();
+    }
 }
 
 void Renderer::tick() {
