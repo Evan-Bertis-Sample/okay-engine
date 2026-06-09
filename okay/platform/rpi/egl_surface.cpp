@@ -3,11 +3,15 @@
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 #include <atomic>
+#include <cerrno>
+#include <chrono>
 #include <csignal>
+#include <cstring>
 #include <fcntl.h>
 #include <gbm.h>
 #include <iostream>
 #include <stdexcept>
+#include <thread>
 #include <unistd.h>
 #include <xf86drm.h>
 #include <xf86drmMode.h>
@@ -22,6 +26,25 @@ std::atomic<bool> g_quit{false};
 
 void sigint_handler(int) {
     g_quit.store(true);
+}
+
+bool set_drm_master_with_retry(int drmFd) {
+    constexpr int maxAttempts = 50;
+    constexpr auto retryDelay = std::chrono::milliseconds(100);
+
+    for (int attempt = 1; attempt <= maxAttempts; ++attempt) {
+        if (drmSetMaster(drmFd) == 0) {
+            return true;
+        }
+
+        const int err = errno;
+        std::cerr << "drmSetMaster failed: " << std::strerror(err) << " (" << err << "), attempt "
+                  << attempt << "/" << maxAttempts << std::endl;
+
+        std::this_thread::sleep_for(retryDelay);
+    }
+
+    return false;
 }
 
 uint32_t bo_to_fb(gbm_bo* bo, int drmFd) {
@@ -182,8 +205,8 @@ void Surface::initialize() {
         throw std::runtime_error("open DRM device failed");
     }
 
-    if (drmSetMaster(_impl->drmFd) != 0) {
-        throw std::runtime_error("drmSetMaster failed");
+    if (!set_drm_master_with_retry(_impl->drmFd)) {
+        throw std::runtime_error("drmSetMaster failed after retries");
     }
 
     _impl->res = drmModeGetResources(_impl->drmFd);
