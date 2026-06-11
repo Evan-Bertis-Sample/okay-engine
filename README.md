@@ -1,3 +1,9 @@
+<div align="center">
+    <img src="docs/img/okay-gh-banner.png" width="100%"/>
+</div>
+
+
+
 # okay-engine
 
 `okay-engine` is a lightweight game engine that targets Windows, and Linux (specifically the Raspberry Pi), and (somewhat) MacOS. It was primarily developed to power `Northwestern Formula Racing`'s dashboard for NFR26, which runs off of a headless Rapsiban OS. Check out that project [here.](https://github.com/NU-Formula-Racing/daq-dash-26)
