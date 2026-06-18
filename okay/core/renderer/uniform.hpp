@@ -16,6 +16,7 @@
 #include <string_view>
 #include <type_traits>
 #include <unordered_map>
+#include <variant>
 
 namespace okay {
 
@@ -245,12 +246,14 @@ class BlockProperty {
 template <auto SamplerName>
 class TextureProperty {
    public:
-    using ValueType = Texture;
+    using ValueType = std::variant<std::monostate, Texture, RenderTexture>;
     static constexpr auto nameV = SamplerName;
     static constexpr uni::UniformKind kind = uni::UniformKind::TEXTURE;
 
     TextureProperty() = default;
-    TextureProperty(const Texture& tex, const Texture::TextureParameters& params = {})
+    TextureProperty(const Texture& tex, const TextureParameters& params = {})
+        : _value(tex), _params(params) {}
+    TextureProperty(const RenderTexture& tex, const TextureParameters& params = {})
         : _value(tex), _params(params) {}
 
     constexpr std::string_view nameView() const {
@@ -260,23 +263,24 @@ class TextureProperty {
         return std::string(nameV.sv());
     }
 
-    void set(const Texture& tex) {
+    void set(const ValueType& tex) {
         _value = tex;
         ++_version;
     }
-    Texture& edit() {
+    
+    ValueType& edit() {
         ++_version;
         return _value;
     }
-    const Texture& get() const {
+    const ValueType& get() const {
         return _value;
     }
 
-    void setParams(const Texture::TextureParameters& p) {
+    void setParams(const TextureParameters& p) {
         _params = p;
         ++_version;
     }
-    const Texture::TextureParameters& params() const {
+    const TextureParameters& params() const {
         return _params;
     }
 
@@ -288,10 +292,14 @@ class TextureProperty {
         set(tex);
         return *this;
     }
+    TextureProperty& operator=(const RenderTexture& tex) {
+        set(tex);
+        return *this;
+    }
 
    private:
-    Texture _value{};
-    Texture::TextureParameters _params{};
+    ValueType _value{};
+    TextureParameters _params{};
     std::uint32_t _version{1};
 };
 

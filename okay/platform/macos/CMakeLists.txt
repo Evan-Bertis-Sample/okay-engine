@@ -43,7 +43,6 @@ target_sources(imgui PRIVATE
 target_link_libraries(imgui PRIVATE
   glfw
   OpenGL::GL
-  user32 gdi32 shell32 advapi32 ole32 uuid winmm imm32 version uxtheme setupapi bcrypt
   -static-libstdc++
 )
 

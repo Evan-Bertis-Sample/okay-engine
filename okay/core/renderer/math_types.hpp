@@ -43,8 +43,8 @@ struct Transform {
 };
 
 struct Bounds {
-    glm::vec3 minBound{};
-    glm::vec3 maxBound{};
+    glm::vec3 minBound{ FLT_MAX };
+    glm::vec3 maxBound{-FLT_MAX };
 
     Bounds() {}
     Bounds(glm::vec3 min, glm::vec3 max) : minBound(min), maxBound(max) {}

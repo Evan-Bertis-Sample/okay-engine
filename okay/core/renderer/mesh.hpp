@@ -70,13 +70,7 @@ struct Mesh {
         return indexCount == 0;
     }
 
-    Mesh& operator=(const Mesh& other) {
-        vertexOffset = other.vertexOffset;
-        vertexCount = other.vertexCount;
-        indexOffset = other.indexOffset;
-        indexCount = other.indexCount;
-        return *this;
-    }
+    Mesh& operator=(const Mesh& other) = default;
 
     bool operator==(const Mesh& other) const {
         return vertexOffset == other.vertexOffset && vertexCount == other.vertexCount &&

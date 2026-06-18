@@ -21,9 +21,10 @@ Mesh MeshBuffer::addMesh(const MeshData& mesh) {
     }
 
     Mesh m{};
-    Bounds mBounds{};
+    Bounds mBounds = Bounds::none();
 
     if (blockPtr != nullptr) {
+        // Engine.logger.debug("addMesh: reused block");
         m.vertexOffset = blockPtr->vertexOffset;
         m.vertexCount = mesh.vertices.size();
         m.indexOffset = blockPtr->indexOffset;
@@ -44,8 +45,11 @@ Mesh MeshBuffer::addMesh(const MeshData& mesh) {
         for (std::size_t i{}; i < m.indexCount; ++i) {
             _indices[blockPtr->indexOffset + i] = mesh.indices[i] + m.vertexOffset;
         }
-
         _dataOutofDate = true;
+        // Engine.logger.debug("addMesh: computed bounds min=({},{},{}) max=({},{},{})",
+        //     mBounds.minBound.x, mBounds.minBound.y, mBounds.minBound.z,
+        //     mBounds.maxBound.x, mBounds.maxBound.y, mBounds.maxBound.z);
+        m.bounds = mBounds;
 
         return m;
     }
@@ -55,6 +59,7 @@ Mesh MeshBuffer::addMesh(const MeshData& mesh) {
         mesh.indices.size());
 
     BlockMeta bm{};
+    // Engine.logger.debug("addMesh: new block");
 
     // get the vertexOffset of the mesh
     m.vertexOffset = _bufferData.size() / MeshVertex::numFloats();
@@ -96,7 +101,10 @@ Mesh MeshBuffer::addMesh(const MeshData& mesh) {
     }
 
     _dataOutofDate = true;
-
+    // Engine.logger.debug("addMesh: computed bounds min=({},{},{}) max=({},{},{})",
+    //         b.minBound.x, b.minBound.y, b.minBound.z,
+    //         b.maxBound.x, b.maxBound.y, b.maxBound.z);
+    m.bounds = b;
     _blocks.push_back(bm);
 
     return m;

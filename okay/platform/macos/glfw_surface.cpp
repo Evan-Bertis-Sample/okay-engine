@@ -29,9 +29,9 @@ void Surface::initialize() {
 
     glfwWindowHint(GLFW_SAMPLES, 4);
     glfwWindowHint(GLFW_RESIZABLE, _impl->cfg.resizable ? GLFW_TRUE : GLFW_FALSE);
-
+    glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, GL_FALSE);
     _impl->window =
-        glfwCreateWindow(_impl->cfg.width, _impl->cfg.height, _impl->cfg.title, nullptr, nullptr);
+        glfwCreateWindow(_impl->cfg.width, _impl->cfg.height , _impl->cfg.title, nullptr, nullptr);
     if (!_impl->window)
         throw std::runtime_error("glfwCreateWindow failed");
 

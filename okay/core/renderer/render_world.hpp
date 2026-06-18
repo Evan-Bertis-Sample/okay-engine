@@ -1,6 +1,7 @@
 #ifndef __RENDER_WORLD_H__
 #define __RENDER_WORLD_H__
 
+#include "glm/ext/quaternion_common.hpp"
 #include "glm/ext/vector_float3.hpp"
 #include "glm/ext/vector_float4.hpp"
 #include "math_types.hpp"
@@ -24,7 +25,7 @@ namespace okay {
 
 class Camera {
    public:
-    enum class ProjectionType { PERPSECTIVE, ORTHOGRAPHIC };
+    enum class ProjectionType { PERSPECTIVE, ORTHOGRAPHIC };
 
     struct PerspectiveLens {
         float fov{45.0f};
@@ -64,12 +65,12 @@ class Camera {
     Lens lens{PerspectiveLens{}};
 
     ProjectionType projectionType() const {
-        return std::holds_alternative<PerspectiveLens>(lens) ? ProjectionType::PERPSECTIVE
+        return std::holds_alternative<PerspectiveLens>(lens) ? ProjectionType::PERSPECTIVE
                                                              : ProjectionType::ORTHOGRAPHIC;
     }
 
     glm::mat4 projectionMatrix(float aspectRatio) const {
-        if (projectionType() == ProjectionType::PERPSECTIVE) {
+        if (projectionType() == ProjectionType::PERSPECTIVE) {
             const PerspectiveLens& p = std::get<PerspectiveLens>(lens);
             return glm::perspective(glm::radians(p.fov), aspectRatio, p.near, p.far);
         } else {
@@ -103,6 +104,14 @@ class Camera {
         return true;
     }
 
+    bool isVisible(const Bounds& bounds, float aspectRatio) {
+        for (const glm::vec3& p : bounds.corners()) {
+            if (isInFrustum(p, aspectRatio))
+                return true;
+        }
+        return false;
+    }
+
     operator Transform() const {
         return transform;
     }
@@ -112,6 +121,13 @@ class Camera {
 
     bool operator!=(const Camera& other) const {
         return !(*this == other);
+    }
+
+   private:
+    float getFar(float aspectRatio) const {
+        if (auto* p = std::get_if<PerspectiveLens>(&lens)) return p->far;
+        if (auto* o = std::get_if<OrthographicLens>(&lens)) return o->far;
+        return 1000.0f;
     }
 };
 

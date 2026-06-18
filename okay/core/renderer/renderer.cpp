@@ -32,20 +32,11 @@ void Renderer::initialize() {
     Engine.logger.debug("Initializing render target pool");
     _renderTargetPool.initializeBuiltins();
 
-    Engine.logger.debug("Initializing pipeline");
-    _pipeline.initialize();
-
-    Engine.logger.debug("Resizing pipeline");
-    _pipeline.resize(_surfaceConfig.width, _surfaceConfig.height);
-
-    Engine.logger.debug("Renderer initialized");
-
-    // bind a white texture by default
     AssetManager* am = Engine.systems.getSystemChecked<AssetManager>();
     TextureLoadSettings tLoad(TextureDataStore::mainStore());
     Texture white = okay::load::engineTexture("textures/white.jpg");
 
-    Texture::TextureParameters params{
+    TextureParameters params{
         .minFilter = GL_LINEAR,
         .magFilter = GL_LINEAR,
         .wrapS = GL_REPEAT,
@@ -66,6 +57,14 @@ void Renderer::initialize() {
                 whiteID);
         }
     }
+
+    Engine.logger.debug("Initializing pipeline");
+    _pipeline.initialize();
+
+    Engine.logger.debug("Resizing pipeline");
+    _pipeline.resize(_surfaceConfig.width, _surfaceConfig.height);
+
+    Engine.logger.debug("Renderer initialized");
 
     if (_imguiImpl->imguiSupported() && _imguiEnabled) {
         Engine.logger.info("Initializing ImGui");

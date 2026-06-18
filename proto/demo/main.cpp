@@ -1,8 +1,15 @@
+#include "glm/gtc/quaternion.hpp"
+#include "okay/core/ecs/ecs_util.hpp"
+#include "okay/core/renderer/material.hpp"
+#include "okay/core/renderer/materials/lit.hpp"
+#include "okay/core/renderer/uniform.hpp"
+
 #include <okay/okay.hpp>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/random.hpp>
 #include <imgui.h>
+#include <memory>
 #include <utility>
 
 namespace ui = okay::ui;
@@ -11,9 +18,11 @@ static void __gameInitialize();
 static void __gameUpdate();
 static void __gameShutdown();
 
-static okay::ECSEntity s_teapot;
+static okay::ECSEntity s_teapot1, s_teapot2, s_teapot3, s_teapot4;
 static okay::ECSEntity s_light;
 static okay::ECSEntity s_camera;
+static glm::vec3 s_pos1, s_pos2, s_pos3, s_pos4;
+
 
 int main() {
     okay::SurfaceConfig surfaceConfig;
@@ -41,78 +50,129 @@ int main() {
 }
 
 static void __gameInitialize() {
-    // Additional game initialization logic
-    okay::Texture texture = okay::load::engineTexture("textures/uv_test.jpg");
+    okay::Texture texture = okay::load::engineTexture("textures/red.jpg");
+    okay::Texture floorTex = okay::load::engineTexture("textures/WoodFlooring.jpg");
     okay::Mesh object = okay::mesh(okay::load::engineMeshData("models/teapot.obj"));
 
-    okay::Mesh cube = okay::mesh(okay::primitives::box().build());
+    okay::Mesh floor = okay::mesh(
+        okay::primitives::box()
+        .sizeSet(glm::vec3(10.0f, 0.3f, 10.0f))
+        .build());
+
     okay::ShaderHandle shader = okay::shaderHandle(okay::load::engineShader("shaders/lit"));
 
-    auto materialProperties = std::make_unique<okay::LitMaterial>();
-    materialProperties->color.set(glm::vec4(1.0f, 1.0f, 0.0f, 1.0f));
-    materialProperties->albedo = texture;
-    okay::MaterialHandle material = okay::materialHandle(shader, std::move(materialProperties));
+    auto props = std::make_unique<okay::LitMaterial>();
+    props->color.set(glm::vec3(0.8, 0.8, 0.8));
+    props->albedo = texture;
+    props->roughness.set(0.75f);
+    props->clearcoat.set(0.75f);
+    okay::MaterialHandle material = okay::materialHandle(shader, std::move(props));
+
+    auto floorProps = std::make_unique<okay::LitMaterial>();
+    floorProps->albedo = floorTex;
+    floorProps->roughness.set(0.75f);
+    floorProps->castsShadows = false;
+    okay::MaterialHandle floorMat = okay::materialHandle(shader, std::move(floorProps));
 
     okay::ecs::registerBuiltins();
 
+    glm::vec3 ldirection = glm::normalize(glm::vec3(-3.0f, -2.0f, 0.0f));
+    glm::quat lrotation = glm::quatLookAt(ldirection, glm::vec3(0.0f, 1.0f, 0.0f));
     s_light = okay::ecs::entity()
-                  .addComponent<okay::TransformComponent>(glm::vec3{},
-                      glm::vec3{0.1f},
-                      glm::angleAxis(glm::radians(0.0f), glm::vec3{2.0f, 3.0f, 1.0f}))
-                  .addComponent<okay::LightComponent>(
-                      okay::LightComponent::directional(glm::vec3{1, 1, 1}, 2.5f));
+                  .addComponent<okay::TransformComponent>(glm::vec3{6.0f, 4.0f, 0.0f}, glm::vec3{1.0f}, lrotation)
+                  .addComponent<okay::LightComponent>(okay::LightComponent::directional(glm::vec3{1, 1, 1}, 2.5f));
 
     s_camera = okay::ecs::entity()
-                   .addComponent<okay::TransformComponent>(glm::vec3{0.0f, 0.0f, 5.0f})
+                   .addComponent<okay::TransformComponent>(glm::vec3{0.0f, 0.0f, 0.0f})
                    .addComponent<okay::CameraComponent>(
                        okay::CameraComponent{okay::Camera::PerspectiveLens{45.0f, 0.1f, 100.0f}});
 
-    s_teapot = okay::ecs::entity()
-                   .addComponent<okay::TransformComponent>(glm::vec3{}, glm::vec3{0.1f})
-                   .addComponent<okay::MeshRendererComponent>(object, material);
+    glm::quat noRot = glm::angleAxis(glm::radians(0.0f), glm::vec3{0.0f, 1.0f, 0.0f});
 
-    for (std::size_t i = 0; i < 1000; ++i) {
-        glm::vec3 pos = glm::ballRand(50.0f);
-        okay::ECSEntity entity = okay::ecs::entity()
-                                     .addComponent<okay::TransformComponent>(pos, glm::vec3{0.5f})
-                                     .addComponent<okay::MeshRendererComponent>(cube, material);
+    s_pos1 = glm::vec3(0.0f, 0.0f, 0.0f);
+    s_teapot1 = okay::ecs::entity()
+        .addComponent<okay::TransformComponent>(s_pos1, glm::vec3{0.1f}, noRot)
+        .addComponent<okay::MeshRendererComponent>(object, material);
 
-        for (std::size_t i = 0; i < 5; ++i) {
-            pos = glm::ballRand(10.0f);
-            okay::ecs::entity(entity)
-                .addComponent<okay::TransformComponent>(pos, glm::vec3{0.5f})
-                .addComponent<okay::MeshRendererComponent>(cube, material);
-        }
-    }
+    s_pos2 = glm::vec3(3.0f, -1.0f, 0.0f);
+    s_teapot2 = okay::ecs::entity()
+        .addComponent<okay::TransformComponent>(s_pos2, glm::vec3{0.1f}, noRot)
+        .addComponent<okay::MeshRendererComponent>(object, material);
 
-    okay::ecs::entity().addComponent<okay::TransformComponent>().addComponent<okay::UIComponent>(
-        []() {
-            return ui::frame(10, 10, 200, 100)(ui::flexbox()
-                    .marginSet(10)
-                    .paddingSet(10)
-                    .rightPaddingSet(20)
-                    .backgroundColorSet(glm::vec4{0.05f, 0.0f, 0.05f, 0.5f})
-                    .borderColorSet(glm::vec4{1.0f, 1.0f, 1.0f, 0.8f})
-                    .borderRadiusSet(5)
-                    .borderWidthSet(1)(ui::h3("Performance"),
-                        ui::vspacer(10),
-                        ui::h3(std::format("FPS: {:2f}", okay::Engine.time->fps())),
-                        ui::h2(std::format("Entity count: {}", okay::ecs::entityCount()))));
-        });
+    s_pos3 = glm::vec3(-3.0f, -1.0f, 0.0f);
+    s_teapot3 = okay::ecs::entity()
+        .addComponent<okay::TransformComponent>(s_pos3, glm::vec3{0.1f}, noRot)
+        .addComponent<okay::MeshRendererComponent>(object, material);
+
+    s_pos4 = glm::vec3(0.0f, -1.0f, -3.0f);
+    s_teapot4 = okay::ecs::entity()
+        .addComponent<okay::TransformComponent>(s_pos4, glm::vec3{0.1f}, noRot)
+        .addComponent<okay::MeshRendererComponent>(object, material);
+
+    okay::ecs::entity()
+        .addComponent<okay::TransformComponent>(glm::vec3(0.0, -2.0, 0.0), glm::vec3{3.0f}, noRot)
+        .addComponent<okay::MeshRendererComponent>(floor, floorMat);
+
+    okay::Tween<glm::vec3>::create(okay::TweenConfig<glm::vec3>{
+        .start      = s_pos1,
+        .end        = s_pos1 + glm::vec3(0.0f, 0.0f, 4.0f),
+        .ref        = std::ref(s_pos1),
+        .durationMs = 2000,
+        .easingFn   = okay::easing::linear,
+        .numLoops   = -1,
+        .inOutBack  = true,
+    })->start();
+
+    okay::Tween<glm::vec3>::create(okay::TweenConfig<glm::vec3>{
+        .start      = s_pos2,
+        .end        = s_pos2 + glm::vec3(3.0f, 5.0f, 0.0f),
+        .ref        = std::ref(s_pos2),
+        .durationMs = 2000,
+        .easingFn   = okay::easing::linear,
+        .numLoops   = -1,
+        .inOutBack  = true,
+        .prefixMs   = 400,
+    })->start();
+
+    okay::Tween<glm::vec3>::create(okay::TweenConfig<glm::vec3>{
+        .start      = s_pos3,
+        .end        = s_pos3 + glm::vec3(-3.0f, 5.0f, 3.0f),
+        .ref        = std::ref(s_pos3),
+        .durationMs = 2000,
+        .easingFn   = okay::easing::linear,
+        .numLoops   = -1,
+        .inOutBack  = true,
+        .prefixMs   = 800,
+    })->start();
+
+    okay::Tween<glm::vec3>::create(okay::TweenConfig<glm::vec3>{
+        .start      = s_pos4,
+        .end        = s_pos4 + glm::vec3(4.0f, 10.0f, 0.0f),
+        .ref        = std::ref(s_pos4),
+        .durationMs = 2000,
+        .easingFn   = okay::easing::linear,
+        .numLoops   = -1,
+        .inOutBack  = true,
+        .prefixMs   = 200,
+    })->start();
 }
 
 static void __gameUpdate() {
-    // move the camera in a circle, always looking at the origin
-    float theta = okay::Engine.time->timeSinceStartSec() * 0.5f * glm::pi<float>();
-    const float distance = 5.0f;
-    glm::vec3 pos = glm::vec3(sin(theta) * distance, 1.0f, cos(theta) * distance);
-    // rotation much look at origin
+    // Camera orbits around origin
+    float theta = okay::Engine.time->timeSinceStartSec() * 0.05f * glm::pi<float>() * 2.0f;
+    float dist = 15.0f;
+    glm::vec3 camPos = glm::vec3(sin(theta) * dist, 2.0f, cos(theta) * dist);
+
     auto& cameraTransform = s_camera.getComponent<okay::TransformComponent>().value();
-    cameraTransform->position = pos;
+    cameraTransform->position = camPos;
     cameraTransform.lookAt(s_camera, glm::vec3{});
+
+    s_teapot1.getComponent<okay::TransformComponent>().value()->position = s_pos1;
+    s_teapot2.getComponent<okay::TransformComponent>().value()->position = s_pos2;
+    s_teapot3.getComponent<okay::TransformComponent>().value()->position = s_pos3;
+    s_teapot4.getComponent<okay::TransformComponent>().value()->position = s_pos4;
 }
 
 static void __gameShutdown() {
-    // Cleanup logic before game shutdown
     okay::Engine.logger.info("Game shutdown.");
 }

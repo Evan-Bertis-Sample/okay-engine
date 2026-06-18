@@ -25,9 +25,11 @@ struct LitMaterial : public SceneMaterialProperties, public OkayMaterialProperti
 
     LitMaterial() {
         lights.setBindingPoint(0);
+        castsShadows = true;
     }
     UniformProperty<float, FixedString("u_ambient")> ambient{0.05f};
     TextureProperty<FixedString("u_albedo")> albedo;
+    TextureProperty<FixedString("u_shadowMap")> shadowMap;
     UniformProperty<glm::vec3, FixedString("u_color")> color{glm::vec3(1.0f)};
     UniformProperty<float, FixedString("u_metallic")> metallic{0.0f};
     UniformProperty<float, FixedString("u_specular")> specular{0.5f};
@@ -41,6 +43,7 @@ struct LitMaterial : public SceneMaterialProperties, public OkayMaterialProperti
     UniformProperty<float, FixedString("u_specularTrans")> specularTrans{0.0f};
     UniformProperty<float, FixedString("u_flatness")> flatness{0.0f};
     UniformProperty<int, FixedString("u_thin")> thin{0};
+    UniformProperty<glm::mat4, FixedString("u_lightSpaceMatrix")> lightSpaceMatrix{};
 
     auto uniformRefs() {
         return std::tuple_cat(SceneMaterialProperties::uniformRefs(),
@@ -57,7 +60,8 @@ struct LitMaterial : public SceneMaterialProperties, public OkayMaterialProperti
                 clearcoatGloss,
                 specularTrans,
                 flatness,
-                thin));
+                thin,
+                lightSpaceMatrix));
     }
     auto uniformRefs() const {
         return std::tuple_cat(SceneMaterialProperties::uniformRefs(),
@@ -74,7 +78,8 @@ struct LitMaterial : public SceneMaterialProperties, public OkayMaterialProperti
                 clearcoatGloss,
                 specularTrans,
                 flatness,
-                thin));
+                thin,
+                lightSpaceMatrix));
     }
 
     auto uniformBlockRefs() {
@@ -85,15 +90,16 @@ struct LitMaterial : public SceneMaterialProperties, public OkayMaterialProperti
     }
 
     auto textureRefs() {
-        return std::tie(albedo);
+        return std::tie(albedo, shadowMap);
     }
     auto textureRefs() const {
-        return std::tie(albedo);
+        return std::tie(albedo, shadowMap);
     }
 
     MaterialFlagCollection flags() {
         MaterialFlagCollection flags = SceneMaterialProperties::flags();
-        flags.addFlag(MaterialFlags::RECEIVE_SHADOWS).addFlag(MaterialFlags::CAST_SHADOWS);
+        flags.addFlag(MaterialFlags::RECEIVE_SHADOWS);
+        if (castsShadows) flags.addFlag(MaterialFlags::CAST_SHADOWS);
         return flags;
     }
 };

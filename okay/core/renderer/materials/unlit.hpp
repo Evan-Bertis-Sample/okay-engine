@@ -15,6 +15,7 @@ struct SceneMaterialProperties {
     UniformProperty<glm::vec3, FixedString("u_cameraPosition")> cameraPosition{};
     UniformProperty<glm::vec3, FixedString("u_cameraDirection")> cameraDirection{};
     UniformProperty<float, FixedString("u_timeMs")> timeMs;
+    UniformProperty<glm::vec4, FixedString("u_skyboxColor")> skyboxColor{glm::vec4(0.22, 0.45, 0.67, 0.5)};
 
     bool isTransparent{false};
     bool recievesShadows{false};
@@ -24,11 +25,11 @@ struct SceneMaterialProperties {
 
     auto uniformRefs() {
         return std::tie(
-            modelMatrix, viewMatrix, projectionMatrix, cameraPosition, cameraDirection, timeMs);
+            modelMatrix, viewMatrix, projectionMatrix, cameraPosition, cameraDirection, timeMs, skyboxColor);
     }
     auto uniformRefs() const {
         return std::tie(
-            modelMatrix, viewMatrix, projectionMatrix, cameraPosition, cameraDirection, timeMs);
+            modelMatrix, viewMatrix, projectionMatrix, cameraPosition, cameraDirection, timeMs, skyboxColor);
     }
 
     auto uniformBlockRefs() {
