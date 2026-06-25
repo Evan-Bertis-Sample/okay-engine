@@ -5,18 +5,54 @@ Okay Engine dispatcher for all `okay_*.py` sub-tools.
 
 import argparse
 import importlib
+import os
+import subprocess
 import sys
 from pathlib import Path
-from tools import tool_util
 
 TOOLS_FOLDER = "tools"
 OKAY_ASCII_LOGO = r"""
-       _                                  _            
-  ___ | |__ __ _  _  _   ___  _ _   __ _ (_) _ _   ___ 
+       _                                  _
+  ___ | |__ __ _  _  _   ___  _ _   __ _ (_) _ _   ___
  / _ \| / // _` || || | / -_)| ' \ / _` || || ' \ / -_)
  \___/|_\_\\__,_| \_, | \___||_||_|\__, ||_||_||_|\___|
-                  |__/             |___/               
+                  |__/             |___/
 """
+
+
+def ensure_venv(project_root: Path):
+    venv_dir = project_root / "venv"
+
+    if sys.platform == "win32":
+        venv_python = venv_dir / "Scripts" / "python.exe"
+    else:
+        venv_python = venv_dir / "bin" / "python"
+
+    if os.environ.get("OKAY_VENV_REEXEC") == "1":
+        return
+
+    venv_created = False
+
+    if not venv_python.exists():
+        subprocess.check_call([sys.executable, "-m", "venv", str(venv_dir)])
+        venv_created = True
+
+    requirements = project_root / "requirements.txt"
+    if venv_created and requirements.exists():
+        subprocess.check_call(
+            [str(venv_python), "-m", "pip", "install", "-r", str(requirements)]
+        )
+
+    env = os.environ.copy()
+    env["OKAY_VENV_REEXEC"] = "1"
+    env["VIRTUAL_ENV"] = str(venv_dir)
+    env["PATH"] = str(venv_python.parent) + os.pathsep + env.get("PATH", "")
+
+    os.execve(
+        str(venv_python),
+        [str(venv_python), str(Path(__file__).resolve()), *sys.argv[1:]],
+        env,
+    )
 
 
 def discover_tools(tools_dir: Path) -> list[Path]:
@@ -42,6 +78,10 @@ def build_module_info(tool_path: Path, project_root: Path) -> tuple[str, str]:
 
 def main():
     project_root = Path(__file__).resolve().parent
+    ensure_venv(project_root)
+
+    from tools import tool_util
+
     tools_dir = project_root / TOOLS_FOLDER
 
     if not tools_dir.is_dir():
@@ -54,7 +94,7 @@ def main():
     # print(OKAY_ASCII_LOGO)
     # print("okay engine – an okay game engine for okay games.\n")
 
-    # Set up top‑level parser
+    # Set up top-level parser
     parser = argparse.ArgumentParser(description="Dispatcher for all okay_ sub-tools.")
     subparsers = parser.add_subparsers(
         dest="tool", required=True, help="Available sub-commands"
@@ -73,7 +113,7 @@ def main():
             module.register_subparser(sub)
 
         modules[cmd] = module
-    
+
     # print("") # Blank line for better readability
 
     args = parser.parse_args()
@@ -86,15 +126,16 @@ def main():
     # don't perform this check if there is a require_okay_project attribute and it returns true
     perform_init_check = True
     if hasattr(tool_mod, "require_okay_project"):
-       perform_init_check = bool(tool_mod.require_okay_project())         
+        perform_init_check = bool(tool_mod.require_okay_project())
 
     # if this tool is not "init" require that the work directory exists
     if perform_init_check and not tool_util.OkayToolUtil.is_good_for_work():
-        sys.stderr.write("Error: This command must be run in a valid Okay project directory.\n")
+        sys.stderr.write(
+            "Error: This command must be run in a valid Okay project directory.\n"
+        )
         sys.exit(1)
 
     # Call the main function of the selected tool
-
     tool_mod.main(args)
 
 

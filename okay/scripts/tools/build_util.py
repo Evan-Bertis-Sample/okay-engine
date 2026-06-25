@@ -10,6 +10,25 @@ import sys
 from pathlib import Path
 
 from tools.tool_util import OkayLogger, OkayLogType, OkayToolUtil
+from watchdog.events import FileSystemEventHandler
+from watchdog.observers import Observer
+
+
+class DirectoryWatcherHandler(FileSystemEventHandler):
+    def __init__(self, cb):
+        self._cb = cb
+
+    def on_created(self, event):
+        self._cb()
+
+    def on_deleted(self, event):
+        self._cb()
+
+    def on_modified(self, event):
+        self._cb()
+
+    def on_moved(self, event):
+        self._cb()
 
 
 class OkayBuildType(enum.Enum):
@@ -393,7 +412,10 @@ class OkayBuildUtil:
 
     @staticmethod
     def run_project(
-        options: OkayBuildOptions, use_gdb: bool = False, allow_dirty: bool = False
+        options: OkayBuildOptions,
+        use_gdb: bool = False,
+        allow_dirty: bool = False,
+        hot_reload: bool = True,
     ):
         if not options.validate_dirs(need_build_dir=True):
             return
@@ -425,9 +447,30 @@ class OkayBuildUtil:
                 | stat.S_IREAD
             )
             os.chmod(options.executable, permissions)
+
+            if hot_reload:
+                OkayBuildUtil.attach_reload_watchdog(options)
+
             subprocess.run(cmd, check=True, cwd=options.build_dir, shell=True)
         except subprocess.CalledProcessError as e:
             OkayLogger.log(f"Runtime error: {e}", OkayLogType.ERROR)
+
+    @staticmethod
+    def attach_reload_watchdog(options: OkayBuildOptions):
+        event_handler = DirectoryWatcherHandler(
+            lambda: OkayBuildUtil.reload_application(options)
+        )
+
+        dirs = [options.project_dir, OkayToolUtil.get_okay_parent_dir()]
+
+        for dir in dirs:
+            observer = Observer()
+            observer.schedule(event_handler, path=str(dir), recursive=True)
+            observer.start()
+
+    @staticmethod
+    def reload_application(options: OkayBuildOptions):
+        OkayLogger.log("Hot reloading application!")
 
     @staticmethod
     def compile_shaders(options: OkayBuildOptions):

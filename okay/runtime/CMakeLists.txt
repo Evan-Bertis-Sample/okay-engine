@@ -11,7 +11,7 @@ target_include_directories(okay_runtime
   PUBLIC ${OKAY_PARENT_DIR}
   PUBLIC ${OKAY_PARENT_DIR}/include
   PUBLIC ${OKAY_VENDOR_DIR}/dynalo/include
-  PUBLIC ${OKAY_INCLUDE_DIRS}
+  PUBLIC ${OKAY_INCLUDE_LIST}
 )
 
 file(GLOB_RECURSE OKAY_RUNTIME_SOURCES ${CMAKE_CURRENT_LIST_DIR}/*.cpp)

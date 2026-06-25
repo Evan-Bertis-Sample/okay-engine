@@ -24,6 +24,11 @@ def register_subparser(subparser):
         help="Override the default target/project name (demo)",
         default="demo",
     )
+    subparser.add_argument(
+        "--hot-reload",
+        action="store_true",
+        help="Enable hot reload of game assets & code (Editor Runtime only!)",
+    )
 
 
 def main(args):
@@ -37,6 +42,8 @@ def main(args):
     build_options.project_dir = project_dir
     build_options.project_name = args.proto_name
     if OkayBuildUtil.build_project(build_options):
-        OkayBuildUtil.run_project(build_options, use_gdb=args.gdb)
+        OkayBuildUtil.run_project(
+            build_options, use_gdb=args.gdb, hot_reload=args.hot_reload
+        )
     else:
         OkayLogger.log("Failed to build project!", OkayLogType.ERROR)

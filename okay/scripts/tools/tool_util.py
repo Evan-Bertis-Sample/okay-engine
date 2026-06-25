@@ -1,9 +1,10 @@
 # tool_utils.py
 
-import os
 import enum
-import subprocess
+import os
 import pathlib
+import subprocess
+
 
 class OkayToolUtil:
     @staticmethod
@@ -20,22 +21,28 @@ class OkayToolUtil:
         return OkayToolUtil.get_okay_dir() / "scripts" / "tools"
 
     @staticmethod
-    def get_okay_work_dir(project_dir : str):
+    def get_okay_work_dir(project_dir: str):
         # get where this file was executed
         return pathlib.Path(project_dir) / ".okay"
-    
+
     @staticmethod
     def get_okay_parent_dir():
         return OkayToolUtil.get_okay_dir().parent
-    
+
     @staticmethod
     def get_okay_cmake_dir():
         return OkayToolUtil.get_okay_dir()
 
     @staticmethod
     def get_okay_build_dir(build_options: "OkayBuildOptions"):
-        build_subfolder = build_options.target.lower() + "_" + build_options.build_type.name.lower()
-        return OkayToolUtil.get_okay_work_dir(build_options.project_dir) / "build" / build_subfolder
+        build_subfolder = (
+            build_options.target.lower() + "_" + build_options.build_type.name.lower()
+        )
+        return (
+            OkayToolUtil.get_okay_work_dir(build_options.project_dir)
+            / "build"
+            / build_subfolder
+        )
 
     @staticmethod
     def execute_bash_script(script_path: str, args: list):
@@ -43,7 +50,7 @@ class OkayToolUtil:
         if not os.path.exists(script_path):
             print(f"Error: The script {script_path} does not exist")
             return
-        
+
         print(f"Executing script: {script_path}")
         print(f"Arguments: {args}")
 
@@ -56,6 +63,7 @@ class OkayToolUtil:
         work_dir = OkayToolUtil.get_okay_work_dir(os.getcwd())
         return work_dir.exists() and work_dir.is_dir()
 
+
 class OkayLogType(enum.Enum):
     INFO = "INFO"
     WARNING = "WARNING"
@@ -63,9 +71,9 @@ class OkayLogType(enum.Enum):
 
     def __str__(self):
         return self.value
-    
+
     @staticmethod
-    def get_prefix_color(log_type : "OkayLogType") -> str:
+    def get_prefix_color(log_type: "OkayLogType") -> str:
         if log_type == OkayLogType.INFO:
             return "\033[94m"
         elif log_type == OkayLogType.WARNING:
@@ -75,13 +83,13 @@ class OkayLogType(enum.Enum):
         return "\033[0m"
 
     @staticmethod
-    def get_suffix_color(log_type : "OkayLogType") -> str:
+    def get_suffix_color(log_type: "OkayLogType") -> str:
         return "\033[0m"  # Reset color
-    
+
     @staticmethod
     def get_log_prefix(log_type: "OkayLogType") -> str:
         return f"[{log_type.name}]"
-    
+
 
 class OkayLogger:
     @staticmethod
