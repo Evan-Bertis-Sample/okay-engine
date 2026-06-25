@@ -2,8 +2,10 @@
 
 import os
 import sys
+
 from tools.build_util import OkayBuildOptions, OkayBuildType, OkayBuildUtil
-from tools.tool_util import OkayToolUtil
+from tools.tool_util import OkayLogger, OkayLogType, OkayToolUtil
+
 
 def register_subparser(subparser):
     OkayBuildOptions.add_subparser_args(subparser)
@@ -14,8 +16,10 @@ def register_subparser(subparser):
         help="Run the project with gdb",
     )
 
+
 def main(args):
     build_options = OkayBuildOptions.from_args(args)
-    OkayBuildUtil.build_project(build_options)
-    # OkayBuildUtil.compile_shaders(build_options.project_dir)
-    OkayBuildUtil.run_project(build_options, use_gdb=args.gdb)
+    if OkayBuildUtil.build_project(build_options):
+        OkayBuildUtil.run_project(build_options, use_gdb=args.gdb)
+    else:
+        OkayLogger.log("Failed to build project!", OkayLogType.ERROR)

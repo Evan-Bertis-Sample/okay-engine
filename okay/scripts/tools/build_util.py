@@ -1,18 +1,20 @@
 #!/usr/bin/env python3
-from pathlib import Path
-import subprocess
-import shutil
-import hashlib
-from tools.tool_util import OkayToolUtil, OkayLogType, OkayLogger
 import enum
+import hashlib
 import os
-import sys
-import stat
 import shlex
+import shutil
+import stat
+import subprocess
+import sys
+from pathlib import Path
+
+from tools.tool_util import OkayLogger, OkayLogType, OkayToolUtil
+
 
 class OkayBuildType(enum.Enum):
-    Debug = "Debug"
-    Release = "Release"
+    Debug = "debug"
+    Release = "release"
 
     @classmethod
     def list(cls):
@@ -28,7 +30,30 @@ class OkayBuildType(enum.Enum):
             if t.name.lower() == s.lower():
                 return t
         return None
-    
+
+    def __str__(self):
+        return self.name
+
+
+class OkayRuntimeType(enum.Enum):
+    Editor = "editor"
+    Runtime = "runtime"
+
+    @classmethod
+    def list(cls):
+        return list(cls)
+
+    @classmethod
+    def names(cls):
+        return [t.name for t in cls]
+
+    @classmethod
+    def from_string(cls, s: str):
+        for t in cls:
+            if t.name.lower() == s.lower():
+                return t
+        return None
+
     def __str__(self):
         return self.name
 
@@ -37,15 +62,17 @@ class OkayBuildOptions:
     def __init__(
         self,
         project_dir: Path,
-        target : str,
+        target: str,
+        runtime_type: OkayRuntimeType = OkayRuntimeType.Runtime,
         build_type: OkayBuildType = OkayBuildType.Release,
         project_name: str = None,
         compiler: str = "g++",
-        generator : str = "auto",
-        user_asset_dir : Path = None
+        generator: str = "auto",
+        user_asset_dir: Path = None,
     ):
         self.project_dir = project_dir.resolve()
         self.target = target
+        self.runtime_type = runtime_type
         self.build_type = build_type
         self.project_name = project_name or self.project_dir.name
         self.compiler = compiler
@@ -59,6 +86,12 @@ class OkayBuildOptions:
             type=Path,
             default=Path("."),
             help="Path to your project root",
+        )
+        sp.add_argument(
+            "--runtime-type",
+            choices=OkayRuntimeType.names(),
+            default=OkayRuntimeType.Editor.name,
+            help="CMake build type",
         )
         sp.add_argument(
             "--build-type",
@@ -119,13 +152,14 @@ class OkayBuildOptions:
 
         return cls(
             project_dir=args.project_dir.resolve(),
+            runtime_type=args.runtime_type,
             build_type=bt,
             project_name=args.project_name,
             target=args.target,
             compiler=args.compiler,
-            generator=args.generator
+            generator=args.generator,
         )
-    
+
     def _decide_generator(self) -> str:
         gen = self.generator.lower()
         if gen == "ninja":
@@ -144,7 +178,6 @@ class OkayBuildOptions:
             return "MinGW Makefiles"
         # Fallback
         return "Unix Makefiles"
-    
 
     @property
     def build_dir(self) -> Path:
@@ -155,23 +188,21 @@ class OkayBuildOptions:
         # turn this into the absolute path
         path = path.resolve()
         return path / f"{self.target.lower()}_{self.build_type.name.lower()}"
-    
 
     @property
     def packaged_engine_asset_dir(self) -> Path:
         return Path(self.build_dir / "engine" / "assets")
-    
+
     @property
     def packaged_game_asset_dir(self) -> Path:
         return Path(self.build_dir / "game" / "assets")
-    
+
     @property
     def engine_asset_dir(self) -> Path:
         return Path(OkayToolUtil.get_okay_dir()) / "assets"
-    
+
     def rel_to_build_dir(self, p: Path) -> str:
         return os.path.relpath(p.resolve(), self.build_dir).replace("\\", "/")
-
 
     @property
     def cmake_configure_cmd(self) -> str:
@@ -181,9 +212,12 @@ class OkayBuildOptions:
 
         args = [
             "cmake",
-            "-G", self._decide_generator(),
-            "-S", str(OkayToolUtil.get_okay_cmake_dir()),
-            "-B", str(self.build_dir),
+            "-G",
+            self._decide_generator(),
+            "-S",
+            str(OkayToolUtil.get_okay_cmake_dir()),
+            "-B",
+            str(self.build_dir),
             f"-DPROJECT={self.project_name}",
             f"-DOKAY_PROJECT_NAME={self.project_name}",
             f"-DOKAY_TARGET={self.target}",
@@ -200,8 +234,10 @@ class OkayBuildOptions:
         using_vs = "Visual Studio 17 2022" in gens
         if not using_vs:
             c_compiler = self.compiler if self.compiler != "g++" else "gcc"
-            args += [f"-DCMAKE_C_COMPILER={c_compiler}",
-                    f"-DCMAKE_CXX_COMPILER={self.compiler}"]
+            args += [
+                f"-DCMAKE_C_COMPILER={c_compiler}",
+                f"-DCMAKE_CXX_COMPILER={self.compiler}",
+            ]
 
         # Cross-compile for Raspberry Pi if desired via a toolchain (see below)
         toolchain = os.environ.get("OKAY_TOOLCHAIN_FILE", "")
@@ -210,24 +246,38 @@ class OkayBuildOptions:
 
         cmd = subprocess.list2cmdline(args)  # uses "..." quoting
 
-        return cmd 
-    
+        return cmd
+
     @property
     def cmake_build_cmd(self) -> str:
-        cmd = ["cmake", "--build", str(self.build_dir), "--target", self.project_name, "--parallel", str(os.cpu_count())]
+        cmd = [
+            "cmake",
+            "--build",
+            str(self.build_dir),
+            "--target",
+            "okay_runtime",
+            "--parallel",
+            str(os.cpu_count()),
+        ]
         return subprocess.list2cmdline(cmd)
 
     @property
     def executable(self) -> Path:
-        exe = f"{self.project_name}.exe" if sys.platform == "win32" else self.project_name
+        exe = (
+            f"{self.project_name}.exe" if sys.platform == "win32" else self.project_name
+        )
         return self.build_dir / exe
 
     def validate_dirs(self, *, need_build_dir: bool = False) -> bool:
         if not self.project_dir.is_dir():
-            OkayLogger.log(f"Project directory not found: {self.project_dir}", OkayLogType.ERROR)
+            OkayLogger.log(
+                f"Project directory not found: {self.project_dir}", OkayLogType.ERROR
+            )
             return False
         if need_build_dir and not self.build_dir.is_dir():
-            OkayLogger.log(f"Build directory not found: {self.build_dir}", OkayLogType.ERROR)
+            OkayLogger.log(
+                f"Build directory not found: {self.build_dir}", OkayLogType.ERROR
+            )
             return False
         return True
 
@@ -253,7 +303,6 @@ class OkayBuildUtil:
         src_h = _sha256_of_files(roots, OkayBuildUtil.SOURCE_EXTS).hexdigest()
         shd_h = _sha256_of_files(roots, OkayBuildUtil.SHADER_EXTS).hexdigest()
         return src_h, shd_h
-    
 
     @staticmethod
     def get_checksum_file(project_dir: Path) -> Path:
@@ -279,46 +328,48 @@ class OkayBuildUtil:
         if stored is None:
             return False
         return stored == OkayBuildUtil.generate_checksums(options)
-    
+
     @staticmethod
-    def package_assets(src_dir : Path, dest_dir : Path):
-        # for now, this is a simple implementation that will copy 
+    def package_assets(src_dir: Path, dest_dir: Path):
+        # for now, this is a simple implementation that will copy
         # all files from the source directory to the destination directory
         # in the future, this will probably package assets and encrypt them
         if src_dir.exists() == False:
             OkayLogger.log(f"Source directory not found: {src_dir}", OkayLogType.ERROR)
             return
-        
+
         if dest_dir.exists():
             shutil.rmtree(dest_dir)
-
 
         shutil.copytree(src_dir, dest_dir, dirs_exist_ok=True)
 
     @staticmethod
-    def build_project(options: OkayBuildOptions):
+    def build_project(options: OkayBuildOptions) -> bool:
         if not options.validate_dirs():
             return
         options.build_dir.mkdir(parents=True, exist_ok=True)
 
         OkayLogger.log("Packaging assets…", OkayLogType.INFO)
-        OkayBuildUtil.package_assets(options.user_asset_dir, options.packaged_game_asset_dir)
-        OkayBuildUtil.package_assets(options.engine_asset_dir, options.packaged_engine_asset_dir)
+        OkayBuildUtil.package_assets(
+            options.user_asset_dir, options.packaged_game_asset_dir
+        )
+        OkayBuildUtil.package_assets(
+            options.engine_asset_dir, options.packaged_engine_asset_dir
+        )
 
-        OkayLogger.log("Executing command: " + options.cmake_configure_cmd, OkayLogType.INFO)
+        OkayLogger.log(
+            "Executing command: " + options.cmake_configure_cmd, OkayLogType.INFO
+        )
         cmake_dir = OkayToolUtil.get_okay_cmake_dir()
         OkayLogger.log(f"Working directory: {cmake_dir}", OkayLogType.INFO)
 
         try:
             subprocess.run(
-                options.cmake_configure_cmd,
-                check=True,
-                cwd=cmake_dir,
-                shell=True
+                options.cmake_configure_cmd, check=True, cwd=cmake_dir, shell=True
             )
         except subprocess.CalledProcessError as e:
             OkayLogger.log(f"CMake configure failed: {e}", OkayLogType.ERROR)
-            return
+            return False
 
         OkayLogger.log(f"Building   -> {options.cmake_build_cmd}", OkayLogType.INFO)
         try:
@@ -326,16 +377,19 @@ class OkayBuildUtil:
                 options.cmake_build_cmd,
                 check=True,
                 cwd=OkayToolUtil.get_okay_dir(),
-                shell=True
+                shell=True,
             )
         except subprocess.CalledProcessError as e:
             width = shutil.get_terminal_size().columns
             OkayLogger.log("\n" + "=" * width + "\n", OkayLogType.ERROR)
             OkayLogger.log(f"Build failed: {e}", OkayLogType.ERROR)
-            return
+            return False
 
         OkayBuildUtil.write_checksum_file(options)
-        OkayLogger.log(f"Build complete – executable at {options.executable}", OkayLogType.INFO)
+        OkayLogger.log(
+            f"Build complete – executable at {options.executable}", OkayLogType.INFO
+        )
+        return True
 
     @staticmethod
     def run_project(
@@ -344,11 +398,16 @@ class OkayBuildUtil:
         if not options.validate_dirs(need_build_dir=True):
             return
         if not options.executable.exists():
-            OkayLogger.log(f"Executable not found: {options.executable}", OkayLogType.ERROR)
+            OkayLogger.log(
+                f"Executable not found: {options.executable}", OkayLogType.ERROR
+            )
             return
 
         if not allow_dirty and not OkayBuildUtil.checksums_valid(options):
-            OkayLogger.log("Project changed since last build – please rebuild.", OkayLogType.WARNING)
+            OkayLogger.log(
+                "Project changed since last build – please rebuild.",
+                OkayLogType.WARNING,
+            )
             OkayLogger.log("    okay build", OkayLogType.INFO)
             OkayLogger.log("    okay sc\n", OkayLogType.INFO)
             OkayLogger.log("…continuing anyway…\n", OkayLogType.WARNING)
@@ -358,7 +417,13 @@ class OkayBuildUtil:
         try:
             # give the executable permission to run and read/write because
             # future build steps may need to modify the executable
-            permissions = stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH | stat.S_IWRITE | stat.S_IREAD
+            permissions = (
+                stat.S_IXUSR
+                | stat.S_IXGRP
+                | stat.S_IXOTH
+                | stat.S_IWRITE
+                | stat.S_IREAD
+            )
             os.chmod(options.executable, permissions)
             subprocess.run(cmd, check=True, cwd=options.build_dir, shell=True)
         except subprocess.CalledProcessError as e:

@@ -15,7 +15,7 @@ static okay::ECSEntity s_teapot;
 static okay::ECSEntity s_light;
 static okay::ECSEntity s_camera;
 
-int main() {
+extern "C" OKAY_EXPORT okay::Game create(int argc, char *args[]) {
     okay::SurfaceConfig surfaceConfig;
     surfaceConfig.width = 800;
     surfaceConfig.height = 480;
@@ -27,17 +27,14 @@ int main() {
 
     auto renderer = okay::Renderer::create(std::move(rendererSettings));
 
-    okay::Game::create()
+    return okay::Game::create()
         .addSystems(std::move(renderer),
             std::make_unique<okay::AssetManager>(),
             std::make_unique<okay::ECS>(),
             std::make_unique<okay::TweenEngine>())
         .onInitialize(__gameInitialize)
         .onUpdate(__gameUpdate)
-        .onShutdown(__gameShutdown)
-        .run();
-
-    return 0;
+        .onShutdown(__gameShutdown);
 }
 
 static void __gameInitialize() {

@@ -92,6 +92,7 @@
 
 // okay/core/util
 #include <okay/core/util/dirty_set.hpp>
+#include <okay/core/util/export.hpp>
 #include <okay/core/util/format.hpp>
 #include <okay/core/util/object_pool.hpp>
 #include <okay/core/util/option.hpp>

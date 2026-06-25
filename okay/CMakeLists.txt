@@ -22,11 +22,20 @@
 # - OKAY_PROJECT_ROOT_DIR: The root directory of the project
 # - OKAY_BUILD_TYPE: Debug, Release, etc.
 # - OKAY_TARGET: The target platform (x86_64, arm64, etc.)
+# - OKAY_RUNTIME: The runtime (editor or player)
+
+#
+# C/CXX SETUP + OTHER BOILERPLATE
+#
 
 cmake_minimum_required(VERSION 3.13)
 project(${PROJECT} C CXX)
 
-add_executable(${PROJECT})
+# targets setup
+add_library(okay SHARED)
+add_library(okay_platform SHARED)
+add_library(${PROJECT} SHARED)
+add_executable(okay_runtime)
 
 # generate compile commands
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -42,29 +51,12 @@ if(NOT EXISTS ${OKAY_PROJECT_ROOT_DIR}/okay.cmake)
     message(FATAL_ERROR "okay.cmake not found in project root directory.")
 endif()
 
-# engine paths
-set(OKAY_ENGINE_DIR ${CMAKE_SOURCE_DIR})
-set(OKAY_PARENT_DIR ${OKAY_ENGINE_DIR}/..)
-set(OKAY_VENDOR_DIR ${OKAY_ENGINE_DIR}/vendor)
-
-message(STATUS "Compiling okay Engine")
-message(STATUS "Engine dir: ${OKAY_ENGINE_DIR}")
-message(STATUS "Vendor dir: ${OKAY_VENDOR_DIR}")
-
-# collect core sources and headers
-file(GLOB_RECURSE OKAY_CORE_SOURCES ${OKAY_ENGINE_DIR}/core/*.cpp ${OKAY_VENDOR_DIR}/glad/src/glad.c)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-file(GLOB_RECURSE OKAY_CORE_HEADERS ${OKAY_ENGINE_DIR}/core/*.hpp)
-
-add_library(okay STATIC ${OKAY_CORE_SOURCES} ${OKAY_CORE_HEADERS})
-
 # c++ standard
 set_property(TARGET okay PROPERTY CXX_STANDARD 20)
 set_property(TARGET ${PROJECT} PROPERTY CXX_STANDARD 20)
 
 target_compile_features(okay PUBLIC cxx_std_20)
 target_compile_features(${PROJECT} PUBLIC cxx_std_20)
-
 
 # Version guards for C++20 features
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
@@ -83,17 +75,52 @@ elseif(MSVC)
     endif()
 endif()
 
+# vendor dependencies
+include(FetchContent)
+
+#
+# ADDITIONAL OKAY-SPECIFIC COMPILE FLAGS
+#
+
+# define verbosity settings for Release Builds
+if(OKAY_BUILD_TYPE STREQUAL "Release")
+    target_compile_definitions(okay PUBLIC -DOKAY_RELEASE)
+    target_compile_definitions(okay PUBLIC -DOKAY_COMPILED_MIN_SEVERITY=2)
+    target_compile_definitions(okay PUBLIC -DOKAY_COMPILED_MIN_VERBOSITY=3)
+endif()
+
+
+#
+# ENGINE PATHS
+#
+
+set(OKAY_ENGINE_DIR ${CMAKE_SOURCE_DIR})
+set(OKAY_PARENT_DIR ${OKAY_ENGINE_DIR}/..)
+set(OKAY_VENDOR_DIR ${OKAY_ENGINE_DIR}/vendor)
+
+#
+# ENGINE
+#
+
+# collect core sources and headers
+file(GLOB_RECURSE OKAY_CORE_SOURCES ${OKAY_ENGINE_DIR}/core/*.cpp ${OKAY_VENDOR_DIR}/glad/src/glad.c)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+file(GLOB_RECURSE OKAY_CORE_HEADERS ${OKAY_ENGINE_DIR}/core/*.hpp)
+
+target_sources(okay PRIVATE ${OKAY_CORE_SOURCES} ${OKAY_CORE_HEADERS})
+
 # common include paths for okay
 target_include_directories(okay
   PUBLIC ${OKAY_PARENT_DIR}
   PUBLIC ${OKAY_PARENT_DIR}/include
 )
 
+#
+# VENDORS
+#
+
 # find OpenGL once for all platforms
 find_package(OpenGL REQUIRED)
-
-# vendor dependencies
-include(FetchContent)
 
 # glm (header-only)
 set(OKAY_ENGINE_LIBRARIES glm)
@@ -105,19 +132,10 @@ add_subdirectory(${OKAY_VENDOR_DIR}/glm)
 
 # freetype
 add_subdirectory(${OKAY_VENDOR_DIR}/freetype)
-# append to engine libraries so it's linked in the final game
 list(APPEND OKAY_ENGINE_LIBRARIES freetype)
 
-# allow glm & glad, and stb to be included in the game
-target_include_directories(okay
-  PUBLIC ${OKAY_VENDOR_DIR}/glm
-  PUBLIC ${OKAY_VENDOR_DIR}/glad/include
-  PUBLIC ${OKAY_VENDOR_DIR}
-)
-
-
+# IMGUI
 set(IMGUI_DIR ${OKAY_VENDOR_DIR}/imgui)
-
 set(IMGUI_SOURCES
   ${IMGUI_DIR}/imgui.cpp
   ${IMGUI_DIR}/imgui_demo.cpp
@@ -126,37 +144,52 @@ set(IMGUI_SOURCES
   ${IMGUI_DIR}/imgui_widgets.cpp
   ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp
 )
-
 add_library(imgui STATIC ${IMGUI_SOURCES})
-
-# allow imgui to be included in the game
 target_include_directories(imgui PUBLIC ${IMGUI_DIR} ${IMGUI_DIR}/backends)
-
-list(APPEND OKAY_ENGINE_LIBRARIES imgui)
-
 # link glfw and OpenGL to imgui
 target_link_libraries(imgui
   PUBLIC
   OpenGL::GL
 )
+list(APPEND OKAY_ENGINE_LIBRARIES imgui)
 
-# platform selection (creates INTERFACE target 'okay_platform')
-# set OKAY_PLATFORM to override autodetect (e.g., -DOKAY_PLATFORM=windows)
-add_subdirectory(${OKAY_ENGINE_DIR}/platform)
 
-# define verbosity settings for Release Builds
-if(OKAY_BUILD_TYPE STREQUAL "Release")
-    target_compile_definitions(okay PUBLIC -DOKAY_RELEASE)
-    target_compile_definitions(okay PUBLIC -DOKAY_COMPILED_MIN_SEVERITY=2)
-    target_compile_definitions(okay PUBLIC -DOKAY_COMPILED_MIN_VERBOSITY=3)
-endif()
+#
+# LINKING & INCLUDES
+#
 
-# link common libs and platform bundle into the engine
-target_link_libraries(okay
-  PUBLIC
-  okay_platform
-  ${OKAY_ENGINE_LIBRARIES}
+# TODO: Combine together runtime & old platform target
+
+# allow glm & glad, and stb to be included in the game
+set(OKAY_INCLUDE_LIST
+    ${OKAY_VENDOR_DIR}/glm
+    ${OKAY_VENDOR_DIR}/glad/include
+    ${OKAY_VENDOR_DIR}
 )
+
+# platform
+add_subdirectory(${OKAY_ENGINE_DIR}/platform)
+target_include_directories(okay_platform PUBLIC ${OKAY_INCLUDE_LIST})
+
+# engine
+target_include_directories(okay PUBLIC ${OKAY_INCLUDE_LIST})
+target_link_libraries(okay PUBLIC ${OKAY_ENGINE_LIBRARIES})
+target_link_libraries(okay PUBLIC okay_platform)
+
+target_compile_definitions(okay PRIVATE OKAY_BUILD_DLL)
+
+
+# runtime
+add_subdirectory(${OKAY_ENGINE_DIR}/runtime)
+target_include_directories(okay_runtime PUBLIC ${OKAY_INCLUDE_LIST})
+target_link_libraries(okay_runtime
+  PUBLIC
+  okay
+)
+
+#
+# GAME!
+#
 
 # compile the game
 message(STATUS "Compiling Game")
@@ -165,4 +198,21 @@ include(${OKAY_PROJECT_ROOT_DIR}/okay.cmake)
 get_target_property(INCLUDE_DIRS okay INCLUDE_DIRECTORIES)
 message(STATUS "okay Include Directories: ${INCLUDE_DIRS}")
 
-target_link_libraries(${PROJECT} PRIVATE okay)
+target_link_libraries(${PROJECT} PUBLIC okay)
+target_link_libraries(okay_runtime PRIVATE ${PROJECT})
+
+
+# backwards compatability with older cmake, where there was no runtime
+# that owned the main() function
+set_target_properties(${PROJECT} PROPERTIES
+    LIBRARY_OUTPUT_NAME "game"
+)
+
+set_target_properties(okay_runtime PROPERTIES
+    RUNTIME_OUTPUT_NAME "${PROJECT}"
+)
+
+target_compile_definitions(${PROJECT}
+    PRIVATE
+        OKAY_GAME_BUILD_DLL
+)

@@ -1,0 +1,24 @@
+# okay/runtime/CMakeLists.txt
+
+message(STATUS "Compiling runtime")
+
+if (NOT DEFINED OKAY_RUNTIME)
+    message(STATUS "OKAY_RUNTIME Not set! Defaulting to 'Editor'")
+    set(OKAY_RUNTIME "editor")
+endif()
+
+target_include_directories(okay_runtime
+  PUBLIC ${OKAY_PARENT_DIR}
+  PUBLIC ${OKAY_PARENT_DIR}/include
+)
+
+file(GLOB_RECURSE OKAY_RUNTIME_SOURCES ${CMAKE_CURRENT_LIST_DIR}/*.cpp)
+file(GLOB_RECURSE OKAY_RUNTIME_HEADERS ${CMAKE_CURRENT_LIST_DIR}/*.hpp)
+
+target_sources(okay_runtime PRIVATE
+    ${OKAY_RUNTIME_SOURCES}
+    ${OKAY_RUNTIME_HEADERS}
+)
+
+
+add_subdirectory(${OKAY_RUNTIME})

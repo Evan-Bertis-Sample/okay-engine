@@ -4,7 +4,6 @@ import argparse
 from collections import defaultdict
 from pathlib import Path
 
-
 HEADER_GUARD = "__OKAY_H__"
 
 

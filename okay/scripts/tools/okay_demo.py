@@ -2,11 +2,14 @@
 
 import os
 import sys
+
 from tools.build_util import OkayBuildOptions, OkayBuildType, OkayBuildUtil
-from tools.tool_util import OkayToolUtil
+from tools.tool_util import OkayLogger, OkayLogType, OkayToolUtil
+
 
 def require_okay_project():
     return False
+
 
 def register_subparser(subparser):
     OkayBuildOptions.add_subparser_args(subparser)
@@ -19,9 +22,8 @@ def register_subparser(subparser):
         "--proto-name",
         action="store",
         help="Override the default target/project name (demo)",
-        default="demo"
+        default="demo",
     )
-
 
 
 def main(args):
@@ -31,7 +33,9 @@ def main(args):
     if not os.path.exists(project_dir):
         print(f"Error: The project directory {project_dir} does not exist")
         return
-    
+
     build_options.project_dir = project_dir
-    OkayBuildUtil.build_project(build_options)
-    OkayBuildUtil.run_project(build_options, use_gdb=args.gdb)
+    if OkayBuildUtil.build_project(build_options):
+        OkayBuildUtil.run_project(build_options, use_gdb=args.gdb)
+    else:
+        OkayLogger.log("Failed to build project!", OkayLogType.ERROR)
