@@ -112,15 +112,24 @@ class FontManager {
     Option<FontHandle> loadFont(const std::string& fontPath, const FontLoadOptions& options = {});
     Glyph getGlyph(FontHandle font, std::uint32_t codepoint);
     FontMetrics getFontMetrics(FontHandle font) {
+        ensureAFontIsLoaded();
         return _metricsPerFace[font.id];
     }
 
     Texture getGlyphAtlas(FontHandle font) {
+        ensureAFontIsLoaded();
         return _glyphAtlases[font.id];
     }
 
     bool isLoadedFont(FontHandle font) {
+        ensureAFontIsLoaded();
         return font.id < _loadedFaces.size();
+    }
+
+    void ensureAFontIsLoaded() {
+        if (_glyphAtlases.size() == 0) {
+            defaultFont();
+        }
     }
 
     FontHandle defaultFont();

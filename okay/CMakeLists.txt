@@ -103,7 +103,7 @@ set(OKAY_VENDOR_DIR ${OKAY_ENGINE_DIR}/vendor)
 #
 
 # collect core sources and headers
-file(GLOB_RECURSE OKAY_CORE_SOURCES ${OKAY_ENGINE_DIR}/core/*.cpp ${OKAY_VENDOR_DIR}/glad/src/glad.c)
+file(GLOB_RECURSE OKAY_CORE_SOURCES ${OKAY_ENGINE_DIR}/core/*.cpp)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 file(GLOB_RECURSE OKAY_CORE_HEADERS ${OKAY_ENGINE_DIR}/core/*.hpp)
 
@@ -213,6 +213,5 @@ set_target_properties(okay_runtime PROPERTIES
 )
 
 target_compile_definitions(${PROJECT}
-    PRIVATE
-        OKAY_GAME_BUILD_DLL
+    PRIVATE OKAY_GAME_BUILD_DLL
 )

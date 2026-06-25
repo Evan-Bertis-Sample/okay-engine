@@ -38,6 +38,8 @@ Option<FontHandle> FontManager::loadFont(
 }
 
 FontManager::Glyph FontManager::getGlyph(FontHandle font, std::uint32_t codepoint) {
+    ensureAFontIsLoaded();
+
     auto& glyphs = getGlyphsForFace(font.id);
     if (glyphs.find(codepoint) != glyphs.end()) {
         return glyphs[codepoint];

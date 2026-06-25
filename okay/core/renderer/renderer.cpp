@@ -16,6 +16,8 @@ using namespace okay;
 void Renderer::initialize() {
     _surface->initialize();
 
+    std::cout << "glGetString ptr:"
+              << static_cast<const unsigned char* (*)(unsigned int)>(glGetString) << "\n";
     Engine.logger.info("GL_VERSION: {}", (const char*)glGetString(GL_VERSION));
     Engine.logger.info("GLSL_VERSION: {}", (const char*)glGetString(GL_SHADING_LANGUAGE_VERSION));
 
