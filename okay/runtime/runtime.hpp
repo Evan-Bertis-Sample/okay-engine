@@ -17,6 +17,6 @@ extern OkayRuntime Runtime;
 }  // namespace okay
 
 /// @brief User-defined function
-extern "C" OKAY_IMPORT okay::Game create(int argc, char* args[]);
+extern "C" OKAY_IMPORT void create(okay::Game* game, int argc, char* args[]);
 
 #endif  // __RUNTIME_HPP__

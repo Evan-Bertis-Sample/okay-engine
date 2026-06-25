@@ -7,6 +7,15 @@
 
 int main(int argc, char* args[]) {
     okay::Runtime.logger.debug("Editor Runtime!");
-    auto game = create(argc, args);
+    dynalo::library lib(dynalo::to_native_name("lib" OKAY_GAME_NAME));
+
+    auto createGameFn = lib.get_function<void(okay::Game*, int, char*[])>("create");
+
+    if (!createGameFn) {
+        okay::Runtime.logger.error("Unable to find createGameFn!");
+    }
+
+    okay::Game game;
+    createGameFn(&game, argc, args);
     game.run();
 }

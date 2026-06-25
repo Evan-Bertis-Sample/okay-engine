@@ -35,6 +35,7 @@ def main(args):
         return
 
     build_options.project_dir = project_dir
+    build_options.project_name = args.proto_name
     if OkayBuildUtil.build_project(build_options):
         OkayBuildUtil.run_project(build_options, use_gdb=args.gdb)
     else:
