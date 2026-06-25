@@ -11,3 +11,6 @@
 [submodule "okay/vendor/freetype"]
 	path = okay/vendor/freetype
 	url = https://github.com/freetype/freetype.git
+[submodule "okay/vendor/dynalo"]
+	path = okay/vendor/dynalo
+	url = https://github.com/maddouri/dynalo.git

@@ -19,7 +19,6 @@ Surface::Surface(Surface&&) noexcept = default;
 Surface& Surface::operator=(Surface&&) noexcept = default;
 
 void Surface::initialize() {
-    std::cout << "Initializing surface!\n";
     if (!glfwInit())
         throw std::runtime_error("glfwInit failed");
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);

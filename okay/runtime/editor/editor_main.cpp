@@ -1,5 +1,9 @@
+// editor_main.cpp
+
 #include <okay/core/engine/system.hpp>
 #include <okay/runtime/runtime.hpp>
+
+#include <dynalo/dynalo.hpp>
 
 int main(int argc, char* args[]) {
     okay::Runtime.logger.debug("Editor Runtime!");
