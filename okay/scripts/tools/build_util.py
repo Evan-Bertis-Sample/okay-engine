@@ -7,6 +7,7 @@ import shutil
 import stat
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 from tools.tool_util import OkayLogger, OkayLogType, OkayToolUtil
@@ -15,20 +16,73 @@ from watchdog.observers import Observer
 
 
 class DirectoryWatcherHandler(FileSystemEventHandler):
-    def __init__(self, cb):
-        self._cb = cb
+    def __init__(
+        self,
+        code_cb,
+        asset_cb,
+        code_change_cb,
+        asset_dirs: list[Path],
+        ignored_dirs: list[Path],
+        debounce_seconds: float = 0.25,
+    ):
+        self._code_cb = code_cb
+        self._asset_cb = asset_cb
+        self._code_change_check = code_change_cb
+        self._asset_dirs = [d.resolve() for d in asset_dirs]
+        self._ignored_dirs = [d.resolve() for d in ignored_dirs]
+        self._debounce_seconds = debounce_seconds
+        self._last_call_at = {"code": 0.0, "asset": 0.0}
+
+    def _contains_path(self, root: Path, path: Path) -> bool:
+        try:
+            path.relative_to(root)
+            return True
+        except ValueError:
+            return False
+
+    def _is_ignored(self, path: Path) -> bool:
+        path = path.resolve()
+        return any(self._contains_path(d, path) for d in self._ignored_dirs)
+
+    def _is_asset(self, path: Path) -> bool:
+        path = path.resolve()
+        return any(self._contains_path(d, path) for d in self._asset_dirs)
+
+    def _handle(self, event):
+        paths = [Path(event.src_path)]
+        if hasattr(event, "dest_path") and event.dest_path:
+            paths.append(Path(event.dest_path))
+
+        if any(self._is_ignored(p) for p in paths):
+            return
+
+        now = time.monotonic()
+        event_type = "asset" if any(self._is_asset(p) for p in paths) else "code"
+
+        if now - self._last_call_at[event_type] < self._debounce_seconds:
+            return
+
+        if event_type == "code" and not self._code_change_check():
+            return
+
+        self._last_call_at[event_type] = now
+
+        if event_type == "asset":
+            self._asset_cb()
+        else:
+            self._code_cb()
 
     def on_created(self, event):
-        self._cb()
+        self._handle(event)
 
     def on_deleted(self, event):
-        self._cb()
+        self._handle(event)
 
     def on_modified(self, event):
-        self._cb()
+        self._handle(event)
 
     def on_moved(self, event):
-        self._cb()
+        self._handle(event)
 
 
 class OkayBuildType(enum.Enum):
@@ -303,12 +357,17 @@ class OkayBuildOptions:
 
 def _sha256_of_files(dirs: list[Path], exts: set[str]) -> hashlib._hashlib.HASH:
     h = hashlib.sha256()
+
     for d in dirs:
         for f in d.rglob("*"):
+            if ".okay" in f.parts:
+                continue
+
             if f.suffix.lower() in exts:
                 with f.open("rb") as fp:
                     for chunk in iter(lambda: fp.read(65536), b""):
                         h.update(chunk)
+
     return h
 
 
@@ -365,7 +424,8 @@ class OkayBuildUtil:
     @staticmethod
     def build_project(options: OkayBuildOptions) -> bool:
         if not options.validate_dirs():
-            return
+            return False
+
         options.build_dir.mkdir(parents=True, exist_ok=True)
 
         OkayLogger.log("Packaging assets…", OkayLogType.INFO)
@@ -435,7 +495,6 @@ class OkayBuildUtil:
             OkayLogger.log("…continuing anyway…\n", OkayLogType.WARNING)
 
         cmd = ["gdb", str(options.executable)] if use_gdb else [str(options.executable)]
-        OkayLogger.log(f"Running -> {' '.join(cmd)}", OkayLogType.INFO)
         try:
             # give the executable permission to run and read/write because
             # future build steps may need to modify the executable
@@ -449,16 +508,41 @@ class OkayBuildUtil:
             os.chmod(options.executable, permissions)
 
             if hot_reload:
+                OkayLogger.log("Attaching reload watchdog...", OkayLogType.INFO)
                 OkayBuildUtil.attach_reload_watchdog(options)
 
+            OkayLogger.log(f"Running -> {' '.join(cmd)}", OkayLogType.INFO)
             subprocess.run(cmd, check=True, cwd=options.build_dir, shell=True)
         except subprocess.CalledProcessError as e:
             OkayLogger.log(f"Runtime error: {e}", OkayLogType.ERROR)
 
     @staticmethod
     def attach_reload_watchdog(options: OkayBuildOptions):
+        last_checksum = OkayBuildUtil.generate_checksums(options)
+
+        def code_change_since_last_event() -> bool:
+            nonlocal last_checksum
+
+            checksum = OkayBuildUtil.generate_checksums(options)
+            if checksum == last_checksum:
+                return False
+
+            last_checksum = checksum
+            return True
+
         event_handler = DirectoryWatcherHandler(
-            lambda: OkayBuildUtil.reload_application(options)
+            code_cb=lambda: OkayBuildUtil.reload_application(options),
+            asset_cb=lambda: OkayBuildUtil.reload_assets(options),
+            code_change_cb=code_change_since_last_event,
+            asset_dirs=[
+                options.user_asset_dir,
+                options.project_dir / "assets",
+                options.engine_asset_dir,
+            ],
+            ignored_dirs=[
+                options.project_dir / ".okay",
+                Path(OkayToolUtil.get_okay_parent_dir()) / ".okay",
+            ],
         )
 
         dirs = [options.project_dir, OkayToolUtil.get_okay_parent_dir()]
@@ -467,6 +551,10 @@ class OkayBuildUtil:
             observer = Observer()
             observer.schedule(event_handler, path=str(dir), recursive=True)
             observer.start()
+
+    @staticmethod
+    def reload_assets(options: OkayBuildOptions):
+        OkayLogger.log("Hot reloading assets!")
 
     @staticmethod
     def reload_application(options: OkayBuildOptions):

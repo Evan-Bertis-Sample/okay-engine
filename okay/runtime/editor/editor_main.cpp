@@ -14,7 +14,6 @@ int main(int argc, char* args[]) {
     if (!createGameFn) {
         okay::Runtime.logger.error("Unable to find createGameFn!");
     }
-
     okay::Game game;
     createGameFn(&game, argc, args);
     game.run();

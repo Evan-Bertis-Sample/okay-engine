@@ -66,7 +66,7 @@ static void __gameInitialize() {
                    .addComponent<okay::TransformComponent>(glm::vec3{}, glm::vec3{0.1f})
                    .addComponent<okay::MeshRendererComponent>(object, material);
 
-    for (std::size_t i = 0; i < 1000; ++i) {
+    for (std::size_t i = 0; i < 100; ++i) {
         glm::vec3 pos = glm::ballRand(50.0f);
         okay::ECSEntity entity = okay::ecs::entity()
                                      .addComponent<okay::TransformComponent>(pos, glm::vec3{0.5f})
