@@ -31,14 +31,14 @@
 cmake_minimum_required(VERSION 3.13)
 project(${PROJECT} C CXX)
 
+# generate compile commands
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 # targets setup
 add_library(okay SHARED)
 add_library(okay_platform SHARED)
 add_library(${PROJECT} SHARED)
 add_executable(okay_runtime)
-
-# generate compile commands
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # do some initial checking
 if(NOT DEFINED PROJECT)
