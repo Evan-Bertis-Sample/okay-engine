@@ -1,5 +1,3 @@
-# runtime/editor/CMakeLists.txt
-
 message(STATUS "Using Editor Runtime!")
 
 file(GLOB_RECURSE OKAY_EDITOR_SOURCES ${CMAKE_CURRENT_LIST_DIR}/*.cpp)
@@ -9,5 +7,18 @@ target_sources(okay_runtime PRIVATE
     ${OKAY_EDITOR_SOURCES}
     ${OKAY_EDITOR_HEADERS}
 )
+
+set(SOCKPP_BUILD_SHARED OFF CACHE BOOL "" FORCE)
+set(SOCKPP_BUILD_STATIC ON CACHE BOOL "" FORCE)
+set(SOCKPP_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(SOCKPP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(SOCKPP_BUILD_DOCUMENTATION OFF CACHE BOOL "" FORCE)
+
+add_subdirectory(
+    ${OKAY_VENDOR_DIR}/sockpp
+    ${CMAKE_CURRENT_BINARY_DIR}/sockpp_build
+)
+
+target_link_libraries(okay_runtime PUBLIC sockpp-static)
 
 message(STATUS "Editor sources: ${OKAY_EDITOR_SOURCES}")
