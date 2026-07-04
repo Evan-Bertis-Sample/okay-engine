@@ -10,6 +10,7 @@ import sys
 import time
 from pathlib import Path
 
+from tools.proc_interface import OkayProcUtil
 from tools.tool_util import OkayLogger, OkayLogType, OkayToolUtil
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
@@ -554,11 +555,23 @@ class OkayBuildUtil:
 
     @staticmethod
     def reload_assets(options: OkayBuildOptions):
-        OkayLogger.log("Hot reloading assets!")
+        OkayLogger.log("Hot reloading assets!", OkayLogType.INFO)
+
+        OkayBuildUtil.package_assets(
+            options.user_asset_dir,
+            options.packaged_game_asset_dir,
+        )
+        OkayBuildUtil.package_assets(
+            options.engine_asset_dir,
+            options.packaged_engine_asset_dir,
+        )
+
+        OkayProcUtil.send_hot_reload_assets()
 
     @staticmethod
     def reload_application(options: OkayBuildOptions):
-        OkayLogger.log("Hot reloading application!")
+        OkayLogger.log("Hot reloading application!", OkayLogType.INFO)
+        OkayProcUtil.send_hot_reload_code()
 
     @staticmethod
     def compile_shaders(options: OkayBuildOptions):

@@ -5,6 +5,8 @@
 #include <cstdint>
 #include <functional>
 #include <map>
+#include <sockpp/error.h>
+#include <sockpp/platform.h>
 #include <sockpp/tcp_acceptor.h>
 #include <sockpp/tcp_connector.h>
 #include <sockpp/tcp_socket.h>
@@ -13,7 +15,11 @@
 
 namespace okay::editor {
 
-enum class ProcMessageKind : std::uint8_t { REQUEST, RESPONSE, ERROR };
+#ifdef ERROR
+#undef ERROR
+#endif
+
+enum class ProcMessageKind : std::uint8_t { REQUEST, RESPONSE, ERROR_MESSAGE };
 
 enum class ProcContentKind : std::uint8_t { HOT_RELOAD_ASSETS, HOT_RELOAD_CODE };
 
@@ -30,7 +36,7 @@ struct ProcMessage {
 
 class ProcInterface {
    public:
-    static constexpr std::uint16_t PORT = 0xBEEF;
+    static constexpr in_port_t PORT = 0xBEEF;
     static constexpr std::size_t HEADER_SIZE = 4;
     static constexpr std::size_t MAX_PAYLOAD_SIZE = 4096;
 
@@ -42,9 +48,7 @@ class ProcInterface {
     ProcInterface(const ProcInterface&) = delete;
     ProcInterface& operator=(const ProcInterface&) = delete;
 
-    bool initialize(std::uint16_t port = PORT);
-    bool initalize(std::uint16_t port = PORT);
-
+    bool initialize();
     void shutdown();
     void tick();
 
@@ -65,6 +69,10 @@ class ProcInterface {
         ProcMessageKind messageKind,
         ProcContentKind contentKind,
         std::uint16_t payloadLength);
+
+   private:
+    sockpp::error_code _accEc{};
+    sockpp::tcp_acceptor _acc{ProcInterface::PORT, sockpp::tcp_acceptor::REUSE, _accEc};
 
     std::map<std::uint8_t, std::vector<RxCallback>> _rxCallbacks;
 };

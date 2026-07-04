@@ -1,6 +1,7 @@
 // editor_main.cpp
 
 #include <okay/core/engine/system.hpp>
+#include <okay/runtime/editor/proc_interface.hpp>
 #include <okay/runtime/runtime.hpp>
 
 #include <dynalo/dynalo.hpp>
@@ -16,5 +17,12 @@ int main(int argc, char* args[]) {
     }
     okay::Game game;
     createGameFn(&game, argc, args);
+    okay::editor::ProcInterface interface;
+    interface.initialize();
+
+    while (true) {
+        interface.tick();
+    }
+
     game.run();
 }
