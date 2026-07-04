@@ -571,6 +571,7 @@ class OkayBuildUtil:
     @staticmethod
     def reload_application(options: OkayBuildOptions):
         OkayLogger.log("Hot reloading application!", OkayLogType.INFO)
+        OkayBuildUtil.build_project(options)
         OkayProcUtil.send_hot_reload_code()
 
     @staticmethod

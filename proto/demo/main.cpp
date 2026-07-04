@@ -35,6 +35,7 @@ extern "C" OKAY_EXPORT void create(okay::Game* game, int argc, char* args[]) {
         .onShutdown(__gameShutdown);
 }
 
+
 static void __gameInitialize() {
     // Additional game initialization logic
     okay::Texture texture = okay::load::engineTexture("textures/uv_test.jpg");

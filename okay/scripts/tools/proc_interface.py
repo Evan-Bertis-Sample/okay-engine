@@ -17,7 +17,7 @@ class OkayProcContentKind(enum.IntEnum):
 
 class OkayProcUtil:
     PORT = 0xBEEF
-    HOST = "127.0.0.1"
+    HOST = "localhost"
 
     HEADER_SIZE = 4
     MAX_PAYLOAD_SIZE = 4096

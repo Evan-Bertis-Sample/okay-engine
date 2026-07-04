@@ -4,9 +4,11 @@
 #include <cstddef>
 #include <cstdint>
 #include <functional>
+#include <list>
 #include <map>
 #include <sockpp/error.h>
 #include <sockpp/platform.h>
+#include <sockpp/poller.h>
 #include <sockpp/tcp_acceptor.h>
 #include <sockpp/tcp_connector.h>
 #include <sockpp/tcp_socket.h>
@@ -40,7 +42,7 @@ class ProcInterface {
     static constexpr std::size_t HEADER_SIZE = 4;
     static constexpr std::size_t MAX_PAYLOAD_SIZE = 4096;
 
-    using RxCallback = std::function<void(std::span<std::uint8_t>)>;
+    using RxCallback = std::function<void(ProcMessageHeader, std::span<std::uint8_t>)>;
 
     ProcInterface();
     ~ProcInterface();
@@ -54,16 +56,6 @@ class ProcInterface {
 
     ProcInterface& addCallback(ProcContentKind contentKind, ProcInterface::RxCallback callback);
 
-    bool send(ProcMessageKind messageKind,
-        ProcContentKind contentKind,
-        std::span<const std::uint8_t> payload = {});
-
-    bool sendRequest(ProcContentKind contentKind, std::span<const std::uint8_t> payload = {});
-
-    bool sendResponse(ProcContentKind contentKind, std::span<const std::uint8_t> payload = {});
-
-    bool sendError(ProcContentKind contentKind, std::span<const std::uint8_t> payload = {});
-
     static ProcMessageHeader parseHeader(const std::uint8_t* data);
     static void writeHeader(std::uint8_t* data,
         ProcMessageKind messageKind,
@@ -72,7 +64,9 @@ class ProcInterface {
 
    private:
     sockpp::error_code _accEc{};
-    sockpp::tcp_acceptor _acc{ProcInterface::PORT, sockpp::tcp_acceptor::REUSE, _accEc};
+    std::unique_ptr<sockpp::tcp_acceptor> _acc;
+    sockpp::poller _poller;
+    std::list<sockpp::tcp_socket> _connections;
 
     std::map<std::uint8_t, std::vector<RxCallback>> _rxCallbacks;
 };

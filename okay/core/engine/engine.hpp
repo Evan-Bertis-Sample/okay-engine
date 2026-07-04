@@ -76,9 +76,9 @@ class Game {
         return *this;
     }
 
-    void run() {
-        // check for required systems
+    bool initialize() {
         bool allRequiredSystems = true;
+
         for (OkaySystemDescriptor systemDescriptor : REQUIRED_SYSTEMS) {
             if (!Engine.systems.hasSystem(systemDescriptor.SysId)) {
                 Engine.logger.error("Missing required system {}", systemDescriptor.SystemName);
@@ -87,33 +87,29 @@ class Game {
         }
 
         if (!allRequiredSystems) {
-            return;
+            return false;
         }
 
         SystemPool& enginePool = Engine.systems.getPool(SystemScope::ENGINE);
+        SystemPool& gamePool = Engine.systems.getPool(SystemScope::GAME);
+        SystemPool& levelPool = Engine.systems.getPool(SystemScope::LEVEL);
 
         for (ISystem* system : enginePool) {
             system->initialize();
             if (!Engine.shouldRun())
-                break;
+                return false;
         }
-
-        SystemPool& gamePool = Engine.systems.getPool(SystemScope::GAME);
 
         for (ISystem* system : gamePool) {
             system->initialize();
             if (!Engine.shouldRun())
-                break;
+                return false;
         }
 
-        // TODO: Make a level manager that handles transitioning between levels
-        // right now we are assuming one level, which is incorrect
-
-        SystemPool& levelPool = Engine.systems.getPool(SystemScope::LEVEL);
         for (ISystem* system : levelPool) {
             system->initialize();
             if (!Engine.shouldRun())
-                break;
+                return false;
         }
 
         if (_onInitialize)
@@ -132,57 +128,67 @@ class Game {
         }
 
         Engine.time->reset();
-        while (Engine.shouldRun()) {
-            for (ISystem* system : enginePool) {
-                system->preTick();
-            }
+        return true;
+    }
 
-            for (ISystem* system : gamePool) {
-                system->preTick();
-            }
+    void tick() {
+        SystemPool& enginePool = Engine.systems.getPool(SystemScope::ENGINE);
+        SystemPool& gamePool = Engine.systems.getPool(SystemScope::GAME);
+        SystemPool& levelPool = Engine.systems.getPool(SystemScope::LEVEL);
 
-            for (ISystem* system : levelPool) {
-                system->preTick();
-            }
-
-            for (ISystem* system : enginePool) {
-                system->tick();
-                if (!Engine.shouldRun())
-                    break;
-            }
-
-            for (ISystem* system : gamePool) {
-                system->tick();
-                if (!Engine.shouldRun())
-                    break;
-            }
-
-            for (ISystem* system : levelPool) {
-                system->tick();
-                if (!Engine.shouldRun())
-                    break;
-            }
-
-            if (_onUpdate)
-                _onUpdate();
-
-            for (ISystem* system : enginePool) {
-                system->postTick();
-            }
-
-            for (ISystem* system : gamePool) {
-                system->postTick();
-            }
-
-            for (ISystem* system : levelPool) {
-                system->postTick();
-            }
-
-            Engine.time->updateDeltaTime();
-
-            Engine._frameCount++;
-            // Engine.logger.info("Frame {} completed.", Engine.frameCount());
+        for (ISystem* system : enginePool) {
+            system->preTick();
         }
+
+        for (ISystem* system : gamePool) {
+            system->preTick();
+        }
+
+        for (ISystem* system : levelPool) {
+            system->preTick();
+        }
+
+        for (ISystem* system : enginePool) {
+            system->tick();
+            if (!Engine.shouldRun())
+                break;
+        }
+
+        for (ISystem* system : gamePool) {
+            system->tick();
+            if (!Engine.shouldRun())
+                break;
+        }
+
+        for (ISystem* system : levelPool) {
+            system->tick();
+            if (!Engine.shouldRun())
+                break;
+        }
+
+        if (_onUpdate)
+            _onUpdate();
+
+        for (ISystem* system : enginePool) {
+            system->postTick();
+        }
+
+        for (ISystem* system : gamePool) {
+            system->postTick();
+        }
+
+        for (ISystem* system : levelPool) {
+            system->postTick();
+        }
+
+        Engine.time->updateDeltaTime();
+        Engine._frameCount++;
+    }
+
+    void shutdown() {
+        SystemPool& enginePool = Engine.systems.getPool(SystemScope::ENGINE);
+        SystemPool& gamePool = Engine.systems.getPool(SystemScope::GAME);
+        SystemPool& levelPool = Engine.systems.getPool(SystemScope::LEVEL);
 
         for (ISystem* system : enginePool) {
             system->shutdown();
@@ -192,7 +198,7 @@ class Game {
             system->shutdown();
         }
 
-        for (ISystem* system : Engine.systems.getPool(SystemScope::LEVEL)) {
+        for (ISystem* system : levelPool) {
             system->shutdown();
         }
 
@@ -201,6 +207,18 @@ class Game {
 
         if (_onShutdown)
             _onShutdown();
+    }
+
+    void run() {
+        if (!initialize()) {
+            return;
+        }
+
+        while (Engine.shouldRun()) {
+            tick();
+        }
+
+        shutdown();
     }
 
    private:
