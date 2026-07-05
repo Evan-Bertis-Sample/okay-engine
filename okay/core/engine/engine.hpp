@@ -2,6 +2,7 @@
 #define __ENGINE_H__
 
 #include <okay/core/engine/logger.hpp>
+#include <okay/core/engine/reload.hpp>
 #include <okay/core/engine/system.hpp>
 #include <okay/core/engine/time.hpp>
 
@@ -129,6 +130,44 @@ class Game {
 
         Engine.time->reset();
         return true;
+    }
+
+    void prepareForReload(ReloadContext context) {
+        SystemPool& enginePool = Engine.systems.getPool(SystemScope::ENGINE);
+        SystemPool& gamePool = Engine.systems.getPool(SystemScope::GAME);
+        SystemPool& levelPool = Engine.systems.getPool(SystemScope::LEVEL);
+
+        for (ISystem* system : enginePool) {
+            system->prepareForReload(context);
+        }
+
+        for (ISystem* system : gamePool) {
+            system->prepareForReload(context);
+
+            for (ISystem* system : levelPool) {
+                system->prepareForReload(context);
+            }
+        }
+
+        // Engine.systems.clear();
+    }
+
+    void reload(ReloadContext context) {
+        SystemPool& enginePool = Engine.systems.getPool(SystemScope::ENGINE);
+        SystemPool& gamePool = Engine.systems.getPool(SystemScope::GAME);
+        SystemPool& levelPool = Engine.systems.getPool(SystemScope::LEVEL);
+
+        for (ISystem* system : enginePool) {
+            system->reload(context);
+        }
+
+        for (ISystem* system : gamePool) {
+            system->reload(context);
+
+            for (ISystem* system : levelPool) {
+                system->reload(context);
+            }
+        }
     }
 
     void tick() {

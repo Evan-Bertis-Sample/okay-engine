@@ -42,6 +42,7 @@
 #include <okay/core/engine/engine.hpp>
 #include <okay/core/engine/event.hpp>
 #include <okay/core/engine/logger.hpp>
+#include <okay/core/engine/reload.hpp>
 #include <okay/core/engine/system.hpp>
 #include <okay/core/engine/time.hpp>
 

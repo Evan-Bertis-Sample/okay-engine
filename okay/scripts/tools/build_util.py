@@ -298,6 +298,7 @@ class OkayBuildOptions:
             f"-DOKAY_PROJECT_ROOT_DIR={abs_prj}",
             f"-DCMAKE_BUILD_TYPE={self.build_type.value}",
             f"-DOKAY_BUILD_TYPE={self.build_type.value}",
+            "-DCMAKE_C_COMPILER_LAUNCHER=ccache",
             # these should be relative to the build dir
             f"-DOKAY_ENGINE_ASSET_ROOT={self.rel_to_build_dir(self.packaged_engine_asset_dir)}",
             f"-DOKAY_GAME_ASSET_ROOT={self.rel_to_build_dir(self.packaged_game_asset_dir)}",
@@ -330,6 +331,20 @@ class OkayBuildOptions:
             str(self.build_dir),
             "--target",
             "okay_runtime",
+            "--parallel",
+            str(os.cpu_count()),
+        ]
+        return subprocess.list2cmdline(cmd)
+
+
+    @property
+    def cmake_build_game_cmd(self) -> str:
+        cmd = [
+            "cmake",
+            "--build",
+            str(self.build_dir),
+            "--target",
+            self.project_name,
             "--parallel",
             str(os.cpu_count()),
         ]
@@ -472,6 +487,196 @@ class OkayBuildUtil:
         return True
 
     @staticmethod
+    def rebuild_game_dll(options: OkayBuildOptions) -> bool:
+        if not options.validate_dirs(need_build_dir=True):
+            return False
+
+        OkayLogger.log("Packaging assets…", OkayLogType.INFO)
+        OkayBuildUtil.package_assets(
+            options.user_asset_dir,
+            options.packaged_game_asset_dir,
+        )
+        OkayBuildUtil.package_assets(
+            options.engine_asset_dir,
+            options.packaged_engine_asset_dir,
+        )
+
+        OkayLogger.log(
+            f"Rebuilding game DLL -> {options.cmake_build_game_cmd}",
+            OkayLogType.INFO,
+        )
+
+        try:
+            subprocess.run(
+                options.cmake_build_game_cmd,
+                check=True,
+                cwd=OkayToolUtil.get_okay_dir(),
+                shell=True,
+            )
+        except subprocess.CalledProcessError as e:
+            width = shutil.get_terminal_size().columns
+            OkayLogger.log("\n" + "=" * width + "\n", OkayLogType.ERROR)
+            OkayLogger.log(f"Game DLL rebuild failed: {e}", OkayLogType.ERROR)
+            return False
+
+        built_game_dll = OkayBuildUtil.get_built_game_dll(options)
+
+        if not built_game_dll.exists():
+            OkayLogger.log(
+                f"Game DLL rebuild completed, but output was not found: {built_game_dll}",
+                OkayLogType.ERROR,
+            )
+            return False
+
+        OkayBuildUtil.write_checksum_file(options)
+
+        OkayLogger.log(
+            f"Game DLL rebuild complete – output at {built_game_dll}",
+            OkayLogType.INFO,
+        )
+        return True
+
+    @staticmethod
+    def get_built_game_dll(options: OkayBuildOptions) -> Path:
+        name = options.project_name
+
+        if sys.platform == "win32":
+            return options.build_dir / f"lib{name}.dll"
+
+        if sys.platform == "darwin":
+            return options.build_dir / f"lib{name}.dylib"
+
+        return options.build_dir / f"lib{name}.so"
+
+
+    @staticmethod
+    def get_hot_reload_dir(options: OkayBuildOptions) -> Path:
+        return options.build_dir / "hot_reload"
+
+
+    @staticmethod
+    def get_game_dll(options: OkayBuildOptions, reload_count: int) -> Path:
+        name = options.project_name
+        hot_reload_dir = OkayBuildUtil.get_hot_reload_dir(options)
+
+        if sys.platform == "win32":
+            return hot_reload_dir / f"lib{name}_{reload_count}.dll"
+
+        if sys.platform == "darwin":
+            return hot_reload_dir / f"lib{name}_{reload_count}.dylib"
+
+        return hot_reload_dir / f"lib{name}_{reload_count}.so"
+
+
+    @staticmethod
+    def get_game_dll_pattern(options: OkayBuildOptions) -> str:
+        name = options.project_name
+
+        if sys.platform == "win32":
+            return f"lib{name}_*.dll"
+
+        if sys.platform == "darwin":
+            return f"lib{name}_*.dylib"
+
+        return f"lib{name}_*.so"
+
+
+    @staticmethod
+    def get_reload_count_from_dll(options: OkayBuildOptions, dll_path: Path) -> int | None:
+        name = options.project_name
+        stem = dll_path.stem
+
+        prefix = f"lib{name}_"
+
+        if not stem.startswith(prefix):
+            return None
+
+        suffix = stem[len(prefix):]
+
+        if not suffix.isdigit():
+            return None
+
+        return int(suffix)
+
+
+    @staticmethod
+    def get_latest_reload_count(options: OkayBuildOptions) -> int:
+        hot_reload_dir = OkayBuildUtil.get_hot_reload_dir(options)
+
+        if not hot_reload_dir.exists():
+            return -1
+
+        max_count = -1
+        pattern = OkayBuildUtil.get_game_dll_pattern(options)
+
+        for dll_path in hot_reload_dir.glob(pattern):
+            count = OkayBuildUtil.get_reload_count_from_dll(options, dll_path)
+
+            if count is not None:
+                max_count = max(max_count, count)
+
+        return max_count
+
+
+    @staticmethod
+    def copy_game_dll(options: OkayBuildOptions, reload_count: int) -> bool:
+        built_game_dll = OkayBuildUtil.get_built_game_dll(options)
+        hot_reload_dir = OkayBuildUtil.get_hot_reload_dir(options)
+        reload_game_dll = OkayBuildUtil.get_game_dll(options, reload_count)
+
+        if not built_game_dll.exists():
+            OkayLogger.log(
+                f"Built game DLL not found: {built_game_dll}",
+                OkayLogType.ERROR,
+            )
+            return False
+
+        try:
+            hot_reload_dir.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(built_game_dll, reload_game_dll)
+        except OSError as e:
+            OkayLogger.log(
+                f"Failed to copy game DLL into hot reload directory: {e}",
+                OkayLogType.ERROR,
+            )
+            return False
+
+        OkayLogger.log(
+            f"Copied game DLL -> {reload_game_dll}",
+            OkayLogType.INFO,
+        )
+        return True
+
+
+    @staticmethod
+    def copy_next_game_dll(options: OkayBuildOptions) -> int | None:
+        next_reload_count = OkayBuildUtil.get_latest_reload_count(options) + 1
+
+        if not OkayBuildUtil.copy_game_dll(options, next_reload_count):
+            return None
+
+        return next_reload_count
+
+
+    @staticmethod
+    def prepare_hot_reload_dir(options: OkayBuildOptions) -> bool:
+        hot_reload_dir = OkayBuildUtil.get_hot_reload_dir(options)
+
+        try:
+            if hot_reload_dir.exists():
+                shutil.rmtree(hot_reload_dir)
+
+            hot_reload_dir.mkdir(parents=True, exist_ok=True)
+        except OSError as e:
+            OkayLogger.log(
+                f"Failed to reset hot reload directory: {hot_reload_dir}: {e}",
+                OkayLogType.ERROR,
+            )
+            return False
+
+        return OkayBuildUtil.copy_game_dll(options, 0)
+
+    @staticmethod
     def run_project(
         options: OkayBuildOptions,
         use_gdb: bool = False,
@@ -495,10 +700,12 @@ class OkayBuildUtil:
             OkayLogger.log("    okay sc\n", OkayLogType.INFO)
             OkayLogger.log("…continuing anyway…\n", OkayLogType.WARNING)
 
+        if hot_reload and not OkayBuildUtil.prepare_hot_reload_dir(options):
+            return
+
         cmd = ["gdb", str(options.executable)] if use_gdb else [str(options.executable)]
+
         try:
-            # give the executable permission to run and read/write because
-            # future build steps may need to modify the executable
             permissions = (
                 stat.S_IXUSR
                 | stat.S_IXGRP
@@ -508,12 +715,17 @@ class OkayBuildUtil:
             )
             os.chmod(options.executable, permissions)
 
+            observers = []
             if hot_reload:
                 OkayLogger.log("Attaching reload watchdog...", OkayLogType.INFO)
-                OkayBuildUtil.attach_reload_watchdog(options)
+                observers = OkayBuildUtil.attach_reload_watchdog(options)
 
             OkayLogger.log(f"Running -> {' '.join(cmd)}", OkayLogType.INFO)
             subprocess.run(cmd, check=True, cwd=options.build_dir, shell=True)
+
+            for obs in observers:
+                obs.stop()
+
         except subprocess.CalledProcessError as e:
             OkayLogger.log(f"Runtime error: {e}", OkayLogType.ERROR)
 
@@ -548,10 +760,15 @@ class OkayBuildUtil:
 
         dirs = [options.project_dir, OkayToolUtil.get_okay_parent_dir()]
 
+        observers = []
+
         for dir in dirs:
             observer = Observer()
             observer.schedule(event_handler, path=str(dir), recursive=True)
             observer.start()
+            observers.append(observer)
+
+        return observers
 
     @staticmethod
     def reload_assets(options: OkayBuildOptions):
@@ -571,20 +788,14 @@ class OkayBuildUtil:
     @staticmethod
     def reload_application(options: OkayBuildOptions):
         OkayLogger.log("Hot reloading application!", OkayLogType.INFO)
-        OkayBuildUtil.build_project(options)
-        OkayProcUtil.send_hot_reload_code()
 
-    @staticmethod
-    def compile_shaders(options: OkayBuildOptions):
-        script = Path(OkayToolUtil.get_okay_tool_dir()) / "okay_sc.sh"
-        if not script.exists():
-            OkayLogger.log(f"Shader compiler not found: {script}", OkayLogType.ERROR)
+        if not OkayBuildUtil.rebuild_game_dll(options):
+            OkayLogger.log("Hot reload build failed.", OkayLogType.ERROR)
             return
-        cmd = [
-            "bash",
-            str(script),
-            str(options.project_dir),
-            OkayToolUtil.get_okay_dir(),
-        ]
-        OkayLogger.log(f"Compiling shaders -> {' '.join(cmd)}", OkayLogType.INFO)
-        os.execvp(cmd[0], cmd)
+
+        reload_count = OkayBuildUtil.copy_next_game_dll(options)
+
+        if reload_count is None:
+            return
+
+        OkayProcUtil.send_hot_reload_code(reload_count.to_bytes(2, byteorder='little'))

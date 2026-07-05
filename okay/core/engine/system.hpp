@@ -1,6 +1,7 @@
 #ifndef __SYSTEM_H__
 #define __SYSTEM_H__
 
+#include <okay/core/engine/reload.hpp>
 #include <okay/core/util/option.hpp>
 
 #include <array>
@@ -35,6 +36,10 @@ class ISystem {
     virtual void postTick() {}
 
     virtual void shutdown() {}
+
+    // hot-reload
+    virtual void prepareForReload(ReloadContext context) {}
+    virtual void reload(ReloadContext context) {}
 };
 
 template <SystemScope ScopeV>
@@ -164,6 +169,10 @@ class SystemPool {
         return Iterator{_systems.end()};
     }
 
+    void clear() {
+        _systems.clear();
+    }
+
    private:
     std::map<std::size_t, std::unique_ptr<ISystem>> _systems;
 };
@@ -207,6 +216,12 @@ class SystemManager {
                 return true;
         }
         return false;
+    }
+
+    void clear() {
+        for (auto& pool : _pools) {
+            pool.clear();
+        }
     }
 
    private:

@@ -91,9 +91,9 @@ void ProcInterface::tick() {
             header.payloadKind,
             header.payloadLength);
 
-        if (_rxCallbacks.contains(static_cast<std::uint8_t>(header.kind))) {
-            for (auto cb : _rxCallbacks[static_cast<std::uint8_t>(header.kind)]) {
-                cb(header, std::span(buf, n.value()));
+        if (_rxCallbacks.contains(header.payloadKind)) {
+            for (auto& cb : _rxCallbacks[header.payloadKind]) {
+                cb(header, std::span(buf + HEADER_SIZE, header.payloadLength));
             }
         }
     }

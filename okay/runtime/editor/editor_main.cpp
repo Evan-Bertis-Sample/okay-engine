@@ -5,14 +5,30 @@
 #include <okay/runtime/editor/proc_interface.hpp>
 #include <okay/runtime/runtime.hpp>
 
+#include <csignal>
 #include <dynalo/dynalo.hpp>
 
 using namespace okay;
 
+static std::uint16_t s_hotReloadCount{0};
+
+static void __exitSignal(int sig) {
+    okay::Engine.logger.info("Exit signal received: {}", sig);
+    okay::Engine.shutdown();
+}
+
+std::string getLibDynamicName() {
+    return dynalo::to_native_name(
+        std::format("./hot_reload/lib" OKAY_GAME_NAME "_{}", s_hotReloadCount));
+};
+
 int main(int argc, char* args[]) {
     Runtime.logger.debug("Editor Runtime!");
-    dynalo::library lib(dynalo::to_native_name("lib" OKAY_GAME_NAME));
 
+    // attach an interrupt to exit the program on ctrl c
+    std::signal(SIGINT, __exitSignal);
+
+    dynalo::library lib(getLibDynamicName());
     auto createGameFn = lib.get_function<void(Game*, int, char*[])>("create");
 
     if (!createGameFn) {
@@ -26,13 +42,36 @@ int main(int argc, char* args[]) {
     interface.initialize();
 
     interface.addCallback(editor::ProcContentKind::HOT_RELOAD_ASSETS,
-        [](editor::ProcMessageHeader header, std::span<uint8_t> data) {
+        [&](editor::ProcMessageHeader header, std::span<uint8_t> data) {
             Runtime.logger.debug("Reloading assets!");
         });
 
     interface.addCallback(editor::ProcContentKind::HOT_RELOAD_CODE,
-        [](editor::ProcMessageHeader header, std::span<uint8_t> data) {
+        [&](editor::ProcMessageHeader header, std::span<uint8_t> data) {
             Runtime.logger.debug("Reloading code!");
+            if (header.payloadLength != 2) {
+                Runtime.logger.error(
+                    "Unexpected payload in hot reload message! Expected a length of 1, got {}",
+                    header.payloadLength);
+                return;
+            }
+
+            s_hotReloadCount = *reinterpret_cast<std::uint16_t*>(&data[0]);
+            Engine.logger.debug("Reloading {}", getLibDynamicName());
+
+            ReloadContext context;
+            game.prepareForReload(context);
+
+            lib = dynalo::library(getLibDynamicName());
+            auto createGameFn = lib.get_function<void(Game*, int, char*[])>("create");
+            if (!createGameFn) {
+                Runtime.logger.error("Unable to find createGameFn!");
+                return;
+            }
+
+            createGameFn(&game, argc, args);
+            game.initialize();
+            game.reload(context);
         });
 
     game.initialize();
@@ -41,4 +80,6 @@ int main(int argc, char* args[]) {
         game.tick();
     }
     game.shutdown();
+
+    return 0;
 }
