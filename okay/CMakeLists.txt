@@ -131,6 +131,16 @@ add_subdirectory(${OKAY_VENDOR_DIR}/glm)
 
 # freetype
 add_subdirectory(${OKAY_VENDOR_DIR}/freetype)
+
+if(WIN32 AND TARGET freetype)
+    get_target_property(_freetype_sources freetype SOURCES)
+
+    if(_freetype_sources)
+        list(FILTER _freetype_sources EXCLUDE REGEX ".*ftver\\.rc$")
+        set_target_properties(freetype PROPERTIES SOURCES "${_freetype_sources}")
+    endif()
+endif()
+
 list(APPEND OKAY_ENGINE_LIBRARIES freetype)
 
 # IMGUI
@@ -174,7 +184,6 @@ target_include_directories(okay_platform PUBLIC ${OKAY_INCLUDE_LIST})
 target_include_directories(okay PUBLIC ${OKAY_INCLUDE_LIST})
 target_link_libraries(okay PUBLIC ${OKAY_ENGINE_LIBRARIES})
 target_link_libraries(okay PUBLIC okay_platform)
-
 target_compile_definitions(okay PRIVATE OKAY_BUILD_DLL)
 
 

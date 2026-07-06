@@ -180,14 +180,14 @@ class OkayBuildOptions:
         sp.add_argument(
             "--compiler",
             type=str,
-            default="g++",
-            help="C/C++ compiler to use (default: gcc)",
+            default="clang",
+            help="C/C++ compiler to use (default: clang)",
         )
         sp.add_argument(
             "--target",
             type=str,
             default="native",
-            help="CMake target to build (default: native)",
+            help="Platform to target (default: native)",
         )
         sp.add_argument(
             "--generator",
@@ -284,10 +284,12 @@ class OkayBuildOptions:
         rel_prj = os.path.relpath(self.project_dir, okay_root).replace("\\", "/")
         abs_prj = (Path(okay_root) / rel_prj).resolve().as_posix()
 
+        generator = self._decide_generator()
+
         args = [
             "cmake",
             "-G",
-            self._decide_generator(),
+            generator,
             "-S",
             str(OkayToolUtil.get_okay_cmake_dir()),
             "-B",
@@ -299,29 +301,52 @@ class OkayBuildOptions:
             f"-DCMAKE_BUILD_TYPE={self.build_type.value}",
             f"-DOKAY_BUILD_TYPE={self.build_type.value}",
             "-DCMAKE_C_COMPILER_LAUNCHER=ccache",
-            # these should be relative to the build dir
+            "-DCMAKE_CXX_COMPILER_LAUNCHER=ccache",
             f"-DOKAY_ENGINE_ASSET_ROOT={self.rel_to_build_dir(self.packaged_engine_asset_dir)}",
             f"-DOKAY_GAME_ASSET_ROOT={self.rel_to_build_dir(self.packaged_game_asset_dir)}",
         ]
 
-        # Only set compilers when we’re *not* using Visual Studio
-        gens = set(self._decide_generator())
-        using_vs = "Visual Studio 17 2022" in gens
+        using_vs = "Visual Studio" in generator
+
         if not using_vs:
-            c_compiler = self.compiler if self.compiler != "g++" else "gcc"
+            compiler = self.compiler.lower()
+
+            if compiler in ("g++", "gcc"):
+                c_compiler = "gcc"
+                cxx_compiler = "g++"
+                rc_compiler = "windres"
+
+            elif compiler in ("clang++", "clang"):
+                c_compiler = "clang"
+                cxx_compiler = "clang++"
+                rc_compiler = "windres" if os.name == "nt" else None
+
+                if os.name == "nt":
+                    resolved_c = shutil.which(c_compiler) or ""
+                    resolved_cxx = shutil.which(cxx_compiler) or ""
+
+                    if "program files" in resolved_c.lower() or "program files" in resolved_cxx.lower():
+                        raise RuntimeError(
+                            "clang/clang++ resolved to the standalone LLVM install instead of "
+                            "MSYS2/MinGW clang. Put the MSYS2 clang directory earlier on PATH, "
+                            "or build with --compiler g++."
+                        )
+
+            else:
+                c_compiler = self.compiler
+                cxx_compiler = self.compiler
+                rc_compiler = None
+
             args += [
                 f"-DCMAKE_C_COMPILER={c_compiler}",
-                f"-DCMAKE_CXX_COMPILER={self.compiler}",
+                f"-DCMAKE_CXX_COMPILER={cxx_compiler}",
             ]
 
-        # Cross-compile for Raspberry Pi if desired via a toolchain (see below)
         toolchain = os.environ.get("OKAY_TOOLCHAIN_FILE", "")
         if self.target.lower() in ("rpi", "raspberrypi") and toolchain:
             args += [f"-DCMAKE_TOOLCHAIN_FILE={toolchain}"]
 
-        cmd = subprocess.list2cmdline(args)  # uses "..." quoting
-
-        return cmd
+        return subprocess.list2cmdline(args)
 
     @property
     def cmake_build_cmd(self) -> str:
