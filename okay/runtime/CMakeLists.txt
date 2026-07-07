@@ -1,7 +1,5 @@
 # okay/runtime/CMakeLists.txt
 
-message(STATUS "Compiling runtime")
-
 if (NOT DEFINED OKAY_RUNTIME)
     message(STATUS "OKAY_RUNTIME Not set! Defaulting to 'Editor'")
     set(OKAY_RUNTIME "editor")

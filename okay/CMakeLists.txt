@@ -203,8 +203,6 @@ target_link_libraries(okay_runtime
 message(STATUS "Compiling Game")
 include(${OKAY_PROJECT_ROOT_DIR}/okay.cmake)
 
-get_target_property(INCLUDE_DIRS okay INCLUDE_DIRECTORIES)
-message(STATUS "okay Include Directories: ${INCLUDE_DIRS}")
 
 target_link_libraries(${PROJECT} PUBLIC okay)
 target_link_libraries(okay_runtime PRIVATE ${PROJECT})
