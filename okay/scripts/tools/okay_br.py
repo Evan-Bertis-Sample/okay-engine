@@ -27,7 +27,7 @@ def main(args):
     build_options = OkayBuildOptions.from_args(args)
     if OkayBuildUtil.build_project(build_options):
         OkayBuildUtil.run_project(
-            build_options, use_gdb=args.gdb, hot_reload=args.hot_reload
+            build_options, use_gdb=args.gdb, hot_reload=args.hot_reload, allow_dirty=True
         )
     else:
         OkayLogger.log("Failed to build project!", OkayLogType.ERROR)

@@ -722,13 +722,14 @@ class OkayBuildUtil:
                 OkayLogType.WARNING,
             )
             OkayLogger.log("    okay build", OkayLogType.INFO)
-            OkayLogger.log("    okay sc\n", OkayLogType.INFO)
             OkayLogger.log("…continuing anyway…\n", OkayLogType.WARNING)
 
         if hot_reload and not OkayBuildUtil.prepare_hot_reload_dir(options):
             return
 
         cmd = ["gdb", str(options.executable)] if use_gdb else [str(options.executable)]
+
+        observers = []
 
         try:
             permissions = (
@@ -740,19 +741,30 @@ class OkayBuildUtil:
             )
             os.chmod(options.executable, permissions)
 
-            observers = []
             if hot_reload:
                 OkayLogger.log("Attaching reload watchdog...", OkayLogType.INFO)
                 observers = OkayBuildUtil.attach_reload_watchdog(options)
 
             OkayLogger.log(f"Running -> {' '.join(cmd)}", OkayLogType.INFO)
-            subprocess.run(cmd, check=True, cwd=options.build_dir, shell=True)
 
-            for obs in observers:
-                obs.stop()
+            subprocess.run(
+                cmd,
+                check=True,
+                cwd=options.build_dir,
+            )
+
+        except KeyboardInterrupt:
+            OkayLogger.log("Runtime interrupted.", OkayLogType.WARNING)
 
         except subprocess.CalledProcessError as e:
             OkayLogger.log(f"Runtime error: {e}", OkayLogType.ERROR)
+
+        finally:
+            for obs in observers:
+                obs.stop()
+
+            for obs in observers:
+                obs.join()
 
     @staticmethod
     def attach_reload_watchdog(options: OkayBuildOptions):
