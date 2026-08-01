@@ -22,11 +22,7 @@ OKAY_ASCII_LOGO = r"""
 
 def ensure_venv(project_root: Path):
     venv_dir = project_root / "venv"
-
-    if sys.platform == "win32":
-        venv_python = venv_dir / "Scripts" / "python.exe"
-    else:
-        venv_python = venv_dir / "bin" / "python"
+    venv_python = venv_dir / "bin" / "python"
 
     if os.environ.get("OKAY_VENV_REEXEC") == "1":
         return
@@ -48,11 +44,16 @@ def ensure_venv(project_root: Path):
     env["VIRTUAL_ENV"] = str(venv_dir)
     env["PATH"] = str(venv_python.parent) + os.pathsep + env.get("PATH", "")
 
-    os.execve(
-        str(venv_python),
-        [str(venv_python), str(Path(__file__).resolve()), *sys.argv[1:]],
-        env,
+    result = subprocess.run(
+        [
+            str(venv_python),
+            str(Path(__file__).resolve()),
+            *sys.argv[1:],
+        ],
+        env=env,
     )
+
+    raise SystemExit(result.returncode)
 
 
 def discover_tools(tools_dir: Path) -> list[Path]:

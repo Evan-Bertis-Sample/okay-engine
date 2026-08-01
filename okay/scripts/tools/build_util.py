@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import enum
 import hashlib
 import os
@@ -751,6 +750,7 @@ class OkayBuildUtil:
                 cmd,
                 check=True,
                 cwd=options.build_dir,
+                stdin=subprocess.DEVNULL,
             )
 
         except KeyboardInterrupt:
@@ -760,11 +760,21 @@ class OkayBuildUtil:
             OkayLogger.log(f"Runtime error: {e}", OkayLogType.ERROR)
 
         finally:
-            for obs in observers:
-                obs.stop()
+            for observer in observers:
+                observer.stop()
 
-            for obs in observers:
-                obs.join()
+            for observer in observers:
+                observer.join(timeout=1.0)
+
+                if observer.is_alive():
+                    OkayLogger.log(
+                        "Reload watchdog did not stop cleanly.",
+                        OkayLogType.WARNING,
+                    )
+
+            sys.stdout.flush()
+            sys.stderr.flush()
+            print(flush=True)
 
     @staticmethod
     def attach_reload_watchdog(options: OkayBuildOptions):
@@ -796,12 +806,12 @@ class OkayBuildUtil:
         )
 
         dirs = [options.project_dir, OkayToolUtil.get_okay_parent_dir()]
-
         observers = []
 
-        for dir in dirs:
+        for directory in dirs:
             observer = Observer()
-            observer.schedule(event_handler, path=str(dir), recursive=True)
+            observer.daemon = True
+            observer.schedule(event_handler, path=str(directory), recursive=True)
             observer.start()
             observers.append(observer)
 
