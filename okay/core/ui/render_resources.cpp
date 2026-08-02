@@ -2,6 +2,11 @@
 
 namespace okay {
 
+UIRenderResoruces& UIRenderResoruces::get() {
+    static UIRenderResoruces instance;
+    return instance;
+}
+
 Option<MaterialHandle> UIRenderResoruces::getRectMaterial(const UIElement& element) {
     if (!element.backgroundMaterialOverride.isNone())
         return Option<MaterialHandle>::some(element.backgroundMaterialOverride);
@@ -12,7 +17,12 @@ Option<MaterialHandle> UIRenderResoruces::getRectMaterial(const UIElement& eleme
         return Option<MaterialHandle>::none();
 
     if (_rectMaterialCache.contains(*key)) {
-        return Option<MaterialHandle>::some(_rectMaterialCache.at(*key));
+        // TODO: This is ideally an uneeded check, but need to do this for
+        // hot-reload. Need to move away from singletons entirely
+        MaterialHandle handle = _rectMaterialCache.at(*key);
+        if (!handle.isNone()) {
+            return Option<MaterialHandle>::some(handle);
+        }
     }
 
     Renderer* renderer = Engine.systems.getSystemChecked<Renderer>();
@@ -52,7 +62,12 @@ Option<MaterialHandle> UIRenderResoruces::getTextMaterial(const UIElement& eleme
     // element.text.value());
 
     if (_textMaterialCache.contains(*key)) {
-        return Option<MaterialHandle>::some(_textMaterialCache.at(*key));
+        // TODO: This is ideally an uneeded check, but need to do this for
+        // hot-reload. Need to move away from singletons entirely
+        MaterialHandle handle = _textMaterialCache.at(*key);
+        if (!handle.isNone()) {
+            return Option<MaterialHandle>::some(handle);
+        }
     }
 
     TextStyle style = element.textStyle;

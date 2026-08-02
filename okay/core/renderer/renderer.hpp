@@ -39,6 +39,11 @@ class Renderer : public System<SystemScope::ENGINE> {
           _pipeline(std::move(settings.pipeline)),
           _imguiEnabled(settings.enableIMGUI) {}
 
+    ~Renderer() {
+        _surface->destroy();
+        _materialRegistry.invalidate();
+    }
+
     void initialize() override;
     void postInitialize() override;
     void preTick() override;

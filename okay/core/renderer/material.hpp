@@ -227,7 +227,7 @@ class MaterialRegistry {
     }
 
     bool validMaterial(const MaterialHandle& handle) const {
-        return handle.owner == this && handle.id < _materials.size();
+        return !_invalidRegistry && handle.owner == this && handle.id < _materials.size();
     }
 
     const Material* getMaterial(const MaterialHandle& handle) const {
@@ -243,7 +243,7 @@ class MaterialRegistry {
     }
 
     bool validShader(const ShaderHandle& handle) const {
-        return handle.owner == this && _shaders.contains(handle.id);
+        return !_invalidRegistry && handle.owner == this && _shaders.contains(handle.id);
     }
 
     const Shader* getShader(const ShaderHandle& handle) const {
@@ -263,9 +263,16 @@ class MaterialRegistry {
         return _materials == other._materials;
     }
 
+    void invalidate() {
+        _invalidRegistry = false;
+    }
+
    private:
     std::vector<std::unique_ptr<Material>> _materials;
     std::unordered_map<GLuint, Shader> _shaders;
+
+    // TODO: remove this, and handle lifetimes better
+    bool _invalidRegistry{false};
 };
 
 template <class Derived>

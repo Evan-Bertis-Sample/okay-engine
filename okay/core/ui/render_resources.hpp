@@ -25,10 +25,7 @@ class UIRenderResoruces {
     using RectMaterial = UIRectMaterial;
     using TextMaterial = TextSDFMaterial;
 
-    static UIRenderResoruces& get() {
-        static UIRenderResoruces instance;
-        return instance;
-    }
+    static UIRenderResoruces& get();
 
     UIRenderResoruces() {
         loadResoruces();
@@ -75,6 +72,19 @@ class UIRenderResoruces {
     }
     Texture whiteTexture() const {
         return _whiteTexture;
+    }
+
+    void reloadResources() {
+        _rectMaterialCache.clear();
+        _textMaterialCache.clear();
+
+        _uiTextShader = ShaderHandle::none();
+        _uiRectShader = ShaderHandle::none();
+
+        _whiteTexture = {};
+        _quadMesh = {};
+
+        loadResoruces();
     }
 
    private:
