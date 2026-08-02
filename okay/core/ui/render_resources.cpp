@@ -3,7 +3,7 @@
 namespace okay {
 
 Option<MaterialHandle> UIRenderResoruces::getRectMaterial(const UIElement& element) {
-    if (element.backgroundMaterialOverride.isValid())
+    if (!element.backgroundMaterialOverride.isNone())
         return Option<MaterialHandle>::some(element.backgroundMaterialOverride);
 
     Option<RectMaterialKey> key = getRectMaterialKey(element);
@@ -40,7 +40,7 @@ Option<MaterialHandle> UIRenderResoruces::getRectMaterial(const UIElement& eleme
 }
 
 Option<MaterialHandle> UIRenderResoruces::getTextMaterial(const UIElement& element) {
-    if (element.textMaterialOverride.isValid())
+    if (!element.textMaterialOverride.isNone())
         return Option<MaterialHandle>::some(element.textMaterialOverride);
 
     Option<TextMaterialKey> key = getTextMaterialKey(element);

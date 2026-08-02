@@ -90,7 +90,7 @@ class Renderer : public System<SystemScope::ENGINE> {
     std::unique_ptr<IMGUIImpl> _imguiImpl;
     bool _imguiEnabled{false};
     bool _imguiInitialized{false};
-    MaterialHandle _skyboxMaterial{MaterialHandle::none()};
+    MaterialHandle _skyboxMaterial{MaterialHandle::invalidHandle()};
 };
 
 }  // namespace okay

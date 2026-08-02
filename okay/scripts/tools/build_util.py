@@ -750,7 +750,6 @@ class OkayBuildUtil:
                 cmd,
                 check=True,
                 cwd=options.build_dir,
-                stdin=subprocess.DEVNULL,
             )
 
         except KeyboardInterrupt:

@@ -352,7 +352,7 @@ RenderItem::RenderItem(MaterialHandle mat, Mesh m) : material(mat), mesh(m) {
 }
 
 void RenderItem::computeSortKey() {
-    if (material->isNone() || mesh.isEmpty()) {
+    if (material.isNone() || mesh.isEmpty()) {
         sortKey = std::numeric_limits<std::uint64_t>::max();
         return;
     }

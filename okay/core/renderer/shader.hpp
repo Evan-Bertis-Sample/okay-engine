@@ -42,10 +42,6 @@ class Shader {
     Failable compile();
     Failable set();
 
-    bool isNone() const {
-        return _srcHash == invalidID();
-    }
-
     State state() const {
         return _state;
     }
@@ -150,8 +146,8 @@ struct ShaderHandle {
     MaterialRegistry* owner = nullptr;
     std::uint32_t id = Shader::invalidID();
 
-    bool isValid() const {
-        return owner != nullptr && id != Shader::invalidID();
+    static ShaderHandle none() {
+        return {nullptr, Shader::invalidID()};
     }
 
     bool operator==(const ShaderHandle& other) const {
@@ -162,6 +158,7 @@ struct ShaderHandle {
         return !(*this == other);
     }
 
+    bool isNone() const;
     const Shader* operator*() const;
     const Shader* operator->() const;
     const Shader* get() const;

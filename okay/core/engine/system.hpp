@@ -18,6 +18,8 @@ enum SystemScope : std::uint8_t { ENGINE, GAME, LEVEL, SCOPE_COUNT };
 
 class ISystem {
    public:
+    virtual ~ISystem() = default;
+
     template <typename T>
     static const std::size_t sysid() {
         return typeid(T).hash_code();
@@ -82,6 +84,9 @@ class SystemPool {
     template <typename T>
     void registerSystem(std::unique_ptr<T> system) {
         static_assert(std::is_base_of_v<ISystem, T>, "T must inherit from OkaySystem.");
+        if (_systems.contains(ISystem::sysid<T>())) {
+            _systems.erase(ISystem::sysid<T>());
+        }
         _systems.emplace(ISystem::sysid<T>(), std::move(system));
     }
 
