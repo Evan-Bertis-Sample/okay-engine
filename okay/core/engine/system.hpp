@@ -14,7 +14,7 @@
 
 namespace okay {
 
-enum SystemScope : std::uint8_t { ENGINE, GAME, LEVEL, SCOPE_COUNT };
+enum class SystemScope : std::uint8_t { ENGINE, GAME, LEVEL, SCOPE_COUNT };
 
 class ISystem {
    public:
@@ -230,7 +230,7 @@ class SystemManager {
     }
 
    private:
-    static std::array<SystemPool, SystemScope::SCOPE_COUNT> _pools;
+    std::array<SystemPool, static_cast<std::size_t>(SystemScope::SCOPE_COUNT)> _pools;
 };
 
 };  // namespace okay

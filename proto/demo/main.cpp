@@ -1,4 +1,5 @@
 #include "okay/core/ui/render_resources.hpp"
+
 #include <okay/okay.hpp>
 
 #include <glm/glm.hpp>
@@ -38,7 +39,6 @@ extern "C" OKAY_EXPORT void create(okay::Game* game, int argc, char* args[]) {
 
 static void __gameInitialize() {
     // Additional game initialization logic
-    okay::UIRenderResoruces::get().reloadResources();
     okay::Texture texture = okay::load::engineTexture("textures/uv_test.jpg");
     okay::Mesh object = okay::mesh(okay::load::engineMeshData("models/teapot.obj"));
 
