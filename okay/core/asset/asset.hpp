@@ -2,6 +2,7 @@
 #define __ASSET_H__
 
 #include <okay/core/engine/engine.hpp>
+#include <okay/core/engine/resource.hpp>
 #include <okay/core/engine/system.hpp>
 #include <okay/core/util/option.hpp>
 #include <okay/core/util/result.hpp>
@@ -89,13 +90,9 @@ struct AssetLoader {
 };
 
 template <typename T, typename LoadOptions = std::tuple<>>
-class CachedAssetStore {
+class CachedAssetStore
+    : public ScopedSingleton<CachedAssetStore<T, LoadOptions>, ResourceScope::ENGINE> {
    public:
-    static CachedAssetStore& instance() {
-        static CachedAssetStore instance;
-        return instance;
-    }
-
     void cacheAsset(const std::filesystem::path& path, Asset<T> asset, const LoadOptions& options) {
         // Engine.logger.debug("Caching asset {}", path.string());
         LoadKey key = {

@@ -2,11 +2,6 @@
 
 namespace okay {
 
-UIRenderResoruces& UIRenderResoruces::get() {
-    static UIRenderResoruces instance;
-    return instance;
-}
-
 Option<MaterialHandle> UIRenderResoruces::getRectMaterial(const UIElement& element) {
     if (!element.backgroundMaterialOverride.isNone())
         return Option<MaterialHandle>::some(element.backgroundMaterialOverride);

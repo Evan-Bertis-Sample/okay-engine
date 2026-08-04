@@ -184,15 +184,9 @@ class SystemPool {
 
 class SystemManager {
    public:
-    SystemManager() {
-        for (std::size_t i = 0; i < SystemScope::SCOPE_COUNT; ++i) {
-            _pools[i] = SystemPool();
-        }
-    }
-
     template <typename T>
     Option<T*> getSystem() {
-        return _pools[T::SCOPE].template getSystem<T>();
+        return _pools[static_cast<std::size_t>(T::SCOPE)].template getSystem<T>();
     }
 
     template <typename T>
@@ -208,11 +202,11 @@ class SystemManager {
 
     template <typename T>
     void registerSystem(std::unique_ptr<T> system) {
-        _pools[T::SCOPE].registerSystem(std::move(system));
+        _pools[static_cast<std::size_t>(T::SCOPE)].registerSystem(std::move(system));
     }
 
     SystemPool& getPool(const SystemScope scope) {
-        return _pools[scope];
+        return _pools[static_cast<std::size_t>(scope)];
     }
 
     bool hasSystem(std::size_t hash) {

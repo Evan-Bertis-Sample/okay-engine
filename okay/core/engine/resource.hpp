@@ -6,9 +6,9 @@
 #include <array>
 #include <cstdint>
 #include <iostream>
+#include <map>
 #include <memory>
 #include <type_traits>
-#include <unordered_map>
 
 namespace okay {
 
@@ -17,7 +17,7 @@ enum class ResourceScope : std::uint8_t { RUNTIME, ENGINE, GAME, LEVEL, SCOPE_CO
 struct IResource {};
 
 template <ResourceScope Scope>
-struct Resource {
+struct Resource : public IResource {
     static constexpr ResourceScope SCOPE{Scope};
 };
 
@@ -70,7 +70,7 @@ class ResourcePool {
         if (it != _resources.end()) {
             _resources.erase(it);
         }
-        _resources.emplace(ResourceDescriptor::getSysId<T>(), args...);
+        _resources.emplace(ResourceDescriptor::getSysId<T>(), std::make_unique<T>(args...));
     }
 
     template <typename T>
@@ -81,7 +81,7 @@ class ResourcePool {
 
     class Iterator {
        private:
-        using base_it = std::unordered_map<std::size_t, std::unique_ptr<IResource>>::iterator;
+        using base_it = std::map<std::size_t, std::unique_ptr<IResource>>::iterator;
 
        public:
         using iterator_category = std::bidirectional_iterator_tag;
@@ -156,7 +156,7 @@ class ResourcePool {
     }
 
    private:
-    std::unordered_map<std::size_t, std::unique_ptr<IResource>> _resources;
+    std::map<std::size_t, std::unique_ptr<IResource>> _resources;
 };
 
 class ResourceManager {
@@ -164,7 +164,7 @@ class ResourceManager {
     template <typename T>
         requires ScopedResource<T>
     Option<T*> getReource() {
-        return _pools[T::SCOPE].template getResource<T>();
+        return _pools[static_cast<std::size_t>(T::SCOPE)].template getResource<T>();
     }
 
     template <typename T>
@@ -182,7 +182,7 @@ class ResourceManager {
     template <typename T, typename... Ts>
         requires ScopedResource<T>
     void addResource(Ts... args) {
-        _pools[T::SCOPE].registerArgs(args...);
+        _pools[static_cast<std::size_t>(T::SCOPE)].registerResource<T>(args...);
     }
 
     ResourcePool& getPool(const ResourceScope scope) {
@@ -192,11 +192,11 @@ class ResourceManager {
     template <typename T>
         requires ScopedResource<T>
     bool hasResource() {
-        return _pools[T::scope].template hasResource<T>();
+        return _pools[static_cast<std::size_t>(T::SCOPE)].template hasResource<T>();
     }
 
     void clearResources(const ResourceScope scope) {
-        _pools[scope].clear();
+        _pools[static_cast<std::size_t>(scope)].clear();
     }
 
    private:

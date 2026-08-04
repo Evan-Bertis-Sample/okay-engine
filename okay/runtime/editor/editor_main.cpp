@@ -1,5 +1,7 @@
 // editor_main.cpp
 
+#include "okay/core/engine/resource.hpp"
+
 #include <okay/core/engine/engine.hpp>
 #include <okay/core/engine/system.hpp>
 #include <okay/runtime/editor/proc_interface.hpp>
@@ -68,6 +70,10 @@ int main(int argc, char* args[]) {
                 Runtime.logger.error("Unable to find createGameFn!");
                 return;
             }
+
+            Engine.resources.clearResources(ResourceScope::ENGINE);
+            Engine.resources.clearResources(ResourceScope::GAME);
+            Engine.resources.clearResources(ResourceScope::LEVEL);
 
             createGameFn(&game, argc, args);
             game.initialize();

@@ -4,6 +4,7 @@
 #include <okay/core/asset/asset.hpp>
 #include <okay/core/asset/asset_util.hpp>
 #include <okay/core/asset/generic/texture_loader.hpp>
+#include <okay/core/engine/engine.hpp>
 #include <okay/core/renderer/material.hpp>
 #include <okay/core/renderer/materials/text_sdf.hpp>
 #include <okay/core/renderer/materials/ui_rect.hpp>
@@ -20,16 +21,10 @@
 
 namespace okay {
 
-class UIRenderResoruces {
+class UIRenderResoruces : public ScopedSingleton<UIRenderResoruces, ResourceScope::ENGINE> {
    public:
     using RectMaterial = UIRectMaterial;
     using TextMaterial = TextSDFMaterial;
-
-    static UIRenderResoruces& get();
-
-    UIRenderResoruces() {
-        loadResoruces();
-    }
 
     Option<MaterialHandle> getRectMaterial(const UIElement& element);
 
