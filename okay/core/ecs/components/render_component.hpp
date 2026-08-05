@@ -14,7 +14,7 @@ namespace okay {
 struct MeshRendererComponent {
    public:
     Mesh mesh{Mesh::none()};
-    MaterialHandle material{MaterialHandle::invalidHandle()};
+    MaterialHandle material{MaterialHandle::none()};
     std::uint8_t renderLayer{0};
     RenderEntity renderEntity{};
 

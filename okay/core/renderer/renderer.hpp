@@ -41,7 +41,6 @@ class Renderer : public System<SystemScope::ENGINE> {
 
     ~Renderer() {
         _surface->destroy();
-        _materialRegistry.invalidate();
     }
 
     void initialize() override;
@@ -95,7 +94,7 @@ class Renderer : public System<SystemScope::ENGINE> {
     std::unique_ptr<IMGUIImpl> _imguiImpl;
     bool _imguiEnabled{false};
     bool _imguiInitialized{false};
-    MaterialHandle _skyboxMaterial{MaterialHandle::invalidHandle()};
+    MaterialHandle _skyboxMaterial{MaterialHandle::none()};
 };
 
 }  // namespace okay

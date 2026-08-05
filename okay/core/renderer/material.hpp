@@ -90,6 +90,8 @@ class IMaterialPropertyCollection {
 
 class Material {
    public:
+    ShaderHandle shader;
+
     static constexpr std::uint32_t invalidID() {
         return 0xFFFFFFFFu;
     }
@@ -97,33 +99,33 @@ class Material {
     Material(ShaderHandle shader,
         std::unique_ptr<IMaterialPropertyCollection> uniforms,
         std::uint32_t id)
-        : _shader(shader), _uniforms(std::move(uniforms)), _id(id) {}
+        : shader(shader), _uniforms(std::move(uniforms)), _id(id) {}
 
     std::uint32_t id() const {
         return _id;
     }
 
     std::uint32_t shaderID() const {
-        return _shader->srcHash();
+        return shader->srcHash();
     }
 
     GLuint programID() const {
-        return _shader->programID();
+        return shader->programID();
     }
 
     Failable setShader() {
-        if (_shader.isNone()) {
+        if (shader.isNone()) {
             return Failable::errorResult("Material has no shader.");
         }
 
-        if (_shader->state() == Shader::State::NOT_COMPILED) {
-            Failable compile = _shader->compile();
+        if (shader->state() == Shader::State::NOT_COMPILED) {
+            Failable compile = shader->compile();
             if (compile.isError()) {
                 return compile;
             }
         }
 
-        return _shader->set();
+        return shader->set();
     }
 
     Failable passUniforms() {
@@ -131,7 +133,7 @@ class Material {
             return Failable::errorResult("Material has no uniforms.");
         }
 
-        if (_shader.isNone()) {
+        if (shader.isNone()) {
             return Failable::errorResult("Material has no shader.");
         }
 
@@ -140,7 +142,7 @@ class Material {
             return set;
         }
 
-        return _uniforms->pass(_shader);
+        return _uniforms->pass(shader);
     }
 
     // disable copy
@@ -151,7 +153,7 @@ class Material {
 
     // equality operator
     bool operator==(const Material& other) const {
-        return _shader == other._shader && _id == other._id;
+        return shader == other.shader && _id == other._id;
     }
 
     bool operator!=(const Material& other) const {
@@ -163,7 +165,6 @@ class Material {
     }
 
    private:
-    ShaderHandle _shader;
     std::size_t _id{invalidID()};
     std::unique_ptr<IMaterialPropertyCollection> _uniforms;
 
@@ -178,7 +179,7 @@ struct MaterialHandle {
         return Material::invalidID();
     };
 
-    static MaterialHandle invalidHandle() {
+    static MaterialHandle none() {
         return {nullptr, MaterialHandle::invalidID()};
     }
 
@@ -205,6 +206,14 @@ struct MaterialHandle {
 
 class MaterialRegistry {
    public:
+    // Immovable because handles need a stable raw ptr to the registry
+    MaterialRegistry() = default;
+    MaterialRegistry(const MaterialRegistry&) = delete;
+    MaterialRegistry& operator=(const MaterialRegistry&) = delete;
+
+    MaterialRegistry(MaterialRegistry&&) = delete;
+    MaterialRegistry& operator=(MaterialRegistry&&) = delete;
+
     ShaderHandle registerShader(
         const std::string& vertexSource, const std::string& fragmentSource) {
         // Create the shader, compile it, and add it to the registry
@@ -222,12 +231,20 @@ class MaterialRegistry {
     MaterialHandle registerMaterial(
         const ShaderHandle& shader, std::unique_ptr<IMaterialPropertyCollection> uniforms) {
         std::uint32_t id = _materials.size();
+
+        if (shader.isNone()) {
+            Engine.logger.warn(
+                "Attempted to register a material with the an invalid shader (ShaderHandle::isNone() is true). "
+                "Returning an invalid material.");
+            return MaterialHandle::none();
+        }
+
         _materials.emplace_back(std::make_unique<Material>(shader, std::move(uniforms), id));
         return {this, id};
     }
 
     bool validMaterial(const MaterialHandle& handle) const {
-        return !_invalidRegistry && handle.owner == this && handle.id < _materials.size();
+        return handle.owner == this && handle.id < _materials.size();
     }
 
     const Material* getMaterial(const MaterialHandle& handle) const {
@@ -243,7 +260,7 @@ class MaterialRegistry {
     }
 
     bool validShader(const ShaderHandle& handle) const {
-        return !_invalidRegistry && handle.owner == this && _shaders.contains(handle.id);
+        return handle.owner == this && _shaders.contains(handle.id);
     }
 
     const Shader* getShader(const ShaderHandle& handle) const {
@@ -263,16 +280,9 @@ class MaterialRegistry {
         return _materials == other._materials;
     }
 
-    void invalidate() {
-        _invalidRegistry = false;
-    }
-
    private:
     std::vector<std::unique_ptr<Material>> _materials;
     std::unordered_map<GLuint, Shader> _shaders;
-
-    // TODO: remove this, and handle lifetimes better
-    bool _invalidRegistry{false};
 };
 
 template <class Derived>

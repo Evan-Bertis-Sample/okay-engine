@@ -26,8 +26,11 @@ class UIRenderResoruces : public ScopedSingleton<UIRenderResoruces, ResourceScop
     using RectMaterial = UIRectMaterial;
     using TextMaterial = TextSDFMaterial;
 
-    Option<MaterialHandle> getRectMaterial(const UIElement& element);
+    UIRenderResoruces() {
+        loadResoruces();
+    }
 
+    Option<MaterialHandle> getRectMaterial(const UIElement& element);
     Option<MaterialHandle> getTextMaterial(const UIElement& element);
 
     static constexpr std::string_view UI_TEXT_SHADER = "shaders/text_sdf";

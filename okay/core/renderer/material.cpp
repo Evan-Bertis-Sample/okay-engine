@@ -1,5 +1,7 @@
 #include "material.hpp"
 
+#include <stdexcept>
+
 namespace okay {
 
 Failable Shader::compile() {
@@ -79,6 +81,9 @@ const Shader* ShaderHandle::operator->() const {
 }
 
 const Shader* ShaderHandle::get() const {
+    if (isNone())
+        throw std::runtime_error(
+            "Dereferencing a shader handle that is none! Check using ShaderHandle::isNone() before using * or -> operators on a handle!");
     return owner->getShader(*this);
 }
 
@@ -91,6 +96,9 @@ Shader* ShaderHandle::operator->() {
 }
 
 Shader* ShaderHandle::get() {
+    if (isNone())
+        throw std::runtime_error(
+            "Dereferencing a shader handle that is none! Check using ShaderHandle::isNone() before using * or -> operators on a handle!");
     return owner->getShader(*this);
 }
 
@@ -107,6 +115,9 @@ const Material* MaterialHandle::operator->() const {
 }
 
 const Material* MaterialHandle::get() const {
+    if (isNone())
+        throw std::runtime_error(
+            "Dereferencing a material handle that is none! Check using MaterialHandle::isNone() before using * or -> operators on a handle!");
     return owner->getMaterial(*this);
 }
 
@@ -119,6 +130,9 @@ Material* MaterialHandle::operator->() {
 }
 
 Material* MaterialHandle::get() {
+    if (isNone())
+        throw std::runtime_error(
+            "Dereferencing a material handle that is none! Check using MaterialHandle::isNone() before using * or -> operators on a handle!");
     return owner->getMaterial(*this);
 }
 
