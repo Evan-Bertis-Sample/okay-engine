@@ -41,7 +41,6 @@ void Renderer::initialize() {
     Engine.logger.debug("Renderer initialized");
 
     // bind a white texture by default
-    AssetManager* am = Engine.systems.getSystemChecked<AssetManager>();
     TextureLoadSettings tLoad(TextureDataStore::mainStore());
     Texture white = okay::load::engineTexture("textures/white.jpg");
 

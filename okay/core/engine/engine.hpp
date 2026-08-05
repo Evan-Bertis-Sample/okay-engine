@@ -139,13 +139,13 @@ template <typename Derived, ResourceScope Scope>
 struct ScopedSingleton : Resource<Scope> {
     static Derived& instance() {
         if (Engine.resources.hasResource<Derived>()) {
-            return *Engine.resources.getReource<Derived>().value();
+            return *Engine.resources.getResource<Derived>().value();
         }
 
         Engine.logger.debug(
             "Creating instance of scoped singleton: {}", ResourceDescriptor::getSysName<Derived>());
         Engine.resources.addResource<Derived>();
-        return *Engine.resources.getReource<Derived>().value();
+        return *Engine.resources.getResource<Derived>().value();
     };
 };
 

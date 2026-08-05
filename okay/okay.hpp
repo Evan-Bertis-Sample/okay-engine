@@ -28,7 +28,6 @@
 #include <okay/core/ecs/components/camera_component.hpp>
 #include <okay/core/ecs/components/light_component.hpp>
 #include <okay/core/ecs/components/render_component.hpp>
-#include <okay/core/ecs/components/text_component.hpp>
 #include <okay/core/ecs/components/transform_component.hpp>
 #include <okay/core/ecs/components/ui_component.hpp>
 

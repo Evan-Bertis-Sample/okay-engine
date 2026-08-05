@@ -1,5 +1,7 @@
 #include "render_resources.hpp"
 
+#include "okay/core/asset/asset.hpp"
+
 namespace okay {
 
 Option<MaterialHandle> UIRenderResoruces::getRectMaterial(const UIElement& element) {
@@ -150,17 +152,17 @@ bool UIRenderResoruces::RectMaterialKey::operator<(const RectMaterialKey& o) con
 }
 
 void UIRenderResoruces::loadResoruces() {
-    AssetManager* am = Engine.systems.getSystemChecked<AssetManager>();
+    AssetManager& am = AssetManager::instance();
 
     _whiteTexture =
-        unwrapAssetResult(am->loadEngineAssetSync<Texture>(WHITE_TEXTURE, TextureLoadSettings{}));
+        unwrapAssetResult(am.loadEngineAssetSync<Texture>(WHITE_TEXTURE, TextureLoadSettings{}));
 
     Renderer* renderer = Engine.systems.getSystemChecked<Renderer>();
-    Shader textShader = unwrapAssetResult(am->loadEngineAssetSync<Shader>(UI_TEXT_SHADER));
+    Shader textShader = unwrapAssetResult(am.loadEngineAssetSync<Shader>(UI_TEXT_SHADER));
     _uiTextShader = renderer->materialRegistry().registerShader(
         textShader.vertexShader, textShader.fragmentShader);
 
-    Shader rectShader = unwrapAssetResult(am->loadEngineAssetSync<Shader>(UI_RECT_SHADER));
+    Shader rectShader = unwrapAssetResult(am.loadEngineAssetSync<Shader>(UI_RECT_SHADER));
     _uiRectShader = renderer->materialRegistry().registerShader(
         rectShader.vertexShader, rectShader.fragmentShader);
 

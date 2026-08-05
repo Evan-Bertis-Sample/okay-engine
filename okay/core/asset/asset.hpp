@@ -148,7 +148,7 @@ using OnAssetSucceedCB = std::function<void(const Asset<T>&)>;
 template <typename T>
 using OnAssetFailedCB = std::function<void(const std::string&)>;
 
-class AssetManager : public System<SystemScope::ENGINE> {
+class AssetManager : public ScopedSingleton<AssetManager, ResourceScope::RUNTIME> {
    public:
     using DefaultAssetIO = FilesystemAssetIO;
 

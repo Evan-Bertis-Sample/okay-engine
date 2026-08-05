@@ -27,7 +27,6 @@ extern "C" OKAY_EXPORT void create(okay::Game* game, int argc, char* args[]) {
     auto renderer = okay::Renderer::create(std::move(rendererSettings));
 
     game->addSystems(std::move(renderer),
-            std::make_unique<okay::AssetManager>(),
             std::make_unique<okay::ECS>(),
             std::make_unique<okay::TweenEngine>())
         .onInitialize(__gameInitialize)

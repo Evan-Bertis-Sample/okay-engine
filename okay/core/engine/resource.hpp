@@ -163,7 +163,7 @@ class ResourceManager {
    public:
     template <typename T>
         requires ScopedResource<T>
-    Option<T*> getReource() {
+    Option<T*> getResource() {
         return _pools[static_cast<std::size_t>(T::SCOPE)].template getResource<T>();
     }
 
