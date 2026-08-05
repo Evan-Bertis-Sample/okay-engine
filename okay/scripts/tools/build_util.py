@@ -804,7 +804,12 @@ class OkayBuildUtil:
             ],
         )
 
-        dirs = [options.project_dir, OkayToolUtil.get_okay_parent_dir()]
+        dirs = [
+            options.project_dir,
+            # only add okay if you can reload engine
+            # right now you can't
+            # OkayToolUtil.get_okay_parent_dir()
+        ]
         observers = []
 
         for directory in dirs:

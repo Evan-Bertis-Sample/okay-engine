@@ -71,6 +71,7 @@ int main(int argc, char* args[]) {
                 return;
             }
 
+            Engine.resources.clearResources(ResourceScope::RUNTIME);
             Engine.resources.clearResources(ResourceScope::ENGINE);
             Engine.resources.clearResources(ResourceScope::GAME);
             Engine.resources.clearResources(ResourceScope::LEVEL);
