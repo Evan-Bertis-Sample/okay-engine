@@ -18,7 +18,7 @@ static okay::ECSEntity s_camera;
 extern "C" OKAY_EXPORT void create(okay::Game* game, int argc, char* args[]) {
     okay::SurfaceConfig surfaceConfig;
     surfaceConfig.width = 800;
-    surfaceConfig.height = 980;
+    surfaceConfig.height = 1080;
 
     okay::RendererSettings rendererSettings{.surfaceConfig = surfaceConfig,
         .pipeline = okay::RenderPipeline::create(std::make_unique<okay::ScenePass>()),

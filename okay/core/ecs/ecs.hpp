@@ -4,6 +4,8 @@
 #include "ecstore.hpp"
 #include "query.hpp"
 
+#include <okay/core/engine/engine.hpp>
+#include <okay/core/engine/reload.hpp>
 #include <okay/core/engine/system.hpp>
 
 #include <cstdint>
@@ -30,7 +32,7 @@ class IECSSystem {
     virtual void entityRemoved(ECS& ecs, ECSEntity& entity) = 0;
 };
 
-class ECS : public EntityComponentStore, public System<SystemScope::LEVEL> {
+class ECS : public EntityComponentStore, public System<SystemScope::GAME> {
    public:
     template <typename Query>
     class EntityIterator {
@@ -173,6 +175,24 @@ class ECS : public EntityComponentStore, public System<SystemScope::LEVEL> {
         for (auto& system : _systems) {
             system->postTick(*this);
         }
+    }
+
+    void prepareForReload(ReloadContext& context) override {
+        ReloadContext::WriteBlob w = context.createWriteBlob("okay::ecs");
+        w.write(1UL);
+    }
+
+    void reload(ReloadContext& context) override {
+        auto rOpt = context.getReadBlob("okay::ecs");
+
+        if (!rOpt) {
+            Engine.logger.debug("Failed to load okay::ecs blob");
+            return;
+        }
+
+        ReloadContext::ReadBlob r = rOpt.value();
+
+        Engine.logger.debug("Loaded {}", *r.read<const unsigned long>());
     }
 
     template <typename T>

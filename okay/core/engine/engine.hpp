@@ -74,8 +74,8 @@ class Game {
     Game& onShutdown(std::function<void()> callback);
 
     bool initialize();
-    void prepareForReload(ReloadContext context);
-    void reload(ReloadContext context);
+    void prepareForReload(ReloadContext& context);
+    void reload(ReloadContext& context);
     void tick();
     void shutdown();
     void run();

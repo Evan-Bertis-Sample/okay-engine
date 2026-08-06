@@ -40,8 +40,8 @@ class ISystem {
     virtual void shutdown() {}
 
     // hot-reload
-    virtual void prepareForReload(ReloadContext context) {}
-    virtual void reload(ReloadContext context) {}
+    virtual void prepareForReload(ReloadContext& context) {}
+    virtual void reload(ReloadContext& context) {}
 };
 
 template <SystemScope ScopeV>

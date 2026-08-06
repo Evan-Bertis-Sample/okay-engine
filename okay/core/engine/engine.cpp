@@ -76,7 +76,10 @@ bool Game::initialize() {
     Engine.time->reset();
     return true;
 }
-void Game::prepareForReload(ReloadContext context) {
+
+void Game::prepareForReload(ReloadContext& context) {
+    Engine.logger.debug("Preparing for reload...");
+
     SystemPool& enginePool = Engine.systems.getPool(SystemScope::ENGINE);
     SystemPool& gamePool = Engine.systems.getPool(SystemScope::GAME);
     SystemPool& levelPool = Engine.systems.getPool(SystemScope::LEVEL);
@@ -95,7 +98,10 @@ void Game::prepareForReload(ReloadContext context) {
 
     // Engine.systems.clear();
 }
-void Game::reload(ReloadContext context) {
+
+void Game::reload(ReloadContext& context) {
+    Engine.logger.debug("Reloading systems...");
+
     SystemPool& enginePool = Engine.systems.getPool(SystemScope::ENGINE);
     SystemPool& gamePool = Engine.systems.getPool(SystemScope::GAME);
     SystemPool& levelPool = Engine.systems.getPool(SystemScope::LEVEL);
