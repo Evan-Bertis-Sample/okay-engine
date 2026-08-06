@@ -2,7 +2,6 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/random.hpp>
-#include <imgui.h>
 #include <utility>
 
 namespace ui = okay::ui;
@@ -18,7 +17,7 @@ static okay::ECSEntity s_camera;
 extern "C" OKAY_EXPORT void create(okay::Game* game, int argc, char* args[]) {
     okay::SurfaceConfig surfaceConfig;
     surfaceConfig.width = 800;
-    surfaceConfig.height = 1080;
+    surfaceConfig.height = 480;
 
     okay::RendererSettings rendererSettings{.surfaceConfig = surfaceConfig,
         .pipeline = okay::RenderPipeline::create(std::make_unique<okay::ScenePass>()),

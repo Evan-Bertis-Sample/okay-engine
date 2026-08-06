@@ -12,12 +12,11 @@ target_include_directories(okay_runtime
   PUBLIC ${OKAY_INCLUDE_LIST}
 )
 
-file(GLOB_RECURSE OKAY_RUNTIME_SOURCES ${CMAKE_CURRENT_LIST_DIR}/*.cpp)
-file(GLOB_RECURSE OKAY_RUNTIME_HEADERS ${CMAKE_CURRENT_LIST_DIR}/*.hpp)
+set(OKAY_RUNTIME_COMMON_DIR ${CMAKE_CURRENT_LIST_DIR})
 
 target_sources(okay_runtime PRIVATE
-    ${OKAY_RUNTIME_SOURCES}
-    ${OKAY_RUNTIME_HEADERS}
+    ${OKAY_RUNTIME_COMMON_DIR}/runtime.cpp
+    ${OKAY_RUNTIME_COMMON_DIR}/runtime.hpp
 )
 
 target_compile_definitions(okay_runtime PUBLIC -DOKAY_GAME_NAME="${PROJECT}")

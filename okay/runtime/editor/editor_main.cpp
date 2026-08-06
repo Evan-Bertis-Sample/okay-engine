@@ -1,8 +1,7 @@
 // editor_main.cpp
 
-#include "okay/core/engine/resource.hpp"
-
 #include <okay/core/engine/engine.hpp>
+#include <okay/core/engine/resource.hpp>
 #include <okay/core/engine/system.hpp>
 #include <okay/runtime/editor/proc_interface.hpp>
 #include <okay/runtime/runtime.hpp>
@@ -21,7 +20,7 @@ static void __exitSignal(int sig) {
 
 std::string getLibDynamicName() {
     return dynalo::to_native_name(
-        std::format("./hot_reload/lib" OKAY_GAME_NAME "_{}", s_hotReloadCount));
+        std::format("./game_dll/lib" OKAY_GAME_NAME "_{}", s_hotReloadCount));
 };
 
 int main(int argc, char* args[]) {

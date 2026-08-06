@@ -31,13 +31,29 @@
 cmake_minimum_required(VERSION 3.13)
 project(${PROJECT} C CXX)
 
-
-
 # targets setup
-add_library(okay SHARED)
-add_library(okay_platform SHARED)
-add_library(${PROJECT} SHARED)
+if(OKAY_RUNTIME STREQUAL "editor")
+    set(OKAY_LIBRARY_TYPE SHARED)
+elseif(OKAY_RUNTIME STREQUAL "player")
+    set(OKAY_LIBRARY_TYPE STATIC)
+else()
+    message(FATAL_ERROR
+        "Invalid OKAY_RUNTIME '${OKAY_RUNTIME}'. Expected 'editor' or 'player'."
+    )
+endif()
+
+add_library(okay ${OKAY_LIBRARY_TYPE})
+add_library(okay_platform ${OKAY_LIBRARY_TYPE})
+add_library(${PROJECT} ${OKAY_LIBRARY_TYPE})
+
 add_executable(okay_runtime)
+
+if(OKAY_RUNTIME STREQUAL "player")
+    target_compile_definitions(okay PUBLIC OKAY_STATIC)
+    target_compile_definitions(okay_platform PUBLIC OKAY_STATIC)
+    target_compile_definitions(${PROJECT} PUBLIC OKAY_STATIC)
+    target_compile_definitions(okay_runtime PUBLIC OKAY_STATIC)
+endif()
 
 # do some initial checking
 if(NOT DEFINED PROJECT)

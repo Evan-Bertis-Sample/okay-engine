@@ -95,22 +95,22 @@ class OkayBuildType(enum.Enum):
 
     @classmethod
     def names(cls):
-        return [t.name for t in cls]
+        return [t.value for t in cls]
 
     @classmethod
     def from_string(cls, s: str):
         for t in cls:
-            if t.name.lower() == s.lower():
+            if t.value.lower() == s.lower():
                 return t
         return None
 
     def __str__(self):
-        return self.name
+        return self.value
 
 
 class OkayRuntimeType(enum.Enum):
     Editor = "editor"
-    Runtime = "runtime"
+    Player = "player"
 
     @classmethod
     def list(cls):
@@ -118,17 +118,17 @@ class OkayRuntimeType(enum.Enum):
 
     @classmethod
     def names(cls):
-        return [t.name for t in cls]
+        return [t.value for t in cls]
 
     @classmethod
     def from_string(cls, s: str):
         for t in cls:
-            if t.name.lower() == s.lower():
+            if t.value.lower() == s.lower():
                 return t
         return None
 
     def __str__(self):
-        return self.name
+        return self.value
 
 
 class OkayBuildOptions:
@@ -136,12 +136,13 @@ class OkayBuildOptions:
         self,
         project_dir: Path,
         target: str,
-        runtime_type: OkayRuntimeType = OkayRuntimeType.Runtime,
+        runtime_type: OkayRuntimeType = OkayRuntimeType.Player,
         build_type: OkayBuildType = OkayBuildType.Release,
         project_name: str = None,
         compiler: str = "g++",
         generator: str = "auto",
         user_asset_dir: Path = None,
+        hot_reload : bool = False
     ):
         self.project_dir = project_dir.resolve()
         self.target = target
@@ -151,6 +152,7 @@ class OkayBuildOptions:
         self.compiler = compiler
         self.generator = generator
         self.user_asset_dir = user_asset_dir or (self.project_dir / "assets")
+        self.hot_reload = hot_reload if runtime_type == OkayRuntimeType.Editor else False
 
     @classmethod
     def add_subparser_args(cls, sp):
@@ -162,14 +164,16 @@ class OkayBuildOptions:
         )
         sp.add_argument(
             "--runtime-type",
+            type=lambda x: x.lower(),
             choices=OkayRuntimeType.names(),
-            default=OkayRuntimeType.Editor.name,
+            default=OkayRuntimeType.Editor.value,
             help="CMake build type",
         )
         sp.add_argument(
             "--build-type",
+            type=lambda x: x.lower(),
             choices=OkayBuildType.names(),
-            default=OkayBuildType.Debug.name,
+            default=OkayBuildType.Debug.value,
             help="CMake build type",
         )
         sp.add_argument(
@@ -195,6 +199,12 @@ class OkayBuildOptions:
             help="CMake generator to use (default: auto)",
         )
 
+        sp.add_argument(
+            "--hot-reload",
+            action="store_true",
+            help="Enable hot reload of game assets & code (Editor Runtime only!)",
+        )
+
         # user asset dirs
         sp.add_argument(
             "--asset-dir",
@@ -217,6 +227,7 @@ class OkayBuildOptions:
     @classmethod
     def from_args(cls, args) -> "OkayBuildOptions":
         bt = OkayBuildType.from_string(args.build_type) or OkayBuildType.Debug
+        rt = OkayRuntimeType.from_string(args.runtime_type) or OkayRuntimeType.Editor
 
         # if this is native, set target to the platform
         if args.target.lower() == "native":
@@ -225,12 +236,13 @@ class OkayBuildOptions:
 
         return cls(
             project_dir=args.project_dir.resolve(),
-            runtime_type=args.runtime_type,
+            runtime_type=rt,
             build_type=bt,
             project_name=args.project_name,
             target=args.target,
             compiler=args.compiler,
             generator=args.generator,
+            hot_reload=args.hot_reload
         )
 
     def _decide_generator(self) -> str:
@@ -260,7 +272,7 @@ class OkayBuildOptions:
         path.mkdir(parents=True, exist_ok=True)
         # turn this into the absolute path
         path = path.resolve()
-        return path / f"{self.target.lower()}_{self.build_type.name.lower()}"
+        return path / f"{self.target.lower()}_{self.build_type.value.lower()}_{self.runtime_type.value.lower()}"
 
     @property
     def packaged_engine_asset_dir(self) -> Path:
@@ -303,6 +315,7 @@ class OkayBuildOptions:
             "-DCMAKE_CXX_COMPILER_LAUNCHER=ccache",
             f"-DOKAY_ENGINE_ASSET_ROOT={self.rel_to_build_dir(self.packaged_engine_asset_dir)}",
             f"-DOKAY_GAME_ASSET_ROOT={self.rel_to_build_dir(self.packaged_game_asset_dir)}",
+            f"-DOKAY_RUNTIME={self.runtime_type.value}"
         ]
 
         using_vs = "Visual Studio" in generator
@@ -574,14 +587,14 @@ class OkayBuildUtil:
 
 
     @staticmethod
-    def get_hot_reload_dir(options: OkayBuildOptions) -> Path:
-        return options.build_dir / "hot_reload"
+    def get_dyn_game_dll_dir(options: OkayBuildOptions) -> Path:
+        return options.build_dir / "game_dll"
 
 
     @staticmethod
     def get_game_dll(options: OkayBuildOptions, reload_count: int) -> Path:
         name = options.project_name
-        hot_reload_dir = OkayBuildUtil.get_hot_reload_dir(options)
+        hot_reload_dir = OkayBuildUtil.get_dyn_game_dll_dir(options)
 
         if sys.platform == "win32":
             return hot_reload_dir / f"lib{name}_{reload_count}.dll"
@@ -625,7 +638,7 @@ class OkayBuildUtil:
 
     @staticmethod
     def get_latest_reload_count(options: OkayBuildOptions) -> int:
-        hot_reload_dir = OkayBuildUtil.get_hot_reload_dir(options)
+        hot_reload_dir = OkayBuildUtil.get_dyn_game_dll_dir(options)
 
         if not hot_reload_dir.exists():
             return -1
@@ -645,7 +658,7 @@ class OkayBuildUtil:
     @staticmethod
     def copy_game_dll(options: OkayBuildOptions, reload_count: int) -> bool:
         built_game_dll = OkayBuildUtil.get_built_game_dll(options)
-        hot_reload_dir = OkayBuildUtil.get_hot_reload_dir(options)
+        dyn_dll_dir = OkayBuildUtil.get_dyn_game_dll_dir(options)
         reload_game_dll = OkayBuildUtil.get_game_dll(options, reload_count)
 
         if not built_game_dll.exists():
@@ -656,11 +669,11 @@ class OkayBuildUtil:
             return False
 
         try:
-            hot_reload_dir.mkdir(parents=True, exist_ok=True)
+            dyn_dll_dir.mkdir(parents=True, exist_ok=True)
             shutil.copy2(built_game_dll, reload_game_dll)
         except OSError as e:
             OkayLogger.log(
-                f"Failed to copy game DLL into hot reload directory: {e}",
+                f"Failed to copy game DLL into dyn dll directory: {e}",
                 OkayLogType.ERROR,
             )
             return False
@@ -683,17 +696,17 @@ class OkayBuildUtil:
 
 
     @staticmethod
-    def prepare_hot_reload_dir(options: OkayBuildOptions) -> bool:
-        hot_reload_dir = OkayBuildUtil.get_hot_reload_dir(options)
+    def prepare_dyn_game_dll_dir(options: OkayBuildOptions) -> bool:
+        dyn_dll_dir = OkayBuildUtil.get_dyn_game_dll_dir(options)
 
         try:
-            if hot_reload_dir.exists():
-                shutil.rmtree(hot_reload_dir)
+            if dyn_dll_dir.exists():
+                shutil.rmtree(dyn_dll_dir)
 
-            hot_reload_dir.mkdir(parents=True, exist_ok=True)
+            dyn_dll_dir.mkdir(parents=True, exist_ok=True)
         except OSError as e:
             OkayLogger.log(
-                f"Failed to reset hot reload directory: {hot_reload_dir}: {e}",
+                f"Failed to reset dyn dll directory: {dyn_dll_dir}: {e}",
                 OkayLogType.ERROR,
             )
             return False
@@ -705,7 +718,6 @@ class OkayBuildUtil:
         options: OkayBuildOptions,
         use_gdb: bool = False,
         allow_dirty: bool = False,
-        hot_reload: bool = True,
     ):
         if not options.validate_dirs(need_build_dir=True):
             return
@@ -723,7 +735,7 @@ class OkayBuildUtil:
             OkayLogger.log("    okay build", OkayLogType.INFO)
             OkayLogger.log("…continuing anyway…\n", OkayLogType.WARNING)
 
-        if hot_reload and not OkayBuildUtil.prepare_hot_reload_dir(options):
+        if options.runtime_type is OkayRuntimeType.Editor and not OkayBuildUtil.prepare_dyn_game_dll_dir(options):
             return
 
         cmd = ["gdb", str(options.executable)] if use_gdb else [str(options.executable)]
@@ -740,7 +752,7 @@ class OkayBuildUtil:
             )
             os.chmod(options.executable, permissions)
 
-            if hot_reload:
+            if options.hot_reload:
                 OkayLogger.log("Attaching reload watchdog...", OkayLogType.INFO)
                 observers = OkayBuildUtil.attach_reload_watchdog(options)
 
