@@ -6,7 +6,6 @@ in vec3 v_color;
 in vec3 v_worldPos;
 in vec3 v_worldNormal;
 in vec2 v_uv;
-in mat3 v_worldToTangent;
 
 out vec4 FragColor;
 
@@ -32,8 +31,11 @@ uniform float u_clearcoatGloss; // controls clearcoat glossiness (0 = satin, 1 =
 uniform float u_specularTrans;  // transmission fraction (glass/translucency)
 uniform float u_flatness;       // blends in Hanrahan-Krueger subsurface for thin surfaces
 uniform int u_thin;             // 0 = solid, 1 = thin surface (leaves, paper)
+uniform float u_opacity;        // multiplies final alpha (1 = fully opaque)
 
 const float PI = 3.1415926535897932384626433832795;
+
+const float CLEARCOAT_MAX = 8.0f;
 
 struct Light {
     vec4 posType;    // xyz = position (POINT/SPOT), w = type (0 dir, 1 point, 2 spot)
@@ -55,6 +57,14 @@ vec3 safeNormalize(vec3 v) {
     float len2 = dot(v, v);
     if (len2 < 1e-8) return vec3(0.0);
     return v * inversesqrt(len2);
+}
+
+mat3 buildWorldToTangent(vec3 N) {
+    vec3 ref = (abs(N.y) < 0.999f) ? vec3(0.0f, 1.0f, 0.0f) : vec3(1.0f, 0.0f, 0.0f);
+    vec3 T = normalize(ref - N * dot(ref, N));
+    vec3 B = cross(N, T);
+    // mat3(...) takes columns, so the transpose has rows T, N, B.
+    return transpose(mat3(T, N, B));
 }
 
 // Smooth radius falloff: 1 at dist=0, 0 at dist>=radius
@@ -143,7 +153,7 @@ float dielectric(float cosThetaI, float etaI, float etaT) {
                             ((etaI * cosThetaI) + (etaT * cosThetaT));
 
     return (rParallel * rParallel + rPerpendicular * rPerpendicular) / 2.0f;
-    
+
 }
 
 // dielectric Fresnel and colored metallic Fresnel based on u_metallic.
@@ -154,7 +164,7 @@ vec3 disneyFresnel(vec3 baseColor, vec3 N, vec3 wi, vec3 wm, vec3 wo) {
     // IOR remap: u_specular = 0.5 -> IOR 1.5
     float ior = (2.0f / (1.0f - sqrt(0.08f * u_specular))) - 1.0f;
     float relativeIOR = dot(N, wi) > 0.0f ? ior : 1.0f / ior;
-    
+
     vec3 R0 = schlickR0FromRelativeIOR(relativeIOR) * mix(vec3(1.0f), tint, u_specularTint);
     R0 = mix(R0, baseColor, u_metallic);
 
@@ -179,7 +189,7 @@ float GTR1(float absDotHL, float a) {
     if (a >= 1.0) return 1.0f / PI;
 
     float a2 = a * a;
-    return (a2 - 1.0) / (PI * log2(a2) * (1.0 + (a2 - 1.0) * absDotHL * absDotHL));
+    return (a2 - 1.0) / (PI * log(a2) * (1.0 + (a2 - 1.0) * absDotHL * absDotHL));
 }
 
 // Anisotropic GGX (GTR2). Returns the
@@ -215,7 +225,7 @@ float GGXG1(vec3 w, vec3 N, float ax, float ay) {
 
     float cos2Phi = w.x * w.x / denom;
     float sin2Phi = w.z * w.z / denom;
-    
+
     float a = sqrt(cos2Phi * ax * ax + sin2Phi * ay * ay);
     float a2Tan2Theta = pow(a * absTanTheta, 2.0f);
 
@@ -318,7 +328,7 @@ float thinTransmissionRoughness(float ior) {
 }
 
 // Specular transmission lobe
-vec3 calcDisneySpecTransmission(vec3 baseColor, vec3 N, vec3 wi, vec3 wo, vec3 wm, float ax, float ay) {    
+vec3 calcDisneySpecTransmission(vec3 baseColor, vec3 N, vec3 wi, vec3 wo, vec3 wm, float ax, float ay) {
     float ior = (2.0f / (1.0f - sqrt(0.08f * u_specular))) - 1.0f;
 
     // Inverts ior based on the side it is coming from
@@ -352,27 +362,28 @@ vec3 calcDisneySpecTransmission(vec3 baseColor, vec3 N, vec3 wi, vec3 wo, vec3 w
 /***************/
 
 // Second specular layer on top of the base material
-float disneyClearcoat(vec3 N, vec3 wo, vec3 wm, vec3 wi) {
+float disneyClearcoat(vec3 N, vec3 wo, vec3 wm, vec3 wi, float normalVariance) {
     if (u_clearcoat <= 0.0f) return 0.0f;
 
     float absDotNH = abs(dot(N, wm));
     float dotHV = dot(wm, wo);
 
-    float clearcoatGloss = u_clearcoatGloss;
+    float alpha = mix(0.1, 0.01, u_clearcoatGloss);
+    alpha = clamp(sqrt(alpha * alpha + 0.25 * normalVariance), alpha, 1.0);
 
-    float d = GTR1(absDotNH, mix(0.1, 0.001, clearcoatGloss));
+    float d = GTR1(absDotNH, alpha);
     float f = schlickFresnel(0.04f, dotHV);
     float gl = GGXG1(wi, 0.25f);
     float gv = GGXG1(wo, 0.25f);
 
-    return 0.25f * u_clearcoat * d * f * gl * gv;
+    return min(0.25f * u_clearcoat * d * f * gl * gv, CLEARCOAT_MAX);
 }
 
 /*****************/
 /** Disney BSDF **/
 /*****************/
 
-vec3 evaluateDisney(vec3 N, vec3 wi, vec3 wm, vec3 wo, vec3 baseColor) {    
+vec3 evaluateDisney(vec3 N, vec3 wi, vec3 wm, vec3 wo, vec3 baseColor, float normalVariance) {
     float dotNV = dot(N, wo);
     float dotNL = max(dot(N, wi), 0.0f);
     if (dotNL <= 0.0f) return vec3(0.0f);
@@ -391,7 +402,7 @@ vec3 evaluateDisney(vec3 N, vec3 wi, vec3 wm, vec3 wo, vec3 baseColor) {
     // clearcoat
     bool upperHemisphere = dotNL > 0.0f && dotNV > 0.0f;
     if (upperHemisphere && u_clearcoat > 0.0f) {
-        float clearcoat = disneyClearcoat(N, wo, wm, wi);
+        float clearcoat = disneyClearcoat(N, wo, wm, wi, normalVariance);
         reflectance += vec3(clearcoat);
     }
 
@@ -429,8 +440,11 @@ vec3 evaluateDisney(vec3 N, vec3 wi, vec3 wm, vec3 wo, vec3 baseColor) {
 void main() {
     vec3 N = safeNormalize(v_worldNormal); // normal vector
     vec3 V = safeNormalize(u_cameraPosition - v_worldPos); // view vector
+    mat3 worldToTangent = buildWorldToTangent(N);
 
-    
+    float normalVariance = dot(dFdx(N), dFdx(N)) + dot(dFdy(N), dFdy(N));
+
+
     vec4 texAlbedo = texture(u_albedo, v_uv);
     vec3 baseColor = mon2lin(texAlbedo.rgb) * v_color;
     vec3 colorOut = u_ambient * baseColor;
@@ -483,13 +497,13 @@ void main() {
         }
 
         vec3 nt = vec3(0.0f, 1.0f, 0.0f);
-        vec3 wo = safeNormalize(v_worldToTangent * V);
-        vec3 wi = safeNormalize(v_worldToTangent * L);
+        vec3 wo = safeNormalize(worldToTangent * V);
+        vec3 wi = safeNormalize(worldToTangent * L);
         vec3 wm = safeNormalize(wo + wi); // half vector
 
-        colorOut += evaluateDisney(nt, wi, wm, wo, baseColor) * Lrgb * intensity * att;
+        colorOut += evaluateDisney(nt, wi, wm, wo, baseColor, normalVariance) * Lrgb * intensity * att;
     }
 
-    FragColor = vec4(colorOut, texAlbedo.a);
+    FragColor = vec4(colorOut, texAlbedo.a * u_opacity);
 
 }

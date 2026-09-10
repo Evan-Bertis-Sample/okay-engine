@@ -41,6 +41,7 @@ struct LitMaterial : public SceneMaterialProperties, public OkayMaterialProperti
     UniformProperty<float, FixedString("u_specularTrans")> specularTrans{0.0f};
     UniformProperty<float, FixedString("u_flatness")> flatness{0.0f};
     UniformProperty<int, FixedString("u_thin")> thin{0};
+    UniformProperty<float, FixedString("u_opacity")> opacity{1.0f};
 
     auto uniformRefs() {
         return std::tuple_cat(SceneMaterialProperties::uniformRefs(),
@@ -57,7 +58,8 @@ struct LitMaterial : public SceneMaterialProperties, public OkayMaterialProperti
                 clearcoatGloss,
                 specularTrans,
                 flatness,
-                thin));
+                thin,
+                opacity));
     }
     auto uniformRefs() const {
         return std::tuple_cat(SceneMaterialProperties::uniformRefs(),
@@ -74,7 +76,8 @@ struct LitMaterial : public SceneMaterialProperties, public OkayMaterialProperti
                 clearcoatGloss,
                 specularTrans,
                 flatness,
-                thin));
+                thin,
+                opacity));
     }
 
     auto uniformBlockRefs() {

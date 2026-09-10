@@ -43,7 +43,8 @@ class ScenePass : public IRenderPass {
         GL_CHECK(glEnable(GL_DEPTH_TEST));
         GL_CHECK(glDisable(GL_BLEND));
 
-        GL_CHECK(glClearColor(0.113f, 0.008f, 0.208f, 1.0f));
+        // GL_CHECK(glClearColor(0.113f, 0.008f, 0.208f, 1.0f));
+        GL_CHECK(glClearColor(0.580f, 0.580f, 0.580f, 1.0f));
         GL_CHECK(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
         // doesn't need MSAA, but should if the platform can support it
