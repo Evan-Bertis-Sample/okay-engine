@@ -1,5 +1,3 @@
-#include "okay/core/engine/engine.hpp"
-
 #include <okay/core/renderer/imgui_impl.hpp>
 
 #include "imgui_internal.h"

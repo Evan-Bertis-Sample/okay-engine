@@ -39,7 +39,7 @@ static void __gameInitialize() {
     okay::Mesh object = okay::mesh(okay::load::engineMeshData("models/teapot.obj"));
 
     okay::Mesh cube = okay::mesh(okay::primitives::box().build());
-    okay::ShaderHandle shader = okay::shaderHandle(okay::load::engineShader("shaders/lit"));
+    okay  ::ShaderHandle shader = okay::shaderHandle(okay::load::engineShader("shaders/lit"));
 
     auto materialProperties = std::make_unique<okay::LitMaterial>();
     materialProperties->color.set(glm::vec4(1.0f, 1.0f, 0.0f, 1.0f));
@@ -70,7 +70,7 @@ static void __gameInitialize() {
                                      .addComponent<okay::TransformComponent>(pos, glm::vec3{0.5f})
                                      .addComponent<okay::MeshRendererComponent>(cube, material);
 
-        for (std::size_t i = 0; i < 5; ++i) {
+        for (std::size_t i = 0; i < 10; ++i) {
             pos = glm::ballRand(10.0f);
             okay::ecs::entity(entity)
                 .addComponent<okay::TransformComponent>(pos, glm::vec3{0.5f})

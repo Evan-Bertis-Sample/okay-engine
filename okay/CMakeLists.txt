@@ -239,3 +239,23 @@ set_target_properties(okay_runtime PROPERTIES
 target_compile_definitions(${PROJECT}
     PRIVATE OKAY_GAME_BUILD_DLL
 )
+
+target_precompile_headers(${PROJECT}
+    PRIVATE
+    <okay/okay.hpp>
+    <vector>
+    <format>
+    <map>
+    <unordered_map>
+    <array>
+    <optional>
+    <expected>
+    <fstream>
+    <filesystem>
+    <functional>
+    <concepts>
+    <memory>
+    <string>
+    <cstdint>
+    <glm/glm.hpp>
+)
