@@ -33,7 +33,6 @@ target_link_libraries(imgui PRIVATE
   glfw
   OpenGL::GL
   user32 gdi32 shell32 advapi32 ole32 uuid winmm imm32 version uxtheme setupapi bcrypt
-  -static-libstdc++
 )
 
 # link low-level deps INTO the platform lib
@@ -41,7 +40,6 @@ target_link_libraries(okay_platform PUBLIC
   glfw
   OpenGL::GL
   user32 gdi32 shell32 advapi32 ole32 uuid winmm imm32 version uxtheme setupapi bcrypt
-  -static-libstdc++
   imgui
 )
 

@@ -28,8 +28,10 @@
 # C/CXX SETUP + OTHER BOILERPLATE
 #
 
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.29)
 project(${PROJECT} C CXX)
+
+set(CMAKE_LINKER_TYPE LLD)
 
 # targets setup
 if(OKAY_RUNTIME STREQUAL "editor")
