@@ -37,6 +37,7 @@ class Renderer : public System<SystemScope::ENGINE> {
           _surface(std::make_unique<Surface>(settings.surfaceConfig)),
           _renderTargetPool(settings.surfaceConfig.width, settings.surfaceConfig.height),
           _pipeline(std::move(settings.pipeline)),
+          _imguiImpl(std::make_unique<IMGUIImpl>()),
           _imguiEnabled(settings.enableIMGUI) {}
 
     ~Renderer() {

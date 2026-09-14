@@ -70,18 +70,25 @@ void Renderer::initialize() {
         Engine.logger.info("Initializing ImGui");
         // Setup Dear ImGui context
         IMGUI_CHECKVERSION();
-        ImGui::CreateContext();
-        ImGuiIO& io = ImGui::GetIO();
-        io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
-        io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;   // Enable Gamepad Controls
-        io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
         auto win = getSurfaceWindow();
         if (win == nullptr) {
             Engine.logger.warn("No GLFW window available");
             return;
         }
-        _imguiImpl->init(win, true);
+
+        ImGuiConfigFlags flags;
+        flags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
+        flags |= ImGuiConfigFlags_NavEnableGamepad;   // Enable Gamepad Controls
+        flags |= ImGuiConfigFlags_DockingEnable;
+
+        _imguiImpl->init(win, flags, true);
+
+        if (!_imguiImpl) {
+            Engine.logger.error("IMGUIImpl didn't return a valid context!");
+        }
+
+        ImGui::SetCurrentContext(_imguiImpl->getImguiContext());
         _imguiInitialized = true;
     }
 }

@@ -12,10 +12,12 @@ class IMGUIImpl {
     ~IMGUIImpl();
 
     bool imguiSupported();
-    void init(void* window, bool enableCallbacks);
+    void init(void* window, ImGuiConfigFlags flags, bool enableCallbacks);
     void newFrame();
     void renderDrawData(ImDrawData* drawData);
     void shutdown();
+
+    ImGuiContext* getImguiContext() const;
 
    private:
     struct Context;

@@ -3,6 +3,7 @@
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
+#include <okay/core/engine/resource.hpp>
 #include <okay/core/renderer/renderer.hpp>
 #include <okay/core/util/option.hpp>
 
@@ -59,7 +60,7 @@ struct FontLoadOptions {
     }
 };
 
-class FontManager {
+class FontManager : public ScopedSingleton<FontManager, ResourceScope::ENGINE> {
    public:
     struct FontHandle {
        public:
@@ -97,11 +98,6 @@ class FontManager {
         float descender;
         float height;
     };
-
-    static FontManager& instance() {
-        static FontManager instance;
-        return instance;
-    }
 
     FontManager();
 

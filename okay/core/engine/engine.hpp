@@ -119,7 +119,7 @@ struct ResourceParameter {
 
     T* get() const {
         if (system == nullptr) {
-            return Engine.systems.getSystemChecked<T>();
+            return Engine.resources.getResourceChecked<T>();
         }
 
         return system;

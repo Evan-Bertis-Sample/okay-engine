@@ -19,12 +19,12 @@ class AssetRef {
    public:
     T asset{};
     bool loaded{false};
-    SystemParameter<AssetManager> assetManager;
+    ResourceParameter<AssetManager> assetManager;
     std::filesystem::path path;
     LoadOptions loadOptions;
 
     AssetRef(const std::filesystem::path& path,
-        SystemParameter<AssetManager> am = nullptr,
+        ResourceParameter<AssetManager> am = nullptr,
         LoadOptions loadOptions = LoadOptions{})
         : assetManager(am), path(path), loadOptions(loadOptions) {}
 
