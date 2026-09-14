@@ -22,7 +22,11 @@ OKAY_ASCII_LOGO = r"""
 
 def ensure_venv(project_root: Path):
     venv_dir = project_root / "venv"
-    venv_python = venv_dir / "bin" / "python"
+
+    if os.name == "nt":
+        venv_python = venv_dir / "bin" / "python.exe"
+    else:
+        venv_python = venv_dir / "bin" / "python"
 
     if os.environ.get("OKAY_VENV_REEXEC") == "1":
         return

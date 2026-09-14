@@ -39,7 +39,7 @@ static void __gameInitialize() {
     okay::Mesh object = okay::mesh(okay::load::engineMeshData("models/teapot.obj"));
 
     okay::Mesh cube = okay::mesh(okay::primitives::box().build());
-    okay  ::ShaderHandle shader = okay::shaderHandle(okay::load::engineShader("shaders/lit"));
+    okay ::ShaderHandle shader = okay::shaderHandle(okay::load::engineShader("shaders/lit"));
 
     auto materialProperties = std::make_unique<okay::LitMaterial>();
     materialProperties->color.set(glm::vec4(1.0f, 1.0f, 0.0f, 1.0f));
