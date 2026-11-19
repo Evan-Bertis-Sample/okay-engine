@@ -17,12 +17,16 @@ IMGUIImpl::IMGUIImpl() : _context(std::make_unique<IMGUIImpl::Context>()) {}
 
 IMGUIImpl::~IMGUIImpl() {}
 
-void IMGUIImpl::init(void* window, bool enableCallbacks) {}
+void IMGUIImpl::init(void* window, ImGuiConfigFlags flags, bool enableCallbacks) {}
 
 void IMGUIImpl::newFrame() {}
 
 void IMGUIImpl::renderDrawData(ImDrawData* drawData) {}
 
 void IMGUIImpl::shutdown() {}
+
+ImGuiContext* IMGUIImpl::getImguiContext() const {
+    return nullptr;
+}
 
 };  // namespace okay

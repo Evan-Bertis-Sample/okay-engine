@@ -1,18 +1,93 @@
-#!/usr/bin/env python3
-from pathlib import Path
-import subprocess
-import shutil
-import hashlib
-from tools.tool_util import OkayToolUtil, OkayLogType, OkayLogger
 import enum
+import hashlib
 import os
-import sys
-import stat
 import shlex
+import shutil
+import stat
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+from tools.proc_interface import OkayProcUtil
+from tools.tool_util import OkayLogger, OkayLogType, OkayToolUtil
+from watchdog.events import FileSystemEventHandler
+from watchdog.observers import Observer
+
+
+class DirectoryWatcherHandler(FileSystemEventHandler):
+    def __init__(
+        self,
+        code_cb,
+        asset_cb,
+        code_change_cb,
+        asset_dirs: list[Path],
+        ignored_dirs: list[Path],
+        debounce_seconds: float = 0.25,
+    ):
+        self._code_cb = code_cb
+        self._asset_cb = asset_cb
+        self._code_change_check = code_change_cb
+        self._asset_dirs = [d.resolve() for d in asset_dirs]
+        self._ignored_dirs = [d.resolve() for d in ignored_dirs]
+        self._debounce_seconds = debounce_seconds
+        self._last_call_at = {"code": 0.0, "asset": 0.0}
+
+    def _contains_path(self, root: Path, path: Path) -> bool:
+        try:
+            path.relative_to(root)
+            return True
+        except ValueError:
+            return False
+
+    def _is_ignored(self, path: Path) -> bool:
+        path = path.resolve()
+        return any(self._contains_path(d, path) for d in self._ignored_dirs)
+
+    def _is_asset(self, path: Path) -> bool:
+        path = path.resolve()
+        return any(self._contains_path(d, path) for d in self._asset_dirs)
+
+    def _handle(self, event):
+        paths = [Path(event.src_path)]
+        if hasattr(event, "dest_path") and event.dest_path:
+            paths.append(Path(event.dest_path))
+
+        if any(self._is_ignored(p) for p in paths):
+            return
+
+        now = time.monotonic()
+        event_type = "asset" if any(self._is_asset(p) for p in paths) else "code"
+
+        if now - self._last_call_at[event_type] < self._debounce_seconds:
+            return
+
+        if event_type == "code" and not self._code_change_check():
+            return
+
+        self._last_call_at[event_type] = now
+
+        if event_type == "asset":
+            self._asset_cb()
+        else:
+            self._code_cb()
+
+    def on_created(self, event):
+        self._handle(event)
+
+    def on_deleted(self, event):
+        self._handle(event)
+
+    def on_modified(self, event):
+        self._handle(event)
+
+    def on_moved(self, event):
+        self._handle(event)
+
 
 class OkayBuildType(enum.Enum):
-    Debug = "Debug"
-    Release = "Release"
+    Debug = "debug"
+    Release = "release"
 
     @classmethod
     def list(cls):
@@ -20,37 +95,64 @@ class OkayBuildType(enum.Enum):
 
     @classmethod
     def names(cls):
-        return [t.name for t in cls]
+        return [t.value for t in cls]
 
     @classmethod
     def from_string(cls, s: str):
         for t in cls:
-            if t.name.lower() == s.lower():
+            if t.value.lower() == s.lower():
                 return t
         return None
-    
+
     def __str__(self):
-        return self.name
+        return self.value
+
+
+class OkayRuntimeType(enum.Enum):
+    Editor = "editor"
+    Player = "player"
+
+    @classmethod
+    def list(cls):
+        return list(cls)
+
+    @classmethod
+    def names(cls):
+        return [t.value for t in cls]
+
+    @classmethod
+    def from_string(cls, s: str):
+        for t in cls:
+            if t.value.lower() == s.lower():
+                return t
+        return None
+
+    def __str__(self):
+        return self.value
 
 
 class OkayBuildOptions:
     def __init__(
         self,
         project_dir: Path,
-        target : str,
+        target: str,
+        runtime_type: OkayRuntimeType = OkayRuntimeType.Player,
         build_type: OkayBuildType = OkayBuildType.Release,
         project_name: str = None,
         compiler: str = "g++",
-        generator : str = "auto",
-        user_asset_dir : Path = None
+        generator: str = "auto",
+        user_asset_dir: Path = None,
+        hot_reload : bool = False
     ):
         self.project_dir = project_dir.resolve()
         self.target = target
+        self.runtime_type = runtime_type
         self.build_type = build_type
         self.project_name = project_name or self.project_dir.name
         self.compiler = compiler
         self.generator = generator
         self.user_asset_dir = user_asset_dir or (self.project_dir / "assets")
+        self.hot_reload = hot_reload if runtime_type == OkayRuntimeType.Editor else False
 
     @classmethod
     def add_subparser_args(cls, sp):
@@ -61,9 +163,17 @@ class OkayBuildOptions:
             help="Path to your project root",
         )
         sp.add_argument(
+            "--runtime-type",
+            type=lambda x: x.lower(),
+            choices=OkayRuntimeType.names(),
+            default=OkayRuntimeType.Editor.value,
+            help="CMake build type",
+        )
+        sp.add_argument(
             "--build-type",
+            type=lambda x: x.lower(),
             choices=OkayBuildType.names(),
-            default=OkayBuildType.Debug.name,
+            default=OkayBuildType.Debug.value,
             help="CMake build type",
         )
         sp.add_argument(
@@ -73,20 +183,26 @@ class OkayBuildOptions:
         sp.add_argument(
             "--compiler",
             type=str,
-            default="g++",
-            help="C/C++ compiler to use (default: gcc)",
+            default="clang",
+            help="C/C++ compiler to use (default: clang)",
         )
         sp.add_argument(
             "--target",
             type=str,
             default="native",
-            help="CMake target to build (default: native)",
+            help="Platform to target (default: native)",
         )
         sp.add_argument(
             "--generator",
             choices=["auto", "ninja", "mingw-makefiles", "unix-makefiles", "vs"],
             default="auto",
             help="CMake generator to use (default: auto)",
+        )
+
+        sp.add_argument(
+            "--hot-reload",
+            action="store_true",
+            help="Enable hot reload of game assets & code (Editor Runtime only!)",
         )
 
         # user asset dirs
@@ -111,6 +227,7 @@ class OkayBuildOptions:
     @classmethod
     def from_args(cls, args) -> "OkayBuildOptions":
         bt = OkayBuildType.from_string(args.build_type) or OkayBuildType.Debug
+        rt = OkayRuntimeType.from_string(args.runtime_type) or OkayRuntimeType.Editor
 
         # if this is native, set target to the platform
         if args.target.lower() == "native":
@@ -119,13 +236,15 @@ class OkayBuildOptions:
 
         return cls(
             project_dir=args.project_dir.resolve(),
+            runtime_type=rt,
             build_type=bt,
             project_name=args.project_name,
             target=args.target,
             compiler=args.compiler,
-            generator=args.generator
+            generator=args.generator,
+            hot_reload=args.hot_reload
         )
-    
+
     def _decide_generator(self) -> str:
         gen = self.generator.lower()
         if gen == "ninja":
@@ -144,7 +263,6 @@ class OkayBuildOptions:
             return "MinGW Makefiles"
         # Fallback
         return "Unix Makefiles"
-    
 
     @property
     def build_dir(self) -> Path:
@@ -154,24 +272,22 @@ class OkayBuildOptions:
         path.mkdir(parents=True, exist_ok=True)
         # turn this into the absolute path
         path = path.resolve()
-        return path / f"{self.target.lower()}_{self.build_type.name.lower()}"
-    
+        return path / f"{self.target.lower()}_{self.build_type.value.lower()}_{self.runtime_type.value.lower()}"
 
     @property
     def packaged_engine_asset_dir(self) -> Path:
         return Path(self.build_dir / "engine" / "assets")
-    
+
     @property
     def packaged_game_asset_dir(self) -> Path:
         return Path(self.build_dir / "game" / "assets")
-    
+
     @property
     def engine_asset_dir(self) -> Path:
         return Path(OkayToolUtil.get_okay_dir()) / "assets"
-    
+
     def rel_to_build_dir(self, p: Path) -> str:
         return os.path.relpath(p.resolve(), self.build_dir).replace("\\", "/")
-
 
     @property
     def cmake_configure_cmd(self) -> str:
@@ -179,67 +295,132 @@ class OkayBuildOptions:
         rel_prj = os.path.relpath(self.project_dir, okay_root).replace("\\", "/")
         abs_prj = (Path(okay_root) / rel_prj).resolve().as_posix()
 
+        generator = self._decide_generator()
+
         args = [
             "cmake",
-            "-G", self._decide_generator(),
-            "-S", str(OkayToolUtil.get_okay_cmake_dir()),
-            "-B", str(self.build_dir),
+            "-G",
+            generator,
+            "-S",
+            str(OkayToolUtil.get_okay_cmake_dir()),
+            "-B",
+            str(self.build_dir),
             f"-DPROJECT={self.project_name}",
             f"-DOKAY_PROJECT_NAME={self.project_name}",
             f"-DOKAY_TARGET={self.target}",
             f"-DOKAY_PROJECT_ROOT_DIR={abs_prj}",
             f"-DCMAKE_BUILD_TYPE={self.build_type.value}",
             f"-DOKAY_BUILD_TYPE={self.build_type.value}",
-            # these should be relative to the build dir
+            "-DCMAKE_C_COMPILER_LAUNCHER=ccache",
+            "-DCMAKE_CXX_COMPILER_LAUNCHER=ccache",
             f"-DOKAY_ENGINE_ASSET_ROOT={self.rel_to_build_dir(self.packaged_engine_asset_dir)}",
             f"-DOKAY_GAME_ASSET_ROOT={self.rel_to_build_dir(self.packaged_game_asset_dir)}",
+            f"-DOKAY_RUNTIME={self.runtime_type.value}"
         ]
 
-        # Only set compilers when we’re *not* using Visual Studio
-        gens = set(self._decide_generator())
-        using_vs = "Visual Studio 17 2022" in gens
-        if not using_vs:
-            c_compiler = self.compiler if self.compiler != "g++" else "gcc"
-            args += [f"-DCMAKE_C_COMPILER={c_compiler}",
-                    f"-DCMAKE_CXX_COMPILER={self.compiler}"]
+        using_vs = "Visual Studio" in generator
 
-        # Cross-compile for Raspberry Pi if desired via a toolchain (see below)
+        if not using_vs:
+            compiler = self.compiler.lower()
+
+            if compiler in ("g++", "gcc"):
+                c_compiler = "gcc"
+                cxx_compiler = "g++"
+                rc_compiler = "windres"
+
+            elif compiler in ("clang++", "clang"):
+                c_compiler = "clang"
+                cxx_compiler = "clang++"
+                rc_compiler = "windres" if os.name == "nt" else None
+
+                if os.name == "nt":
+                    resolved_c = shutil.which(c_compiler) or ""
+                    resolved_cxx = shutil.which(cxx_compiler) or ""
+
+                    if "program files" in resolved_c.lower() or "program files" in resolved_cxx.lower():
+                        raise RuntimeError(
+                            "clang/clang++ resolved to the standalone LLVM install instead of "
+                            "MSYS2/MinGW clang. Put the MSYS2 clang directory earlier on PATH, "
+                            "or build with --compiler g++."
+                        )
+
+            else:
+                c_compiler = self.compiler
+                cxx_compiler = self.compiler
+                rc_compiler = None
+
+            args += [
+                f"-DCMAKE_C_COMPILER={c_compiler}",
+                f"-DCMAKE_CXX_COMPILER={cxx_compiler}",
+            ]
+
         toolchain = os.environ.get("OKAY_TOOLCHAIN_FILE", "")
         if self.target.lower() in ("rpi", "raspberrypi") and toolchain:
             args += [f"-DCMAKE_TOOLCHAIN_FILE={toolchain}"]
 
-        cmd = subprocess.list2cmdline(args)  # uses "..." quoting
+        return subprocess.list2cmdline(args)
 
-        return cmd 
-    
     @property
     def cmake_build_cmd(self) -> str:
-        cmd = ["cmake", "--build", str(self.build_dir), "--target", self.project_name, "--parallel", str(os.cpu_count())]
+        cmd = [
+            "cmake",
+            "--build",
+            str(self.build_dir),
+            "--target",
+            "okay_runtime",
+            "--parallel",
+            str(os.cpu_count()),
+        ]
+        return subprocess.list2cmdline(cmd)
+
+
+    @property
+    def cmake_build_game_cmd(self) -> str:
+        cmd = [
+            "cmake",
+            "--build",
+            str(self.build_dir),
+            "--target",
+            self.project_name,
+            "--parallel",
+            str(os.cpu_count()),
+        ]
         return subprocess.list2cmdline(cmd)
 
     @property
     def executable(self) -> Path:
-        exe = f"{self.project_name}.exe" if sys.platform == "win32" else self.project_name
+        exe = (
+            f"{self.project_name}.exe" if sys.platform == "win32" else self.project_name
+        )
         return self.build_dir / exe
 
     def validate_dirs(self, *, need_build_dir: bool = False) -> bool:
         if not self.project_dir.is_dir():
-            OkayLogger.log(f"Project directory not found: {self.project_dir}", OkayLogType.ERROR)
+            OkayLogger.log(
+                f"Project directory not found: {self.project_dir}", OkayLogType.ERROR
+            )
             return False
         if need_build_dir and not self.build_dir.is_dir():
-            OkayLogger.log(f"Build directory not found: {self.build_dir}", OkayLogType.ERROR)
+            OkayLogger.log(
+                f"Build directory not found: {self.build_dir}", OkayLogType.ERROR
+            )
             return False
         return True
 
 
 def _sha256_of_files(dirs: list[Path], exts: set[str]) -> hashlib._hashlib.HASH:
     h = hashlib.sha256()
+
     for d in dirs:
         for f in d.rglob("*"):
+            if ".okay" in f.parts:
+                continue
+
             if f.suffix.lower() in exts:
                 with f.open("rb") as fp:
                     for chunk in iter(lambda: fp.read(65536), b""):
                         h.update(chunk)
+
     return h
 
 
@@ -253,7 +434,6 @@ class OkayBuildUtil:
         src_h = _sha256_of_files(roots, OkayBuildUtil.SOURCE_EXTS).hexdigest()
         shd_h = _sha256_of_files(roots, OkayBuildUtil.SHADER_EXTS).hexdigest()
         return src_h, shd_h
-    
 
     @staticmethod
     def get_checksum_file(project_dir: Path) -> Path:
@@ -279,46 +459,49 @@ class OkayBuildUtil:
         if stored is None:
             return False
         return stored == OkayBuildUtil.generate_checksums(options)
-    
+
     @staticmethod
-    def package_assets(src_dir : Path, dest_dir : Path):
-        # for now, this is a simple implementation that will copy 
+    def package_assets(src_dir: Path, dest_dir: Path):
+        # for now, this is a simple implementation that will copy
         # all files from the source directory to the destination directory
         # in the future, this will probably package assets and encrypt them
         if src_dir.exists() == False:
             OkayLogger.log(f"Source directory not found: {src_dir}", OkayLogType.ERROR)
             return
-        
+
         if dest_dir.exists():
             shutil.rmtree(dest_dir)
-
 
         shutil.copytree(src_dir, dest_dir, dirs_exist_ok=True)
 
     @staticmethod
-    def build_project(options: OkayBuildOptions):
+    def build_project(options: OkayBuildOptions) -> bool:
         if not options.validate_dirs():
-            return
+            return False
+
         options.build_dir.mkdir(parents=True, exist_ok=True)
 
         OkayLogger.log("Packaging assets…", OkayLogType.INFO)
-        OkayBuildUtil.package_assets(options.user_asset_dir, options.packaged_game_asset_dir)
-        OkayBuildUtil.package_assets(options.engine_asset_dir, options.packaged_engine_asset_dir)
+        OkayBuildUtil.package_assets(
+            options.user_asset_dir, options.packaged_game_asset_dir
+        )
+        OkayBuildUtil.package_assets(
+            options.engine_asset_dir, options.packaged_engine_asset_dir
+        )
 
-        OkayLogger.log("Executing command: " + options.cmake_configure_cmd, OkayLogType.INFO)
+        OkayLogger.log(
+            "Executing command: " + options.cmake_configure_cmd, OkayLogType.INFO
+        )
         cmake_dir = OkayToolUtil.get_okay_cmake_dir()
         OkayLogger.log(f"Working directory: {cmake_dir}", OkayLogType.INFO)
 
         try:
             subprocess.run(
-                options.cmake_configure_cmd,
-                check=True,
-                cwd=cmake_dir,
-                shell=True
+                options.cmake_configure_cmd, check=True, cwd=cmake_dir, shell=True
             )
         except subprocess.CalledProcessError as e:
             OkayLogger.log(f"CMake configure failed: {e}", OkayLogType.ERROR)
-            return
+            return False
 
         OkayLogger.log(f"Building   -> {options.cmake_build_cmd}", OkayLogType.INFO)
         try:
@@ -326,55 +509,356 @@ class OkayBuildUtil:
                 options.cmake_build_cmd,
                 check=True,
                 cwd=OkayToolUtil.get_okay_dir(),
-                shell=True
+                shell=True,
             )
         except subprocess.CalledProcessError as e:
             width = shutil.get_terminal_size().columns
             OkayLogger.log("\n" + "=" * width + "\n", OkayLogType.ERROR)
             OkayLogger.log(f"Build failed: {e}", OkayLogType.ERROR)
-            return
+            return False
 
         OkayBuildUtil.write_checksum_file(options)
-        OkayLogger.log(f"Build complete – executable at {options.executable}", OkayLogType.INFO)
+        OkayLogger.log(
+            f"Build complete – executable at {options.executable}", OkayLogType.INFO
+        )
+        return True
+
+    @staticmethod
+    def rebuild_game_dll(options: OkayBuildOptions) -> bool:
+        if not options.validate_dirs(need_build_dir=True):
+            return False
+
+        OkayLogger.log("Packaging assets…", OkayLogType.INFO)
+        OkayBuildUtil.package_assets(
+            options.user_asset_dir,
+            options.packaged_game_asset_dir,
+        )
+        OkayBuildUtil.package_assets(
+            options.engine_asset_dir,
+            options.packaged_engine_asset_dir,
+        )
+
+        OkayLogger.log(
+            f"Rebuilding game DLL -> {options.cmake_build_game_cmd}",
+            OkayLogType.INFO,
+        )
+
+        try:
+            subprocess.run(
+                options.cmake_build_game_cmd,
+                check=True,
+                cwd=OkayToolUtil.get_okay_dir(),
+                shell=True,
+            )
+        except subprocess.CalledProcessError as e:
+            width = shutil.get_terminal_size().columns
+            OkayLogger.log("\n" + "=" * width + "\n", OkayLogType.ERROR)
+            OkayLogger.log(f"Game DLL rebuild failed: {e}", OkayLogType.ERROR)
+            return False
+
+        built_game_dll = OkayBuildUtil.get_built_game_dll(options)
+
+        if not built_game_dll.exists():
+            OkayLogger.log(
+                f"Game DLL rebuild completed, but output was not found: {built_game_dll}",
+                OkayLogType.ERROR,
+            )
+            return False
+
+        OkayBuildUtil.write_checksum_file(options)
+
+        OkayLogger.log(
+            f"Game DLL rebuild complete – output at {built_game_dll}",
+            OkayLogType.INFO,
+        )
+        return True
+
+    @staticmethod
+    def get_built_game_dll(options: OkayBuildOptions) -> Path:
+        name = options.project_name
+
+        if sys.platform == "win32":
+            return options.build_dir / f"lib{name}.dll"
+
+        if sys.platform == "darwin":
+            return options.build_dir / f"lib{name}.dylib"
+
+        return options.build_dir / f"lib{name}.so"
+
+
+    @staticmethod
+    def get_dyn_game_dll_dir(options: OkayBuildOptions) -> Path:
+        return options.build_dir / "game_dll"
+
+
+    @staticmethod
+    def get_game_dll(options: OkayBuildOptions, reload_count: int) -> Path:
+        name = options.project_name
+        hot_reload_dir = OkayBuildUtil.get_dyn_game_dll_dir(options)
+
+        if sys.platform == "win32":
+            return hot_reload_dir / f"lib{name}_{reload_count}.dll"
+
+        if sys.platform == "darwin":
+            return hot_reload_dir / f"lib{name}_{reload_count}.dylib"
+
+        return hot_reload_dir / f"lib{name}_{reload_count}.so"
+
+
+    @staticmethod
+    def get_game_dll_pattern(options: OkayBuildOptions) -> str:
+        name = options.project_name
+
+        if sys.platform == "win32":
+            return f"lib{name}_*.dll"
+
+        if sys.platform == "darwin":
+            return f"lib{name}_*.dylib"
+
+        return f"lib{name}_*.so"
+
+
+    @staticmethod
+    def get_reload_count_from_dll(options: OkayBuildOptions, dll_path: Path) -> int | None:
+        name = options.project_name
+        stem = dll_path.stem
+
+        prefix = f"lib{name}_"
+
+        if not stem.startswith(prefix):
+            return None
+
+        suffix = stem[len(prefix):]
+
+        if not suffix.isdigit():
+            return None
+
+        return int(suffix)
+
+
+    @staticmethod
+    def get_latest_reload_count(options: OkayBuildOptions) -> int:
+        hot_reload_dir = OkayBuildUtil.get_dyn_game_dll_dir(options)
+
+        if not hot_reload_dir.exists():
+            return -1
+
+        max_count = -1
+        pattern = OkayBuildUtil.get_game_dll_pattern(options)
+
+        for dll_path in hot_reload_dir.glob(pattern):
+            count = OkayBuildUtil.get_reload_count_from_dll(options, dll_path)
+
+            if count is not None:
+                max_count = max(max_count, count)
+
+        return max_count
+
+
+    @staticmethod
+    def copy_game_dll(options: OkayBuildOptions, reload_count: int) -> bool:
+        built_game_dll = OkayBuildUtil.get_built_game_dll(options)
+        dyn_dll_dir = OkayBuildUtil.get_dyn_game_dll_dir(options)
+        reload_game_dll = OkayBuildUtil.get_game_dll(options, reload_count)
+
+        if not built_game_dll.exists():
+            OkayLogger.log(
+                f"Built game DLL not found: {built_game_dll}",
+                OkayLogType.ERROR,
+            )
+            return False
+
+        try:
+            dyn_dll_dir.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(built_game_dll, reload_game_dll)
+        except OSError as e:
+            OkayLogger.log(
+                f"Failed to copy game DLL into dyn dll directory: {e}",
+                OkayLogType.ERROR,
+            )
+            return False
+
+        OkayLogger.log(
+            f"Copied game DLL -> {reload_game_dll}",
+            OkayLogType.INFO,
+        )
+        return True
+
+
+    @staticmethod
+    def copy_next_game_dll(options: OkayBuildOptions) -> int | None:
+        next_reload_count = OkayBuildUtil.get_latest_reload_count(options) + 1
+
+        if not OkayBuildUtil.copy_game_dll(options, next_reload_count):
+            return None
+
+        return next_reload_count
+
+
+    @staticmethod
+    def prepare_dyn_game_dll_dir(options: OkayBuildOptions) -> bool:
+        dyn_dll_dir = OkayBuildUtil.get_dyn_game_dll_dir(options)
+
+        try:
+            if dyn_dll_dir.exists():
+                shutil.rmtree(dyn_dll_dir)
+
+            dyn_dll_dir.mkdir(parents=True, exist_ok=True)
+        except OSError as e:
+            OkayLogger.log(
+                f"Failed to reset dyn dll directory: {dyn_dll_dir}: {e}",
+                OkayLogType.ERROR,
+            )
+            return False
+
+        return OkayBuildUtil.copy_game_dll(options, 0)
 
     @staticmethod
     def run_project(
-        options: OkayBuildOptions, use_gdb: bool = False, allow_dirty: bool = False
+        options: OkayBuildOptions,
+        use_gdb: bool = False,
+        allow_dirty: bool = False,
     ):
         if not options.validate_dirs(need_build_dir=True):
             return
         if not options.executable.exists():
-            OkayLogger.log(f"Executable not found: {options.executable}", OkayLogType.ERROR)
+            OkayLogger.log(
+                f"Executable not found: {options.executable}", OkayLogType.ERROR
+            )
             return
 
         if not allow_dirty and not OkayBuildUtil.checksums_valid(options):
-            OkayLogger.log("Project changed since last build – please rebuild.", OkayLogType.WARNING)
+            OkayLogger.log(
+                "Project changed since last build – please rebuild.",
+                OkayLogType.WARNING,
+            )
             OkayLogger.log("    okay build", OkayLogType.INFO)
-            OkayLogger.log("    okay sc\n", OkayLogType.INFO)
             OkayLogger.log("…continuing anyway…\n", OkayLogType.WARNING)
 
+        if options.runtime_type is OkayRuntimeType.Editor and not OkayBuildUtil.prepare_dyn_game_dll_dir(options):
+            return
+
         cmd = ["gdb", str(options.executable)] if use_gdb else [str(options.executable)]
-        OkayLogger.log(f"Running -> {' '.join(cmd)}", OkayLogType.INFO)
+
+        observers = []
+
         try:
-            # give the executable permission to run and read/write because
-            # future build steps may need to modify the executable
-            permissions = stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH | stat.S_IWRITE | stat.S_IREAD
+            permissions = (
+                stat.S_IXUSR
+                | stat.S_IXGRP
+                | stat.S_IXOTH
+                | stat.S_IWRITE
+                | stat.S_IREAD
+            )
             os.chmod(options.executable, permissions)
-            subprocess.run(cmd, check=True, cwd=options.build_dir, shell=True)
+
+            if options.hot_reload:
+                OkayLogger.log("Attaching reload watchdog...", OkayLogType.INFO)
+                observers = OkayBuildUtil.attach_reload_watchdog(options)
+
+            OkayLogger.log(f"Running -> {' '.join(cmd)}", OkayLogType.INFO)
+
+            subprocess.run(
+                cmd,
+                check=True,
+                cwd=options.build_dir,
+            )
+
+        except KeyboardInterrupt:
+            OkayLogger.log("Runtime interrupted.", OkayLogType.WARNING)
+
         except subprocess.CalledProcessError as e:
             OkayLogger.log(f"Runtime error: {e}", OkayLogType.ERROR)
 
+        finally:
+            for observer in observers:
+                observer.stop()
+
+            for observer in observers:
+                observer.join(timeout=1.0)
+
+                if observer.is_alive():
+                    OkayLogger.log(
+                        "Reload watchdog did not stop cleanly.",
+                        OkayLogType.WARNING,
+                    )
+
+            sys.stdout.flush()
+            sys.stderr.flush()
+            print(flush=True)
+
     @staticmethod
-    def compile_shaders(options: OkayBuildOptions):
-        script = Path(OkayToolUtil.get_okay_tool_dir()) / "okay_sc.sh"
-        if not script.exists():
-            OkayLogger.log(f"Shader compiler not found: {script}", OkayLogType.ERROR)
-            return
-        cmd = [
-            "bash",
-            str(script),
-            str(options.project_dir),
-            OkayToolUtil.get_okay_dir(),
+    def attach_reload_watchdog(options: OkayBuildOptions):
+        last_checksum = OkayBuildUtil.generate_checksums(options)
+
+        def code_change_since_last_event() -> bool:
+            nonlocal last_checksum
+
+            checksum = OkayBuildUtil.generate_checksums(options)
+            if checksum == last_checksum:
+                return False
+
+            last_checksum = checksum
+            return True
+
+        event_handler = DirectoryWatcherHandler(
+            code_cb=lambda: OkayBuildUtil.reload_application(options),
+            asset_cb=lambda: OkayBuildUtil.reload_assets(options),
+            code_change_cb=code_change_since_last_event,
+            asset_dirs=[
+                options.user_asset_dir,
+                options.project_dir / "assets",
+                options.engine_asset_dir,
+            ],
+            ignored_dirs=[
+                options.project_dir / ".okay",
+                Path(OkayToolUtil.get_okay_parent_dir()) / ".okay",
+            ],
+        )
+
+        dirs = [
+            options.project_dir,
+            # only add okay if you can reload engine
+            # right now you can't
+            # OkayToolUtil.get_okay_parent_dir()
         ]
-        OkayLogger.log(f"Compiling shaders -> {' '.join(cmd)}", OkayLogType.INFO)
-        os.execvp(cmd[0], cmd)
+        observers = []
+
+        for directory in dirs:
+            observer = Observer()
+            observer.daemon = True
+            observer.schedule(event_handler, path=str(directory), recursive=True)
+            observer.start()
+            observers.append(observer)
+
+        return observers
+
+    @staticmethod
+    def reload_assets(options: OkayBuildOptions):
+        OkayLogger.log("Hot reloading assets!", OkayLogType.INFO)
+
+        OkayBuildUtil.package_assets(
+            options.user_asset_dir,
+            options.packaged_game_asset_dir,
+        )
+        OkayBuildUtil.package_assets(
+            options.engine_asset_dir,
+            options.packaged_engine_asset_dir,
+        )
+
+        OkayProcUtil.send_hot_reload_assets()
+
+    @staticmethod
+    def reload_application(options: OkayBuildOptions):
+        OkayLogger.log("Hot reloading application!", OkayLogType.INFO)
+
+        if not OkayBuildUtil.rebuild_game_dll(options):
+            OkayLogger.log("Hot reload build failed.", OkayLogType.ERROR)
+            return
+
+        reload_count = OkayBuildUtil.copy_next_game_dll(options)
+
+        if reload_count is None:
+            return
+
+        OkayProcUtil.send_hot_reload_code(reload_count.to_bytes(2, byteorder='little'))

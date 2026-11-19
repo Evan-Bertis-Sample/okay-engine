@@ -2,6 +2,7 @@
 #define __GPU_H__
 
 #include <okay/core/engine/engine.hpp>
+#include <okay/core/engine/resource.hpp>
 #include <okay/core/renderer/gl.hpp>
 #include <okay/core/renderer/texture.hpp>
 #include <okay/core/util/result.hpp>
@@ -334,18 +335,10 @@ class TextureManager {
     std::unordered_map<TextureKey, GPUTextureInfo, TextureKeyHash> _textures;
 };
 
-class GPUState {
+class GPUState : public ScopedSingleton<GPUState, ResourceScope::RUNTIME> {
    public:
     UniformBlockManager blocks;
     TextureManager textures;
-
-    static GPUState& instance() {
-        static GPUState s_instance;
-        return s_instance;
-    }
-
-   private:
-    GPUState() = default;
 };
 
 }  // namespace okay

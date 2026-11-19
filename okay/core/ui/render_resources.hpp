@@ -4,6 +4,7 @@
 #include <okay/core/asset/asset.hpp>
 #include <okay/core/asset/asset_util.hpp>
 #include <okay/core/asset/generic/texture_loader.hpp>
+#include <okay/core/engine/engine.hpp>
 #include <okay/core/renderer/material.hpp>
 #include <okay/core/renderer/materials/text_sdf.hpp>
 #include <okay/core/renderer/materials/ui_rect.hpp>
@@ -20,22 +21,16 @@
 
 namespace okay {
 
-class UIRenderResoruces {
+class UIRenderResoruces : public ScopedSingleton<UIRenderResoruces, ResourceScope::ENGINE> {
    public:
     using RectMaterial = UIRectMaterial;
     using TextMaterial = TextSDFMaterial;
-
-    static UIRenderResoruces& get() {
-        static UIRenderResoruces instance;
-        return instance;
-    }
 
     UIRenderResoruces() {
         loadResoruces();
     }
 
     Option<MaterialHandle> getRectMaterial(const UIElement& element);
-
     Option<MaterialHandle> getTextMaterial(const UIElement& element);
 
     static constexpr std::string_view UI_TEXT_SHADER = "shaders/text_sdf";
@@ -75,6 +70,19 @@ class UIRenderResoruces {
     }
     Texture whiteTexture() const {
         return _whiteTexture;
+    }
+
+    void reloadResources() {
+        _rectMaterialCache.clear();
+        _textMaterialCache.clear();
+
+        _uiTextShader = ShaderHandle::none();
+        _uiRectShader = ShaderHandle::none();
+
+        _whiteTexture = {};
+        _quadMesh = {};
+
+        loadResoruces();
     }
 
    private:

@@ -1,5 +1,7 @@
 #include "material.hpp"
 
+#include <stdexcept>
+
 namespace okay {
 
 Failable Shader::compile() {
@@ -66,42 +68,72 @@ Failable Shader::set() {
     return Failable::ok({});
 }
 
+bool ShaderHandle::isNone() const {
+    return owner == nullptr || id == Shader::invalidID() || !owner->validShader(*this);
+}
+
 const Shader* ShaderHandle::operator*() const {
-    return owner->getShader(id);
+    return get();
 }
 
 const Shader* ShaderHandle::operator->() const {
-    return owner->getShader(id);
+    return get();
 }
 
 const Shader* ShaderHandle::get() const {
-    return owner->getShader(id);
+    if (isNone())
+        throw std::runtime_error(
+            "Dereferencing a shader handle that is none! Check using ShaderHandle::isNone() before using * or -> operators on a handle!");
+    return owner->getShader(*this);
 }
 
 Shader* ShaderHandle::operator*() {
-    return owner->getShader(id);
+    return get();
 }
 
 Shader* ShaderHandle::operator->() {
-    return owner->getShader(id);
+    return get();
 }
 
 Shader* ShaderHandle::get() {
-    return owner->getShader(id);
+    if (isNone())
+        throw std::runtime_error(
+            "Dereferencing a shader handle that is none! Check using ShaderHandle::isNone() before using * or -> operators on a handle!");
+    return owner->getShader(*this);
 }
 
-const std::unique_ptr<Material>& MaterialHandle::operator*() const {
-    return owner->getMaterial(id);
+bool MaterialHandle::isNone() const {
+    return owner == nullptr || id == MaterialHandle::invalidID() || !owner->validMaterial(*this);
 }
 
-const std::unique_ptr<Material>& MaterialHandle::operator->() const {
-    return owner->getMaterial(id);
+const Material* MaterialHandle::operator*() const {
+    return get();
 }
 
-const std::unique_ptr<Material>& MaterialHandle::get() const {
-    return owner->getMaterial(id);
+const Material* MaterialHandle::operator->() const {
+    return get();
 }
 
-std::uint32_t MaterialRegistry::_materialID = 0;
+const Material* MaterialHandle::get() const {
+    if (isNone())
+        throw std::runtime_error(
+            "Dereferencing a material handle that is none! Check using MaterialHandle::isNone() before using * or -> operators on a handle!");
+    return owner->getMaterial(*this);
+}
+
+Material* MaterialHandle::operator*() {
+    return get();
+}
+
+Material* MaterialHandle::operator->() {
+    return get();
+}
+
+Material* MaterialHandle::get() {
+    if (isNone())
+        throw std::runtime_error(
+            "Dereferencing a material handle that is none! Check using MaterialHandle::isNone() before using * or -> operators on a handle!");
+    return owner->getMaterial(*this);
+}
 
 };  // namespace okay

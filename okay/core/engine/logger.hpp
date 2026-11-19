@@ -27,6 +27,10 @@
 
 namespace okay {
 
+#ifdef ERROR
+#undef ERROR
+#endif
+
 enum class Severity : std::uint8_t { DEBUG = 0, INFO = 1, WARNING = 2, ERROR = 3 };
 enum class Verbosity : std::uint8_t {
     SILENT = 0,

@@ -2,6 +2,7 @@
 #define __UI_H__
 
 #include "element.hpp"
+#include "okay/core/ui/render_resources.hpp"
 
 #include <okay/core/engine/engine.hpp>
 #include <okay/core/engine/system.hpp>

@@ -38,6 +38,8 @@ Option<FontHandle> FontManager::loadFont(
 }
 
 FontManager::Glyph FontManager::getGlyph(FontHandle font, std::uint32_t codepoint) {
+    ensureAFontIsLoaded();
+
     auto& glyphs = getGlyphsForFace(font.id);
     if (glyphs.find(codepoint) != glyphs.end()) {
         return glyphs[codepoint];
@@ -146,7 +148,7 @@ void FontManager::generateGlyphSetAndAtlasForFace(std::uint32_t faceId, int widt
 FontManager::FontHandle FontManager::defaultFont() {
     if (_defaultFont.isNone()) {
         Engine.logger.debug("Loading default font");
-        AssetManager* am = Engine.systems.getSystemChecked<AssetManager>();
+        AssetManager* am = Engine.resources.getResourceChecked<AssetManager>();
         _defaultFont = Option<FontHandle>::some(
             unwrapAssetResult(am->loadEngineAssetSync<FontManager::FontHandle>(
                 "fonts/ARIAL.ttf", FontLoadOptions{})));

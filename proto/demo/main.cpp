@@ -2,7 +2,6 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/random.hpp>
-#include <imgui.h>
 #include <utility>
 
 namespace ui = okay::ui;
@@ -15,11 +14,10 @@ static okay::ECSEntity s_teapot;
 static okay::ECSEntity s_light;
 static okay::ECSEntity s_camera;
 
-int main() {
+extern "C" OKAY_EXPORT void create(okay::Game* game, int argc, char* args[]) {
     okay::SurfaceConfig surfaceConfig;
     surfaceConfig.width = 800;
     surfaceConfig.height = 480;
-    okay::Surface surface(surfaceConfig);
 
     okay::RendererSettings rendererSettings{.surfaceConfig = surfaceConfig,
         .pipeline = okay::RenderPipeline::create(std::make_unique<okay::ScenePass>()),
@@ -27,17 +25,12 @@ int main() {
 
     auto renderer = okay::Renderer::create(std::move(rendererSettings));
 
-    okay::Game::create()
-        .addSystems(std::move(renderer),
-            std::make_unique<okay::AssetManager>(),
+    game->addSystems(std::move(renderer),
             std::make_unique<okay::ECS>(),
             std::make_unique<okay::TweenEngine>())
         .onInitialize(__gameInitialize)
         .onUpdate(__gameUpdate)
-        .onShutdown(__gameShutdown)
-        .run();
-
-    return 0;
+        .onShutdown(__gameShutdown);
 }
 
 static void __gameInitialize() {
@@ -46,7 +39,7 @@ static void __gameInitialize() {
     okay::Mesh object = okay::mesh(okay::load::engineMeshData("models/teapot.obj"));
 
     okay::Mesh cube = okay::mesh(okay::primitives::box().build());
-    okay::ShaderHandle shader = okay::shaderHandle(okay::load::engineShader("shaders/lit"));
+    okay ::ShaderHandle shader = okay::shaderHandle(okay::load::engineShader("shaders/lit"));
 
     auto materialProperties = std::make_unique<okay::LitMaterial>();
     materialProperties->color.set(glm::vec4(1.0f, 1.0f, 0.0f, 1.0f));
@@ -71,13 +64,13 @@ static void __gameInitialize() {
                    .addComponent<okay::TransformComponent>(glm::vec3{}, glm::vec3{0.1f})
                    .addComponent<okay::MeshRendererComponent>(object, material);
 
-    for (std::size_t i = 0; i < 1000; ++i) {
+    for (std::size_t i = 0; i < 100; ++i) {
         glm::vec3 pos = glm::ballRand(50.0f);
         okay::ECSEntity entity = okay::ecs::entity()
                                      .addComponent<okay::TransformComponent>(pos, glm::vec3{0.5f})
                                      .addComponent<okay::MeshRendererComponent>(cube, material);
 
-        for (std::size_t i = 0; i < 5; ++i) {
+        for (std::size_t i = 0; i < 10; ++i) {
             pos = glm::ballRand(10.0f);
             okay::ecs::entity(entity)
                 .addComponent<okay::TransformComponent>(pos, glm::vec3{0.5f})

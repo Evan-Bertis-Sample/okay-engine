@@ -1,0 +1,9 @@
+message(STATUS "Using Player Runtime!")
+
+file(GLOB_RECURSE OKAY_PLAYER_SOURCES ${CMAKE_CURRENT_LIST_DIR}/*.cpp)
+file(GLOB_RECURSE OKAY_PLAYER_HEADERS ${CMAKE_CURRENT_LIST_DIR}/*.hpp)
+
+target_sources(okay_runtime PRIVATE
+    ${OKAY_PLAYER_SOURCES}
+    ${OKAY_PLAYER_HEADERS}
+)

@@ -438,7 +438,8 @@ void UI::renderNode(const UINode& node, Renderer& renderer, int layerBase) {
             // Replace the text mesh
             RenderEntity::Properties props = renderInfo.textEntity.prop();
             props.mesh = getTextMesh(node, renderer);
-            Option<MaterialHandle> material = UIRenderResoruces::get().getTextMaterial(element);
+            Option<MaterialHandle> material =
+                UIRenderResoruces::instance().getTextMaterial(element);
             if (material.isSome()) {
                 props.material = material.value();
             }
@@ -583,8 +584,8 @@ void UI::createRectRenderEntity(const UINode& node, Renderer& renderer) {
 
     if (element.backgroundImage.isSome() || element.backgroundColor.a > 0.0f) {
         // Engine.logger.debug("Creating render entity for UI element with background image");
-        MaterialHandle handle = UIRenderResoruces::get().getRectMaterial(element).value();
-        Mesh bgMesh = UIRenderResoruces::get().quadMesh();
+        MaterialHandle handle = UIRenderResoruces::instance().getRectMaterial(element).value();
+        Mesh bgMesh = UIRenderResoruces::instance().quadMesh();
         RenderEntity entity =
             renderer.world().addRenderEntity(glm::vec3(1.0f, 1.0f, 0.0f), handle, bgMesh);
 
@@ -599,7 +600,7 @@ void UI::createTextRenderEntity(const UINode& node, Renderer& renderer) {
     if (element.text.isSome()) {
         // Engine.logger.debug("Creating render entity for UI element with text
         // element.text.value()); render text
-        MaterialHandle handle = UIRenderResoruces::get().getTextMaterial(element).value();
+        MaterialHandle handle = UIRenderResoruces::instance().getTextMaterial(element).value();
         Mesh textMesh = getTextMesh(node, renderer);
 
         // Create the render entity, using a default position

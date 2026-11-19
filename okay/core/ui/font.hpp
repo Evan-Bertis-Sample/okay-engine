@@ -3,6 +3,7 @@
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
+#include <okay/core/engine/resource.hpp>
 #include <okay/core/renderer/renderer.hpp>
 #include <okay/core/util/option.hpp>
 
@@ -59,7 +60,7 @@ struct FontLoadOptions {
     }
 };
 
-class FontManager {
+class FontManager : public ScopedSingleton<FontManager, ResourceScope::ENGINE> {
    public:
     struct FontHandle {
        public:
@@ -98,11 +99,6 @@ class FontManager {
         float height;
     };
 
-    static FontManager& instance() {
-        static FontManager instance;
-        return instance;
-    }
-
     FontManager();
 
     ~FontManager() {
@@ -112,15 +108,24 @@ class FontManager {
     Option<FontHandle> loadFont(const std::string& fontPath, const FontLoadOptions& options = {});
     Glyph getGlyph(FontHandle font, std::uint32_t codepoint);
     FontMetrics getFontMetrics(FontHandle font) {
+        ensureAFontIsLoaded();
         return _metricsPerFace[font.id];
     }
 
     Texture getGlyphAtlas(FontHandle font) {
+        ensureAFontIsLoaded();
         return _glyphAtlases[font.id];
     }
 
     bool isLoadedFont(FontHandle font) {
+        ensureAFontIsLoaded();
         return font.id < _loadedFaces.size();
+    }
+
+    void ensureAFontIsLoaded() {
+        if (_glyphAtlases.size() == 0) {
+            defaultFont();
+        }
     }
 
     FontHandle defaultFont();

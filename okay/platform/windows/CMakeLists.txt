@@ -9,8 +9,8 @@ file(GLOB PLATFORM_HDR CONFIGURE_DEPENDS ${CMAKE_CURRENT_LIST_DIR}/*.hpp)
 
 
 # okay_platform is a real STATIC lib created in platform/CMakeLists.txt
-target_sources(okay_platform PRIVATE 
-  ${PLATFORM_SRC} 
+target_sources(okay_platform PRIVATE
+  ${PLATFORM_SRC}
   ${PLATFORM_HDR}
 )
 
@@ -33,7 +33,6 @@ target_link_libraries(imgui PRIVATE
   glfw
   OpenGL::GL
   user32 gdi32 shell32 advapi32 ole32 uuid winmm imm32 version uxtheme setupapi bcrypt
-  -static-libstdc++
 )
 
 # link low-level deps INTO the platform lib
@@ -41,7 +40,6 @@ target_link_libraries(okay_platform PUBLIC
   glfw
   OpenGL::GL
   user32 gdi32 shell32 advapi32 ole32 uuid winmm imm32 version uxtheme setupapi bcrypt
-  -static-libstdc++
   imgui
 )
 

@@ -1,6 +1,7 @@
 #ifndef __SYSTEM_H__
 #define __SYSTEM_H__
 
+#include <okay/core/engine/reload.hpp>
 #include <okay/core/util/option.hpp>
 
 #include <array>
@@ -13,10 +14,12 @@
 
 namespace okay {
 
-enum SystemScope : std::uint8_t { ENGINE, GAME, LEVEL, SCOPE_COUNT };
+enum class SystemScope : std::uint8_t { ENGINE, GAME, LEVEL, SCOPE_COUNT };
 
 class ISystem {
    public:
+    virtual ~ISystem() = default;
+
     template <typename T>
     static const std::size_t sysid() {
         return typeid(T).hash_code();
@@ -35,6 +38,10 @@ class ISystem {
     virtual void postTick() {}
 
     virtual void shutdown() {}
+
+    // hot-reload
+    virtual void prepareForReload(ReloadContext& context) {}
+    virtual void reload(ReloadContext& context) {}
 };
 
 template <SystemScope ScopeV>
@@ -77,6 +84,9 @@ class SystemPool {
     template <typename T>
     void registerSystem(std::unique_ptr<T> system) {
         static_assert(std::is_base_of_v<ISystem, T>, "T must inherit from OkaySystem.");
+        if (_systems.contains(ISystem::sysid<T>())) {
+            _systems.erase(ISystem::sysid<T>());
+        }
         _systems.emplace(ISystem::sysid<T>(), std::move(system));
     }
 
@@ -164,21 +174,19 @@ class SystemPool {
         return Iterator{_systems.end()};
     }
 
+    void clear() {
+        _systems.clear();
+    }
+
    private:
     std::map<std::size_t, std::unique_ptr<ISystem>> _systems;
 };
 
 class SystemManager {
    public:
-    SystemManager() {
-        for (std::size_t i = 0; i < SystemScope::SCOPE_COUNT; ++i) {
-            _pools[i] = SystemPool();
-        }
-    }
-
     template <typename T>
     Option<T*> getSystem() {
-        return _pools[T::SCOPE].template getSystem<T>();
+        return _pools[static_cast<std::size_t>(T::SCOPE)].template getSystem<T>();
     }
 
     template <typename T>
@@ -194,11 +202,11 @@ class SystemManager {
 
     template <typename T>
     void registerSystem(std::unique_ptr<T> system) {
-        _pools[T::SCOPE].registerSystem(std::move(system));
+        _pools[static_cast<std::size_t>(T::SCOPE)].registerSystem(std::move(system));
     }
 
     SystemPool& getPool(const SystemScope scope) {
-        return _pools[scope];
+        return _pools[static_cast<std::size_t>(scope)];
     }
 
     bool hasSystem(std::size_t hash) {
@@ -209,8 +217,14 @@ class SystemManager {
         return false;
     }
 
+    void clear() {
+        for (auto& pool : _pools) {
+            pool.clear();
+        }
+    }
+
    private:
-    static std::array<SystemPool, SystemScope::SCOPE_COUNT> _pools;
+    std::array<SystemPool, static_cast<std::size_t>(SystemScope::SCOPE_COUNT)> _pools;
 };
 
 };  // namespace okay

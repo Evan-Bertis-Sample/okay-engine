@@ -87,6 +87,7 @@ class EntityComponentStore {
     static constexpr std::size_t MAX_COMPONENTS = 32;
 
     EntityComponentStore() = default;
+    virtual ~EntityComponentStore() = default;
 
     template <typename T>
     void registerComponentType();

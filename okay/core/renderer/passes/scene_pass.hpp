@@ -61,7 +61,7 @@ class ScenePass : public IRenderPass {
 
         // render the skybox
         MaterialHandle skyboxMaterial = context.renderer.skyboxMaterial();
-        if (skyboxMaterial.isValid()) {
+        if (!skyboxMaterial.isNone()) {
             handleMaterialSwitch(context,
                 skyboxMaterial,
                 projection,
@@ -87,7 +87,7 @@ class ScenePass : public IRenderPass {
             RenderItem& item = context.world.getRenderItem(handle);
             if (item.mesh.isEmpty())
                 continue;
-            if (item.material->isNone())
+            if (item.material.isNone())
                 continue;
 
             Camera& camera = context.world.camera();

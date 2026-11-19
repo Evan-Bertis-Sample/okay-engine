@@ -1,9 +1,11 @@
 #include "render_resources.hpp"
 
+#include "okay/core/asset/asset.hpp"
+
 namespace okay {
 
 Option<MaterialHandle> UIRenderResoruces::getRectMaterial(const UIElement& element) {
-    if (element.backgroundMaterialOverride.isValid())
+    if (!element.backgroundMaterialOverride.isNone())
         return Option<MaterialHandle>::some(element.backgroundMaterialOverride);
 
     Option<RectMaterialKey> key = getRectMaterialKey(element);
@@ -12,7 +14,12 @@ Option<MaterialHandle> UIRenderResoruces::getRectMaterial(const UIElement& eleme
         return Option<MaterialHandle>::none();
 
     if (_rectMaterialCache.contains(*key)) {
-        return Option<MaterialHandle>::some(_rectMaterialCache.at(*key));
+        // TODO: This is ideally an uneeded check, but need to do this for
+        // hot-reload. Need to move away from singletons entirely
+        MaterialHandle handle = _rectMaterialCache.at(*key);
+        if (!handle.isNone()) {
+            return Option<MaterialHandle>::some(handle);
+        }
     }
 
     Renderer* renderer = Engine.systems.getSystemChecked<Renderer>();
@@ -40,7 +47,7 @@ Option<MaterialHandle> UIRenderResoruces::getRectMaterial(const UIElement& eleme
 }
 
 Option<MaterialHandle> UIRenderResoruces::getTextMaterial(const UIElement& element) {
-    if (element.textMaterialOverride.isValid())
+    if (!element.textMaterialOverride.isNone())
         return Option<MaterialHandle>::some(element.textMaterialOverride);
 
     Option<TextMaterialKey> key = getTextMaterialKey(element);
@@ -52,7 +59,12 @@ Option<MaterialHandle> UIRenderResoruces::getTextMaterial(const UIElement& eleme
     // element.text.value());
 
     if (_textMaterialCache.contains(*key)) {
-        return Option<MaterialHandle>::some(_textMaterialCache.at(*key));
+        // TODO: This is ideally an uneeded check, but need to do this for
+        // hot-reload. Need to move away from singletons entirely
+        MaterialHandle handle = _textMaterialCache.at(*key);
+        if (!handle.isNone()) {
+            return Option<MaterialHandle>::some(handle);
+        }
     }
 
     TextStyle style = element.textStyle;
@@ -140,17 +152,17 @@ bool UIRenderResoruces::RectMaterialKey::operator<(const RectMaterialKey& o) con
 }
 
 void UIRenderResoruces::loadResoruces() {
-    AssetManager* am = Engine.systems.getSystemChecked<AssetManager>();
+    AssetManager& am = AssetManager::instance();
 
     _whiteTexture =
-        unwrapAssetResult(am->loadEngineAssetSync<Texture>(WHITE_TEXTURE, TextureLoadSettings{}));
+        unwrapAssetResult(am.loadEngineAssetSync<Texture>(WHITE_TEXTURE, TextureLoadSettings{}));
 
     Renderer* renderer = Engine.systems.getSystemChecked<Renderer>();
-    Shader textShader = unwrapAssetResult(am->loadEngineAssetSync<Shader>(UI_TEXT_SHADER));
+    Shader textShader = unwrapAssetResult(am.loadEngineAssetSync<Shader>(UI_TEXT_SHADER));
     _uiTextShader = renderer->materialRegistry().registerShader(
         textShader.vertexShader, textShader.fragmentShader);
 
-    Shader rectShader = unwrapAssetResult(am->loadEngineAssetSync<Shader>(UI_RECT_SHADER));
+    Shader rectShader = unwrapAssetResult(am.loadEngineAssetSync<Shader>(UI_RECT_SHADER));
     _uiRectShader = renderer->materialRegistry().registerShader(
         rectShader.vertexShader, rectShader.fragmentShader);
 
