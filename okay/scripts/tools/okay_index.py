@@ -101,7 +101,7 @@ def main(args):
     db_paths = sorted(find_compile_commands(project_root))
 
     if not db_paths:
-        print("No compile_commands.json files found under .okay/build/")
+        print(f"No compile_commands.json files found under {project_root}")
         return
 
     merged_by_file: dict[str, dict] = {}

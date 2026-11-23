@@ -32,6 +32,7 @@ cmake_minimum_required(VERSION 3.29)
 project(${PROJECT} C CXX)
 
 set(CMAKE_LINKER_TYPE LLD)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # targets setup
 if(OKAY_RUNTIME STREQUAL "editor")
@@ -46,6 +47,7 @@ endif()
 
 add_library(okay ${OKAY_LIBRARY_TYPE})
 add_library(okay_platform ${OKAY_LIBRARY_TYPE})
+add_library(okay_rhi ${OKAY_LIBRARY_TYPE})
 add_library(${PROJECT} ${OKAY_LIBRARY_TYPE})
 add_library(okay_util STATIC)
 
@@ -200,10 +202,13 @@ add_subdirectory(${OKAY_ENGINE_DIR}/util)
 add_subdirectory(${OKAY_ENGINE_DIR}/platform)
 target_include_directories(okay_platform PUBLIC ${OKAY_INCLUDE_LIST})
 
+# rhi
+add_subdirectory(${OKAY_ENGINE_DIR}/rhi)
+
 # engine
 target_include_directories(okay PUBLIC ${OKAY_INCLUDE_LIST})
 target_link_libraries(okay PUBLIC ${OKAY_ENGINE_LIBRARIES})
-target_link_libraries(okay PUBLIC okay_platform okay_util)
+target_link_libraries(okay PUBLIC okay_platform okay_rhi okay_util)
 target_compile_definitions(okay PRIVATE OKAY_BUILD_DLL)
 
 

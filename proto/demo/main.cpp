@@ -18,6 +18,7 @@ extern "C" OKAY_EXPORT void create(okay::Game* game, int argc, char* args[]) {
     okay::SurfaceConfig surfaceConfig;
     surfaceConfig.width = 800;
     surfaceConfig.height = 480;
+    surfaceConfig.title = "Okay Engine Demo";
 
     okay::RendererSettings rendererSettings{.surfaceConfig = surfaceConfig,
         .pipeline = okay::RenderPipeline::create(std::make_unique<okay::ScenePass>()),
@@ -27,7 +28,9 @@ extern "C" OKAY_EXPORT void create(okay::Game* game, int argc, char* args[]) {
 
     game->addSystems(std::move(renderer),
             std::make_unique<okay::ECS>(),
-            std::make_unique<okay::TweenEngine>())
+            std::make_unique<okay::TweenEngine>(),
+            std::make_unique<okay::TestRenderer>(
+                okay::TestRendererSettings{.surfaceConfig = surfaceConfig}))
         .onInitialize(__gameInitialize)
         .onUpdate(__gameUpdate)
         .onShutdown(__gameShutdown);
@@ -39,7 +42,7 @@ static void __gameInitialize() {
     okay::Mesh object = okay::mesh(okay::load::engineMeshData("models/teapot.obj"));
 
     okay::Mesh cube = okay::mesh(okay::primitives::box().build());
-    okay ::ShaderHandle shader = okay::shaderHandle(okay::load::engineShader("shaders/lit"));
+    okay::ShaderHandle shader = okay::shaderHandle(okay::load::engineShader("shaders/lit"));
 
     auto materialProperties = std::make_unique<okay::LitMaterial>();
     materialProperties->color.set(glm::vec4(1.0f, 1.0f, 0.0f, 1.0f));
