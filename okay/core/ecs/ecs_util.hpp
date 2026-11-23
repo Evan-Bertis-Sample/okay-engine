@@ -1,3 +1,8 @@
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// ecs_util.hpp - Okay Engine
+
 #pragma once
 
 #include <okay/core/ecs/builtins.hpp>

@@ -1,3 +1,8 @@
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// scene_pass.hpp - Okay Engine
+
 #pragma once
 
 #include "glm/ext/matrix_transform.hpp"

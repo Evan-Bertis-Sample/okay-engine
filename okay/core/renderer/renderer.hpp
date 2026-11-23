@@ -1,3 +1,8 @@
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// renderer.hpp - Okay Engine
+
 #pragma once
 
 #include "imgui_impl.hpp"

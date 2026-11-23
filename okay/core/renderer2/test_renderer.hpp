@@ -1,3 +1,8 @@
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// test_renderer.hpp - Okay Engine
+
 #pragma once
 
 // Test renderer for the development of renderer v2

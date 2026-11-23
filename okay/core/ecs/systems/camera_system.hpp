@@ -1,3 +1,8 @@
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// camera_system.hpp - Okay Engine
+
 #pragma once
 
 #include <okay/core/ecs/components/camera_component.hpp>

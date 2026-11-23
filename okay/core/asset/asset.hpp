@@ -1,3 +1,8 @@
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// asset.hpp - Okay Engine
+
 #ifndef __ASSET_H__
 #define __ASSET_H__
 

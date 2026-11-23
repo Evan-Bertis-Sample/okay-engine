@@ -1,3 +1,8 @@
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// okay.hpp - Okay Engine
+
 #pragma once
 
 // This file is auto-generated. Do not edit manually.

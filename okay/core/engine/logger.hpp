@@ -1,3 +1,8 @@
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// logger.hpp - Okay Engine
+
 #ifndef OKAY_LOGGER_HPP
 #define OKAY_LOGGER_HPP
 

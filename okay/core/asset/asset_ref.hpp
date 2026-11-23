@@ -1,3 +1,8 @@
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// asset_ref.hpp - Okay Engine
+
 #pragma once
 
 #include <okay/core/asset/asset.hpp>

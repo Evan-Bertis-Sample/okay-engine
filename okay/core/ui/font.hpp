@@ -1,3 +1,8 @@
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// font.hpp - Okay Engine
+
 #pragma once
 
 #include <ft2build.h>

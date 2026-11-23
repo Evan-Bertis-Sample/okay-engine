@@ -1,3 +1,8 @@
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// light_system.hpp - Okay Engine
+
 #pragma once
 
 #include <okay/core/ecs/components/light_component.hpp>

@@ -1,3 +1,8 @@
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// tween_collection.hpp - Okay Engine
+
 #pragma once
 
 #include "okay/core/tween/i_okay_tween.hpp"

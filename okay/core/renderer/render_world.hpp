@@ -1,3 +1,8 @@
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// render_world.hpp - Okay Engine
+
 #pragma once
 
 #include "glm/ext/vector_float3.hpp"

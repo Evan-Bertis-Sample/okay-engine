@@ -1,3 +1,8 @@
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// shader_loader.hpp - Okay Engine
+
 #ifndef __SHADER_LOADER_H__
 #define __SHADER_LOADER_H__
 

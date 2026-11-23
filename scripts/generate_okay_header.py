@@ -4,6 +4,12 @@ import argparse
 from collections import defaultdict
 from pathlib import Path
 
+LICENSE_HEADER = """\
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// okay.hpp - Okay Engine
+"""
 
 def collect_headers(core_dir: Path, output_file: Path) -> list[Path]:
     headers: list[Path] = []
@@ -32,6 +38,7 @@ def group_headers(repo_root: Path, headers: list[Path]) -> dict[str, list[str]]:
 def generate_header_text(grouped_headers: dict[str, list[str]]) -> str:
     lines: list[str] = []
 
+    lines.append(LICENSE_HEADER)
     lines.append("#pragma once")
     lines.append("")
     lines.append("// This file is auto-generated. Do not edit manually.")

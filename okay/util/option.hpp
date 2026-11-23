@@ -1,3 +1,8 @@
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// option.hpp - Okay Engine
+
 #pragma once
 
 #include <functional>

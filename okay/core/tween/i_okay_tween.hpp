@@ -1,3 +1,8 @@
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// i_okay_tween.hpp - Okay Engine
+
 #pragma once
 
 namespace okay {

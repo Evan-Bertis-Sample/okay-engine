@@ -1,3 +1,8 @@
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// mesh_loader.hpp - Okay Engine
+
 #pragma once
 
 #include <okay/core/asset/asset.hpp>
