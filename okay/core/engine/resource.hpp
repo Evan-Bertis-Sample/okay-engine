@@ -1,7 +1,11 @@
-#ifndef __RESOURCE_HPP__
-#define __RESOURCE_HPP__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// resource.hpp - Okay Engine
 
-#include <okay/core/util/option.hpp>
+#pragma once
+
+#include <okay/util/option.hpp>
 
 #include <array>
 #include <cstdint>
@@ -204,5 +208,3 @@ class ResourceManager {
 };
 
 };  // namespace okay
-
-#endif  // __RESOURCE_HPP__

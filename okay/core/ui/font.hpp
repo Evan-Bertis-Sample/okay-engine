@@ -1,11 +1,15 @@
-#ifndef __FONT_H__
-#define __FONT_H__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// font.hpp - Okay Engine
+
+#pragma once
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include <okay/core/engine/resource.hpp>
 #include <okay/core/renderer/renderer.hpp>
-#include <okay/core/util/option.hpp>
+#include <okay/util/option.hpp>
 
 #include <cstdint>
 #include <stdexcept>
@@ -153,5 +157,3 @@ class FontManager : public ScopedSingleton<FontManager, ResourceScope::ENGINE> {
 };
 
 };  // namespace okay
-
-#endif  // _FONT_H__

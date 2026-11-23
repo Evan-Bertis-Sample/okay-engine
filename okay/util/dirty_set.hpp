@@ -1,5 +1,9 @@
-#ifndef __DIRTY_SET_H__
-#define __DIRTY_SET_H__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// dirty_set.hpp - Okay Engine
+
+#pragma once
 
 #include <algorithm>
 #include <cstdint>
@@ -92,5 +96,3 @@ class DirtySet final {
 };
 
 }  // namespace okay
-
-#endif  // __DIRTY_SET_H__

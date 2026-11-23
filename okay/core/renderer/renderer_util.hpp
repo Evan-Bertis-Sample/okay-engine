@@ -1,5 +1,9 @@
-#ifndef __RENDERER_UTIL_H__
-#define __RENDERER_UTIL_H__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// renderer_util.hpp - Okay Engine
+
+#pragma once
 
 #include <okay/core/engine/engine.hpp>
 #include <okay/core/renderer/material.hpp>
@@ -30,5 +34,3 @@ inline MaterialHandle materialHandle(Shader shader,
 }
 
 };  // namespace okay
-
-#endif  // __RENDERER_UTIL_H__

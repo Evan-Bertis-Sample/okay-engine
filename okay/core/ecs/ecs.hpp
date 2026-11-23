@@ -1,5 +1,9 @@
-#ifndef __ECS_H__
-#define __ECS_H__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// ecs.hpp - Okay Engine
+
+#pragma once
 
 #include "ecstore.hpp"
 #include "query.hpp"
@@ -261,5 +265,3 @@ class ECSSystem : public IECSSystem {
 };
 
 }  // namespace okay
-
-#endif  // __ECS_H__

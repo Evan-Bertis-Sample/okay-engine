@@ -1,5 +1,9 @@
-#ifndef __SCENE_PASS_H__
-#define __SCENE_PASS_H__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// scene_pass.hpp - Okay Engine
+
+#pragma once
 
 #include "glm/ext/matrix_transform.hpp"
 #include "okay/core/engine/system.hpp"
@@ -202,5 +206,3 @@ class ScenePass : public IRenderPass {
 };
 
 };  // namespace okay
-
-#endif  // __SCENE_PASS_H__

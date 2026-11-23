@@ -1,5 +1,9 @@
-#ifndef __TWEEN_COLLECTION_H__
-#define __TWEEN_COLLECTION_H__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// tween_collection.hpp - Okay Engine
+
+#pragma once
 
 #include "okay/core/tween/i_okay_tween.hpp"
 
@@ -74,5 +78,3 @@ class TweenCollection : public ITween, public std::enable_shared_from_this<Tween
     std::vector<std::shared_ptr<ITween>> _collection;
 };
 }  // namespace okay
-
-#endif

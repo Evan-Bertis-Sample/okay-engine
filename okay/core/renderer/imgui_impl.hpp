@@ -1,5 +1,9 @@
-#ifndef __IMGUI_IMPL_H__
-#define __IMGUI_IMPL_H__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// imgui_impl.hpp - Okay Engine
+
+#pragma once
 
 #include <imgui.h>
 #include <memory>
@@ -25,5 +29,3 @@ class IMGUIImpl {
 };
 
 };  // namespace okay
-
-#endif  // __IMGUI_IMPL_H__

@@ -1,5 +1,9 @@
-#ifndef __SINGLETON_HPP__
-#define __SINGLETON_HPP__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// singleton.hpp - Okay Engine
+
+#pragma once
 
 #include <type_traits>
 #include <utility>
@@ -30,5 +34,3 @@ class Singleton {
 };
 
 }  // namespace okay
-
-#endif  // _SINGLETON_HPP__

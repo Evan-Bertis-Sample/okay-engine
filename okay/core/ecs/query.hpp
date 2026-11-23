@@ -1,8 +1,12 @@
-#ifndef __QUERY_H__
-#define __QUERY_H__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// query.hpp - Okay Engine
+
+#pragma once
 
 #include <okay/core/ecs/ecstore.hpp>
-#include <okay/core/util/option.hpp>
+#include <okay/util/option.hpp>
 
 #include <bitset>
 #include <cstdint>
@@ -121,5 +125,3 @@ struct ECSQuery {
 };
 
 }  // namespace okay
-
-#endif  // __QUERY_H__

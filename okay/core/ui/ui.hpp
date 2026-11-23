@@ -1,5 +1,9 @@
-#ifndef __UI_H__
-#define __UI_H__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// ui.hpp - Okay Engine
+
+#pragma once
 
 #include "element.hpp"
 #include "okay/core/ui/render_resources.hpp"
@@ -146,5 +150,3 @@ class UI {
 };
 
 };  // namespace okay
-
-#endif  // __UI_H__

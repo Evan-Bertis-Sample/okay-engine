@@ -1,5 +1,9 @@
-#ifndef __CAMERA_COMPONENT_H__
-#define __CAMERA_COMPONENT_H__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// camera_component.hpp - Okay Engine
+
+#pragma once
 
 #include <okay/core/ecs/ecs.hpp>
 #include <okay/core/renderer/render_world.hpp>
@@ -27,5 +31,3 @@ struct CameraComponent {
 };
 
 }  // namespace okay
-
-#endif  // __CAMERA_COMPONENT_H__

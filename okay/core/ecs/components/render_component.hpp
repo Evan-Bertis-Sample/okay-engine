@@ -1,5 +1,9 @@
-#ifndef __RENDER_COMPONENT_H__
-#define __RENDER_COMPONENT_H__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// render_component.hpp - Okay Engine
+
+#pragma once
 
 #include <okay/core/ecs/ecs.hpp>
 #include <okay/core/renderer/material.hpp>
@@ -24,5 +28,3 @@ struct MeshRendererComponent {
 };
 
 }  // namespace okay
-
-#endif  // __RENDER_COMPONENT_H__

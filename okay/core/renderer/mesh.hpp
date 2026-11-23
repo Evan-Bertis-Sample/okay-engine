@@ -1,9 +1,13 @@
-#ifndef __MESH_H__
-#define __MESH_H__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// mesh.hpp - Okay Engine
+
+#pragma once
 
 #include <okay/core/renderer/gl.hpp>
 #include <okay/core/renderer/math_types.hpp>
-#include <okay/core/util/result.hpp>
+#include <okay/util/result.hpp>
 
 #include <glm/glm.hpp>
 #include <vector>
@@ -191,5 +195,3 @@ class MeshBuffer {
 };
 
 }  // namespace okay
-
-#endif  // _MESH_H__

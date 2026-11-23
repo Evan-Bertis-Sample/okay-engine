@@ -1,9 +1,13 @@
-#ifndef __MESH_LOADER_H__
-#define __MESH_LOADER_H__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// mesh_loader.hpp - Okay Engine
+
+#pragma once
 
 #include <okay/core/asset/asset.hpp>
 #include <okay/core/renderer/mesh.hpp>
-#include <okay/core/util/result.hpp>
+#include <okay/util/result.hpp>
 
 #include <filesystem>
 #include <istream>
@@ -23,5 +27,3 @@ struct AssetLoader<MeshData> {
 };
 
 }  // namespace okay
-
-#endif  // __MESH_LOADER_H__

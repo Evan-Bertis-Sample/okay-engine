@@ -1,5 +1,9 @@
-#ifndef __SURFACE_H__
-#define __SURFACE_H__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// surface.hpp - Okay Engine
+
+#pragma once
 
 #include <okay/core/engine/system.hpp>
 #include <okay/core/renderer/gl.hpp>
@@ -36,5 +40,3 @@ class Surface {
 };
 
 }  // namespace okay
-
-#endif  // _SURFACE_H__

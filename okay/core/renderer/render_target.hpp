@@ -1,8 +1,12 @@
-#ifndef __RENDER_TARGET_H__
-#define __RENDER_TARGET_H__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// render_target.hpp - Okay Engine
+
+#pragma once
 
 #include <okay/core/renderer/gl.hpp>
-#include <okay/core/util/option.hpp>
+#include <okay/util/option.hpp>
 
 #include <string>
 #include <vector>
@@ -70,5 +74,3 @@ class RenderTargetPool {
 };
 
 };  // namespace okay
-
-#endif  // _RENDER_TARGET_H__

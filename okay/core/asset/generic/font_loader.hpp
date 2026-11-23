@@ -1,13 +1,17 @@
-#ifndef __FONT_LOADER_H__
-#define __FONT_LOADER_H__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// font_loader.hpp - Okay Engine
+
+#pragma once
 
 #include <okay/core/asset/asset.hpp>
 #include <okay/core/renderer/material.hpp>
 #include <okay/core/renderer/texture.hpp>
 #include <okay/core/renderer/uniform.hpp>
 #include <okay/core/ui/font.hpp>
-#include <okay/core/util/option.hpp>
-#include <okay/core/util/result.hpp>
+#include <okay/util/option.hpp>
+#include <okay/util/result.hpp>
 
 #include <filesystem>
 
@@ -33,5 +37,3 @@ struct AssetLoader<FontManager::FontHandle, FontLoadOptions> {
 };
 
 }  // namespace okay
-
-#endif  // __FONT_LOADER_H__

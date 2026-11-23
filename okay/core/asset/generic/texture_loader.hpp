@@ -1,11 +1,15 @@
-#ifndef __TEXTURE_LOADER_H__
-#define __TEXTURE_LOADER_H__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// texture_loader.hpp - Okay Engine
+
+#pragma once
 
 #include <okay/core/asset/asset.hpp>
 #include <okay/core/renderer/material.hpp>
 #include <okay/core/renderer/texture.hpp>
 #include <okay/core/renderer/uniform.hpp>
-#include <okay/core/util/result.hpp>
+#include <okay/util/result.hpp>
 
 #include <cstddef>
 #include <filesystem>
@@ -90,5 +94,3 @@ struct AssetLoader<Texture, TextureLoadSettings> {
 };
 
 }  // namespace okay
-
-#endif  // __TEXTURE_LOADER_H__

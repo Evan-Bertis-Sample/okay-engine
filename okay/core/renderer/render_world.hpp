@@ -1,5 +1,9 @@
-#ifndef __RENDER_WORLD_H__
-#define __RENDER_WORLD_H__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// render_world.hpp - Okay Engine
+
+#pragma once
 
 #include "glm/ext/vector_float3.hpp"
 #include "glm/ext/vector_float4.hpp"
@@ -8,9 +12,9 @@
 #include <okay/core/renderer/gl.hpp>
 #include <okay/core/renderer/material.hpp>
 #include <okay/core/renderer/mesh.hpp>
-#include <okay/core/util/dirty_set.hpp>
-#include <okay/core/util/object_pool.hpp>
-#include <okay/core/util/property.hpp>
+#include <okay/util/dirty_set.hpp>
+#include <okay/util/object_pool.hpp>
+#include <okay/util/property.hpp>
 
 #include <cstdint>
 #include <glm/glm.hpp>
@@ -399,5 +403,3 @@ class RenderWorld {
 };
 
 }  // namespace okay
-
-#endif  // _RENDER_WORLD_H__

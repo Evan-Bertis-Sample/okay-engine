@@ -1,5 +1,9 @@
-#ifndef __RENDER_RESOURCES_H__
-#define __RENDER_RESOURCES_H__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// render_resources.hpp - Okay Engine
+
+#pragma once
 
 #include <okay/core/asset/asset.hpp>
 #include <okay/core/asset/asset_util.hpp>
@@ -14,8 +18,8 @@
 #include <okay/core/ui/element.hpp>
 #include <okay/core/ui/font.hpp>
 #include <okay/core/ui/text_layout.hpp>
-#include <okay/core/util/object_pool.hpp>
-#include <okay/core/util/option.hpp>
+#include <okay/util/object_pool.hpp>
+#include <okay/util/option.hpp>
 
 #include <string_view>
 
@@ -104,5 +108,3 @@ class UIRenderResoruces : public ScopedSingleton<UIRenderResoruces, ResourceScop
 };
 
 };  // namespace okay
-
-#endif  // __RENDER_RESOURCES_H__

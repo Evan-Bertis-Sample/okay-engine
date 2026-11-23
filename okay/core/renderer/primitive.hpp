@@ -1,5 +1,9 @@
-#ifndef __PRIMITIVE_H__
-#define __PRIMITIVE_H__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// primitive.hpp - Okay Engine
+
+#pragma once
 
 #include <okay/core/renderer/mesh.hpp>
 
@@ -230,5 +234,3 @@ inline CapsuleBuilder capsule() {
 }
 
 }  // namespace okay::primitives
-
-#endif  // _PRIMITIVE_H__

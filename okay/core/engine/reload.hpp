@@ -1,7 +1,11 @@
-#ifndef __RELOAD_HPP__
-#define __RELOAD_HPP__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// reload.hpp - Okay Engine
 
-#include "okay/core/util/option.hpp"
+#pragma once
+
+#include "okay/util/option.hpp"
 
 #include <cstdint>
 #include <cstring>
@@ -139,5 +143,3 @@ struct ReloadContext {
 };
 
 }  // namespace okay
-
-#endif  // __RELOAD_HPP__

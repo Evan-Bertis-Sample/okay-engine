@@ -1,8 +1,12 @@
-#ifndef __RUNTIME_HPP__
-#define __RUNTIME_HPP__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// runtime.hpp - Okay Engine
+
+#pragma once
 
 #include <okay/core/engine/engine.hpp>
-#include <okay/core/util/export.hpp>
+#include <okay/util/export.hpp>
 
 namespace okay {
 
@@ -18,5 +22,3 @@ extern OkayRuntime Runtime;
 
 /// @brief User-defined function
 extern "C" OKAY_IMPORT void create(okay::Game* game, int argc, char* args[]);
-
-#endif  // __RUNTIME_HPP__

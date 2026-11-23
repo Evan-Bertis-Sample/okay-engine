@@ -1,12 +1,16 @@
-#ifndef __UNIFORM_H__
-#define __UNIFORM_H__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// uniform.hpp - Okay Engine
+
+#pragma once
 
 #include <okay/core/engine/engine.hpp>
 #include <okay/core/engine/logger.hpp>
 #include <okay/core/renderer/gl.hpp>
 #include <okay/core/renderer/texture.hpp>
-#include <okay/core/util/result.hpp>
-#include <okay/core/util/type.hpp>
+#include <okay/util/result.hpp>
+#include <okay/util/type.hpp>
 
 #include <atomic>
 #include <cstdint>
@@ -296,5 +300,3 @@ class TextureProperty {
 };
 
 };  // namespace okay
-
-#endif  // _UNIFORM_H__

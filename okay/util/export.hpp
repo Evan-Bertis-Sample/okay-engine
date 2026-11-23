@@ -1,5 +1,9 @@
-#ifndef __EXPORT_HPP__
-#define __EXPORT_HPP__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// export.hpp - Okay Engine
+
+#pragma once
 
 #if defined(_WIN32) || defined(__CYGWIN__)
 
@@ -26,5 +30,3 @@
 #endif
 
 #endif
-
-#endif  // __EXPORT_HPP__

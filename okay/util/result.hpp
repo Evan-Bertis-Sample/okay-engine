@@ -1,7 +1,11 @@
-#ifndef __RESULT_H__
-#define __RESULT_H__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// result.hpp - Okay Engine
 
-#include <okay/core/util/type.hpp>
+#pragma once
+
+#include <okay/util/type.hpp>
 
 #include <functional>
 #include <optional>
@@ -273,5 +277,3 @@ Failable runAll(Fs&&... fs)
 }
 
 }  // namespace okay
-
-#endif  // __RESULT_H__

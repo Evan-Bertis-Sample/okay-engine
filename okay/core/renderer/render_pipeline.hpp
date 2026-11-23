@@ -1,5 +1,9 @@
-#ifndef __RENDER_PIPELINE_H__
-#define __RENDER_PIPELINE_H__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// render_pipeline.hpp - Okay Engine
+
+#pragma once
 
 #include <okay/core/renderer/gl.hpp>
 #include <okay/core/renderer/render_target.hpp>
@@ -76,5 +80,3 @@ class RenderPipeline {
 };
 
 };  // namespace okay
-
-#endif  // _RENDER_PIPELINE_H__

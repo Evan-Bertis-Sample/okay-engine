@@ -1,5 +1,9 @@
-#ifndef __TWEEN_SEQUENCE_H__
-#define __TWEEN_SEQUENCE_H__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// tween_sequence.hpp - Okay Engine
+
+#pragma once
 
 #include <okay/core/tween/i_okay_tween.hpp>
 
@@ -77,5 +81,3 @@ class TweenSequence : public ITween, public std::enable_shared_from_this<TweenSe
     uint32_t _index{0};
 };
 }  // namespace okay
-
-#endif

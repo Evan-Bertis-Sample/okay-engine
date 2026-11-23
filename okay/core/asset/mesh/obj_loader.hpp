@@ -1,5 +1,9 @@
-#ifndef __OBJ_LOADER_H__
-#define __OBJ_LOADER_H__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// obj_loader.hpp - Okay Engine
+
+#pragma once
 
 #include <okay/core/asset/mesh/mesh_loader.hpp>
 #include <okay/core/renderer/mesh.hpp>
@@ -65,5 +69,3 @@ class ObjLoader final : public MeshLoader {
 };
 
 }  // namespace okay
-
-#endif  // __OBJ_LOADER_H__

@@ -1,5 +1,9 @@
-#ifndef __STRING_H__
-#define __STRING_H__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// string.hpp - Okay Engine
+
+#pragma once
 
 #include <string>
 #include <string_view>
@@ -23,5 +27,3 @@ class StringUtils final {
 };
 
 }  // namespace okay
-
-#endif  // __STRING_H__

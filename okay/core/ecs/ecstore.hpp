@@ -1,13 +1,17 @@
-#ifndef __ECSTORE_H__
-#define __ECSTORE_H__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// ecstore.hpp - Okay Engine
+
+#pragma once
 
 #include <okay/core/engine/engine.hpp>
 #include <okay/core/engine/logger.hpp>
 #include <okay/core/engine/system.hpp>
 #include <okay/core/renderer/renderer.hpp>
-#include <okay/core/util/object_pool.hpp>
-#include <okay/core/util/option.hpp>
-#include <okay/core/util/type.hpp>
+#include <okay/util/object_pool.hpp>
+#include <okay/util/option.hpp>
+#include <okay/util/type.hpp>
 
 #include <bitset>
 #include <cstddef>
@@ -429,5 +433,3 @@ bool EntityComponentStore::hasComponent(const ECSEntity& entity) {
 }
 
 }  // namespace okay
-
-#endif  // __ECSTORE_H__

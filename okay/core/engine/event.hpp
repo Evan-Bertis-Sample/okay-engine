@@ -1,5 +1,9 @@
-#ifndef __EVENT_H__
-#define __EVENT_H__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// event.hpp - Okay Engine
+
+#pragma once
 
 #include <functional>
 
@@ -27,5 +31,3 @@ class Event {
 };
 
 };  // namespace okay
-
-#endif  // _EVENT_H__

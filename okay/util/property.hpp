@@ -1,5 +1,9 @@
-#ifndef __PROPERTY_H__
-#define __PROPERTY_H__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// property.hpp - Okay Engine
+
+#pragma once
 
 #include <functional>
 #include <type_traits>
@@ -81,5 +85,3 @@ class Property {
 };
 
 }  // namespace okay
-
-#endif  // __PROPERTY_H__

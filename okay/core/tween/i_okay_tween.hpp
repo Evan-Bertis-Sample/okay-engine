@@ -1,5 +1,9 @@
-#ifndef __I_OKAY_TWEEN_H__
-#define __I_OKAY_TWEEN_H__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// i_okay_tween.hpp - Okay Engine
+
+#pragma once
 
 namespace okay {
 
@@ -20,5 +24,3 @@ class ITween {
 };
 
 }  // namespace okay
-
-#endif  // __I_OKAY_TWEEN_H__

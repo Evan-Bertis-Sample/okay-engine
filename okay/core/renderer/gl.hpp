@@ -1,8 +1,12 @@
-#ifndef __GL_H__
-#define __GL_H__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// gl.hpp - Okay Engine
+
+#pragma once
 
 #include <okay/core/engine/engine.hpp>
-#include <okay/core/util/result.hpp>
+#include <okay/util/result.hpp>
 
 #include <glad/glad.h>
 
@@ -52,5 +56,3 @@ inline const char* glErrName(GLenum e) {
                 " (" + glErrName(_e) + ")");                                                 \
         }                                                                                    \
     } while (0)
-
-#endif

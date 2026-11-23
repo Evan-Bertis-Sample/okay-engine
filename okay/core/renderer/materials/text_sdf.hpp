@@ -1,5 +1,9 @@
-#ifndef __TEXT_SDF_H__
-#define __TEXT_SDF_H__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// text_sdf.hpp - Okay Engine
+
+#pragma once
 
 #include <okay/core/renderer/material.hpp>
 #include <okay/core/renderer/materials/unlit.hpp>
@@ -75,5 +79,3 @@ struct TextSDFMaterial : public TextSDFProperties, public OkayMaterialProperties
 };
 
 }  // namespace okay
-
-#endif  // __TEXT_SDF_H__

@@ -1,5 +1,9 @@
-#ifndef __ASSET_UTIL_H__
-#define __ASSET_UTIL_H__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// asset_util.hpp - Okay Engine
+
+#pragma once
 
 #include <okay/core/asset/asset.hpp>
 #include <okay/core/asset/generic/font_loader.hpp>
@@ -109,5 +113,3 @@ inline MeshData engineMeshData(
 }  // namespace load
 
 }  // namespace okay
-
-#endif  // __ASSET_UTIL_H__

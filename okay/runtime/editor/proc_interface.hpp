@@ -1,3 +1,8 @@
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// proc_interface.hpp - Okay Engine
+
 #ifndef __PROC_INTERFACE_H__
 #define __PROC_INTERFACE_H__
 

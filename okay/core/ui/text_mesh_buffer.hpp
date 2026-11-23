@@ -1,13 +1,17 @@
-#ifndef __TEXT_MESH_BUFFER_H__
-#define __TEXT_MESH_BUFFER_H__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// text_mesh_buffer.hpp - Okay Engine
+
+#pragma once
 
 #include <okay/core/engine/engine.hpp>
 #include <okay/core/renderer/mesh.hpp>
 #include <okay/core/ui/font.hpp>
 #include <okay/core/ui/text_layout.hpp>
 #include <okay/core/ui/text_mesh_builder.hpp>
-#include <okay/core/util/object_pool.hpp>
-#include <okay/core/util/result.hpp>
+#include <okay/util/object_pool.hpp>
+#include <okay/util/result.hpp>
 
 namespace okay {
 
@@ -106,5 +110,3 @@ class TextMeshBuffer {
 };
 
 };  // namespace okay
-
-#endif

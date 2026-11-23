@@ -1,5 +1,9 @@
-#ifndef __TIME_H__
-#define __TIME_H__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// time.hpp - Okay Engine
+
+#pragma once
 
 #include <chrono>
 
@@ -51,5 +55,3 @@ class Time {
 };
 
 }  // namespace okay
-
-#endif  // __TIME_H__

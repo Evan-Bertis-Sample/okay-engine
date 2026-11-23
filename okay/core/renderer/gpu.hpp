@@ -1,11 +1,15 @@
-#ifndef __GPU_H__
-#define __GPU_H__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// gpu.hpp - Okay Engine
+
+#pragma once
 
 #include <okay/core/engine/engine.hpp>
 #include <okay/core/engine/resource.hpp>
 #include <okay/core/renderer/gl.hpp>
 #include <okay/core/renderer/texture.hpp>
-#include <okay/core/util/result.hpp>
+#include <okay/util/result.hpp>
 
 #include <atomic>
 #include <cstdint>
@@ -342,5 +346,3 @@ class GPUState : public ScopedSingleton<GPUState, ResourceScope::RUNTIME> {
 };
 
 }  // namespace okay
-
-#endif  // _GPU_H__

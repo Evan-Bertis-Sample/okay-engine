@@ -1,5 +1,9 @@
-#ifndef __TWEEN_EASING_H__
-#define __TWEEN_EASING_H__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// tween_easing.hpp - Okay Engine
+
+#pragma once
 
 #include <cmath>
 #include <functional>
@@ -59,5 +63,3 @@ float bounceInOut(float progress);
 };  // namespace easing
 
 };  // namespace okay
-
-#endif

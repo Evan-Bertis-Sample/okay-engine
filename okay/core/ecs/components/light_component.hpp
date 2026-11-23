@@ -1,9 +1,13 @@
-#ifndef __LIGHT_COMPONENT_H__
-#define __LIGHT_COMPONENT_H__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// light_component.hpp - Okay Engine
+
+#pragma once
 
 #include <okay/core/ecs/ecs.hpp>
 #include <okay/core/renderer/render_world.hpp>
-#include <okay/core/util/option.hpp>
+#include <okay/util/option.hpp>
 
 namespace okay {
 
@@ -84,5 +88,3 @@ struct LightComponent {
 };
 
 };  // namespace okay
-
-#endif  // __LIGHT_COMPONENT_H__

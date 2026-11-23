@@ -1,12 +1,16 @@
-#ifndef __LIT_H__
-#define __LIT_H__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// lit.hpp - Okay Engine
+
+#pragma once
 
 #include "glm/detail/qualifier.hpp"
 
 #include <okay/core/renderer/materials/unlit.hpp>
 #include <okay/core/renderer/render_world.hpp>
 #include <okay/core/renderer/uniform.hpp>
-#include <okay/core/util/type.hpp>
+#include <okay/util/type.hpp>
 
 #include <glm/glm.hpp>
 
@@ -106,5 +110,3 @@ static_assert(sizeof(okay::DefaultLightBlock) == 16 + 16 * 64,
 static_assert(alignof(okay::DefaultLightBlock) == 16, "DefaultLightBlock must be 16-byte aligned");
 
 }  // namespace okay
-
-#endif  // __LIT_H__

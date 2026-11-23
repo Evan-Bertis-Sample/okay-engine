@@ -1,8 +1,6 @@
 from tools.tool_util import OkayToolUtil
 import subprocess
 
-def require_okay_project():
-    return False
 
 def register_subparser(sp):
     sp.add_argument("-y", "--yes", action="store_true", help="Automatically confirm the update without prompting")

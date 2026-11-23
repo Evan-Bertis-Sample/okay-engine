@@ -1,5 +1,9 @@
-#ifndef __MATH_TYPES_H__
-#define __MATH_TYPES_H__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// math_types.hpp - Okay Engine
+
+#pragma once
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -152,5 +156,3 @@ struct Bounds {
 };
 
 };  // namespace okay
-
-#endif  // __MATH_TYPES_H__

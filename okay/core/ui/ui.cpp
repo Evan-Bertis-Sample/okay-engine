@@ -7,8 +7,8 @@
 
 #include <okay/core/engine/engine.hpp>
 #include <okay/core/renderer/renderer.hpp>
-#include <okay/core/util/format.hpp>
-#include <okay/core/util/variant.hpp>
+#include <okay/util/format.hpp>
+#include <okay/util/variant.hpp>
 
 #include <variant>
 

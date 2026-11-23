@@ -9,9 +9,6 @@ from typing import Iterable
 DEFAULT_OUTPUT = "compile_commands.json"
 
 
-def require_okay_project():
-    return False
-
 
 def register_subparser(subparser):
     subparser.add_argument(

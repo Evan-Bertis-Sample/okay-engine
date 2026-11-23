@@ -1,5 +1,9 @@
-#ifndef __UNLIT_H__
-#define __UNLIT_H__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// unlit.hpp - Okay Engine
+
+#pragma once
 
 #include <okay/core/renderer/material.hpp>
 #include <okay/core/renderer/uniform.hpp>
@@ -98,5 +102,3 @@ struct UnlitMaterial final : public SceneMaterialProperties,
 };
 
 };  // namespace okay
-
-#endif  // __UNLIT_H__

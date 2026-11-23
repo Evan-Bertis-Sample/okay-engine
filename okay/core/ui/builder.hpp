@@ -1,10 +1,14 @@
-#ifndef __BUILDER_H__
-#define __BUILDER_H__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// builder.hpp - Okay Engine
+
+#pragma once
 
 #include "okay/core/engine/engine.hpp"
 
 #include <okay/core/ui/element.hpp>
-#include <okay/core/util/option.hpp>
+#include <okay/util/option.hpp>
 
 namespace okay {
 
@@ -255,5 +259,3 @@ inline UIElement relCenterFrame(size::Percent x,
 };  // namespace ui
 
 };  // namespace okay
-
-#endif  // __BUILDER_H__

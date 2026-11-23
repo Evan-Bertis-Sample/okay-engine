@@ -1,5 +1,9 @@
-#ifndef __RENDERER_H__
-#define __RENDERER_H__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// renderer.hpp - Okay Engine
+
+#pragma once
 
 #include "imgui_impl.hpp"
 #include "render_pipeline.hpp"
@@ -14,7 +18,7 @@
 #include <okay/core/renderer/primitive.hpp>
 #include <okay/core/renderer/render_world.hpp>
 #include <okay/core/renderer/surface.hpp>
-#include <okay/core/util/singleton.hpp>
+#include <okay/util/singleton.hpp>
 
 #include <cstdint>
 
@@ -99,5 +103,3 @@ class Renderer : public System<SystemScope::ENGINE> {
 };
 
 }  // namespace okay
-
-#endif  // _RENDERER_H__

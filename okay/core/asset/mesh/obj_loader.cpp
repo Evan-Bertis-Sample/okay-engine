@@ -1,5 +1,5 @@
 #include <okay/core/asset/mesh/obj_loader.hpp>
-#include <okay/core/util/string.hpp>
+#include <okay/util/string.hpp>
 
 #include <cctype>
 #include <sstream>

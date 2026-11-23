@@ -1,8 +1,12 @@
-#ifndef __SYSTEM_H__
-#define __SYSTEM_H__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// system.hpp - Okay Engine
+
+#pragma once
 
 #include <okay/core/engine/reload.hpp>
-#include <okay/core/util/option.hpp>
+#include <okay/util/option.hpp>
 
 #include <array>
 #include <cstdint>
@@ -228,5 +232,3 @@ class SystemManager {
 };
 
 };  // namespace okay
-
-#endif  // _SYSTEM_H__

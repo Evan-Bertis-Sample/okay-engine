@@ -1,5 +1,9 @@
-#ifndef __MATERIAL_H__
-#define __MATERIAL_H__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// material.hpp - Okay Engine
+
+#pragma once
 
 #include <okay/core/engine/engine.hpp>
 #include <okay/core/renderer/gl.hpp>
@@ -7,7 +11,7 @@
 #include <okay/core/renderer/shader.hpp>
 #include <okay/core/renderer/texture.hpp>
 #include <okay/core/renderer/uniform.hpp>
-#include <okay/core/util/result.hpp>
+#include <okay/util/result.hpp>
 
 #include <cstddef>
 #include <cstdint>
@@ -365,5 +369,3 @@ class OkayMaterialProperties : public IMaterialPropertyCollection {
     bool _initialized{false};
 };
 };  // namespace okay
-
-#endif  // _MATERIAL_H__

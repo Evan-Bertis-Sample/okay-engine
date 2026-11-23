@@ -1,5 +1,9 @@
-#ifndef __BUILTINS_H__
-#define __BUILTINS_H__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// builtins.hpp - Okay Engine
+
+#pragma once
 
 // components
 #include <okay/core/ecs/components/camera_component.hpp>
@@ -33,5 +37,3 @@ inline void registerBuiltinComponentsAndSystems(SystemParameter<ECS> ecs = nullp
 };
 
 }  // namespace okay
-
-#endif  // __BUILTINS_H__

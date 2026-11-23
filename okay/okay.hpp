@@ -1,5 +1,9 @@
-#ifndef __OKAY_H__
-#define __OKAY_H__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// okay.hpp - Okay Engine
+
+#pragma once
 
 // This file is auto-generated. Do not edit manually.
 
@@ -73,6 +77,9 @@
 // okay/core/renderer/passes
 #include <okay/core/renderer/passes/scene_pass.hpp>
 
+// okay/core/renderer2
+#include <okay/core/renderer2/test_renderer.hpp>
+
 // okay/core/tween
 #include <okay/core/tween/i_okay_tween.hpp>
 #include <okay/core/tween/tween.hpp>
@@ -91,17 +98,15 @@
 #include <okay/core/ui/text_mesh_builder.hpp>
 #include <okay/core/ui/ui.hpp>
 
-// okay/core/util
-#include <okay/core/util/dirty_set.hpp>
-#include <okay/core/util/export.hpp>
-#include <okay/core/util/format.hpp>
-#include <okay/core/util/object_pool.hpp>
-#include <okay/core/util/option.hpp>
-#include <okay/core/util/property.hpp>
-#include <okay/core/util/result.hpp>
-#include <okay/core/util/singleton.hpp>
-#include <okay/core/util/string.hpp>
-#include <okay/core/util/type.hpp>
-#include <okay/core/util/variant.hpp>
-
-#endif  // __OKAY_H__
+// okay/util
+#include <okay/util/dirty_set.hpp>
+#include <okay/util/export.hpp>
+#include <okay/util/format.hpp>
+#include <okay/util/object_pool.hpp>
+#include <okay/util/option.hpp>
+#include <okay/util/property.hpp>
+#include <okay/util/result.hpp>
+#include <okay/util/singleton.hpp>
+#include <okay/util/string.hpp>
+#include <okay/util/type.hpp>
+#include <okay/util/variant.hpp>

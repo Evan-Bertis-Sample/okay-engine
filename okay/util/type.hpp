@@ -1,5 +1,9 @@
-#ifndef __TYPE_H__
-#define __TYPE_H__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// type.hpp - Okay Engine
+
+#pragma once
 
 #include <string_view>
 #include <tuple>
@@ -39,5 +43,3 @@ static void tupleForEach(Tuple&& t, Fn&& fn) {
 }
 
 };  // namespace okay
-
-#endif  // __TYPE_H__

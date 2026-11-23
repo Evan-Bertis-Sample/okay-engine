@@ -1,5 +1,9 @@
-#ifndef __FORMAT_H__
-#define __FORMAT_H__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// format.hpp - Okay Engine
+
+#pragma once
 
 #include "glm/fwd.hpp"
 
@@ -99,5 +103,3 @@ struct std::formatter<okay::Transform> {
             ctx.out(), "position: {}, scale: {}, rotation: {}", t.position, t.scale, t.rotation);
     }
 };
-
-#endif  // __FORMAT_H__

@@ -4,8 +4,12 @@ import argparse
 from collections import defaultdict
 from pathlib import Path
 
-HEADER_GUARD = "__OKAY_H__"
-
+LICENSE_HEADER = """\
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// okay.hpp - Okay Engine
+"""
 
 def collect_headers(core_dir: Path, output_file: Path) -> list[Path]:
     headers: list[Path] = []
@@ -34,8 +38,8 @@ def group_headers(repo_root: Path, headers: list[Path]) -> dict[str, list[str]]:
 def generate_header_text(grouped_headers: dict[str, list[str]]) -> str:
     lines: list[str] = []
 
-    lines.append(f"#ifndef {HEADER_GUARD}")
-    lines.append(f"#define {HEADER_GUARD}")
+    lines.append(LICENSE_HEADER)
+    lines.append("#pragma once")
     lines.append("")
     lines.append("// This file is auto-generated. Do not edit manually.")
     lines.append("")
@@ -50,8 +54,6 @@ def generate_header_text(grouped_headers: dict[str, list[str]]) -> str:
         for h in headers:
             lines.append(f"#include <{h}>")
 
-    lines.append("")
-    lines.append(f"#endif  // {HEADER_GUARD}")
     lines.append("")
 
     return "\n".join(lines)
@@ -77,6 +79,14 @@ def main() -> int:
     )
 
     parser.add_argument(
+        "--util-dir",
+        type=Path,
+        default=None,
+        help="Path to okay/util directory (default: <repo-root>/okay/util)",
+    )
+
+
+    parser.add_argument(
         "--output",
         type=Path,
         default=None,
@@ -87,12 +97,15 @@ def main() -> int:
 
     repo_root = args.repo_root.resolve()
     core_dir = (args.core_dir or (repo_root / "okay" / "core")).resolve()
+    util_dir = (args.util_dir or (repo_root / "okay" / "util")).resolve()
     output_file = (args.output or (repo_root / "okay" / "okay.hpp")).resolve()
 
     if not core_dir.exists():
         raise FileNotFoundError(f"Core directory not found: {core_dir}")
 
-    headers = collect_headers(core_dir, output_file)
+    headers = []
+    headers.extend(collect_headers(core_dir, output_file))
+    headers.extend(collect_headers(util_dir, output_file))
     grouped = group_headers(repo_root, headers)
     content = generate_header_text(grouped)
 

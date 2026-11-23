@@ -1,10 +1,15 @@
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// shader_loader.hpp - Okay Engine
+
 #ifndef __SHADER_LOADER_H__
 #define __SHADER_LOADER_H__
 
 #include <okay/core/asset/asset.hpp>
 #include <okay/core/renderer/material.hpp>
 #include <okay/core/renderer/uniform.hpp>
-#include <okay/core/util/result.hpp>
+#include <okay/util/result.hpp>
 
 #include <filesystem>
 #include <istream>

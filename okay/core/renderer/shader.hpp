@@ -1,10 +1,14 @@
-#ifndef __SHADER_H__
-#define __SHADER_H__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// shader.hpp - Okay Engine
+
+#pragma once
 
 #include <okay/core/engine/engine.hpp>
 #include <okay/core/renderer/texture.hpp>
 #include <okay/core/renderer/uniform.hpp>
-#include <okay/core/util/result.hpp>
+#include <okay/util/result.hpp>
 
 #include <cstddef>
 #include <cstdint>
@@ -169,5 +173,3 @@ struct ShaderHandle {
 };
 
 }  // namespace okay
-
-#endif  // _SHADER_H__

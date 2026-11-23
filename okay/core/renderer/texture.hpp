@@ -1,8 +1,12 @@
-#ifndef __TEXTURE_H__
-#define __TEXTURE_H__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// texture.hpp - Okay Engine
+
+#pragma once
 
 #include <okay/core/renderer/gl.hpp>
-#include <okay/core/util/result.hpp>
+#include <okay/util/result.hpp>
 
 #include <span>
 #include <vector>
@@ -202,5 +206,3 @@ class Texture {
 };
 
 }  // namespace okay
-
-#endif  // _TEXTURE_H__

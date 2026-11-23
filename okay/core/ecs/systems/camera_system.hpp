@@ -1,5 +1,9 @@
-#ifndef __CAMERA_SYSTEM_H__
-#define __CAMERA_SYSTEM_H__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// camera_system.hpp - Okay Engine
+
+#pragma once
 
 #include <okay/core/ecs/components/camera_component.hpp>
 #include <okay/core/ecs/components/transform_component.hpp>
@@ -22,5 +26,3 @@ class CameraSystem : public ECSSystem<query::Get<TransformComponent, CameraCompo
 };
 
 }  // namespace okay
-
-#endif  // __CAMERA_SYSTEM_H__

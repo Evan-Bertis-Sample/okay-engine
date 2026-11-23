@@ -1,5 +1,9 @@
-#ifndef __UI_SYSTEM_H__
-#define __UI_SYSTEM_H__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// ui_system.hpp - Okay Engine
+
+#pragma once
 
 #include <okay/core/ecs/components/transform_component.hpp>
 #include <okay/core/ecs/components/ui_component.hpp>
@@ -39,5 +43,3 @@ class UISystem : public ECSSystem<query::Get<TransformComponent, UIComponent>> {
 };
 
 }  // namespace okay
-
-#endif  // __UI_SYSTEM_H__

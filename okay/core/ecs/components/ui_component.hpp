@@ -1,5 +1,9 @@
-#ifndef __UI_COMPONENT_H__
-#define __UI_COMPONENT_H__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// ui_component.hpp - Okay Engine
+
+#pragma once
 
 #include <okay/core/ui/builder.hpp>
 #include <okay/core/ui/element.hpp>
@@ -27,5 +31,3 @@ struct UIComponent {
 };
 
 };  // namespace okay
-
-#endif  // __UI_COMPONENT_H__

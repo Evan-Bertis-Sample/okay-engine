@@ -7,10 +7,6 @@ from tools.build_util import OkayBuildOptions, OkayBuildType, OkayBuildUtil
 from tools.tool_util import OkayLogger, OkayLogType, OkayToolUtil
 
 
-def require_okay_project():
-    return False
-
-
 def register_subparser(subparser):
     OkayBuildOptions.add_subparser_args(subparser)
     subparser.add_argument(

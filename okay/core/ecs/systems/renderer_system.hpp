@@ -1,5 +1,9 @@
-#ifndef __RENDERER_SYSTEM_H__
-#define __RENDERER_SYSTEM_H__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// renderer_system.hpp - Okay Engine
+
+#pragma once
 
 #include <okay/core/ecs/components/camera_component.hpp>
 #include <okay/core/ecs/components/light_component.hpp>
@@ -63,5 +67,3 @@ class RendererSystem : public ECSSystem<query::Get<TransformComponent, MeshRende
 };
 
 }  // namespace okay
-
-#endif  // __RENDERER_SYSTEM_H__

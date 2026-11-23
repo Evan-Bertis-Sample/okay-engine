@@ -1,5 +1,9 @@
-#ifndef __OBJECT_POOL_H__
-#define __OBJECT_POOL_H__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// object_pool.hpp - Okay Engine
+
+#pragma once
 
 #include <okay/core/engine/engine.hpp>
 #include <okay/core/engine/logger.hpp>
@@ -362,5 +366,3 @@ class ObjectPool final {
 };
 
 }  // namespace okay
-
-#endif  // __OBJECT_POOL_H__

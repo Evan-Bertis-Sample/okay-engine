@@ -1,5 +1,9 @@
-#ifndef __OPTION_H__
-#define __OPTION_H__
+// Copyright (c) 2026 Okay Engine contributors
+// SPDX-License-Identifier: MIT
+//
+// option.hpp - Okay Engine
+
+#pragma once
 
 #include <functional>
 #include <optional>
@@ -130,5 +134,3 @@ class Option {
 };
 
 }  // namespace okay
-
-#endif
