@@ -1,5 +1,4 @@
-#ifndef __GL_H__
-#define __GL_H__
+#pragma once
 
 #include <okay/core/engine/engine.hpp>
 #include <okay/util/result.hpp>
@@ -52,5 +51,3 @@ inline const char* glErrName(GLenum e) {
                 " (" + glErrName(_e) + ")");                                                 \
         }                                                                                    \
     } while (0)
-
-#endif

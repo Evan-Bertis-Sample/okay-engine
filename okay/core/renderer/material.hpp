@@ -1,5 +1,4 @@
-#ifndef __MATERIAL_H__
-#define __MATERIAL_H__
+#pragma once
 
 #include <okay/core/engine/engine.hpp>
 #include <okay/core/renderer/gl.hpp>
@@ -365,5 +364,3 @@ class OkayMaterialProperties : public IMaterialPropertyCollection {
     bool _initialized{false};
 };
 };  // namespace okay
-
-#endif  // _MATERIAL_H__

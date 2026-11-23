@@ -1,5 +1,4 @@
-#ifndef __GPU_H__
-#define __GPU_H__
+#pragma once
 
 #include <okay/core/engine/engine.hpp>
 #include <okay/core/engine/resource.hpp>
@@ -342,5 +341,3 @@ class GPUState : public ScopedSingleton<GPUState, ResourceScope::RUNTIME> {
 };
 
 }  // namespace okay
-
-#endif  // _GPU_H__

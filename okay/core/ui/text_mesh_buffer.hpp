@@ -1,5 +1,4 @@
-#ifndef __TEXT_MESH_BUFFER_H__
-#define __TEXT_MESH_BUFFER_H__
+#pragma once
 
 #include <okay/core/engine/engine.hpp>
 #include <okay/core/renderer/mesh.hpp>
@@ -106,5 +105,3 @@ class TextMeshBuffer {
 };
 
 };  // namespace okay
-
-#endif

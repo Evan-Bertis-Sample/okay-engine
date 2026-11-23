@@ -1,5 +1,4 @@
-#ifndef __STRING_H__
-#define __STRING_H__
+#pragma once
 
 #include <string>
 #include <string_view>
@@ -23,5 +22,3 @@ class StringUtils final {
 };
 
 }  // namespace okay
-
-#endif  // __STRING_H__

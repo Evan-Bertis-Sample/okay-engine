@@ -1,5 +1,4 @@
-#ifndef __FONT_H__
-#define __FONT_H__
+#pragma once
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -153,5 +152,3 @@ class FontManager : public ScopedSingleton<FontManager, ResourceScope::ENGINE> {
 };
 
 };  // namespace okay
-
-#endif  // _FONT_H__

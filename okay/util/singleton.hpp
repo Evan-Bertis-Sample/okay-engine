@@ -1,5 +1,4 @@
-#ifndef __SINGLETON_HPP__
-#define __SINGLETON_HPP__
+#pragma once
 
 #include <type_traits>
 #include <utility>
@@ -30,5 +29,3 @@ class Singleton {
 };
 
 }  // namespace okay
-
-#endif  // _SINGLETON_HPP__

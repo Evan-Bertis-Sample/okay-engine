@@ -1,5 +1,4 @@
-#ifndef __ENGINE_H__
-#define __ENGINE_H__
+#pragma once
 
 #include <okay/core/engine/logger.hpp>
 #include <okay/core/engine/reload.hpp>
@@ -150,5 +149,3 @@ struct ScopedSingleton : Resource<Scope> {
 };
 
 };  // namespace okay
-
-#endif  // __ENGINE_H__

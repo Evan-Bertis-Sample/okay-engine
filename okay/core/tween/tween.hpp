@@ -1,5 +1,4 @@
-#ifndef __TWEEN_H__
-#define __TWEEN_H__
+#pragma once
 
 #include <okay/core/engine/logger.hpp>
 #include <okay/core/tween/i_okay_tween.hpp>
@@ -288,5 +287,3 @@ class Tween : public ITween, public std::enable_shared_from_this<Tween<T>> {
 };
 
 }  // namespace okay
-
-#endif

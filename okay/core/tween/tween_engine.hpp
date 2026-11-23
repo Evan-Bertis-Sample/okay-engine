@@ -1,5 +1,4 @@
-#ifndef __TWEEN_ENGINE_H__
-#define __TWEEN_ENGINE_H__
+#pragma once
 
 #include <okay/core/engine/system.hpp>
 #include <okay/core/tween/i_okay_tween.hpp>
@@ -39,5 +38,3 @@ class TweenEngine : public System<SystemScope::ENGINE> {
 };
 
 };  // namespace okay
-
-#endif

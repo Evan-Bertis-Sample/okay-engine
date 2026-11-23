@@ -1,5 +1,4 @@
-#ifndef __UI_COMPONENT_H__
-#define __UI_COMPONENT_H__
+#pragma once
 
 #include <okay/core/ui/builder.hpp>
 #include <okay/core/ui/element.hpp>
@@ -27,5 +26,3 @@ struct UIComponent {
 };
 
 };  // namespace okay
-
-#endif  // __UI_COMPONENT_H__

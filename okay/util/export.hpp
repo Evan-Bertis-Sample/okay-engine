@@ -1,5 +1,4 @@
-#ifndef __EXPORT_HPP__
-#define __EXPORT_HPP__
+#pragma once
 
 #if defined(_WIN32) || defined(__CYGWIN__)
 
@@ -26,5 +25,3 @@
 #endif
 
 #endif
-
-#endif  // __EXPORT_HPP__

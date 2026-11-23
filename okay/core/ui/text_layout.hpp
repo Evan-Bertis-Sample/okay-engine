@@ -1,5 +1,4 @@
-#ifndef __TEXT_LAYOUT_H__
-#define __TEXT_LAYOUT_H__
+#pragma once
 
 #include <okay/core/ui/font.hpp>
 
@@ -179,5 +178,3 @@ class TextLayout {
 };
 
 }  // namespace okay
-
-#endif  // __TEXT_LAYOUT_H__

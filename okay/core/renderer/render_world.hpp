@@ -1,5 +1,4 @@
-#ifndef __RENDER_WORLD_H__
-#define __RENDER_WORLD_H__
+#pragma once
 
 #include "glm/ext/vector_float3.hpp"
 #include "glm/ext/vector_float4.hpp"
@@ -399,5 +398,3 @@ class RenderWorld {
 };
 
 }  // namespace okay
-
-#endif  // _RENDER_WORLD_H__

@@ -1,5 +1,4 @@
-#ifndef __OBJ_LOADER_H__
-#define __OBJ_LOADER_H__
+#pragma once
 
 #include <okay/core/asset/mesh/mesh_loader.hpp>
 #include <okay/core/renderer/mesh.hpp>
@@ -65,5 +64,3 @@ class ObjLoader final : public MeshLoader {
 };
 
 }  // namespace okay
-
-#endif  // __OBJ_LOADER_H__

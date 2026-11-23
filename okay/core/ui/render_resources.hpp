@@ -1,5 +1,4 @@
-#ifndef __RENDER_RESOURCES_H__
-#define __RENDER_RESOURCES_H__
+#pragma once
 
 #include <okay/core/asset/asset.hpp>
 #include <okay/core/asset/asset_util.hpp>
@@ -104,5 +103,3 @@ class UIRenderResoruces : public ScopedSingleton<UIRenderResoruces, ResourceScop
 };
 
 };  // namespace okay
-
-#endif  // __RENDER_RESOURCES_H__

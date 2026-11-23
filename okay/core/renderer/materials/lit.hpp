@@ -1,5 +1,4 @@
-#ifndef __LIT_H__
-#define __LIT_H__
+#pragma once
 
 #include "glm/detail/qualifier.hpp"
 
@@ -106,5 +105,3 @@ static_assert(sizeof(okay::DefaultLightBlock) == 16 + 16 * 64,
 static_assert(alignof(okay::DefaultLightBlock) == 16, "DefaultLightBlock must be 16-byte aligned");
 
 }  // namespace okay
-
-#endif  // __LIT_H__

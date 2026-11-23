@@ -1,5 +1,4 @@
-#ifndef __BUILTINS_H__
-#define __BUILTINS_H__
+#pragma once
 
 // components
 #include <okay/core/ecs/components/camera_component.hpp>
@@ -33,5 +32,3 @@ inline void registerBuiltinComponentsAndSystems(SystemParameter<ECS> ecs = nullp
 };
 
 }  // namespace okay
-
-#endif  // __BUILTINS_H__

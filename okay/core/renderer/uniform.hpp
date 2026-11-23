@@ -1,5 +1,4 @@
-#ifndef __UNIFORM_H__
-#define __UNIFORM_H__
+#pragma once
 
 #include <okay/core/engine/engine.hpp>
 #include <okay/core/engine/logger.hpp>
@@ -296,5 +295,3 @@ class TextureProperty {
 };
 
 };  // namespace okay
-
-#endif  // _UNIFORM_H__

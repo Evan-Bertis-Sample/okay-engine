@@ -1,5 +1,4 @@
-#ifndef __RESOURCE_HPP__
-#define __RESOURCE_HPP__
+#pragma once
 
 #include <okay/util/option.hpp>
 
@@ -204,5 +203,3 @@ class ResourceManager {
 };
 
 };  // namespace okay
-
-#endif  // __RESOURCE_HPP__

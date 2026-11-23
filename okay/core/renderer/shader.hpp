@@ -1,5 +1,4 @@
-#ifndef __SHADER_H__
-#define __SHADER_H__
+#pragma once
 
 #include <okay/core/engine/engine.hpp>
 #include <okay/core/renderer/texture.hpp>
@@ -169,5 +168,3 @@ struct ShaderHandle {
 };
 
 }  // namespace okay
-
-#endif  // _SHADER_H__

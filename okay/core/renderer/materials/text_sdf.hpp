@@ -1,5 +1,4 @@
-#ifndef __TEXT_SDF_H__
-#define __TEXT_SDF_H__
+#pragma once
 
 #include <okay/core/renderer/material.hpp>
 #include <okay/core/renderer/materials/unlit.hpp>
@@ -75,5 +74,3 @@ struct TextSDFMaterial : public TextSDFProperties, public OkayMaterialProperties
 };
 
 }  // namespace okay
-
-#endif  // __TEXT_SDF_H__

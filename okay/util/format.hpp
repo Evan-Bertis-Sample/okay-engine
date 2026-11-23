@@ -1,5 +1,4 @@
-#ifndef __FORMAT_H__
-#define __FORMAT_H__
+#pragma once
 
 #include "glm/fwd.hpp"
 
@@ -99,5 +98,3 @@ struct std::formatter<okay::Transform> {
             ctx.out(), "position: {}, scale: {}, rotation: {}", t.position, t.scale, t.rotation);
     }
 };
-
-#endif  // __FORMAT_H__

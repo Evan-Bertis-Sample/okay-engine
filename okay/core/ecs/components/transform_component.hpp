@@ -1,5 +1,4 @@
-#ifndef __TRANSFORM_COMPONENT_H__
-#define __TRANSFORM_COMPONENT_H__
+#pragma once
 
 #include <okay/core/ecs/ecs.hpp>
 #include <okay/core/renderer/render_world.hpp>
@@ -162,5 +161,3 @@ struct TransformComponent {
 };
 
 }  // namespace okay
-
-#endif  // __TRANSFORM_COMPONENT_H__

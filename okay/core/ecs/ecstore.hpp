@@ -1,5 +1,4 @@
-#ifndef __ECSTORE_H__
-#define __ECSTORE_H__
+#pragma once
 
 #include <okay/core/engine/engine.hpp>
 #include <okay/core/engine/logger.hpp>
@@ -429,5 +428,3 @@ bool EntityComponentStore::hasComponent(const ECSEntity& entity) {
 }
 
 }  // namespace okay
-
-#endif  // __ECSTORE_H__

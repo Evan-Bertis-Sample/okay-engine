@@ -1,5 +1,4 @@
-#ifndef __CAMERA_COMPONENT_H__
-#define __CAMERA_COMPONENT_H__
+#pragma once
 
 #include <okay/core/ecs/ecs.hpp>
 #include <okay/core/renderer/render_world.hpp>
@@ -27,5 +26,3 @@ struct CameraComponent {
 };
 
 }  // namespace okay
-
-#endif  // __CAMERA_COMPONENT_H__

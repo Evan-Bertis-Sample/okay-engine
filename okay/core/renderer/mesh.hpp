@@ -1,5 +1,4 @@
-#ifndef __MESH_H__
-#define __MESH_H__
+#pragma once
 
 #include <okay/core/renderer/gl.hpp>
 #include <okay/core/renderer/math_types.hpp>
@@ -191,5 +190,3 @@ class MeshBuffer {
 };
 
 }  // namespace okay
-
-#endif  // _MESH_H__

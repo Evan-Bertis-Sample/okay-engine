@@ -1,5 +1,4 @@
-#ifndef __RELOAD_HPP__
-#define __RELOAD_HPP__
+#pragma once
 
 #include "okay/util/option.hpp"
 
@@ -139,5 +138,3 @@ struct ReloadContext {
 };
 
 }  // namespace okay
-
-#endif  // __RELOAD_HPP__

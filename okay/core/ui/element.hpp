@@ -1,5 +1,4 @@
-#ifndef __ELEMENT_H__
-#define __ELEMENT_H__
+#pragma once
 
 #include <okay/core/asset/asset.hpp>
 #include <okay/core/asset/asset_util.hpp>
@@ -344,5 +343,3 @@ struct UIElement {
 };
 
 };  // namespace okay
-
-#endif  // __ELEMENT_H__

@@ -1,5 +1,4 @@
-#ifndef __OBJECT_POOL_H__
-#define __OBJECT_POOL_H__
+#pragma once
 
 #include <okay/core/engine/engine.hpp>
 #include <okay/core/engine/logger.hpp>
@@ -362,5 +361,3 @@ class ObjectPool final {
 };
 
 }  // namespace okay
-
-#endif  // __OBJECT_POOL_H__

@@ -1,5 +1,4 @@
-#ifndef __TYPE_H__
-#define __TYPE_H__
+#pragma once
 
 #include <string_view>
 #include <tuple>
@@ -39,5 +38,3 @@ static void tupleForEach(Tuple&& t, Fn&& fn) {
 }
 
 };  // namespace okay
-
-#endif  // __TYPE_H__

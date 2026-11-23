@@ -1,5 +1,4 @@
-#ifndef __RENDER_TARGET_H__
-#define __RENDER_TARGET_H__
+#pragma once
 
 #include <okay/core/renderer/gl.hpp>
 #include <okay/util/option.hpp>
@@ -70,5 +69,3 @@ class RenderTargetPool {
 };
 
 };  // namespace okay
-
-#endif  // _RENDER_TARGET_H__

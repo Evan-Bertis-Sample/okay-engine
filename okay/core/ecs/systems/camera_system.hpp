@@ -1,5 +1,4 @@
-#ifndef __CAMERA_SYSTEM_H__
-#define __CAMERA_SYSTEM_H__
+#pragma once
 
 #include <okay/core/ecs/components/camera_component.hpp>
 #include <okay/core/ecs/components/transform_component.hpp>
@@ -22,5 +21,3 @@ class CameraSystem : public ECSSystem<query::Get<TransformComponent, CameraCompo
 };
 
 }  // namespace okay
-
-#endif  // __CAMERA_SYSTEM_H__

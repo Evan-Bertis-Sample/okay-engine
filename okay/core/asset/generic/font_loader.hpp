@@ -1,5 +1,4 @@
-#ifndef __FONT_LOADER_H__
-#define __FONT_LOADER_H__
+#pragma once
 
 #include <okay/core/asset/asset.hpp>
 #include <okay/core/renderer/material.hpp>
@@ -33,5 +32,3 @@ struct AssetLoader<FontManager::FontHandle, FontLoadOptions> {
 };
 
 }  // namespace okay
-
-#endif  // __FONT_LOADER_H__

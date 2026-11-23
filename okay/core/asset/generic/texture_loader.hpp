@@ -1,5 +1,4 @@
-#ifndef __TEXTURE_LOADER_H__
-#define __TEXTURE_LOADER_H__
+#pragma once
 
 #include <okay/core/asset/asset.hpp>
 #include <okay/core/renderer/material.hpp>
@@ -90,5 +89,3 @@ struct AssetLoader<Texture, TextureLoadSettings> {
 };
 
 }  // namespace okay
-
-#endif  // __TEXTURE_LOADER_H__

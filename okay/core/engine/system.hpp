@@ -1,5 +1,4 @@
-#ifndef __SYSTEM_H__
-#define __SYSTEM_H__
+#pragma once
 
 #include <okay/core/engine/reload.hpp>
 #include <okay/util/option.hpp>
@@ -228,5 +227,3 @@ class SystemManager {
 };
 
 };  // namespace okay
-
-#endif  // _SYSTEM_H__

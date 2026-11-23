@@ -1,5 +1,4 @@
-#ifndef __PRIMITIVE_H__
-#define __PRIMITIVE_H__
+#pragma once
 
 #include <okay/core/renderer/mesh.hpp>
 
@@ -230,5 +229,3 @@ inline CapsuleBuilder capsule() {
 }
 
 }  // namespace okay::primitives
-
-#endif  // _PRIMITIVE_H__

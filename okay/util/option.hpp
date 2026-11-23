@@ -1,5 +1,4 @@
-#ifndef __OPTION_H__
-#define __OPTION_H__
+#pragma once
 
 #include <functional>
 #include <optional>
@@ -130,5 +129,3 @@ class Option {
 };
 
 }  // namespace okay
-
-#endif

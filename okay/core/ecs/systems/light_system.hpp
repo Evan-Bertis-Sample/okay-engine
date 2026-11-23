@@ -1,5 +1,4 @@
-#ifndef __LIGHT_SYSTEM_H__
-#define __LIGHT_SYSTEM_H__
+#pragma once
 
 #include <okay/core/ecs/components/light_component.hpp>
 #include <okay/core/ecs/components/transform_component.hpp>
@@ -73,5 +72,3 @@ class LightSystem : public ECSSystem<query::Get<TransformComponent, LightCompone
 };
 
 }  // namespace okay
-
-#endif  // __LIGHT_SYSTEM_H__

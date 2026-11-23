@@ -1,5 +1,4 @@
-#ifndef __MESH_LOADER_H__
-#define __MESH_LOADER_H__
+#pragma once
 
 #include <okay/core/asset/asset.hpp>
 #include <okay/core/renderer/mesh.hpp>
@@ -23,5 +22,3 @@ struct AssetLoader<MeshData> {
 };
 
 }  // namespace okay
-
-#endif  // __MESH_LOADER_H__

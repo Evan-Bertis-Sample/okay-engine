@@ -1,5 +1,4 @@
-#ifndef __OKAY_H__
-#define __OKAY_H__
+#pragma once
 
 // This file is auto-generated. Do not edit manually.
 
@@ -73,6 +72,9 @@
 // okay/core/renderer/passes
 #include <okay/core/renderer/passes/scene_pass.hpp>
 
+// okay/core/renderer2
+#include <okay/core/renderer2/test_renderer.hpp>
+
 // okay/core/tween
 #include <okay/core/tween/i_okay_tween.hpp>
 #include <okay/core/tween/tween.hpp>
@@ -91,4 +93,15 @@
 #include <okay/core/ui/text_mesh_builder.hpp>
 #include <okay/core/ui/ui.hpp>
 
-#endif  // __OKAY_H__
+// okay/util
+#include <okay/util/dirty_set.hpp>
+#include <okay/util/export.hpp>
+#include <okay/util/format.hpp>
+#include <okay/util/object_pool.hpp>
+#include <okay/util/option.hpp>
+#include <okay/util/property.hpp>
+#include <okay/util/result.hpp>
+#include <okay/util/singleton.hpp>
+#include <okay/util/string.hpp>
+#include <okay/util/type.hpp>
+#include <okay/util/variant.hpp>

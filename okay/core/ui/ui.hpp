@@ -1,5 +1,4 @@
-#ifndef __UI_H__
-#define __UI_H__
+#pragma once
 
 #include "element.hpp"
 #include "okay/core/ui/render_resources.hpp"
@@ -146,5 +145,3 @@ class UI {
 };
 
 };  // namespace okay
-
-#endif  // __UI_H__

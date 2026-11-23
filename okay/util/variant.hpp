@@ -1,5 +1,4 @@
-#ifndef __VARIANT_H__
-#define __VARIANT_H__
+#pragma once
 
 namespace okay {
 
@@ -13,5 +12,3 @@ template <class... Ts>
 Overloaded(Ts...) -> Overloaded<Ts...>;
 
 }  // namespace okay
-
-#endif  // __VARIANT_H__

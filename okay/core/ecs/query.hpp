@@ -1,5 +1,4 @@
-#ifndef __QUERY_H__
-#define __QUERY_H__
+#pragma once
 
 #include <okay/core/ecs/ecstore.hpp>
 #include <okay/util/option.hpp>
@@ -121,5 +120,3 @@ struct ECSQuery {
 };
 
 }  // namespace okay
-
-#endif  // __QUERY_H__

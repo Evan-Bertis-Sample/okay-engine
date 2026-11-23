@@ -1,5 +1,4 @@
-#ifndef __BUILDER_H__
-#define __BUILDER_H__
+#pragma once
 
 #include "okay/core/engine/engine.hpp"
 
@@ -255,5 +254,3 @@ inline UIElement relCenterFrame(size::Percent x,
 };  // namespace ui
 
 };  // namespace okay
-
-#endif  // __BUILDER_H__

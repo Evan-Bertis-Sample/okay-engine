@@ -1,5 +1,4 @@
-#ifndef __LIGHT_COMPONENT_H__
-#define __LIGHT_COMPONENT_H__
+#pragma once
 
 #include <okay/core/ecs/ecs.hpp>
 #include <okay/core/renderer/render_world.hpp>
@@ -84,5 +83,3 @@ struct LightComponent {
 };
 
 };  // namespace okay
-
-#endif  // __LIGHT_COMPONENT_H__

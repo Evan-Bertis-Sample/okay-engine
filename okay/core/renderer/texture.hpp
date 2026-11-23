@@ -1,5 +1,4 @@
-#ifndef __TEXTURE_H__
-#define __TEXTURE_H__
+#pragma once
 
 #include <okay/core/renderer/gl.hpp>
 #include <okay/util/result.hpp>
@@ -202,5 +201,3 @@ class Texture {
 };
 
 }  // namespace okay
-
-#endif  // _TEXTURE_H__

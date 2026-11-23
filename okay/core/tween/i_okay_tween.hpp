@@ -1,5 +1,4 @@
-#ifndef __I_OKAY_TWEEN_H__
-#define __I_OKAY_TWEEN_H__
+#pragma once
 
 namespace okay {
 
@@ -20,5 +19,3 @@ class ITween {
 };
 
 }  // namespace okay
-
-#endif  // __I_OKAY_TWEEN_H__

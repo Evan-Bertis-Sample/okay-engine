@@ -1,5 +1,4 @@
-#ifndef __EVENT_H__
-#define __EVENT_H__
+#pragma once
 
 #include <functional>
 
@@ -27,5 +26,3 @@ class Event {
 };
 
 };  // namespace okay
-
-#endif  // _EVENT_H__

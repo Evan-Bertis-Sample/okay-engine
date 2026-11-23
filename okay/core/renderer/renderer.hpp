@@ -1,5 +1,4 @@
-#ifndef __RENDERER_H__
-#define __RENDERER_H__
+#pragma once
 
 #include "imgui_impl.hpp"
 #include "render_pipeline.hpp"
@@ -99,5 +98,3 @@ class Renderer : public System<SystemScope::ENGINE> {
 };
 
 }  // namespace okay
-
-#endif  // _RENDERER_H__

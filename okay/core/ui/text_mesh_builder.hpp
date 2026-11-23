@@ -1,5 +1,4 @@
-#ifndef __TEXT_MESH_BUILDER_H__
-#define __TEXT_MESH_BUILDER_H__
+#pragma once
 
 #include <okay/core/engine/engine.hpp>
 #include <okay/core/renderer/mesh.hpp>
@@ -32,5 +31,3 @@ inline MeshData textMesh(std::string_view text, const TextStyle& style, bool dou
 }
 
 }  // namespace okay
-
-#endif  // __TEXT_MESH_BUILDER_H__

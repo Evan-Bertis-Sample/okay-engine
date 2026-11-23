@@ -1,5 +1,4 @@
-#ifndef __SURFACE_H__
-#define __SURFACE_H__
+#pragma once
 
 #include <okay/core/engine/system.hpp>
 #include <okay/core/renderer/gl.hpp>
@@ -36,5 +35,3 @@ class Surface {
 };
 
 }  // namespace okay
-
-#endif  // _SURFACE_H__

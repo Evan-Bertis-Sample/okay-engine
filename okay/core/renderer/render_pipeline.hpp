@@ -1,5 +1,4 @@
-#ifndef __RENDER_PIPELINE_H__
-#define __RENDER_PIPELINE_H__
+#pragma once
 
 #include <okay/core/renderer/gl.hpp>
 #include <okay/core/renderer/render_target.hpp>
@@ -76,5 +75,3 @@ class RenderPipeline {
 };
 
 };  // namespace okay
-
-#endif  // _RENDER_PIPELINE_H__

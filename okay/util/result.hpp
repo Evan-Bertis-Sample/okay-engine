@@ -1,5 +1,4 @@
-#ifndef __RESULT_H__
-#define __RESULT_H__
+#pragma once
 
 #include <okay/util/type.hpp>
 
@@ -273,5 +272,3 @@ Failable runAll(Fs&&... fs)
 }
 
 }  // namespace okay
-
-#endif  // __RESULT_H__

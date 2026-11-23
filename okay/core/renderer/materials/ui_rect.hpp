@@ -1,5 +1,4 @@
-#ifndef __UI_RECT_H__
-#define __UI_RECT_H__
+#pragma once
 
 #include <okay/core/renderer/material.hpp>
 #include <okay/core/renderer/materials/unlit.hpp>
@@ -79,5 +78,3 @@ struct UIRectMaterial : public UIRectProperties, public OkayMaterialProperties<U
 };
 
 }  // namespace okay
-
-#endif  // __UI_RECT_H__

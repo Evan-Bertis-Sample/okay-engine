@@ -1,5 +1,4 @@
-#ifndef __TIME_H__
-#define __TIME_H__
+#pragma once
 
 #include <chrono>
 
@@ -51,5 +50,3 @@ class Time {
 };
 
 }  // namespace okay
-
-#endif  // __TIME_H__

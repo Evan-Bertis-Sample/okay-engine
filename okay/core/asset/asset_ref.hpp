@@ -1,5 +1,4 @@
-#ifndef __ASSET_REF_H__
-#define __ASSET_REF_H__
+#pragma once
 
 #include <okay/core/asset/asset.hpp>
 #include <okay/core/asset/asset_util.hpp>
@@ -69,5 +68,3 @@ template <typename T, typename LoadOptions = std::tuple<>>
 using EngineAssetRef = AssetRef<T, true, LoadOptions>;
 
 }  // namespace okay
-
-#endif  // __ASSET_REF_H__

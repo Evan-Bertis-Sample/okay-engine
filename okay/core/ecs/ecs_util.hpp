@@ -1,5 +1,4 @@
-#ifndef __ECS_UTIL_H__
-#define __ECS_UTIL_H__
+#pragma once
 
 #include <okay/core/ecs/builtins.hpp>
 #include <okay/core/ecs/ecs.hpp>
@@ -67,5 +66,3 @@ inline ECSEntity uiEntity(std::function<UIElement()> uiBuilder,
 }
 
 };  // namespace okay::ecs
-
-#endif  // __ECS_UTIL_H__

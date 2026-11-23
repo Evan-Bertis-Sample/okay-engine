@@ -1,5 +1,4 @@
-#ifndef __PROPERTY_H__
-#define __PROPERTY_H__
+#pragma once
 
 #include <functional>
 #include <type_traits>
@@ -81,5 +80,3 @@ class Property {
 };
 
 }  // namespace okay
-
-#endif  // __PROPERTY_H__

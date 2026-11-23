@@ -1,5 +1,4 @@
-#ifndef __RUNTIME_HPP__
-#define __RUNTIME_HPP__
+#pragma once
 
 #include <okay/core/engine/engine.hpp>
 #include <okay/util/export.hpp>
@@ -18,5 +17,3 @@ extern OkayRuntime Runtime;
 
 /// @brief User-defined function
 extern "C" OKAY_IMPORT void create(okay::Game* game, int argc, char* args[]);
-
-#endif  // __RUNTIME_HPP__
