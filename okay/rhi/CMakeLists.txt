@@ -10,4 +10,4 @@ target_sources(okay_rhi PRIVATE
     ${OKAY_RHI_HEADERS}
 )
 
-target_link_libraries(okay_rhi PRIVATE okay_platform)
+target_link_libraries(okay_rhi PRIVATE okay_platform okay_util)

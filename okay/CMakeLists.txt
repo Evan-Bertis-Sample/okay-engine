@@ -47,8 +47,8 @@ endif()
 
 add_library(okay ${OKAY_LIBRARY_TYPE})
 add_library(okay_platform ${OKAY_LIBRARY_TYPE})
-add_library(okay_rhi ${OKAY_LIBRARY_TYPE})
 add_library(${PROJECT} ${OKAY_LIBRARY_TYPE})
+add_library(okay_rhi STATIC)
 add_library(okay_util STATIC)
 
 add_executable(okay_runtime)
