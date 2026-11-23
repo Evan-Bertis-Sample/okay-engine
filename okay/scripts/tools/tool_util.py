@@ -58,9 +58,9 @@ class OkayToolUtil:
         os.exec([script_path] + args, shell=True)
 
     @staticmethod
-    def is_good_for_work() -> bool:
+    def is_good_for_work(project_dir : str) -> bool:
         # check if the current working directory has an ".okay" work directory
-        work_dir = OkayToolUtil.get_okay_work_dir(os.getcwd())
+        work_dir = OkayToolUtil.get_okay_work_dir(project_dir)
         return work_dir.exists() and work_dir.is_dir()
 
 

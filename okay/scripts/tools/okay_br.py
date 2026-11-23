@@ -19,6 +19,11 @@ def register_subparser(subparser):
 
 def main(args):
     build_options = OkayBuildOptions.from_args(args)
+
+    if not OkayToolUtil.is_good_for_work(args.project_dir):
+        OkayLogger.log(f"Cannot build project! {args.project_dir} is not an okay project!", OkayLogType.ERROR);
+        return
+
     if OkayBuildUtil.build_project(build_options):
         OkayBuildUtil.run_project(
             build_options, use_gdb=args.gdb, allow_dirty=True

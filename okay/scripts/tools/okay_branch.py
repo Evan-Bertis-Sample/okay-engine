@@ -1,9 +1,6 @@
 from tools.tool_util import OkayToolUtil
 import subprocess
 
-def require_okay_project():
-    return False
-
 def register_subparser(sp):
     # list or switch
     sp.add_argument(
@@ -32,7 +29,7 @@ def main(args):
         except subprocess.CalledProcessError as e:
             print(f"Error running git branch: {e}")
             return
-        
+
     if args.switch:
         print(f"Switching to branch {args.switch}")
         try:

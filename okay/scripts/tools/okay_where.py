@@ -2,8 +2,6 @@
 
 from tools.tool_util import OkayToolUtil
 
-def require_okay_project():
-    return False
 
 
 def main(args):

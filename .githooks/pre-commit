@@ -7,12 +7,37 @@ cd "$REPO_ROOT"
 echo "[pre-commit] Generating okay/okay.hpp..."
 python scripts/generate_okay_header.py --repo-root "$REPO_ROOT"
 
-echo "[pre-commit] Formatting source files..."
-source scripts/format.sh
+echo "[pre-commit] Checking source formatting..."
 
-echo "[pre-commit] Staging updates..."
-git add okay/okay.hpp
-git add okay
-git add scripts
+if ! bash scripts/format.sh --check; then
+    echo ""
+    echo "[pre-commit] ERROR: Some files are not formatted properly."
+    echo "[pre-commit] Please run:"
+    echo "    ./scripts/format.sh"
+    echo ""
+    exit 1
+fi
+
+echo "[pre-commit] Checking for license headers..."
+
+if ! python scripts/okay_headers.py okay --check; then
+    echo ""
+    echo "[pre-commit] ERROR: Some files have missing or outdated license headers."
+    echo "[pre-commit] Please run:"
+    echo "    python scripts/okay_headers.py okay"
+    echo ""
+    exit 1
+fi
+
+
+echo "[pre-commit] Verifying that demo compiles..."
+
+if build_output=$(python okay/scripts/okay.py build --project-dir proto/demo 2>&1); then
+    echo "[pre-commit] Demo build successful."
+else
+    echo "[pre-commit] ERROR: Demo build failed"
+    echo "$build_output"
+    exit 1
+fi
 
 echo "[pre-commit] Done."

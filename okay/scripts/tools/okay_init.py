@@ -5,9 +5,6 @@ import sys
 from tools import tool_util
 import shutil
 
-def require_okay_project():
-    return False
-
 def main(args):
     # initialize the work directory, if needed
     # if it already exists, just say that it exists
@@ -17,4 +14,3 @@ def main(args):
         print(f"Initialized okay project")
     else:
         print(f"Okay project already initialized")
-    
