@@ -5,7 +5,7 @@
 #include FT_FREETYPE_H
 #include <okay/core/engine/resource.hpp>
 #include <okay/core/renderer/renderer.hpp>
-#include <okay/core/util/option.hpp>
+#include <okay/util/option.hpp>
 
 #include <cstdint>
 #include <stdexcept>

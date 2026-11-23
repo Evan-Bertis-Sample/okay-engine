@@ -5,8 +5,8 @@
 #include <okay/core/engine/logger.hpp>
 #include <okay/core/renderer/gl.hpp>
 #include <okay/core/renderer/texture.hpp>
-#include <okay/core/util/result.hpp>
-#include <okay/core/util/type.hpp>
+#include <okay/util/result.hpp>
+#include <okay/util/type.hpp>
 
 #include <atomic>
 #include <cstdint>

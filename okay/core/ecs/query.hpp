@@ -2,7 +2,7 @@
 #define __QUERY_H__
 
 #include <okay/core/ecs/ecstore.hpp>
-#include <okay/core/util/option.hpp>
+#include <okay/util/option.hpp>
 
 #include <bitset>
 #include <cstdint>

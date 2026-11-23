@@ -8,9 +8,9 @@
 #include <okay/core/renderer/gl.hpp>
 #include <okay/core/renderer/material.hpp>
 #include <okay/core/renderer/mesh.hpp>
-#include <okay/core/util/dirty_set.hpp>
-#include <okay/core/util/object_pool.hpp>
-#include <okay/core/util/property.hpp>
+#include <okay/util/dirty_set.hpp>
+#include <okay/util/object_pool.hpp>
+#include <okay/util/property.hpp>
 
 #include <cstdint>
 #include <glm/glm.hpp>

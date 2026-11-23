@@ -1,6 +1,6 @@
 #include "ecstore.hpp"
 
-#include <okay/core/util/object_pool.hpp>
+#include <okay/util/object_pool.hpp>
 
 namespace okay {
 

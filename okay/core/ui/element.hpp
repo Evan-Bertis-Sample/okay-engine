@@ -9,8 +9,8 @@
 #include <okay/core/renderer/texture.hpp>
 #include <okay/core/ui/font.hpp>
 #include <okay/core/ui/text_layout.hpp>
-#include <okay/core/util/object_pool.hpp>
-#include <okay/core/util/option.hpp>
+#include <okay/util/object_pool.hpp>
+#include <okay/util/option.hpp>
 
 #include <glm/gtx/hash.hpp>
 #include <unordered_map>

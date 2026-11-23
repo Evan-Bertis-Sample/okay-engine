@@ -2,7 +2,7 @@
 #define __GL_H__
 
 #include <okay/core/engine/engine.hpp>
-#include <okay/core/util/result.hpp>
+#include <okay/util/result.hpp>
 
 #include <glad/glad.h>
 

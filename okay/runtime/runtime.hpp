@@ -2,7 +2,7 @@
 #define __RUNTIME_HPP__
 
 #include <okay/core/engine/engine.hpp>
-#include <okay/core/util/export.hpp>
+#include <okay/util/export.hpp>
 
 namespace okay {
 

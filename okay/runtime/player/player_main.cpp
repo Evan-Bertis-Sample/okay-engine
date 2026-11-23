@@ -2,8 +2,8 @@
 
 #include <okay/core/engine/engine.hpp>
 #include <okay/core/engine/system.hpp>
-#include <okay/core/util/export.hpp>
 #include <okay/runtime/runtime.hpp>
+#include <okay/util/export.hpp>
 
 #include <csignal>
 

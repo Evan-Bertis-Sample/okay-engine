@@ -1,7 +1,7 @@
 #ifndef __RESOURCE_HPP__
 #define __RESOURCE_HPP__
 
-#include <okay/core/util/option.hpp>
+#include <okay/util/option.hpp>
 
 #include <array>
 #include <cstdint>

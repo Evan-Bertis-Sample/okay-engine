@@ -6,8 +6,8 @@
 #include <okay/core/ui/font.hpp>
 #include <okay/core/ui/text_layout.hpp>
 #include <okay/core/ui/text_mesh_builder.hpp>
-#include <okay/core/util/object_pool.hpp>
-#include <okay/core/util/result.hpp>
+#include <okay/util/object_pool.hpp>
+#include <okay/util/result.hpp>
 
 namespace okay {
 

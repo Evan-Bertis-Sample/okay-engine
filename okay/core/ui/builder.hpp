@@ -4,7 +4,7 @@
 #include "okay/core/engine/engine.hpp"
 
 #include <okay/core/ui/element.hpp>
-#include <okay/core/util/option.hpp>
+#include <okay/util/option.hpp>
 
 namespace okay {
 

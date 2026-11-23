@@ -6,7 +6,7 @@
 #include <okay/core/renderer/materials/unlit.hpp>
 #include <okay/core/renderer/render_world.hpp>
 #include <okay/core/renderer/uniform.hpp>
-#include <okay/core/util/type.hpp>
+#include <okay/util/type.hpp>
 
 #include <glm/glm.hpp>
 

@@ -3,7 +3,7 @@
 
 #include <okay/core/renderer/gl.hpp>
 #include <okay/core/renderer/math_types.hpp>
-#include <okay/core/util/result.hpp>
+#include <okay/util/result.hpp>
 
 #include <glm/glm.hpp>
 #include <vector>

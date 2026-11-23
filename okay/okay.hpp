@@ -91,17 +91,4 @@
 #include <okay/core/ui/text_mesh_builder.hpp>
 #include <okay/core/ui/ui.hpp>
 
-// okay/core/util
-#include <okay/core/util/dirty_set.hpp>
-#include <okay/core/util/export.hpp>
-#include <okay/core/util/format.hpp>
-#include <okay/core/util/object_pool.hpp>
-#include <okay/core/util/option.hpp>
-#include <okay/core/util/property.hpp>
-#include <okay/core/util/result.hpp>
-#include <okay/core/util/singleton.hpp>
-#include <okay/core/util/string.hpp>
-#include <okay/core/util/type.hpp>
-#include <okay/core/util/variant.hpp>
-
 #endif  // __OKAY_H__

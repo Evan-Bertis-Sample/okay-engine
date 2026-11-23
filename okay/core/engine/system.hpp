@@ -2,7 +2,7 @@
 #define __SYSTEM_H__
 
 #include <okay/core/engine/reload.hpp>
-#include <okay/core/util/option.hpp>
+#include <okay/util/option.hpp>
 
 #include <array>
 #include <cstdint>

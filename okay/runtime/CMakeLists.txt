@@ -20,5 +20,6 @@ target_sources(okay_runtime PRIVATE
 )
 
 target_compile_definitions(okay_runtime PUBLIC -DOKAY_GAME_NAME="${PROJECT}")
+target_link_libraries(okay_runtime PRIVATE okay_util)
 
 add_subdirectory(${OKAY_RUNTIME})

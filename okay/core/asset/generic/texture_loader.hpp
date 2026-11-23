@@ -5,7 +5,7 @@
 #include <okay/core/renderer/material.hpp>
 #include <okay/core/renderer/texture.hpp>
 #include <okay/core/renderer/uniform.hpp>
-#include <okay/core/util/result.hpp>
+#include <okay/util/result.hpp>
 
 #include <cstddef>
 #include <filesystem>

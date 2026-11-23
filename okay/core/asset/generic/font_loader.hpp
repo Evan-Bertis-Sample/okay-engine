@@ -6,8 +6,8 @@
 #include <okay/core/renderer/texture.hpp>
 #include <okay/core/renderer/uniform.hpp>
 #include <okay/core/ui/font.hpp>
-#include <okay/core/util/option.hpp>
-#include <okay/core/util/result.hpp>
+#include <okay/util/option.hpp>
+#include <okay/util/result.hpp>
 
 #include <filesystem>
 

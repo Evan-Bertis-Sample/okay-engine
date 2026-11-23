@@ -3,7 +3,7 @@
 
 #include <okay/core/ecs/ecs.hpp>
 #include <okay/core/renderer/render_world.hpp>
-#include <okay/core/util/option.hpp>
+#include <okay/util/option.hpp>
 
 namespace okay {
 

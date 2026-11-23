@@ -1,7 +1,7 @@
 #ifndef __RESULT_H__
 #define __RESULT_H__
 
-#include <okay/core/util/type.hpp>
+#include <okay/util/type.hpp>
 
 #include <functional>
 #include <optional>

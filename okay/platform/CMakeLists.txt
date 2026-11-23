@@ -40,6 +40,7 @@ add_subdirectory(
 )
 
 target_link_libraries(okay_platform PUBLIC sockpp-static)
+target_link_libraries(okay_platform PRIVATE okay_util)
 
 # if(WIN32)
 #     set_target_properties(sockpp-static PROPERTIES

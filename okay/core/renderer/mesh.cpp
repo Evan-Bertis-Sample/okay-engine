@@ -1,6 +1,6 @@
 #include "mesh.hpp"
 
-#include "okay/core/util/result.hpp"
+#include "okay/util/result.hpp"
 
 #include <okay/core/engine/engine.hpp>
 #include <okay/core/engine/logger.hpp>

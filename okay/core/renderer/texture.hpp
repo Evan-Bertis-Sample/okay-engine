@@ -2,7 +2,7 @@
 #define __TEXTURE_H__
 
 #include <okay/core/renderer/gl.hpp>
-#include <okay/core/util/result.hpp>
+#include <okay/util/result.hpp>
 
 #include <span>
 #include <vector>

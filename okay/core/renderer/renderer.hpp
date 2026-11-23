@@ -14,7 +14,7 @@
 #include <okay/core/renderer/primitive.hpp>
 #include <okay/core/renderer/render_world.hpp>
 #include <okay/core/renderer/surface.hpp>
-#include <okay/core/util/singleton.hpp>
+#include <okay/util/singleton.hpp>
 
 #include <cstdint>
 

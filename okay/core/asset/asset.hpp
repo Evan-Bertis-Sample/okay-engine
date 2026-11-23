@@ -4,8 +4,8 @@
 #include <okay/core/engine/engine.hpp>
 #include <okay/core/engine/resource.hpp>
 #include <okay/core/engine/system.hpp>
-#include <okay/core/util/option.hpp>
-#include <okay/core/util/result.hpp>
+#include <okay/util/option.hpp>
+#include <okay/util/result.hpp>
 
 #include <filesystem>
 #include <fstream>

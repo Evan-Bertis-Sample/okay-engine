@@ -3,7 +3,7 @@
 
 #include <okay/core/asset/asset.hpp>
 #include <okay/core/renderer/mesh.hpp>
-#include <okay/core/util/result.hpp>
+#include <okay/util/result.hpp>
 
 #include <filesystem>
 #include <istream>
