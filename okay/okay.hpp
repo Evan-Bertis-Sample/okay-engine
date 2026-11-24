@@ -77,9 +77,6 @@
 // okay/core/renderer/passes
 #include <okay/core/renderer/passes/scene_pass.hpp>
 
-// okay/core/renderer2
-#include <okay/core/renderer2/test_renderer.hpp>
-
 // okay/core/tween
 #include <okay/core/tween/i_okay_tween.hpp>
 #include <okay/core/tween/tween.hpp>
