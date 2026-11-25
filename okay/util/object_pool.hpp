@@ -6,7 +6,7 @@
 #pragma once
 
 #include <okay/core/engine/engine.hpp>
-#include <okay/core/engine/logger.hpp>
+#include <okay/util/logger.hpp>
 
 #include <cstdint>
 #include <iterator>

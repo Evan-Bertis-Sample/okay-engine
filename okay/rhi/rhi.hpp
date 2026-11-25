@@ -6,6 +6,7 @@
 #pragma once
 
 #include <vulkan/vulkan.hpp>
+#include <okay/util/logger.hpp>
 
 namespace okay {
 
@@ -17,12 +18,14 @@ class VkRhi {
    public:
     VkRhiConfig config;
 
+
     VkRhi(const VkRhiConfig& config) : config(config) {}
 
     void initialize();
 
    private:
     vk::Instance _vkInstance;
+    vk::Device _vkDevice;
 };
 
 }  // namespace okay

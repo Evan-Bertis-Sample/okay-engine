@@ -5,10 +5,10 @@
 
 #pragma once
 
-#include <okay/core/engine/logger.hpp>
 #include <okay/core/tween/i_okay_tween.hpp>
 #include <okay/core/tween/tween_easing.hpp>
 #include <okay/core/tween/tween_engine.hpp>
+#include <okay/util/logger.hpp>
 
 #include <cstdint>
 #include <functional>

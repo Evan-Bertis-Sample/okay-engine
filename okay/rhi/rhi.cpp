@@ -7,11 +7,13 @@ VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE
 namespace okay {
 
 void VkRhi::initialize() {
+    VULKAN_HPP_DEFAULT_DISPATCHER.init();
+
     vk::ApplicationInfo appInfo{
         .pApplicationName = config.applicationName,
-        .applicationVersion = 1,
+        .applicationVersion = VK_MAKE_VERSION(1, 0, 0),
         .pEngineName = "okay_engine_vk",
-        .engineVersion = 1,
+        .engineVersion = VK_MAKE_VERSION(1, 0, 0),
         .apiVersion = vk::ApiVersion12,
     };
 
@@ -20,9 +22,15 @@ void VkRhi::initialize() {
     };
 
     _vkInstance = vk::createInstance(instanceCreateInfo);
-    VULKAN_HPP_DEFAULT_DISPATCHER.init(_vkInstance);
+    std::vector<vk::PhysicalDevice> physicalDevices = _vkInstance.enumeratePhysicalDevices();
 
-    // std::vector<vk::PhysicalDevice> physicalDevices = _vkInstance.enumeratePhysicalDevices();
+    for (vk::PhysicalDevice &pd : physicalDevices) {
+
+    }
+
+
+    VULKAN_HPP_DEFAULT_DISPATCHER.init(_vkInstance);
+    VULKAN_HPP_DEFAULT_DISPATCHER.init(_vkDevice);
 }
 
 }  // namespace okay

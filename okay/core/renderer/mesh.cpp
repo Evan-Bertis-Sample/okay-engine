@@ -3,8 +3,8 @@
 #include "okay/util/result.hpp"
 
 #include <okay/core/engine/engine.hpp>
-#include <okay/core/engine/logger.hpp>
 #include <okay/core/renderer/gl.hpp>
+#include <okay/util/logger.hpp>
 
 using namespace okay;
 

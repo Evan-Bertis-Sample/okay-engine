@@ -6,9 +6,9 @@
 #pragma once
 
 #include <okay/core/engine/engine.hpp>
-#include <okay/core/engine/logger.hpp>
 #include <okay/core/renderer/gl.hpp>
 #include <okay/core/renderer/texture.hpp>
+#include <okay/util/logger.hpp>
 #include <okay/util/result.hpp>
 #include <okay/util/type.hpp>
 

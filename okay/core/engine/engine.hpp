@@ -5,11 +5,11 @@
 
 #pragma once
 
-#include <okay/core/engine/logger.hpp>
 #include <okay/core/engine/reload.hpp>
 #include <okay/core/engine/resource.hpp>
 #include <okay/core/engine/system.hpp>
 #include <okay/core/engine/time.hpp>
+#include <okay/util/logger.hpp>
 
 #include <functional>
 #include <source_location>

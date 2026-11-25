@@ -74,9 +74,15 @@ endif()
 # c++ standard
 set_property(TARGET okay PROPERTY CXX_STANDARD 20)
 set_property(TARGET ${PROJECT} PROPERTY CXX_STANDARD 20)
+set_property(TARGET okay_platform PROPERTY CXX_STANDARD 20)
+set_property(TARGET okay_util PROPERTY CXX_STANDARD 20)
+set_property(TARGET okay_rhi PROPERTY CXX_STANDARD 20)
 
 target_compile_features(okay PUBLIC cxx_std_20)
 target_compile_features(${PROJECT} PUBLIC cxx_std_20)
+target_compile_features(okay_platform PUBLIC cxx_std_20)
+target_compile_features(okay_util PUBLIC cxx_std_20)
+target_compile_features(okay_rhi PUBLIC cxx_std_20)
 
 # Version guards for C++20 features
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
@@ -104,9 +110,9 @@ include(FetchContent)
 
 # define verbosity settings for Release Builds
 if(OKAY_BUILD_TYPE STREQUAL "Release")
-    target_compile_definitions(okay PUBLIC -DOKAY_RELEASE)
-    target_compile_definitions(okay PUBLIC -DOKAY_COMPILED_MIN_SEVERITY=2)
-    target_compile_definitions(okay PUBLIC -DOKAY_COMPILED_MIN_VERBOSITY=3)
+    target_compile_definitions(okay_util PUBLIC -DOKAY_RELEASE)
+    target_compile_definitions(okay_util PUBLIC -DOKAY_COMPILED_MIN_SEVERITY=2)
+    target_compile_definitions(okay_util PUBLIC -DOKAY_COMPILED_MIN_VERBOSITY=3)
 endif()
 
 
