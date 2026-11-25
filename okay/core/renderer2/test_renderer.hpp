@@ -10,7 +10,7 @@
 
 #include <okay/core/engine/system.hpp>
 #include <okay/core/renderer/surface.hpp>
-#include <okay/rhi/vk/vk_rhi.hpp>
+#include <okay/rhi/rhi.hpp>
 
 namespace okay {
 
