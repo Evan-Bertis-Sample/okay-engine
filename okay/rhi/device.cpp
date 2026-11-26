@@ -1,4 +1,4 @@
-#include "rhi.hpp"
+#include "device.hpp"
 
 #include "vulkan/vulkan.hpp"
 
@@ -6,9 +6,13 @@
 
 VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE
 
-namespace okay {
+namespace okay::rhi {
 
-Failable VkRhi::initialize() {
+Failable RenderDevice::initialize() {
+    if (_init) {
+        return Failable::errorResult("Render device already initialized!");
+    }
+
     VULKAN_HPP_DEFAULT_DISPATCHER.init();
 
     vk::ApplicationInfo appInfo{
@@ -33,7 +37,17 @@ Failable VkRhi::initialize() {
 
     _vkDevice = physicalDevices[0].createDevice({}, nullptr);
     VULKAN_HPP_DEFAULT_DISPATCHER.init(_vkDevice);
+    _init = true;
+
     return Failable::ok();
 }
 
-}  // namespace okay
+void RenderDevice::shutdown() {
+    if (!_init)
+        return;
+
+    _vkDevice.destroy();
+    _vkInstance.destroy();
+}
+
+}  // namespace okay::rhi

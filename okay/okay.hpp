@@ -63,7 +63,6 @@
 #include <okay/core/renderer/renderer.hpp>
 #include <okay/core/renderer/renderer_util.hpp>
 #include <okay/core/renderer/shader.hpp>
-#include <okay/core/renderer/surface.hpp>
 #include <okay/core/renderer/texture.hpp>
 #include <okay/core/renderer/uniform.hpp>
 

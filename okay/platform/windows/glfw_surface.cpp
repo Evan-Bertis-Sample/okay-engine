@@ -1,5 +1,5 @@
 #include <okay/core/renderer/gl.hpp>
-#include <okay/core/renderer/surface.hpp>
+#include <okay/platform/surface.hpp>
 
 #include <GLFW/glfw3.h>
 #include <iostream>

@@ -9,8 +9,8 @@
 // directly accesses RHI for now
 
 #include <okay/core/engine/system.hpp>
-#include <okay/core/renderer/surface.hpp>
-#include <okay/rhi/rhi.hpp>
+#include <okay/platform/surface.hpp>
+#include <okay/rhi/device.hpp>
 
 namespace okay {
 
@@ -23,7 +23,9 @@ class TestRenderer : public System<SystemScope::ENGINE> {
     TestRenderer(TestRendererSettings settings)
         : _settings(settings),
           _surface(settings.surfaceConfig),
-          _rhi(VkRhiConfig{.applicationName = settings.surfaceConfig.title}) {}
+          _rhi(rhi::RenderDeviceConfig{
+              .applicationName = settings.surfaceConfig.title,
+          }) {}
 
     void initialize() {
         _rhi.initialize();
@@ -32,7 +34,7 @@ class TestRenderer : public System<SystemScope::ENGINE> {
    private:
     TestRendererSettings _settings;
     Surface _surface;
-    VkRhi _rhi;
+    rhi::RenderDevice _rhi;
 };
 
 }  // namespace okay

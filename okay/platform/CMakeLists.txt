@@ -26,6 +26,17 @@ target_include_directories(okay_platform PRIVATE
  ${OKAY_VENDOR_DIR}/glad/include
 )
 
+# platform-headers
+
+file(GLOB OKAY_PLATFORM_SOURCES ${CMAKE_CURRENT_LIST_DIR}/*.cpp)
+file(GLOB OKAY_PLATFORM_HEADERS ${CMAKE_CURRENT_LIST_DIR}/*.hpp)
+
+target_sources(okay_rhi PRIVATE
+    ${OKAY_PLATFORM_SOURCES}
+    ${OKAY_PLATFORM_HEADERS}
+)
+
+
 # sockpp
 
 set(SOCKPP_BUILD_SHARED OFF CACHE BOOL "" FORCE)

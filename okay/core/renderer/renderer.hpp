@@ -17,7 +17,7 @@
 #include <okay/core/renderer/mesh.hpp>
 #include <okay/core/renderer/primitive.hpp>
 #include <okay/core/renderer/render_world.hpp>
-#include <okay/core/renderer/surface.hpp>
+#include <okay/platform/surface.hpp>
 #include <okay/util/singleton.hpp>
 
 #include <cstdint>

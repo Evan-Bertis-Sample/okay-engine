@@ -5,9 +5,6 @@
 
 #pragma once
 
-#include <okay/core/engine/system.hpp>
-#include <okay/core/renderer/gl.hpp>
-
 #include <memory>
 
 namespace okay {

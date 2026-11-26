@@ -1,4 +1,4 @@
-#include <okay/core/renderer/surface.hpp>
+#include <okay/platform/surface.hpp>
 
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
