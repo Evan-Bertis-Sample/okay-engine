@@ -5,8 +5,10 @@
 
 #pragma once
 
-#include <vulkan/vulkan.hpp>
 #include <okay/util/logger.hpp>
+#include <okay/util/result.hpp>
+
+#include <vulkan/vulkan.hpp>
 
 namespace okay {
 
@@ -17,11 +19,11 @@ struct VkRhiConfig {
 class VkRhi {
    public:
     VkRhiConfig config;
-
+    Logger logger;
 
     VkRhi(const VkRhiConfig& config) : config(config) {}
 
-    void initialize();
+    Failable initialize();
 
    private:
     vk::Instance _vkInstance;
