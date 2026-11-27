@@ -121,9 +121,15 @@ void RenderDevice::shutdown() {
     if (!_init)
         return;
 
-    _surface.destroy();
+    _vkDevice.waitIdle();
+
+    _vkDevice.destroySwapchainKHR(_swapchain);
     _vkDevice.destroy();
+
+    _vkInstance.destroySurfaceKHR(_vkSurface);
     _vkInstance.destroy();
+
+    _surface.destroy();
 }
 
 }  // namespace okay::rhi
