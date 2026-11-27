@@ -1,7 +1,5 @@
 # okay/rhi
 
-find_package(Vulkan REQUIRED)
-
 file(GLOB OKAY_RHI_SOURCES ${CMAKE_CURRENT_LIST_DIR}/*.cpp)
 file(GLOB OKAY_RHI_HEADERS ${CMAKE_CURRENT_LIST_DIR}/*.hpp)
 
@@ -17,9 +15,7 @@ target_include_directories(okay_rhi
 
 
 target_compile_definitions(okay_rhi PUBLIC
-    VULKAN_HPP_NO_STRUCT_CONSTRUCTORS
-    VULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1
-    VK_NO_PROTOTYPES
+    ${VULKAN_COMPILE_FLAGS}
 )
 
 target_link_libraries(okay_rhi

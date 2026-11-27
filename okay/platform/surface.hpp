@@ -6,6 +6,7 @@
 #pragma once
 
 #include <memory>
+#include <vulkan/vulkan.hpp>
 
 namespace okay {
 
@@ -25,6 +26,9 @@ class Surface {
     Surface& operator=(Surface&&) noexcept;
 
     void initialize();
+    std::vector<const char*> requiredVulkanExtensions();
+    vk::SurfaceKHR createVulkanSurface(vk::Instance instance);
+
     bool shouldClose() const;
     void pollEvents();
     void swapBuffers();

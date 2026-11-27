@@ -5,8 +5,7 @@
 
 #pragma once
 
-#include "vulkan/vulkan.hpp"
-
+#include <okay/platform/surface.hpp>
 #include <okay/rhi/texture.hpp>
 #include <okay/util/logger.hpp>
 #include <okay/util/object_pool.hpp>
@@ -17,7 +16,8 @@
 namespace okay::rhi {
 
 struct RenderDeviceConfig {
-    const char* applicationName;
+    const char* applicationName{"Okay Application"};
+    SurfaceConfig surfaceConfig;
 };
 
 using TextureHandle = ObjectPoolHandle;
@@ -27,7 +27,8 @@ class RenderDevice {
     RenderDeviceConfig config;
     Logger logger;
 
-    RenderDevice(const RenderDeviceConfig& config) : config(config) {}
+    RenderDevice(const RenderDeviceConfig& config)
+        : config(config), _surface(config.surfaceConfig) {}
 
     // lifetime
     Failable initialize();
@@ -39,7 +40,11 @@ class RenderDevice {
 
    private:
     vk::Instance _vkInstance;
+    vk::PhysicalDevice _vkPhysicalDevice;
     vk::Device _vkDevice;
+    vk::Queue _vkGraphicsQueue;
+    vk::SwapchainKHR _swapchain;
+    Surface _surface;
 
     bool _init{false};
     ObjectPool<Texture> _texturePool;

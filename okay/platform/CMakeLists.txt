@@ -26,6 +26,11 @@ target_include_directories(okay_platform PRIVATE
  ${OKAY_VENDOR_DIR}/glad/include
 )
 
+target_link_libraries(okay_platform PRIVATE Vulkan::Headers)
+target_compile_definitions(okay_platform PUBLIC
+    ${VULKAN_COMPILE_FLAGS}
+)
+
 # platform-headers
 
 file(GLOB OKAY_PLATFORM_SOURCES ${CMAKE_CURRENT_LIST_DIR}/*.cpp)

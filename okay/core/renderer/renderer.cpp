@@ -14,7 +14,8 @@
 using namespace okay;
 
 void Renderer::initialize() {
-    _surface->initialize();
+    // (breaking API change -- TODO: remove old renderer)
+    // _surface->initialize();
 
     Engine.logger.info("GL_VERSION: {}", (const char*)glGetString(GL_VERSION));
     Engine.logger.info("GLSL_VERSION: {}", (const char*)glGetString(GL_SHADING_LANGUAGE_VERSION));
